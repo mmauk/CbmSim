@@ -20,8 +20,8 @@ ROOT          = ./
 CXX              = g++
 CXXFLAGS         = -m64 -pipe -std=c++11 -O3 -g -O2 -Wall  
 MODULE_CXX_FLAGS = -m64 -pipe -std=c++11 -O2 -fPIC 
-INCPATH          = -I. -Iinclude -I/usr/local/cuda/include -I$(ROOT)CBM_CORE_LIB/include -I$(ROOT)CBM_DATA_LIB/include \
-			       -I$(ROOT)CBM_STATE_LIB/include -I$(ROOT)CBM_TOOLS_LIB/include -I$(ROOT)CXX_TOOLS_LIB/include 
+INCPATH          = -I. -Iinclude/Big_Sim -I/usr/local/cuda/include -I$(ROOT)include/CBM_CORE_LIB -I$(ROOT)include/CBM_DATA_LIB \
+			       -I$(ROOT)include/CBM_STATE_LIB -I$(ROOT)include/CBM_TOOLS_LIB -I$(ROOT)include/CXX_TOOLS_LIB 
 LIBS             = -L/user/local/cuda/lib64 -L/usr/local/cuda/lib64 -L/usr/lib64 -L/opt/cuda/lib64 -lcudart
 LINK             = g++
 LFLAGS           = -m64 
@@ -37,8 +37,9 @@ RMDIR            = rmdir
 
 ####### Big Simulation Directories
 
-BIG_SIM_SRC_PATH     = src/
-BIG_SIM_OBJ_PATH     = objs/
+BIG_SIM_SRC_PATH     = $(ROOT)src/Big_Sim/
+BIG_SIM_INCLUDE_PATH = $(ROOT)/include/Big_Sim/
+BIG_SIM_OBJ_PATH     = $(ROOT)objs/Big_Sim/
 
 
 ####### Big Simulation Files
@@ -54,9 +55,9 @@ BIG_SIM_OBJECTS    = $(BIG_SIM_OBJ_PATH)control.o \
 
 ####### CBM Core Directories
 
-CBM_CORE_SRC_PATH     = $(ROOT)CBM_CORE_LIB/src/
-CBM_CORE_INCLUDE_PATH = $(ROOT)CBM_CORE_LIB/include/
-CBM_CORE_OBJ_PATH     = $(ROOT)CBM_CORE_LIB/objs/
+CBM_CORE_SRC_PATH     = $(ROOT)src/CBM_CORE_LIB/
+CBM_CORE_INCLUDE_PATH = $(ROOT)include/CBM_CORE_LIB/
+CBM_CORE_OBJ_PATH     = $(ROOT)objs/CBM_CORE_LIB/
 
 ####### CBM Core Files
 
@@ -80,9 +81,9 @@ CBM_CORE_OBJECTS  = $(CBM_CORE_OBJ_PATH)kernels_cuda.o \
 
 ####### CBM Data Directories
 
-CBM_DATA_SRC_PATH     = $(ROOT)CBM_DATA_LIB/src/
-CBM_DATA_INCLUDE_PATH = $(ROOT)CBM_DATA_LIB/include/
-CBM_DATA_OBJ_PATH     = $(ROOT)CBM_DATA_LIB/objs/
+CBM_DATA_SRC_PATH     = $(ROOT)src/CBM_DATA_LIB/
+CBM_DATA_INCLUDE_PATH = $(ROOT)include/CBM_DATA_LIB/
+CBM_DATA_OBJ_PATH     = $(ROOT)objs/CBM_DATA_LIB/
 
 ####### CBM Data Files
 
@@ -105,9 +106,9 @@ CBM_DATA_OBJECTS  = $(CBM_DATA_OBJ_PATH)ectrialsdata.o \
 
 ####### CBM State Directories
 
-CBM_STATE_SRC_PATH     = $(ROOT)CBM_STATE_LIB/src/
-CBM_STATE_INCLUDE_PATH = $(ROOT)CBM_STATE_LIB/include/
-CBM_STATE_OBJ_PATH     = $(ROOT)CBM_STATE_LIB/objs/
+CBM_STATE_SRC_PATH     = $(ROOT)src/CBM_STATE_LIB/
+CBM_STATE_INCLUDE_PATH = $(ROOT)include/CBM_STATE_LIB/
+CBM_STATE_OBJ_PATH     = $(ROOT)objs/CBM_STATE_LIB/
 
 ####### CBM State Files
 
@@ -142,9 +143,9 @@ CBM_STATE_OBJECTS  = $(CBM_STATE_OBJ_PATH)cbmstate.o \
 
 ####### CBM Tools Objects Directory
 
-CBM_TOOLS_SRC_PATH     = $(ROOT)CBM_TOOLS_LIB/src/
-CBM_TOOLS_INCLUDE_PATH = $(ROOT)CBM_TOOLS_LIB/include/
-CBM_TOOLS_OBJ_PATH     = $(ROOT)CBM_TOOLS_LIB/objs/
+CBM_TOOLS_SRC_PATH     = $(ROOT)src/CBM_TOOLS_LIB/
+CBM_TOOLS_INCLUDE_PATH = $(ROOT)include/CBM_TOOLS_LIB/
+CBM_TOOLS_OBJ_PATH     = $(ROOT)objs/CBM_TOOLS_LIB/
 
 ####### CBM Tools Files
 
@@ -159,9 +160,9 @@ CBM_TOOLS_OBJECTS  = $(CBM_TOOLS_OBJ_PATH)ecmfpopulation.o \
 
 ####### CXX Tools Directories
 
-CXX_TOOLS_SRC_PATH     = $(ROOT)CXX_TOOLS_LIB/src/
-CXX_TOOLS_INCLUDE_PATH = $(ROOT)CXX_TOOLS_LIB/include/
-CXX_TOOLS_OBJ_PATH     = $(ROOT)CXX_TOOLS_LIB/objs/
+CXX_TOOLS_SRC_PATH     = $(ROOT)src/CXX_TOOLS_LIB/
+CXX_TOOLS_INCLUDE_PATH = $(ROOT)include/CXX_TOOLS_LIB/
+CXX_TOOLS_OBJ_PATH     = $(ROOT)objs/CXX_TOOLS_LIB/
 
 ####### CXX Tools Files
 
@@ -196,7 +197,7 @@ MODULE_OBJECTS = $(CBM_CORE_OBJECTS) $(CBM_DATA_OBJECTS) $(CBM_STATE_OBJECTS) \
 
 ####### Target Name
 
-TARGET = Big_Sim
+TARGET = $(ROOT)Big_Sim
 
 ####### Check or create all object directories
 
@@ -216,16 +217,16 @@ $(TARGET):  $(MODULE_OBJECTS) $(BIG_SIM_OBJECTS)
 	
 ####### Compile Big Simulation
 
-objs/control.o: src/control.cpp include/control.h \
-		include/setsim.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o objs/control.o src/control.cpp
+$(BIG_SIM_OBJ_PATH)control.o: $(BIG_SIM_SRC_PATH)control.cpp $(BIG_SIM_INCLUDE_PATH)control.h \
+		$(BIG_SIM_INCLUDE_PATH)setsim.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o $(BIG_SIM_OBJ_PATH)control.o $(BIG_SIM_SRC_PATH)control.cpp
 
-objs/main.o: src/main.cpp include/control.h \
-		include/setsim.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o objs/main.o src/main.cpp
+$(BIG_SIM_OBJ_PATH)main.o: $(BIG_SIM_SRC_PATH)main.cpp $(BIG_SIM_INCLUDE_PATH)control.h \
+		$(BIG_SIM_INCLUDE_PATH)setsim.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o $(BIG_SIM_OBJ_PATH)main.o $(BIG_SIM_SRC_PATH)main.cpp
 
-objs/setsim.o: src/setsim.cpp include/setsim.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o objs/setsim.o src/setsim.cpp
+$(BIG_SIM_OBJ_PATH)setsim.o: $(BIG_SIM_SRC_PATH)setsim.cpp $(BIG_SIM_INCLUDE_PATH)setsim.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o $(BIG_SIM_OBJ_PATH)setsim.o $(BIG_SIM_SRC_PATH)setsim.cpp
 
 
 # ====================================== COMPILE MODULES =========================================
@@ -233,8 +234,8 @@ objs/setsim.o: src/setsim.cpp include/setsim.h
 
 ####### CBM Core Compiler Options
 
-CBM_CORE_INCLUDES = -I. -I/usr/local/cuda/include -I/opt/cuda/include -I$(ROOT)CXX_TOOLS_LIB/include \
-					-I$(ROOT)CBM_STATE_LIB/include -I$(CBM_CORE_INCLUDE_PATH) 
+CBM_CORE_INCLUDES = -I. -I/usr/local/cuda/include -I/opt/cuda/include -I$(CBM_CORE_INCLUDE_PATH) \
+					-I$(CBM_STATE_INCLUDE_PATH) -I$(CXX_TOOLS_INCLUDE_PATH) 
 
 ####### CBM Core Build Rules
 
@@ -966,7 +967,7 @@ $(CBM_CORE_OBJ_PATH)mzone.o: $(CBM_CORE_SRC_PATH)mzonemodules/mzone.cpp $(CBM_CO
 
 ####### CBM Data Compiler Options
 
-CBM_DATA_INCLUDES = -I. -I$(ROOT)CXX_TOOLS_LIB/include -Iinclude -I$(CBM_DATA_INCLUDE_PATH)
+CBM_DATA_INCLUDES = -I. -I$(BIG_SIM_INCLUDE_PATH) -I$(CBM_DATA_INCLUDE_PATH) -I$(CXX_TOOLS_INCLUDE_PATH) 
 
 ####### CBM Data Build Rules
 
@@ -1006,7 +1007,7 @@ $(CBM_DATA_OBJ_PATH)spikerasterbitarray.o: $(CBM_DATA_SRC_PATH)spikeraster/spike
 
 ####### CBM State Compiler Options
 
-CBM_STATE_INCLUDES = -I. -I$(ROOT)CXX_TOOLS_LIB/include -I$(CBM_STATE_INCLUDE_PATH)
+CBM_STATE_INCLUDES = -I. -I$(CBM_STATE_INCLUDE_PATH) -I$(CXX_TOOLS_INCLUDE_PATH)
 
 ####### CBM State Build Rules
 
@@ -1100,7 +1101,7 @@ $(CBM_STATE_OBJ_PATH)mzoneconnectivitystate.o: $(CBM_STATE_SRC_PATH)state/mzonec
 
 ####### CBM Tools Compiler Options
 
-CBM_TOOLS_INCLUDES = -I. -I$(ROOT)CXX_TOOLS_LIB/include -I$(ROOT)CBM_CORE_LIB/include -I$(CBM_TOOLS_INCLUDE_PATH)
+CBM_TOOLS_INCLUDES = -I. -I$(CBM_CORE_INCLUDE_PATH) -I$(CBM_TOOLS_INCLUDE_PATH) -I$(CXX_TOOLS_INCLUDE_PATH)
 
 ####### CBM Tools Build Rules
 
