@@ -1,9 +1,19 @@
 #!/usr/bin/bash
 
-command=$1
+command="$1"
+git_integrate="$2"
 
 cd $HOME/Dev/Git/Big_Sim/
-case $command in
+
+if [ "$git_integrate" != "y" ] && [ "$git_integrate" != "n" ]; then
+	printf "command not recognized. Exiting" && exit 1
+fi
+
+if [ "$git_integrate" == "y" ]; then
+	git pull origin master
+fi
+
+case "$command" in
 	"build")
 		printf "Building the entire simulation...\n" && make ;;
 	"clean")
