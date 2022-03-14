@@ -42,10 +42,13 @@ else
 	({ vpnui 2>/dev/null; } &) 	
 fi
 
-printf "\nsyncing files from local machine to remote...\n"
-rsync -artvz --progress -s "$CLIENT_PROJ_PATH" "$REMOTE_USER@$REMOTE_HOST:$REMOTE_PROJ_PATH" --delete
+printf "\nCommiting and pushing to remote...\n"
+git add .
+read -p "Enter your commit message: " commit_message
+git commit -m "$commit_message"
+git push origin master
 
-printf "\nAttempting to log in via ssh to $REMOTE_USER@$REMOTE_HOST...\n\n"
-ssh -T -E $LOG_FILE $REMOTE_USER@$REMOTE_HOST 'bash -s' < build_remote_helper.sh $1 
-
-printf "\n Finished with all tasks. Exiting..."
+#printf "\nAttempting to log in via ssh to $REMOTE_USER@$REMOTE_HOST...\n\n"
+#ssh -T -E $LOG_FILE $REMOTE_USER@$REMOTE_HOST 'bash -s' < build_remote_helper.sh $1 
+#
+#printf "\n Finished with all tasks. Exiting..."
