@@ -48,7 +48,19 @@ read -p "Enter your commit message: " commit_message
 git commit -m "$commit_message"
 git push origin master
 
-#printf "\nAttempting to log in via ssh to $REMOTE_USER@$REMOTE_HOST...\n\n"
-#ssh -T -E $LOG_FILE $REMOTE_USER@$REMOTE_HOST 'bash -s' < build_remote_helper.sh $1 
-#
-#printf "\n Finished with all tasks. Exiting..."
+printf "\nAttempting to log in via ssh to $REMOTE_USER@$REMOTE_HOST...\n\n"
+ssh -T -E $LOG_FILE $REMOTE_USER@$REMOTE_HOST << 'EOL'
+	cd /home/seang/Dev/Git/Big_Sim
+	git pull origin master
+	read -p "(b)uild or (c)lean? " command
+	case $command in
+		[bB])
+			printf "Building...\n" && make ;;
+		[cC])
+			printf "Cleaning...\n" && make clean ;;
+		*)
+			printf "Command not recognized. Exiting\n" && exit 1 ;;
+	esac
+EOL 
+
+printf "\n Finished with all tasks. Exiting..."

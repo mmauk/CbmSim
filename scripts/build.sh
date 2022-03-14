@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/usr/bin/bash 
 
 # assume we are running this build script in Big_Sim/Big_Sim/
 
