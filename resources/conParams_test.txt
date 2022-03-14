@@ -1,0 +1,57 @@
+glXP2 9
+glYP2 7
+goXP2 6
+goYP2 4
+grAFDelayInTStep 1
+grPFVelInGRXPerTStep 147
+grXP2 11
+grYP2 9
+lownumpGLfromGLtoGR 64
+maxnumpGLfromGLtoGO 1
+maxnumpGLfromGLtoGR 80
+maxnumpGLfromGOtoGL 1
+maxnumpGOfromGLtoGO 16
+maxnumpGOfromGOtoGL 48
+maxnumpGOfromGRtoGO 4096
+maxnumpGRfromGLtoGR 4
+maxnumpGRfromGOtoGR 4
+maxnumpGRfromGRtoGO 4
+maxnumpGRfromMFtoGR 4
+numIOP2 2
+numMFP2 10
+numNCP2 3
+numPCP2 5
+numSCP2 9
+numpPCfromPCtoNC 3
+spanGOAscDenOnGRX 2048
+spanGOAscDenOnGRY 48
+spanGOAxonOnGLX 12
+spanGOAxonOnGLY 12
+spanGODecDenOnGLX 12
+spanGODecDenOnGLY 12
+spanGRDenOnGLX 4
+spanGRDenOnGLY 4
+GOGOLocalMatrix
+maxnumpGOInGOtoGO 9
+maxnumpGOOutGOtoGO 9
+0 1 0.7
+0 -1 0.7
+1 0 0.7
+-1 0 0.7
+1 1 0.7
+-1 1 0.7
+-1 -1 0.7
+1 -1 0.7
+0 0 0
+GOGOCoupLocalMatrix
+maxnumpGOCoupInGOtoGO 8
+maxnumpGOCoupOutGOtoGO 8
+0 1 0.1
+0 -1 0.1
+1 0 0.1
+-1 0 0.1
+1 1 0.1
+-1 1 0.1
+1 -1 0.1
+-1 -1 0.1
+connectivityParamEnd 1
