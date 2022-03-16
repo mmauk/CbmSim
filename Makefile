@@ -38,7 +38,7 @@ RMDIR            = rmdir
 ####### Big Simulation Directories
 
 BIG_SIM_SRC_PATH     = $(ROOT)src/Big_Sim/
-BIG_SIM_INCLUDE_PATH = $(ROOT)/include/Big_Sim/
+BIG_SIM_INCLUDE_PATH = $(ROOT)include/Big_Sim/
 BIG_SIM_OBJ_PATH     = $(ROOT)objs/Big_Sim/
 
 
