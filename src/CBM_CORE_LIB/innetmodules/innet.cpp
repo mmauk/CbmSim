@@ -9,6 +9,7 @@
 #include "innetmodules/innet.h"
 
 using namespace std;
+
 InNet::InNet(ConnectivityParams *conParams, ActivityParams *actParams,
 		InNetConnectivityState *conState, InNetActivityState *actState,
 		int gpuIndStart, int numGPUs)

@@ -17,8 +17,8 @@ string Sprintf(const char *fmt, Args... args) {
 SetSim::SetSim(int fileNum, int goRecipParam, int simNum){
 
     // Not sure how we want our act files to be named	
-    string inActFile = Sprintf("CBM_Params/actParams_binChoice2_%d.txt", fileNum+1);	
-    string inConFile = Sprintf("CBM_Params/conParams_binChoice2_%d.txt", fileNum+1);	
+    string inActFile = Sprintf("./resources/actParams_binChoice2_%d.txt", fileNum+1);	
+    string inConFile = Sprintf("./resources/conParams_binChoice2_%d.txt", fileNum+1);	
 
 	fstream actPF(inActFile.c_str());
 	fstream conPF(inConFile.c_str());
