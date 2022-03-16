@@ -42,10 +42,22 @@ else
 	({ vpnui 2>/dev/null; } &) 	
 fi
 
-printf "\nsyncing files from local machine to remote...\n"
-rsync -artvz --progress -s "$CLIENT_PROJ_PATH" "$REMOTE_USER@$REMOTE_HOST:$REMOTE_PROJ_PATH" --delete
+read -p "Would you like to push the project to the remote? (y/n) " git_integrate 
 
+[ "$git_integrate" != y ] && [ "$git_integrate" != n ] && \
+	printf "input not recognized. Exiting\n" && exit 1
+
+if [ "$git_integrate" = "y" ]; then
+	printf "\nCommiting and pushing to remote...\n"
+	git add .
+	read -p "Enter your commit message: " commit_message
+	git commit -m "$commit_message"
+	git push origin master
+fi
+
+command=$1
 printf "\nAttempting to log in via ssh to $REMOTE_USER@$REMOTE_HOST...\n\n"
-ssh -T -E $LOG_FILE $REMOTE_USER@$REMOTE_HOST 'bash -s' < build_remote_helper.sh $1 
+ssh -T -E $LOG_FILE $REMOTE_USER@$REMOTE_HOST 'bash -s' < build_remote_helper.sh "$command $git_integrate"
 
-printf "\n Finished with all tasks. Exiting..."
+printf "\nFinished with all tasks. Exiting...\n"
+
