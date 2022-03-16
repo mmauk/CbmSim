@@ -88,7 +88,6 @@ int main() {
 	time = clock();
     	
 	for(int i=0; i < 1; i++){	
-	    // TODO: find what i and j loop over	
 		cout << "ParamNum:  " << i << endl;
 		
 		for(int j=0; j < 1; j++){

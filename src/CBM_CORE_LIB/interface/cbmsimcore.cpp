@@ -14,7 +14,6 @@ using namespace std;
 CBMSimCore::CBMSimCore(CBMState *state, int *mzoneRSeed, int gpuIndStart, int numGPUP2)
 {
 	construct(state, mzoneRSeed, gpuIndStart, numGPUP2);
-
 }
 
 CBMSimCore::CBMSimCore(CBMState *state, int gpuIndStart, int numGPUP2)
