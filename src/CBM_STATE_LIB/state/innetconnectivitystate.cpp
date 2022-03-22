@@ -10,68 +10,64 @@
 using namespace std;
 
 
-InNetConnectivityState::InNetConnectivityState
-	(ConnectivityParams *parameters, unsigned int msPerStep, int randSeed, int goRecipParam, int simNum)
+InNetConnectivityState::InNetConnectivityState(ConnectivityParams *parameters, unsigned int msPerStep,
+		int randSeed, int goRecipParam, int simNum)
 {
-	CRandomSFMT *randGen;
-	cp=parameters;
-
-	randGen=new CRandomSFMT0(randSeed);
 	
-	cout<<"Input net state construction:"<<endl;
-	cout<<"allocating memory"<<endl;
-	allocateMemory();
-	cout<<"initializing variables"<<endl;
-	initializeVals();
+	this->cp = parameters;
 
+	CRandomSFMT *randGen = new CRandomSFMT0(randSeed);
+	
+	std::cout << "Input net state construction:" << std::endl;
+	std::cout << "allocating memory" << std::endl;
+	allocateMemory();
+	
+	std::cout << "Initializing connections..." << std::endl;
+	initializeVals();
 	
 	srand(time(0));	
 
-
-	
-
-
-	cout<<"connecting GO to GO"<<endl;
-	//connectGOGO(randGen);
-	//connectGOGOBias(randGen);
+	std::cout << "connecting GO to GO" << endl;
+	// NOTE: there are different versions of this function	
 	connectGOGODecayP(randGen, goRecipParam, simNum);	
-	
 	
 //	cout<<"connecting PF to BC"<<endl;
 //	connectPFtoBC();
 	
-	
 //	cout<<"connecting UBC and GL"<<endl;
 //	connectGLUBC();
-	cout<<"connecting GR and GL"<<endl;
+	std::cout << "connecting GR and GL" << std::endl;
 	connectGRGL(randGen);
-	cout<<"connecting GO and GL"<<endl;
+	
+	std::cout << "connecting GO and GL" << std::endl;
 	connectGOGL(randGen);
 //	cout<<"connecting UBC to GL"<<endl;
 //	connectUBCGL();	
-	cout<<"connecting MF and GL"<<endl;
+	
+	std::cout<<"connecting MF and GL"<<std::endl;
 	connectMFGL_noUBC(randGen);
 //	connectMFGL_withUBC(randGen);	
-//	cout<<"translating UBC GL"<<endl;
+//	std::cout<<"translating UBC GL"<<std::endl;
 //	translateUBCGL();
-	cout<<"translating MF GL"<<endl;
+	
+	std::cout<<"translating MF GL"<<std::endl;
 	translateMFGL();
-	cout<<"translating GO and GL"<<endl;
+	
+	std::cout<<"translating GO and GL"<<std::endl;
 	translateGOGL(randGen);
-	cout<<"connecting GR to GO"<<endl;
+	
+	std::cout<<"connecting GR to GO"<<std::endl;
 	connectGRGO(randGen, goRecipParam);
-	cout<<"connecting GO to GO gap junctions"<<endl;
+	
+	std::cout<<"connecting GO to GO gap junctions"<<std::endl;
 	connectGOGO_GJ(randGen);
 	
-	cout<<"assigning GR delays"<<endl;
+	std::cout<<"assigning GR delays"<<std::endl;
 	assignGRDelays(msPerStep);
-	cout<<"assigning PF to BC delays"<<endl;
-	cout<<"done"<<endl;
-
-
-
-
-
+	
+	std::cout<<"assigning PF to BC delays"<<std::endl;
+	std::cout<<"done"<<std::endl;
+	
 	delete randGen;
 }
 
@@ -2504,30 +2500,30 @@ cout << "	GRtoGO_GR:	" << sumGOGR_GR << endl;
 }
 
 
-void InNetConnectivityState::connectGOGODecayP(CRandomSFMT *randGen, int goRecipParam, int simNum)
-{
+void InNetConnectivityState::connectGOGODecayP(CRandomSFMT *randGen, int goRecipParam, int simNum) {
 
-//int numberConnections[12] = {4,8,12,16,20,24,28,32,36,40,44,48};
-int numberConnections[26] = {1,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50};
+	//int numberConnections[12] = {4,8,12,16,20,24,28,32,36,40,44,48};
+	int numberConnections[26] = {1,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50};
 
-//int numberConnections[5] = {14, 16, 18, 20, 22};
+	//int numberConnections[5] = {14, 16, 18, 20, 22};
 
-int span = 4;
-int numCon = 12;//numberConnections[goRecipParam];
-int numP = (span+1)*(span+1); 
+	int span = 4;
+	int numCon = 12;//numberConnections[goRecipParam];
+	int numP = (span + 1) * (span + 1); 
 
-//Allocate Dat Shit Boi
-	numpGOGABAInGOGO=new int[cp->numGO];
-	pGOGABAInGOGO=allocate2DArray<int>(cp->numGO, numCon);
-	numpGOGABAOutGOGO=new int[cp->numGO];
-	pGOGABAOutGOGO=allocate2DArray<int>(cp->numGO, numCon);	
-	conGOGOBoolOut=allocate2DArray<bool>(cp->numGO, cp->numGO);
-	spanArrayGOtoGOsynX = new int[span+1];
-	spanArrayGOtoGOsynY = new int[span+1];
-	xCoorsGOGOsyn = new int[numP];
-	yCoorsGOGOsyn = new int[numP];
-	Pcon=new float[numP];
-//Initialize MaaFuka
+	//Allocate Dat Shit Boi
+	numpGOGABAInGOGO    = new int[cp->numGO];
+	pGOGABAInGOGO	    = allocate2DArray<int>(cp->numGO, numCon);
+	numpGOGABAOutGOGO   = new int[cp->numGO];
+	pGOGABAOutGOGO	    = allocate2DArray<int>(cp->numGO, numCon);	
+	conGOGOBoolOut	    = allocate2DArray<bool>(cp->numGO, cp->numGO);
+	spanArrayGOtoGOsynX = new int[span + 1];
+	spanArrayGOtoGOsynY = new int[span + 1];
+	xCoorsGOGOsyn 		= new int[numP];
+	yCoorsGOGOsyn 		= new int[numP];
+	Pcon 				= new float[numP];
+	
+	//Initialize MaaFuka
 	arrayInitialize<int>(numpGOGABAInGOGO, 0, cp->numGO);
 	arrayInitialize<int>(pGOGABAInGOGO[0], UINT_MAX, cp->numGO*numCon);
 	arrayInitialize<int>(numpGOGABAOutGOGO, 0, cp->numGO);
@@ -2540,67 +2536,58 @@ int numP = (span+1)*(span+1);
 	arrayInitialize<float>(Pcon, 0, numP);
 
 
+	float A = 0.35;
+	float sig = 1000;//1.95;
 
-float A = 0.35;
-float sig = 1000;//1.95;
+	float recipParamArray_P[11] = {1.0, 0.925, 0.78, 0.62, 0.47, 0.32, 0.19, 0.07, 0.0, 0.0, 0.0};
+	float recipParamArray_LowerP[11] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.8, 0.35, 0.0}; 
+	bool recipParamArray_ReduceBase[11] = {false, false, false, false, false, false, false, false, true, true, false};
+	bool recipParamArray_noRecip[11] = {false, false, false, false, false, false, false, false, false, false, true};
+	 
 
+	float pRecipGOGO = 1.0;//recipParamArray_P[goRecipParam];
+	bool noRecip = false;//recipParamArray_noRecip[goRecipParam];
+	float pRecipLowerBase = 0.0;//recipParamArray_LowerP[goRecipParam];
+	bool reduceBaseRecip = false;//recipParamArray_ReduceBase[goRecipParam];
 
-float recipParamArray_P[11] = {1.0, 0.925, 0.78, 0.62, 0.47, 0.32, 0.19, 0.07, 0.0, 0.0, 0.0};
-float recipParamArray_LowerP[11] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.8, 0.35, 0.0}; 
-bool recipParamArray_ReduceBase[11] = {false, false, false, false, false, false, false, false, true, true, false};
-bool recipParamArray_noRecip[11] = {false, false, false, false, false, false, false, false, false, false, true};
- 
-
-float pRecipGOGO = 1.0;//recipParamArray_P[goRecipParam];
-bool noRecip = false;//recipParamArray_noRecip[goRecipParam];
-float pRecipLowerBase = 0.0;//recipParamArray_LowerP[goRecipParam];
-bool reduceBaseRecip = false;//recipParamArray_ReduceBase[goRecipParam];
-
-//int maxGOOut = 8;
-float PconX;
-float PconY;
+	//int maxGOOut = 8;
+	float PconX;
+	float PconY;
 
 
-
-
-
-	for(int i=0; i<span+1;i++){
+	for (int i = 0; i < span + 1; i++) {
 		int ind = span - i;
-		spanArrayGOtoGOsynX[i] = (span/2) - ind;}
-	for(int i=0; i<span+1;i++){
-		int ind = span - i;
-		spanArrayGOtoGOsynY[i] = (span/2) - ind;}
-		
-	for(int i=0; i<numP; i++)
-	{
-		xCoorsGOGOsyn[i] = spanArrayGOtoGOsynX[ i%(span+1) ];
-		yCoorsGOGOsyn[i] = spanArrayGOtoGOsynY[ i/(span+1) ];		
+		spanArrayGOtoGOsynX[i] = (span / 2) - ind;
 	}
 	
+	for (int i = 0; i < span + 1; i++) {
+		int ind = span - i;
+		spanArrayGOtoGOsynY[i] = (span / 2) - ind;
+	}
+		
+	for (int i = 0; i < numP; i++) {
+		xCoorsGOGOsyn[i] = spanArrayGOtoGOsynX[i % (span + 1)];
+		yCoorsGOGOsyn[i] = spanArrayGOtoGOsynY[i / (span + 1)];		
+	}
 
-	for(int i=0; i<numP; i++)
-	{
-	
-		PconX =  (xCoorsGOGOsyn[i]*xCoorsGOGOsyn[i]) / (2*(sig*sig));
-		PconY = (yCoorsGOGOsyn[i]*yCoorsGOGOsyn[i]) / (2*(sig*sig));
-		Pcon[i] = A * exp(-(PconX + PconY) );
+	for (int i = 0; i < numP; i++) {
+		PconX   = (xCoorsGOGOsyn[i] * xCoorsGOGOsyn[i]) / (2 * (sig * sig));
+		PconY   = (yCoorsGOGOsyn[i] * yCoorsGOGOsyn[i]) / (2 * (sig * sig));
+		Pcon[i] = A * exp(-(PconX + PconY));
 	
 	}
 	
 	// Remove self connection 
-	for(int i=0; i<numP;i++)
-	{
-		if( (xCoorsGOGOsyn[i] == 0) && (yCoorsGOGOsyn[i] == 0) )
-		{
-			Pcon[i] = 0;
-		}
+	// NOTE: there is a more efficient way of doing this
+	for (int i = 0; i < numP; i++) {
+		if ((xCoorsGOGOsyn[i] == 0) && (yCoorsGOGOsyn[i] == 0)) Pcon[i] = 0;
 	}
 	
-	vector<int> rGOGOSpanInd;
-	rGOGOSpanInd.assign(numP,0);
-	for(int ind=0; ind<numP; ind++)
-	{rGOGOSpanInd[ind] = ind;}
-	
+	std::vector<int> rGOGOSpanInd;
+	rGOGOSpanInd.assign(numP, 0);
+	for (int ind = 0; ind < numP; ind++) {
+		rGOGOSpanInd[ind] = ind;
+	}
 
 	int srcPosX;
 	int srcPosY;
@@ -2609,83 +2596,83 @@ float PconY;
 	int tempDestPosX;
 	int tempDestPosY;
 	int destInd;
-for(int atmpt = 0; atmpt<200; atmpt++){
-	
-	for(int i=0; i<cp->numGO; i++)
-	{	
-		srcPosX = i%cp->goX;
-		srcPosY = i/cp->goX;	
+
+	for (int atmpt = 0; atmpt < 200; atmpt++) {
 		
-		random_shuffle(rGOGOSpanInd.begin(), rGOGOSpanInd.end());		
-		
-		for(int j=0; j<numP; j++)
-		{	
+		for (int i = 0; i < this->cp->numGO; i++) {	
+			srcPosX = i % this->cp->goX;
+			srcPosY = i / this->cp->goX;	
 			
-			preDestPosX = xCoorsGOGOsyn[ rGOGOSpanInd[j] ]; 
-			preDestPosY = yCoorsGOGOsyn[ rGOGOSpanInd[j] ];	
-
-			tempDestPosX = srcPosX + preDestPosX;
-			tempDestPosY = srcPosY + preDestPosY;
-
-			tempDestPosX = (tempDestPosX%cp->goX+cp->goX)%cp->goX;
-			tempDestPosY = (tempDestPosY%cp->goY+cp->goY)%cp->goY;
-					
-			destInd = tempDestPosY*cp->goX+tempDestPosX;
-
-		
-			// Normal One	
-			if(noRecip == false && reduceBaseRecip == false && randGen->Random()>=1-Pcon[rGOGOSpanInd[j] ] && (conGOGOBoolOut[i][destInd] == false) && numpGOGABAOutGOGO[i] < numCon && numpGOGABAInGOGO[destInd] < numCon)
-			{	
-				pGOGABAOutGOGO[i][ numpGOGABAOutGOGO[i] ] = destInd;
-				numpGOGABAOutGOGO[i]++;
+			random_shuffle(rGOGOSpanInd.begin(), rGOGOSpanInd.end());		
+			
+			for (int j = 0; j < numP; j++) {	
 				
-				pGOGABAInGOGO[destInd][ numpGOGABAInGOGO[destInd] ] = i;
-				numpGOGABAInGOGO[destInd]++;
-				
-				conGOGOBoolOut[i][destInd] = true;
+				preDestPosX = xCoorsGOGOsyn[rGOGOSpanInd[j]]; 
+				preDestPosY = yCoorsGOGOsyn[rGOGOSpanInd[j]];	
+
+				tempDestPosX = srcPosX + preDestPosX;
+				tempDestPosY = srcPosY + preDestPosY;
+
+				tempDestPosX = (tempDestPosX % this->cp->goX + this->cp->goX) % this->cp->goX;
+				tempDestPosY = (tempDestPosY % this->cp->goY + this->cp->goY) % this->cp->goY;
 						
-				if(randGen->Random() >= 1-pRecipGOGO && conGOGOBoolOut[destInd][i] == false && numpGOGABAOutGOGO[destInd] < numCon && numpGOGABAInGOGO[i] < numCon){
+				destInd = tempDestPosY * this->cp->goX + tempDestPosX;
+			
+				// Normal One	
+				if ( !noRecip && !reduceBaseRecip && randGen->Random()>= 1 - Pcon[rGOGOSpanInd[j]]
+						&& !conGOGOBoolOut[i][destInd] && numpGOGABAOutGOGO[i] < numCon
+						&& numpGOGABAInGOGO[destInd] < numCon) {	
+					pGOGABAOutGOGO[i][numpGOGABAOutGOGO[i]] = destInd;
+					numpGOGABAOutGOGO[i]++;
 					
-					pGOGABAOutGOGO[destInd][ numpGOGABAOutGOGO[destInd] ] = i;
-					numpGOGABAOutGOGO[destInd]++;
+					pGOGABAInGOGO[destInd][numpGOGABAInGOGO[destInd]] = i;
+					numpGOGABAInGOGO[destInd]++;
 					
-					pGOGABAInGOGO[i][ numpGOGABAInGOGO[i] ] = destInd;
-					numpGOGABAInGOGO[i]++;
-					
-					conGOGOBoolOut[ destInd ][i] = true;
+					conGOGOBoolOut[i][destInd] = true;
+							
+					if (randGen->Random() >= 1 - pRecipGOGO && !conGOGOBoolOut[destInd][i]
+							&& numpGOGABAOutGOGO[destInd] < numCon && numpGOGABAInGOGO[i] < numCon) {
+						
+						pGOGABAOutGOGO[destInd][numpGOGABAOutGOGO[destInd]] = i;
+						numpGOGABAOutGOGO[destInd]++;
+						
+						pGOGABAInGOGO[i][numpGOGABAInGOGO[i]] = destInd;
+						numpGOGABAInGOGO[i]++;
+						
+						conGOGOBoolOut[destInd][i] = true;
+					}
 				}
+			
+				if (!noRecip && reduceBaseRecip && randGen->Random()>=1 - Pcon[rGOGOSpanInd[j]]
+						&& !conGOGOBoolOut[i][destInd] && (!conGOGOBoolOut[destInd][i] ||
+							randGen->Random() >= 1 - pRecipLowerBase) && numpGOGABAOutGOGO[i] < numCon
+						&& numpGOGABAInGOGO[destInd] < numCon) {	
+					pGOGABAOutGOGO[i][numpGOGABAOutGOGO[i]] = destInd;
+					numpGOGABAOutGOGO[i]++;
+					
+					pGOGABAInGOGO[destInd][numpGOGABAInGOGO[destInd]] = i;
+					numpGOGABAInGOGO[destInd]++;
+					
+					conGOGOBoolOut[i][destInd] = true;	
+				}
+
+				if (noRecip && !reduceBaseRecip && randGen->Random() >= 1 - Pcon[rGOGOSpanInd[j]]
+						&& (!conGOGOBoolOut[i][destInd]) && conGOGOBoolOut[destInd][i] == false && numpGOGABAOutGOGO[i] < numCon && numpGOGABAInGOGO[destInd] < numCon)
+				{	
+					pGOGABAOutGOGO[i][ numpGOGABAOutGOGO[i] ] = destInd;
+					numpGOGABAOutGOGO[i]++;
+					
+					pGOGABAInGOGO[destInd][ numpGOGABAInGOGO[destInd] ] = i;
+					numpGOGABAInGOGO[destInd]++;
+					
+					conGOGOBoolOut[i][destInd] = true;
+				}
+
+
 			}
-		
-
-
-
-			if(noRecip == false && reduceBaseRecip == true && randGen->Random()>=1-Pcon[rGOGOSpanInd[j] ] && conGOGOBoolOut[i][destInd] == false && (conGOGOBoolOut[destInd][i] == false || randGen->Random()>=1-pRecipLowerBase) && numpGOGABAOutGOGO[i] < numCon && numpGOGABAInGOGO[destInd] < numCon)
-			{	
-				pGOGABAOutGOGO[i][ numpGOGABAOutGOGO[i] ] = destInd;
-				numpGOGABAOutGOGO[i]++;
-				
-				pGOGABAInGOGO[destInd][ numpGOGABAInGOGO[destInd] ] = i;
-				numpGOGABAInGOGO[destInd]++;
-				
-				conGOGOBoolOut[i][destInd] = true;	
-			}
-
-			if(noRecip == true && reduceBaseRecip == false && randGen->Random()>=1-Pcon[rGOGOSpanInd[j] ] && (conGOGOBoolOut[i][destInd] == false) && conGOGOBoolOut[destInd][i] == false && numpGOGABAOutGOGO[i] < numCon && numpGOGABAInGOGO[destInd] < numCon)
-			{	
-				pGOGABAOutGOGO[i][ numpGOGABAOutGOGO[i] ] = destInd;
-				numpGOGABAOutGOGO[i]++;
-				
-				pGOGABAInGOGO[destInd][ numpGOGABAInGOGO[destInd] ] = i;
-				numpGOGABAInGOGO[destInd]++;
-				
-				conGOGOBoolOut[i][destInd] = true;
-			}
-
-
 		}
-	}
 
-}
+	}
 
 //	int conv[7] = {4000, 3000, 2000, 1000, 500, 250, 125};
 	//ofstream fileGOGOconIn;

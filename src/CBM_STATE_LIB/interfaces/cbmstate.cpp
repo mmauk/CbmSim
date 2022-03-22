@@ -9,52 +9,42 @@
 
 using namespace std;
 
-CBMState::CBMState(fstream &infile)
-{
+CBMState::CBMState(std::fstream &infile) {
 	infile>>numZones;
 
-	conParams=new ConnectivityParams(infile);
-	actParams=new ActivityParams(infile);
+	conParams = new ConnectivityParams(infile);
+	actParams = new ActivityParams(infile);
 
 	infile.seekg(1, ios::cur);
-	innetConState=new InNetConnectivityState(conParams, infile);
-	mzoneConStates=new MZoneConnectivityState*[numZones];
-	for(int i=0; i<numZones; i++)
-	{
-		mzoneConStates[i]=new MZoneConnectivityState(conParams, infile);
+	innetConState = new InNetConnectivityState(conParams, infile);
+	mzoneConStates = new MZoneConnectivityState*[numZones];
+	for (int i = 0; i < numZones; i++) {
+		mzoneConStates[i] = new MZoneConnectivityState(conParams, infile);
 	}
 
-	innetActState=new InNetActivityState(conParams, infile);
-	mzoneActStates=new MZoneActivityState*[numZones];
-	for(int i=0; i<numZones; i++)
-	{
+	innetActState = new InNetActivityState(conParams, infile);
+	mzoneActStates = new MZoneActivityState*[numZones];
+	for (int i = 0; i < numZones; i++) {
 		mzoneActStates[i]=new MZoneActivityState(conParams, actParams, infile);
 	}
 }
 
-CBMState::CBMState(fstream &actPFile, fstream &conPFile, unsigned int nZones, int goRecipParam, int simNum)
-{
-	cout << "Normal State constructor" << endl;
+CBMState::CBMState(std::fstream &actPFile, std::fstream &conPFile, unsigned int nZones,
+		int goRecipParam, int simNum) {
+	std::cout << "Normal State constructor" << std::endl;
 	int innetCRSeed;
-	int *mzoneCRSeed;
-	int *mzoneARSeed;
+	int *mzoneCRSeed = new int[nZones];
+	int *mzoneARSeed = new int[nZones];
 
 	CRandomSFMT0 randGen(time(0));
+	innetCRSeed = randGen.IRandom(0, INT_MAX);
 
-	mzoneCRSeed=new int[nZones];
-	mzoneARSeed=new int[nZones];
-
-	innetCRSeed=randGen.IRandom(0, INT_MAX);
-
-	for(int i=0; i<nZones; i++)
-	{
-		mzoneCRSeed[i]=randGen.IRandom(0, INT_MAX);
-		mzoneARSeed[i]=randGen.IRandom(0, INT_MAX);
+	for (int i = 0; i < nZones; i++) {
+		mzoneCRSeed[i] = randGen.IRandom(0, INT_MAX);
+		mzoneARSeed[i] = randGen.IRandom(0, INT_MAX);
 	}
 
-	
 	newState(actPFile, conPFile, nZones, innetCRSeed, mzoneCRSeed, mzoneARSeed, goRecipParam, simNum);
-	
 
 	delete[] mzoneCRSeed;
 	delete[] mzoneARSeed;
@@ -188,23 +178,21 @@ MZoneConnectivityState* CBMState::getMZoneConStateInternal(unsigned int zoneN)
 	return mzoneConStates[zoneN];
 }
 
-void CBMState::newState(fstream &actPFile, fstream &conPFile, unsigned int nZones,
-			int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed, int goRecipParam, int simNum)
-{
+void CBMState::newState(std::fstream &actPFile, std::fstream &conPFile, unsigned int nZones,
+			int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed, int goRecipParam, int simNum) {
 	
-	
-	numZones=nZones;
+	numZones = nZones;
 
-	conParams=new ConnectivityParams(conPFile);
-	
-	actParams=new ActivityParams(actPFile);
+	conParams = new ConnectivityParams(conPFile);
+	actParams = new ActivityParams(actPFile);
 
-	cout<<"parameters loaded"<<endl;
+	std::cout << "parameters loaded" << std::endl;
 
 	//modified, switch between different innetconstates
+	//NOTE: inNet stands for input network	
 	//innetConState=new InNetConStateGGIAltCon(conParams, actParams->msPerTimeStep, innetCRSeed);
-	innetConState=new InNetConnectivityState(conParams, actParams->msPerTimeStep, innetCRSeed, goRecipParam, simNum);
-	cout<<"Innet connectivity states constructed"<<endl;
+	innetConState = new InNetConnectivityState(conParams, actParams->msPerTimeStep, innetCRSeed, goRecipParam, simNum);
+	std::cout << "Innet connectivity states constructed" << std::endl;
 
 	mzoneConStates=new MZoneConnectivityState*[numZones];
 	for(int i=0; i<numZones; i++)

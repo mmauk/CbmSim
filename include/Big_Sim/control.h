@@ -27,7 +27,6 @@ class Control {
 		Control();
 		~Control();
 
-    // NOTE: do we want everything here to be declared as public variables? Or do we want them as class variables?
 	// Objects
 	//SetSim *simulation;
 	CBMState *joestate;
@@ -145,9 +144,13 @@ class Control {
 	ct_uint8_t *goSpkCount_Trial;;
 
 	const ct_uint8_t* goSpks; 
-	void runTuningSimulation(int tuningTrials, int numTrials, int simNum, int csSize, float csFracMFs, float goMin);
+	void runTuningSimulation(int tuningTrials, int numTrials, int simNum, int csSize, float csFracMFs,
+			float goMin);
 	void runSimulation(int tuningTrials, int numTrials, int simNum, int csSize, float csFracMFs, float goMin);
-	void runSimulationWithGRdata(int fileNum, int goRecipParam, int tuningTrials, int grDetectionTrials, int numTrials, int simNum, int csSize, float csFracMFs, float goMin, float GOGR, float GRGO, float MFGO, float csMinRate, float csMaxRate, float gogoW, int inputWeight, int inputWeight_two, float spillFrac);
+	void runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuningTrials,
+			int numGrDetectionTrials, int numTrainingTrials, int simNum, int csSize, float csFracMFs,
+			float goMin, float GOGR, float GRGO, float MFGO, float csMinRate, float csMaxRate,
+			float gogoW, int inputStrength, int inputWeight_two, float spillFrac) {
 
 	float **activeGRgISum;
 	void train(int selectState, int filename, int ISIs, int numTrials, int numCon, int tunedConNumber);

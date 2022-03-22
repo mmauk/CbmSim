@@ -4,23 +4,26 @@
 
 using namespace std;
 
-
 Control::Control(){};
 
 Control::~Control(){};
 
-void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int tuningTrials, int grDetectionTrials, int numTrials, int simNum, int csSize, float csFracMFs, float goMin, float GOGR, float GRGO, float MFGO, float csMinRate, float csMaxRate, float gogoW, int inputStrength, int inputWeight_two, float spillFrac){
-	
+void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuningTrials,
+		int numGrDetectionTrials, int numTrainingTrials, int simNum, int csSize, float csFracMFs,
+		float goMin, float GOGR, float GRGO, float MFGO, float csMinRate, float csMaxRate,
+		float gogoW, int inputStrength, int inputWeight_two, float spillFrac) {
 
-	cout << "fileNum:  " << fileNum << endl;
+	//TODO: Need to create separate logger
+	std::cout << "fileNum: " << fileNum << std::endl;
 	SetSim simulation(fileNum, goRecipParam, simNum);
 	joestate = simulation.getstate();
 	joesim = simulation.getsim();
 	joeMFFreq = simulation.getMFFreq(csMinRate, csMaxRate);
 	joeMFs = simulation.getMFs();	
 
-	int preTrialNumber = tuningTrials+grDetectionTrials;
-	int collectionTrials = numTrials;//numTrials - preTrialNumber;
+	int numTotalTrials = numTuningTrials + numGrDetectionTrials + numTrainingTrials;  
+	int preTrialNumber = numTuningTrials + numGrDetectionTrials;
+	int collectionTrials = numTotalTrials;//numTrials - preTrialNumber;
 	
 	
 	
@@ -30,15 +33,16 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int tuningT
 //	mfR = new float[numGO];
 	
 	
-	cout << "Done filling MF arrays" << endl;	
+	std::cout << "Done filling MF arrays" << std::endl;	
 
 	int recipName[25] = {2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50};
 	//int numCon[25] = {2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50};
 	//int numCon[25] = {2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50};
 	int conv[8] = {5000, 4000, 3000, 2000, 1000, 500, 250, 125};
-//Set up granule cell data collection
+
+	//Set up granule cell data collection
 	//Find granule cells with CS MF input	
-/*	int* granuleIndWithInput =  getGRIndicies(csFracMFs); 
+	/*	int* granuleIndWithInput =  getGRIndicies(csFracMFs); 
 	int numpActiveGranule = getNumGRIndicies(csFracMFs);	
 	cout << "Number of Granule cells w/ inputs	" << numpActiveGranule << endl;	
 	//Allocate and Initialize 
@@ -56,31 +60,33 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int tuningT
 	arrayInitialize<ct_uint8_t>(preGRPSTHPreCS[0], 0, numpActiveGranule*csSize);
 
 	int grSaveNumber = 30000;
-*/
+	*/
 	//grpcWeights = allocate2DArray<float>(numPC, 32768);
 	//arrayInitialize<float>(grpcWeights[0], 0, numPC*32768);
-// Allocate and Initialize PSTH and Raster arrays
+
+	// Allocate and Initialize PSTH and Raster arrays
 	allPCRaster = allocate2DArray<ct_uint8_t>(numPC, (csSize+msPreCS+msPostCS)*(collectionTrials));	
-	arrayInitialize<ct_uint8_t>(allPCRaster[0], 0, numPC*(csSize+msPreCS+msPostCS)*(collectionTrials) );
+	arrayInitialize<ct_uint8_t>(allPCRaster[0], 0, numPC*(csSize+msPreCS+msPostCS)*(collectionTrials));
 	
 	allNCRaster = allocate2DArray<ct_uint8_t>(numNC, (csSize+msPreCS+msPostCS)*(collectionTrials));	
-	arrayInitialize<ct_uint8_t>(allNCRaster[0], 0, numNC*(csSize+msPreCS+msPostCS)*(collectionTrials) );
+	arrayInitialize<ct_uint8_t>(allNCRaster[0], 0, numNC*(csSize+msPreCS+msPostCS)*(collectionTrials));
 
 	allSCRaster = allocate2DArray<ct_uint8_t>(numSC, (csSize+msPreCS+msPostCS)*(collectionTrials));	
-	arrayInitialize<ct_uint8_t>(allSCRaster[0], 0, numSC*(csSize+msPreCS+msPostCS)*(collectionTrials) );
+	arrayInitialize<ct_uint8_t>(allSCRaster[0], 0, numSC*(csSize+msPreCS+msPostCS)*(collectionTrials));
 
 	allBCRaster = allocate2DArray<ct_uint8_t>(numBC, (csSize+msPreCS+msPostCS)*(collectionTrials));	
-	arrayInitialize<ct_uint8_t>(allBCRaster[0], 0, numBC*(csSize+msPreCS+msPostCS)*(collectionTrials) );
+	arrayInitialize<ct_uint8_t>(allBCRaster[0], 0, numBC*(csSize+msPreCS+msPostCS)*(collectionTrials));
 	
-//	allIORaster = allocate2DArray<ct_uint8_t>(numIO, (5000)*(collectionTrials));	
-//	arrayInitialize<ct_uint8_t>(allIORaster[0], 0, numIO*(5000)*(collectionTrials) );
+	//	allIORaster = allocate2DArray<ct_uint8_t>(numIO, (5000)*(collectionTrials));	
+	//	arrayInitialize<ct_uint8_t>(allIORaster[0], 0, numIO*(5000)*(collectionTrials));
 	
-
-
 	//allGORaster = allocate2DArray<ct_uint8_t>(numGO, (csSize+msPreCS+msPostCS)*(collectionTrials));	
 	//arrayInitialize<ct_uint8_t>(allGORaster[0], 0, numGO*(csSize+msPreCS+msPostCS)*(collectionTrials) );
-cout << "PC arrays" << endl;	
-/*	allGORaster = allocate2DArray<ct_uint8_t>(numGO, (csSize+msPreCS+msPostCS)*(collectionTrials));	
+	
+	
+	std::cout << "PC arrays" << std::endl;	
+
+	/*	allGORaster = allocate2DArray<ct_uint8_t>(numGO, (csSize+msPreCS+msPostCS)*(collectionTrials));	
 	arrayInitialize<ct_uint8_t>(allGORaster[0], 0, numGO*(csSize+msPreCS+msPostCS)*(collectionTrials) );
 	allGORaster1 = allocate2DArray<ct_uint8_t>(numGO, (csSize+msPreCS+msPostCS)*(collectionTrials));	
 	arrayInitialize<ct_uint8_t>(allGORaster1[0], 0, numGO*(csSize+msPreCS+msPostCS)*(collectionTrials) );
@@ -98,10 +104,10 @@ cout << "PC arrays" << endl;
 	arrayInitialize<ct_uint8_t>(allGORaster7[0], 0, numGO*(csSize+msPreCS+msPostCS)*(collectionTrials) );
 	allGORaster8 = allocate2DArray<ct_uint8_t>(numGO, (csSize+msPreCS+msPostCS)*(collectionTrials));	
 	arrayInitialize<ct_uint8_t>(allGORaster8[0], 0, numGO*(csSize+msPreCS+msPostCS)*(collectionTrials) );
-*/	
+	*/	
 
 	allGOPSTH = allocate2DArray<ct_uint8_t>(numGO, (csSize+msPreCS+msPostCS));	
-	arrayInitialize<ct_uint8_t>(allGOPSTH[0], 0, numGO*(csSize+msPreCS+msPostCS) );
+	arrayInitialize<ct_uint8_t>(allGOPSTH[0], 0, numGO*(csSize+msPreCS+msPostCS));
 
 //	allGORaster = allocate2DArray<ct_uint8_t>(numGO, (csSize+msPreCS+msPostCS)*(collectionTrials));	
 //	arrayInitialize<ct_uint8_t>(allGORaster[0], 0, numGO*(csSize+msPreCS+msPostCS)*(collectionTrials) );
@@ -113,65 +119,54 @@ cout << "PC arrays" << endl;
 //	arrayInitialize<float>(allGRGORaster[0], 0, numGO*(csSize+msPreCS+msPostCS)*(collectionTrials) );
 	
 	float medTrials;
-        float *mTall = new float[numTrials];
-        float *grgoGall = new float[numTrials];
-        float *mfgoGall = new float[numTrials];
+	float *mTall    = new float[numTrials];
+	float *grgoGall = new float[numTrials];
+	float *mfgoGall = new float[numTrials];
+	
 	//allGORaster_gogoG = allocate2DArray<float>(numGO, (csSize+msPreCS+msPostCS)*(collectionTrials));	
 	//arrayInitialize<float>(allGORaster_gogoG[0], 0, numGO*(csSize+msPreCS+msPostCS)*(collectionTrials) );
-	
-
-	
 
 //	allPCRaster = allocate2DArray<ct_uint8_t>(numPC, (csSize+msPreCS+msPostCS)*(collectionTrials));	
 //	arrayInitialize<ct_uint8_t>(allPCRaster[0], 0, numPC*(csSize+msPreCS+msPostCS)*(collectionTrials) );
-	
-	
-	
-	
-
-
 
 	//int trialsPerMFRate = 10;
-	
 
-
-	clock_t T;
+	std::clock_t timer;
 	int rasterCounter = 0;
 	int rasterCounterIO = 0;
-	//clock_t tt;
 	int grSpkCounter = 0;
 	int grSpkCounterPre = 0;
 	
 	
-	vector<int> goSpkCounter;
+	std::vector<int> goSpkCounter;
 	goSpkCounter.assign(numGO, 0);
 	//int *goSpkCounterPre;
 	//goSpkCounterPre = new int[numGO];
 	
-	
 	float r;
 	int tsCSCounter = 0;
 	//mfBackRate = new float[4096]; 
-	for (trial = 0; trial < numTrials; trial++){
-		T = clock();
+	for (int trial = 0; trial < numTrials; trial++) {
+		timer = std::clock();
 
-
-		for(int i=0; i<numGO; i++){
+		for(int i=0; i < numGO; i++) {
 			goSpkCounter[i] = 0;
 			//goSpkCounterPre[i] = 0;
 		}
+
 		float gGRGO_sum = 0;
 		float gMFGO_sum = 0;
 
+		if (trial <= tuningTrials) {
+			std::cout << "Pre-tuning trial number: " << trial << std::endl;
+			trialTime = 5000;	
+		}
 
-		if(trial<=tuningTrials){
-			cout << "TrialT" << trial << endl;
+		if (trial > tuningTrials) {
+			std::cout << "Post-tuning trial number: " << trial << std::endl;
 			trialTime = 5000;	
 		}
-		if(trial>tuningTrials){
-			cout << "TrialR" << trial << endl;
-			trialTime = 5000;	
-		}
+
 /*		if(trial == 0){
 			tsCSCounter = 0;
 			rasterCounter = 0;	
