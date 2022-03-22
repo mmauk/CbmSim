@@ -2,7 +2,7 @@
 #include <time.h>
 #include "control.h"
 
-using namespace std;
+//using namespace std;
 
 Control::Control(){};
 
