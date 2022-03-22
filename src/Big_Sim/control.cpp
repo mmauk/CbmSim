@@ -4,14 +4,15 @@
 
 //using namespace std;
 
-Control::Control(){};
+//Control::Control(){};
 
-Control::~Control(){};
+//Control::~Control(){};
 
 void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuningTrials,
 		int numGrDetectionTrials, int numTrainingTrials, int simNum, int csSize, float csFracMFs,
 		float goMin, float GOGR, float GRGO, float MFGO, float csMinRate, float csMaxRate,
-		float gogoW, int inputStrength, int inputWeight_two, float spillFrac) {
+		float gogoW, int inputStrength, int inputWeight_two, float spillFrac)
+{
 
 	//TODO: Need to create separate logger
 	std::cout << "fileNum: " << fileNum << std::endl;
@@ -25,44 +26,10 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	int preTrialNumber = numTuningTrials + numGrDetectionTrials;
 	int collectionTrials = numTotalTrials;//numTrials - preTrialNumber;
 	
-	
-	
-//	mfNoiseRates = allocate2DArray<float>(5000*100, numGO);	
-//	arrayInitialize<float>(mfNoiseRates[0], 0, numGO*5000*100);
-
-//	mfR = new float[numGO];
-	
-	
 	std::cout << "Done filling MF arrays" << std::endl;	
 
 	int recipName[25] = {2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50};
-	//int numCon[25] = {2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50};
-	//int numCon[25] = {2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50};
 	int conv[8] = {5000, 4000, 3000, 2000, 1000, 500, 250, 125};
-
-	//Set up granule cell data collection
-	//Find granule cells with CS MF input	
-	/*	int* granuleIndWithInput =  getGRIndicies(csFracMFs); 
-	int numpActiveGranule = getNumGRIndicies(csFracMFs);	
-	cout << "Number of Granule cells w/ inputs	" << numpActiveGranule << endl;	
-	//Allocate and Initialize 
-	int activeCounter=0;
-	int *activeGranuleIndex;
-	activeGranuleIndex = new int[numpActiveGranule];
-	for(int i=0; i<numpActiveGranule; i++){activeGranuleIndex[i] = false;}
-	grPSTHCS = new ct_uint8_t[numpActiveGranule];
-	for(int i=0; i<numpActiveGranule; i++){grPSTHCS[i] = 0;}
-	grPSTHPreCS = new ct_uint8_t[numpActiveGranule];
-	for(int i=0; i<numpActiveGranule; i++){grPSTHPreCS[i] = 0;}
-	preGRPSTHCS=allocate2DArray<ct_uint8_t>(numpActiveGranule, csSize);
-	arrayInitialize<ct_uint8_t>(preGRPSTHCS[0], 0, numpActiveGranule*csSize);
-	preGRPSTHPreCS=allocate2DArray<ct_uint8_t>(numpActiveGranule, csSize);
-	arrayInitialize<ct_uint8_t>(preGRPSTHPreCS[0], 0, numpActiveGranule*csSize);
-
-	int grSaveNumber = 30000;
-	*/
-	//grpcWeights = allocate2DArray<float>(numPC, 32768);
-	//arrayInitialize<float>(grpcWeights[0], 0, numPC*32768);
 
 	// Allocate and Initialize PSTH and Raster arrays
 	allPCRaster = allocate2DArray<ct_uint8_t>(numPC, (csSize+msPreCS+msPostCS)*(collectionTrials));	
@@ -77,61 +44,17 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	allBCRaster = allocate2DArray<ct_uint8_t>(numBC, (csSize+msPreCS+msPostCS)*(collectionTrials));	
 	arrayInitialize<ct_uint8_t>(allBCRaster[0], 0, numBC*(csSize+msPreCS+msPostCS)*(collectionTrials));
 	
-	//	allIORaster = allocate2DArray<ct_uint8_t>(numIO, (5000)*(collectionTrials));	
-	//	arrayInitialize<ct_uint8_t>(allIORaster[0], 0, numIO*(5000)*(collectionTrials));
-	
-	//allGORaster = allocate2DArray<ct_uint8_t>(numGO, (csSize+msPreCS+msPostCS)*(collectionTrials));	
-	//arrayInitialize<ct_uint8_t>(allGORaster[0], 0, numGO*(csSize+msPreCS+msPostCS)*(collectionTrials) );
-	
-	
 	std::cout << "PC arrays" << std::endl;	
-
-	/*	allGORaster = allocate2DArray<ct_uint8_t>(numGO, (csSize+msPreCS+msPostCS)*(collectionTrials));	
-	arrayInitialize<ct_uint8_t>(allGORaster[0], 0, numGO*(csSize+msPreCS+msPostCS)*(collectionTrials) );
-	allGORaster1 = allocate2DArray<ct_uint8_t>(numGO, (csSize+msPreCS+msPostCS)*(collectionTrials));	
-	arrayInitialize<ct_uint8_t>(allGORaster1[0], 0, numGO*(csSize+msPreCS+msPostCS)*(collectionTrials) );
-	allGORaster2 = allocate2DArray<ct_uint8_t>(numGO, (csSize+msPreCS+msPostCS)*(collectionTrials));	
-	arrayInitialize<ct_uint8_t>(allGORaster2[0], 0, numGO*(csSize+msPreCS+msPostCS)*(collectionTrials) );
-	allGORaster3 = allocate2DArray<ct_uint8_t>(numGO, (csSize+msPreCS+msPostCS)*(collectionTrials));	
-	arrayInitialize<ct_uint8_t>(allGORaster3[0], 0, numGO*(csSize+msPreCS+msPostCS)*(collectionTrials) );
-	allGORaster4 = allocate2DArray<ct_uint8_t>(numGO, (csSize+msPreCS+msPostCS)*(collectionTrials));	
-	arrayInitialize<ct_uint8_t>(allGORaster4[0], 0, numGO*(csSize+msPreCS+msPostCS)*(collectionTrials) );
-	allGORaster5 = allocate2DArray<ct_uint8_t>(numGO, (csSize+msPreCS+msPostCS)*(collectionTrials));	
-	arrayInitialize<ct_uint8_t>(allGORaster5[0], 0, numGO*(csSize+msPreCS+msPostCS)*(collectionTrials) );
-	allGORaster6 = allocate2DArray<ct_uint8_t>(numGO, (csSize+msPreCS+msPostCS)*(collectionTrials));	
-	arrayInitialize<ct_uint8_t>(allGORaster6[0], 0, numGO*(csSize+msPreCS+msPostCS)*(collectionTrials) );
-	allGORaster7 = allocate2DArray<ct_uint8_t>(numGO, (csSize+msPreCS+msPostCS)*(collectionTrials));	
-	arrayInitialize<ct_uint8_t>(allGORaster7[0], 0, numGO*(csSize+msPreCS+msPostCS)*(collectionTrials) );
-	allGORaster8 = allocate2DArray<ct_uint8_t>(numGO, (csSize+msPreCS+msPostCS)*(collectionTrials));	
-	arrayInitialize<ct_uint8_t>(allGORaster8[0], 0, numGO*(csSize+msPreCS+msPostCS)*(collectionTrials) );
-	*/	
 
 	allGOPSTH = allocate2DArray<ct_uint8_t>(numGO, (csSize+msPreCS+msPostCS));	
 	arrayInitialize<ct_uint8_t>(allGOPSTH[0], 0, numGO*(csSize+msPreCS+msPostCS));
 
-//	allGORaster = allocate2DArray<ct_uint8_t>(numGO, (csSize+msPreCS+msPostCS)*(collectionTrials));	
-//	arrayInitialize<ct_uint8_t>(allGORaster[0], 0, numGO*(csSize+msPreCS+msPostCS)*(collectionTrials) );
-
-//	allGOGORaster = allocate2DArray<float>(numGO, (csSize+msPreCS+msPostCS)*(collectionTrials));	
-//	arrayInitialize<float>(allGOGORaster[0], 0, numGO*(csSize+msPreCS+msPostCS)*(collectionTrials) );
-	
-//	allGRGORaster = allocate2DArray<float>(numGO, (csSize+msPreCS+msPostCS)*(collectionTrials));	
-//	arrayInitialize<float>(allGRGORaster[0], 0, numGO*(csSize+msPreCS+msPostCS)*(collectionTrials) );
-	
 	float medTrials;
 	float *mTall    = new float[numTotalTrials];
 	float *grgoGall = new float[numTotalTrials];
 	float *mfgoGall = new float[numTotalTrials];
 	
-	//allGORaster_gogoG = allocate2DArray<float>(numGO, (csSize+msPreCS+msPostCS)*(collectionTrials));	
-	//arrayInitialize<float>(allGORaster_gogoG[0], 0, numGO*(csSize+msPreCS+msPostCS)*(collectionTrials) );
-
-//	allPCRaster = allocate2DArray<ct_uint8_t>(numPC, (csSize+msPreCS+msPostCS)*(collectionTrials));	
-//	arrayInitialize<ct_uint8_t>(allPCRaster[0], 0, numPC*(csSize+msPreCS+msPostCS)*(collectionTrials) );
-
-	//int trialsPerMFRate = 10;
-
-	std::clock_t timer;
+	clock_t timer;
 	int rasterCounter = 0;
 	int rasterCounterIO = 0;
 	int grSpkCounter = 0;
@@ -140,280 +63,153 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	
 	std::vector<int> goSpkCounter;
 	goSpkCounter.assign(numGO, 0);
-	//int *goSpkCounterPre;
-	//goSpkCounterPre = new int[numGO];
 	
 	float r;
 	int tsCSCounter = 0;
-	//mfBackRate = new float[4096]; 
-	for (int trial = 0; trial < numTrials; trial++) {
-		timer = std::clock();
+	for (int trial = 0; trial < numTotalTrials; trial++)
+	{
+		timer = clock();
 
-		for(int i=0; i < numGO; i++) {
+		for(int i=0; i < numGO; i++)
+		{	
 			goSpkCounter[i] = 0;
-			//goSpkCounterPre[i] = 0;
 		}
 
 		float gGRGO_sum = 0;
 		float gMFGO_sum = 0;
 
-		if (trial <= tuningTrials) {
+		if (trial <= numTuningTrials)
+	   	{
 			std::cout << "Pre-tuning trial number: " << trial << std::endl;
 			trialTime = 5000;	
 		}
 
-		if (trial > tuningTrials) {
+		if (trial > numTuningTrials)
+		{
 			std::cout << "Post-tuning trial number: " << trial << std::endl;
 			trialTime = 5000;	
 		}
 
-/*		if(trial == 0){
-			tsCSCounter = 0;
-			rasterCounter = 0;	
-			ifstream myReadFile;
-			myReadFile.open("SimulationInput/rateCS_ISI"+to_string(csSize)+"_randomWalk_csNoise_withColl_noiselvl_0_0.bin", ios::in | ios::binary);
-			;for(int i=0; i<100*5000; i++){
-				for(int j=0; j<numGO; j++){
-					myReadFile.read((char*) &mfNoiseRates[i][j], sizeof(float));
-				}	
-			}
-			myReadFile.close();	
-		
-			for(int i=0; i<5000; i++){
-				cout << mfNoiseRates[i][0] << " ";
-			}
-		
-		}
-*/
 		int PSTHCounter = 0;	
 		int grPSTHCounter = 0;	
 		int preCounterGRCS = 0;
 		int preCounterGRPre = 0;
-		//int rasterCounter = 0;
-		
 
 		// Homeostatic plasticity trials
 
-		if(trial >= tuningTrials){
+		if (trial >= numTuningTrials)
+		{
 			// Run active granule cell detection 	
-			if(trial == preTrialNumber){			
+			if (trial == preTrialNumber)
+			{			
 				int spk;
 				int binCountPre;
 				int binCountCS;
-			/*	for(int grInd=0; grInd<numpActiveGranule; grInd++)
-				{
-					for(int timeStep=0; timeStep<csSize; timeStep++)
+
+				for (tts = 0 ; tts < trialTime; tts++)
+					
+					if (tts == csSize + csStart)
 					{
-						binCountCS = preGRPSTHCS[grInd][timeStep];
-						grPSTHCS[grInd] += binCountCS;
+						// Deliver US 
+						joesim->updateErrDrive(0,0.0);
 					}
 					
-					for(int timeStep=0; timeStep<csSize; timeStep++)
+					if (tts < csStart || tts >= csStart + csSize)
 					{
-						binCountPre = preGRPSTHPreCS[grInd][timeStep];
-						grPSTHPreCS[grInd] += binCountPre;
+						// Background MF activity in the Pre and Post CS period
+						mfAP = joeMFs->calcPoissActivity(joeMFFreq->getMFBG(), joesim->getMZoneList());	
 					}
-		
+					else if (tts >= csStart && tts < csStart + csPhasicSize) 
+					{
+						// Phasic MF activity during the CS for a duration set in control.h 
+						mfAP = joeMFs->calcPoissActivity(joeMFFreq->getMFFreqInCSPhasic(), joesim->getMZoneList());
+					}
+					else
+					{
+						// Tonic MF activity during the CS period
+						mfAP = joeMFs->calcPoissActivity(joeMFFreq->getMFInCSTonicA(), joesim->getMZoneList());
+					}
+
+					bool *isTrueMF = joeMFs->calcTrueMFs(joeMFFreq->getMFBG());
+					joesim->updateTrueMFs(isTrueMF);
+					joesim->updateMFInput(mfAP);
+					joesim->calcActivity(goMin, simNum, GOGR, GRGO, MFGO, gogoW, spillFrac);	
 					
-					if(grPSTHCS[grInd] >= (grPSTHPreCS[grInd]+20)){
-						activeGranuleIndex[activeCounter] = granuleIndWithInput[grInd];	
-						activeCounter++;
+					if(tts >= csStart && tts < csStart + csSize)
+					{
+
+						mfgoG = joesim->getInputNet()->exportgSum_MFGO();
+						grgoG = joesim->getInputNet()->exportgSum_GRGO();
+						goSpks = joesim->getInputNet()->exportAPGO();
+						for (int i = 0; i < numGO; i++)
+						{
+								goSpkCounter[i] += goSpks[i];
+								gGRGO_sum += grgoG[i];
+								gMFGO_sum += mfgoG[i];
+						}
+
 					}
-				
-				
+					
+					if(tts == csStart + csSize)
+					{
+						int n = sizeof(goSpkCounter) / sizeof(goSpkCounter[0]);
+						
+						std::sort(goSpkCounter.begin(), goSpkCounter.begin()+4096);
+						
+						int m = (goSpkCounter[2047] + goSpkCounter[2048])/2.0;
+						float goSpkSum = 0;
+						
+						for(int i = 0; i < numGO; i++)
+						{
+								goSpkSum += goSpkCounter[i];
+						}
+						
+						std::cout << "Mean GO Rate: " << goSpkSum / (float)numGO << std::endl;
+
+						medTrials += m / 2.0;
+						std::cout << "Median GO Rate: " << m / 2.0 << std::endl;
+
+						mTall[trial] = m / 2.0;
+						std::cout << "mean gGRGO   = " << gGRGO_sum / (numGO * csSize) << std::endl;
+						std::cout << "mean gMFGO   = " << gMFGO_sum / (numGO * csSize) << std::endl;
+						std::cout << "GR:MF ratio  = " << gGRGO_sum / gMFGO_sum << std::endl;
+
+						grgoGall[trial] = gGRGO_sum / (numGO * csSize);
+						mfgoGall[trial] = gMFGO_sum / (numGO * csSize);
+
+					}
+					
+					if (trial >= preTrialNumber && tts >= csStart-msPreCS && tts< csStart + csSize + msPostCS)
+					{
+						
+						//PKJ
+						const ct_uint8_t* pcSpks=joesim->getMZoneList()[0]->exportAPPC();
+						for(int i=0; i<numPC; i++){
+							allPCRaster[i][rasterCounter] = pcSpks[i];
+						}
+						
+						//NC
+						const ct_uint8_t* ncSpks=joesim->getMZoneList()[0]->exportAPNC();
+						for(int i=0; i<numNC; i++){
+							allNCRaster[i][rasterCounter] = ncSpks[i];
+						}
+						
+						
+						//BC
+						const ct_uint8_t* bcSpks=joesim->getMZoneList()[0]->exportAPBC();
+						for(int i=0; i<numBC; i++){
+							allBCRaster[i][rasterCounter] = bcSpks[i];
+						}
+						//SC
+						const ct_uint8_t* scSpks=joesim->getInputNet()->exportAPSC();
+						for(int i=0; i<numSC; i++){
+							allSCRaster[i][rasterCounter] = scSpks[i];
+						}	
+						PSTHCounter++;
+						rasterCounter++;
+					}
+
 				}
-			*/	
-			//	cout << "		*****Golgi median C0 Rate:	" << medTrials / 20.0 << " ****** "<<endl; 
-				//ofstream fileActGRs;
-				//fileActGRs.open("activeGRInds.txt");
-				//for(int i=0; i<activeCounter; i++){
-				//	fileActGRs << activeGranuleIndex[i] << endl;
-				//}
-				//cout << "Active Granule Number:		" << activeCounter << endl;
-				//cout << "GO CS rate:	" << (float)goSpkCounter / (2.0*10.0*(float)numGO) << endl;;
-				//cout << "GO Base rate:	" << (float)goSpkCounterPre / (2.0*10.0*(float)numGO) << endl;;
-			//	cout << "GR CS rate:	" << (float)grSpkCounter / (10.0*(float)numGR) << endl;;
-			//	cout << "GR Base rate:	" << (float)grSpkCounterPre / (10.0*(float)numGR) << endl;;
-					
-			//	activeGRPSTH=allocate2DArray<ct_uint8_t>(activeCounter, (csSize+msPreCS+msPostCS));
-			//	arrayInitialize<ct_uint8_t>(activeGRPSTH[0], 0, activeCounter*(csSize+msPreCS+msPostCS) );		
-				
-			//	activeGRRaster = allocate2DArray<ct_uint8_t>(grSaveNumber, (csSize+msPreCS+msPostCS)*(collectionTrials));	
-			//	arrayInitialize<ct_uint8_t>(activeGRRaster[0], 0, grSaveNumber*(csSize+msPreCS+msPostCS)*(collectionTrials) );
-			}
-			
-			
-			
-			
-			for (tts = 0 ; tts <trialTime; tts++){
-			//	for(int i=0; i<numGO; i++){
-			//		mfR[i] =  mfNoiseRates[tts][i];
-			//	}
-				//tsCSCounter++;			
-				//mfAP = joeMFs->calcPoissActivity(mfR, joesim->getMZoneList());
-				// Deliver US 
-				if (tts == csSize + csStart  ){joesim->updateErrDrive(0,0.0);}
-				// Background MF activity in the Pre and Post CS period
-				if(tts < csStart || tts >= csStart+csSize){ mfAP = joeMFs->calcPoissActivity(joeMFFreq->getMFBG(), joesim->getMZoneList() ); }	
-				// Phasic MF activity during the CS for a duration set in control.h 
-				else if(tts >= csStart && tts < csStart + csPhasicSize){mfAP = joeMFs->calcPoissActivity(joeMFFreq->getMFFreqInCSPhasic(), joesim->getMZoneList());}
-				// Tonic MF activity during the CS period
-				else{mfAP = joeMFs->calcPoissActivity(joeMFFreq->getMFInCSTonicA(), joesim->getMZoneList());}
-
-				bool *isTrueMF = joeMFs->calcTrueMFs(joeMFFreq->getMFBG());
-				joesim->updateTrueMFs(isTrueMF);
-				joesim->updateMFInput(mfAP);
-				joesim->calcActivity(goMin, simNum, GOGR, GRGO, MFGO, gogoW, spillFrac);	
-				
-				//if(trial == numTrials-1 && tts == 0){
-				//	grpcWeights = joesim->getMZoneList()[0]->exportPFPCWeights();  
-				
-				//}
-
-
-                                if(tts>=csStart && tts<csStart+csSize){
-
-                                        //grSpks = joesim->getInputNet()->exportAPGR();
-                                        //for(int i=0; i<numpActiveGranule; i++){
-                                //              preGRPSTHCS[i][preCounterGRCS] = preGRPSTHCS[i][preCounterGRCS] + grSpks[ granuleIndWithInput[i] ];
-                                //      }
-                                //      preCounterGRCS++;
-
-                                        mfgoG = joesim->getInputNet()->exportgSum_MFGO();
-                                        grgoG = joesim->getInputNet()->exportgSum_GRGO();
-                                        goSpks = joesim->getInputNet()->exportAPGO();
-                                        for(int i=0; i<numGO; i++){
-                                                goSpkCounter[i] += goSpks[i];
-                                                gGRGO_sum += grgoG[i];
-                                                gMFGO_sum += mfgoG[i];
-                                        }
-
-                                //      for(int i=0; i<numGR; i++){
-                                //              grSpkCounter += grSpks[i];
-                                //      }
-                                }
-                                if(tts == csStart+csSize){
-                                        int n = sizeof(goSpkCounter) / sizeof(goSpkCounter[0]);
-                                        sort(goSpkCounter.begin(), goSpkCounter.begin()+4096);
-                                        int m = (goSpkCounter[2047] + goSpkCounter[2048])/2.0;
-
-                                        float goSpkSum = 0;
-                                        for(int i=0; i<numGO; i++){
-                                                goSpkSum+=goSpkCounter[i];
-                                        }
-                                        cout << "Mean GO Rate:  " << goSpkSum/(float)numGO << endl;
-
-                                        medTrials += m / 2.0;
-                                        cout << "Median GO Rate:  " << m / 2.0 << endl;
-
-                                        mTall[trial] = m / 2.0;
-                                        cout << "mean gGRGO = " << gGRGO_sum / (numGO*csSize) << endl;
-                                        cout << "mean gMFGO = " << gMFGO_sum / (numGO*csSize) << endl;
-                                        cout << "       GR:MF ratio  =  " << gGRGO_sum / gMFGO_sum << endl;
-
-                                        grgoGall[trial] = gGRGO_sum / (numGO*csSize);
-                                        mfgoGall[trial] = gMFGO_sum / (numGO*csSize);
-
-                                }
-
-
-
-				// CS GR activity
-			/*	if(trial<preTrialNumber && trial>=tuningTrials && tts>=csStart && tts<csStart+csSize){
-					
-					//grSpks = joesim->getInputNet()->exportAPGR();			
-					//for(int i=0; i<numpActiveGranule; i++){
-				//		preGRPSTHCS[i][preCounterGRCS] = preGRPSTHCS[i][preCounterGRCS] + grSpks[ granuleIndWithInput[i] ];
-				//	}
-				//	preCounterGRCS++;
-				
-					goSpks = joesim->getInputNet()->exportAPGO();
-					for(int i=0; i<numGO; i++){
-						goSpkCounter[i] += goSpks[i];	
-					}
-				
-				//	for(int i=0; i<numGR; i++){
-				//		grSpkCounter += grSpks[i];	
-				//	}
-				}
-				if(tts == csStart+csSize){
-					int n = sizeof(goSpkCounter) / sizeof(goSpkCounter[0]);
-					sort(goSpkCounter.begin(), goSpkCounter.begin()+4096);
-					int m = (goSpkCounter[2047] + goSpkCounter[2048])/2.0;	
-					
-					medTrials += m / 2.0; 
-					cout << m / 2.0 << endl;
-				}	
-				// preCS GR activity 
-				if(trial<preTrialNumber && trial>=tuningTrials && tts>=csStart-csSize && tts<csStart){
-					
-				//	grSpks = joesim->getInputNet()->exportAPGR();			
-				//	for(int i=0; i<numpActiveGranule; i++){
-				//		preGRPSTHPreCS[i][preCounterGRPre] = preGRPSTHPreCS[i][preCounterGRPre] + grSpks[ granuleIndWithInput[i] ];
-				//	}
-				//	preCounterGRPre++;
-					goSpks = joesim->getInputNet()->exportAPGO();
-					for(int i=0; i<numGO; i++){
-						//goSpkCounterPre[i] += goSpks[i];	
-					}
-					//for(int i=0; i<numGR; i++){
-					//	grSpkCounterPre += grSpks[i];	
-					//}
-				}*/
-				
-				if(trial>=preTrialNumber && tts>=csStart-msPreCS && tts<csStart+csSize+msPostCS){
-					
-					//Granule collection
-			//		grSpks = joesim->getInputNet()->exportAPGR();			
-			//		for(int i=0; i<grSaveNumber; i++){	
-			//			activeGRPSTH[i][grPSTHCounter] = activeGRPSTH[i][grPSTHCounter] + grSpks[ activeGranuleIndex[i]  ]; 
-				//		activeGRRaster[i][rasterCounter] = grSpks[i];
-			//		}
-			//		grPSTHCounter++;
-				
-					//Golgi
-				//	for(int i=0; i<numGO; i++){
-				//		allGORaster[i][rasterCounter] = mfAP[i];
-				//	}
-
-					//gogoG = joesim->getInputNet()->exportgSum_GOGO();
-					//grgoG = joesim->getInputNet()->exportgSum_GRGO(); 
-				//	goSpks = joesim->getInputNet()->exportAPGO();
-				//		for(int i=0; i<numGO; i++){	
-					//		allGOGORaster[i][rasterCounter] = gogoG[i];
-					//		allGRGORaster[i][rasterCounter] = grgoG[i];
-					//		allGORaster[i][rasterCounter] = goSpks[i];
-				//			allGOPSTH[i][PSTHCounter] = allGOPSTH[i][PSTHCounter] + goSpks[i];
-				//		}
-
-					//PKJ
-					const ct_uint8_t* pcSpks=joesim->getMZoneList()[0]->exportAPPC();
-					for(int i=0; i<numPC; i++){
-						allPCRaster[i][rasterCounter] = pcSpks[i];
-					}
-					
-					//NC
-					const ct_uint8_t* ncSpks=joesim->getMZoneList()[0]->exportAPNC();
-					for(int i=0; i<numNC; i++){
-						allNCRaster[i][rasterCounter] = ncSpks[i];
-					}
-					
-					
-					//BC
-	  				const ct_uint8_t* bcSpks=joesim->getMZoneList()[0]->exportAPBC();
-					for(int i=0; i<numBC; i++){
-						allBCRaster[i][rasterCounter] = bcSpks[i];
-					}
-					//SC
-	  				const ct_uint8_t* scSpks=joesim->getInputNet()->exportAPSC();
-					for(int i=0; i<numSC; i++){
-						allSCRaster[i][rasterCounter] = scSpks[i];
-					}	
-					PSTHCounter++;
-					rasterCounter++;
-				}
-
-			}
 		}
 		
 	T = clock() - T;
@@ -1011,12 +807,16 @@ int Control::getNumGRIndicies(float CStonicMFfrac)
 	int numPostSynGRs;
 	int *pActiveGRsBool;
 	pActiveGRsBool = new int[numGR];
-	for(int i=0; i<numGR; i++){ pActiveGRsBool[i]=0;}
+	
+	for(int i=0; i<numGR; i++)
+	{ 
+		pActiveGRsBool[i]=0;
+	}
 
 
 	for(int i=0; i<numActiveMFs; i++)
 	{
-		MFtoGRs = joestate->getInnetConStateInternal()->getpMFfromMFtoGRCon( activeMFInd[i] );
+		MFtoGRs = joestate->getInnetConStateInternal()->getpMFfromMFtoGRCon(activeMFInd[i]);
 		numPostSynGRs = MFtoGRs.size();
 		
 		for(int j=0; j<numPostSynGRs; j++)
@@ -1033,9 +833,8 @@ int Control::getNumGRIndicies(float CStonicMFfrac)
 			counterGR++;
 		}
 	}
-
+	
 	return counterGR;
-
 }
 
 
