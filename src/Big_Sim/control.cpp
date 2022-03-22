@@ -25,8 +25,6 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	int preTrialNumber = numTuningTrials + numGrDetectionTrials;
 	int collectionTrials = numTotalTrials;//numTrials - preTrialNumber;
 	
-	
-	
 //	mfNoiseRates = allocate2DArray<float>(5000*100, numGO);	
 //	arrayInitialize<float>(mfNoiseRates[0], 0, numGO*5000*100);
 
@@ -1011,12 +1009,16 @@ int Control::getNumGRIndicies(float CStonicMFfrac)
 	int numPostSynGRs;
 	int *pActiveGRsBool;
 	pActiveGRsBool = new int[numGR];
-	for(int i=0; i<numGR; i++){ pActiveGRsBool[i]=0;}
+	
+	for(int i=0; i<numGR; i++)
+	{ 
+		pActiveGRsBool[i]=0;
+	}
 
 
 	for(int i=0; i<numActiveMFs; i++)
 	{
-		MFtoGRs = joestate->getInnetConStateInternal()->getpMFfromMFtoGRCon( activeMFInd[i] );
+		MFtoGRs = joestate->getInnetConStateInternal()->getpMFfromMFtoGRCon(activeMFInd[i]);
 		numPostSynGRs = MFtoGRs.size();
 		
 		for(int j=0; j<numPostSynGRs; j++)
@@ -1033,9 +1035,8 @@ int Control::getNumGRIndicies(float CStonicMFfrac)
 			counterGR++;
 		}
 	}
-
+	
 	return counterGR;
-
 }
 
 
