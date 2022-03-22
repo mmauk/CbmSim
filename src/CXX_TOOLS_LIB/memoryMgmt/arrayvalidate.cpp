@@ -7,36 +7,35 @@
 
 #include "memoryMgmt/arrayvalidate.h"
 
-bool validateFloatArray(float *array, unsigned int numElements)
+bool validateFloatArray(float *array, unsigned int numElem)
 {
-	bool valid;
+	bool valid = true;
 
-	valid=true;
-
-	for(int i=0; i<numElements; i++)
+	for (size_t i = 0; i < numElem; i++)
 	{
-		if(isnanf(array[i]) || (isinff(array[i])!=0))
+		if (isnanf(array[i]) || isinff(array[i])
 		{
-			valid=false;
+			valid = false;
+			break;
 		}
 	}
 
 	return valid;
 }
 
-bool validateDoubleArray(double *array, unsigned int numElements)
+bool validateDoubleArray(double *array, unsigned int numElem)
 {
-	bool valid;
+	bool valid = true;
 
-	valid=true;
-
-	for(int i=0; i<numElements; i++)
+	for (size_t i = 0; i < numElem; i++)
 	{
-		if(isnan(array[i]) || (isinf(array[i])!=0))
+		if (isnan(array[i] || isinf(array[i])
 		{
 			valid=false;
+			break;
 		}
 	}
 
 	return valid;
 }
+
