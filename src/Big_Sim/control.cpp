@@ -29,7 +29,6 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	
 	std::cout << "Done filling MF arrays" << std::endl;	
 
-	int recipName[25] = {2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50};
 	int conv[8] = {5000, 4000, 3000, 2000, 1000, 500, 250, 125};
 
 	// Allocate and Initialize PSTH and Raster arrays
@@ -57,16 +56,10 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	
 	clock_t timer;
 	int rasterCounter = 0;
-	int rasterCounterIO = 0;
-	int grSpkCounter = 0;
-	int grSpkCounterPre = 0;
-	
 	
 	std::vector<int> goSpkCounter;
 	goSpkCounter.assign(numGO, 0);
 	
-	float r;
-	int tsCSCounter = 0;
 	for (int trial = 0; trial < numTotalTrials; trial++)
 	{
 		timer = clock();
@@ -92,9 +85,6 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 		}
 
 		int PSTHCounter = 0;	
-		int grPSTHCounter = 0;	
-		int preCounterGRCS = 0;
-		int preCounterGRPre = 0;
 
 		// Homeostatic plasticity trials
 
@@ -213,11 +203,10 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 				}
 
 			}
-		
 		}	
 		
 		timer = clock() - timer;
-		std::cout << "Trial time seconds: " << (float)T / CLOCKS_PER_SEC << std::endl;
+		std::cout << "Trial time seconds: " << (float)timer / CLOCKS_PER_SEC << std::endl;
 	}
 	
 	delete joestate;
@@ -261,7 +250,7 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	
 	for (int i = 0; i < numSC; i++)
 	{
-		for (int j = 0; j < (numTrials - preTrialNumber) * (csSize + msPreCS + msPostCS); j++)
+		for (int j = 0; j < (numTotalTrials - preTrialNumber) * (csSize + msPreCS + msPostCS); j++)
 		{
 			myfileSCbin.write((char*) &allSCRaster[i][j], sizeof(ct_uint8_t));
 		}
@@ -277,23 +266,16 @@ int* Control::getGRIndicies(float CStonicMFfrac)
 	int numMF = 4096;
 	int numGR = 1048576;
 
-
-	//float CStonicMFfrac = 0.05;
 	float CSphasicMFfrac = 0.0;
 	float contextMFfrac = 0.00;
 	
-	bool* contextMFs = joeMFFreq->getContextMFInd();
-	bool* phasicMFs = joeMFFreq->getPhasicMFInd();
 	bool* tonicMFsA = joeMFFreq->getTonicMFInd();
 	bool* tonicMFsB = joeMFFreq->getTonicMFIndOverlap();
 	
-	
-	int numContext = numMF*contextMFfrac; 
-	int numPhasic = numMF*CSphasicMFfrac; 
 	int numTonic = numMF*CStonicMFfrac; 
 	int numActiveMFs = numTonic;
 
-	cout << "Number of CS MossyFibers:	" << numActiveMFs << endl;
+	std::cout << "Number of CS MossyFibers:	" << numActiveMFs << std::endl;
 	
 	int *activeMFIndA;
 	activeMFIndA = new int[numActiveMFs];
@@ -302,53 +284,46 @@ int* Control::getGRIndicies(float CStonicMFfrac)
 	
 	int counterMFA=0;
 	int counterMFB=0;
-	for(int i=0; i<numMF; i++)
+	
+	for (int i = 0; i < numMF; i++)
 	{	
-		if(tonicMFsA[i])
+		if (tonicMFsA[i])
 		{
-			activeMFIndA[ counterMFA ] = i;
+			activeMFIndA[counterMFA] = i;
 			counterMFA++;
 		}
+		
 		if(tonicMFsB[i])
 		{
-			activeMFIndB[ counterMFB ] = i;
+			activeMFIndB[counterMFB] = i;
 			counterMFB++;
 		}
 	}
-	cout << "NumMFs in A:	" << counterMFA << endl;
-	cout << "NumMFs in B:	" << counterMFB << endl;
+	std::cout << "NumMFs in A: " << counterMFA << std::endl;
+	std::cout << "NumMFs in B: " << counterMFB << std::endl;
 	
-/*	ofstream fileActMFA;
-	fileActMFA.open("mfTonicCSA.txt");
-	for(int i=0; i<counterMFA; i++){
-		fileActMFA << activeMFIndA[i] << endl;
-	}
-	ofstream fileActMFB;
-	fileActMFB.open("mfTonicCSB.txt");
-	for(int i=0; i<counterMFB; i++){
-		fileActMFB << activeMFIndB[i] << endl;
-	}
-*/
-	vector<int> MFtoGRs;	
+	std::vector<int> MFtoGRs;	
 	int numPostSynGRs;
 	int *pActiveGRsBool;
 	pActiveGRsBool = new int[numGR];
-	for(int i=0; i<numGR; i++){ pActiveGRsBool[i]=0;}
+	
+	for (int i = 0; i<numGR; i++) {
+		pActiveGRsBool[i] = 0;
+	}
 
-	for(int i=0; i<numActiveMFs; i++)
+	for (int i = 0; i < numActiveMFs; i++)
 	{
-		MFtoGRs = joestate->getInnetConStateInternal()->getpMFfromMFtoGRCon( activeMFIndA[i] );
+		MFtoGRs = joestate->getInnetConStateInternal()->getpMFfromMFtoGRCon(activeMFIndA[i]);
 		numPostSynGRs = MFtoGRs.size();
 		
-		for(int j=0; j<numPostSynGRs; j++)
+		for (int j = 0; j < numPostSynGRs; j++)
 		{
-			pActiveGRsBool[ MFtoGRs[j] ] = pActiveGRsBool[ MFtoGRs[j] ] + 1;
+			pActiveGRsBool[MFtoGRs[j]] = pActiveGRsBool[MFtoGRs[j]] + 1;
 		}
-	
 	}
 	
 	int counterGR = 0;
-	for(int i=0; i<numGR; i++)
+	for (int i=0; i<numGR; i++)
 	{
 		if(pActiveGRsBool[i] >= 1)
 		{		
@@ -358,31 +333,28 @@ int* Control::getGRIndicies(float CStonicMFfrac)
 
 	int *pActiveGRs;
 	pActiveGRs = new int[counterGR];
-	for(int i=0; i<counterGR; i++){ pActiveGRs[i]=0;}
+	for (int i = 0; i < counterGR; i++) {
+		pActiveGRs[i] = 0;
+	}
 
-	int counterAGR=0;
-	for(int i=0; i<numGR; i++)
+	int counterAGR = 0;
+	for (int i = 0; i < numGR; i++)
 	{
-		if(pActiveGRsBool[i] >= 1)
+		if (pActiveGRsBool[i] >= 1)
 		{		
 			pActiveGRs[counterAGR] = i;
 			counterAGR++;
 		}
-		
 	}	
 
 	return pActiveGRs;
-
 }
-
 
 int Control::getNumGRIndicies(float CStonicMFfrac) 
 {
 	int numMF = 4096;
 	int numGR = 1048576;
 
-
-	//float CStonicMFfrac = 0.05;
 	float CSphasicMFfrac = 0.0;
 	float contextMFfrac = 0.0;
 	
@@ -399,41 +371,41 @@ int Control::getNumGRIndicies(float CStonicMFfrac)
 	activeMFInd = new int[numActiveMFs];
 	
 	int counterMF=0;
-	for(int i=0; i<numMF; i++)
+	for (int i = 0; i < numMF; i++)
 	{	
-		if(contextMFs[i] || tonicMFs[i] || phasicMFs[i])
+		if (contextMFs[i] || tonicMFs[i] || phasicMFs[i])
 		{
-			activeMFInd[ counterMF ] = i;
+			activeMFInd[counterMF] = i;
 			counterMF++;
 		}
 	}
 
-	vector<int> MFtoGRs;	
+	std::vector<int> MFtoGRs;	
 	int numPostSynGRs;
 	int *pActiveGRsBool;
 	pActiveGRsBool = new int[numGR];
 	
-	for(int i=0; i<numGR; i++)
+	for (int i = 0; i < numGR; i++)
 	{ 
-		pActiveGRsBool[i]=0;
+		pActiveGRsBool[i] = 0;
 	}
 
 
-	for(int i=0; i<numActiveMFs; i++)
+	for (int i = 0; i < numActiveMFs; i++)
 	{
 		MFtoGRs = joestate->getInnetConStateInternal()->getpMFfromMFtoGRCon(activeMFInd[i]);
 		numPostSynGRs = MFtoGRs.size();
 		
-		for(int j=0; j<numPostSynGRs; j++)
+		for(int j = 0; j < numPostSynGRs; j++)
 		{
-			pActiveGRsBool[ MFtoGRs[j] ] = pActiveGRsBool[ MFtoGRs[j] ] + 1;
+			pActiveGRsBool[MFtoGRs[j]] = pActiveGRsBool[MFtoGRs[j]] + 1;
 		}
 	}
 	
 	int counterGR = 0;
-	for(int i=0; i<numGR; i++)
+	for (int i = 0; i < numGR; i++)
 	{
-		if(pActiveGRsBool[i] >= 1)
+		if (pActiveGRsBool[i] >= 1)
 		{		
 			counterGR++;
 		}
@@ -441,6 +413,4 @@ int Control::getNumGRIndicies(float CStonicMFfrac)
 	
 	return counterGR;
 }
-
-
 

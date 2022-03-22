@@ -8,7 +8,7 @@
 #include "memoryMgmt/dynamic2darray.h"
 #include "memoryMgmt/arrayvalidate.h"
 
-bool validate2DfloatArray(float ** array, unsigned int numElements)
+bool validate2DfloatArray(float **array, unsigned int numElements)
 {
 	return validateFloatArray(array[0], numElements);
 }
