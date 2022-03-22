@@ -150,7 +150,7 @@ class Control {
 	void runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuningTrials,
 			int numGrDetectionTrials, int numTrainingTrials, int simNum, int csSize, float csFracMFs,
 			float goMin, float GOGR, float GRGO, float MFGO, float csMinRate, float csMaxRate,
-			float gogoW, int inputStrength, int inputWeight_two, float spillFrac) {
+			float gogoW, int inputStrength, int inputWeight_two, float spillFrac);
 
 	float **activeGRgISum;
 	void train(int selectState, int filename, int ISIs, int numTrials, int numCon, int tunedConNumber);

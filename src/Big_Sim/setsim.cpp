@@ -13,7 +13,6 @@ string Sprintf(const char *fmt, Args... args) {
 	return string(buf.data());
 }
 
-
 SetSim::SetSim(int fileNum, int goRecipParam, int simNum){
 
     // Not sure how we want our act files to be named	

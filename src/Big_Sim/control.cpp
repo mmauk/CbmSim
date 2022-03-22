@@ -119,9 +119,9 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 //	arrayInitialize<float>(allGRGORaster[0], 0, numGO*(csSize+msPreCS+msPostCS)*(collectionTrials) );
 	
 	float medTrials;
-	float *mTall    = new float[numTrials];
-	float *grgoGall = new float[numTrials];
-	float *mfgoGall = new float[numTrials];
+	float *mTall    = new float[numTotalTrials];
+	float *grgoGall = new float[numTotalTrials];
+	float *mfgoGall = new float[numTotalTrials];
 	
 	//allGORaster_gogoG = allocate2DArray<float>(numGO, (csSize+msPreCS+msPostCS)*(collectionTrials));	
 	//arrayInitialize<float>(allGORaster_gogoG[0], 0, numGO*(csSize+msPreCS+msPostCS)*(collectionTrials) );
