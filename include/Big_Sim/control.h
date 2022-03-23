@@ -5,21 +5,21 @@
 #include <fstream>
 #include "setsim.h"
 
-#include <stdDefinitions/pstdint.h>
+#include "stdDefinitions/pstdint.h"
 
-#include <interfaces/cbmstate.h>
-#include <interfaces/iconnectivityparams.h>
-#include <interfaces/iactivityparams.h>
-#include <state/innetconnectivitystate.h>
+#include "interfaces/cbmstate.h"
+#include "interfaces/iconnectivityparams.h"
+#include "interfaces/iactivityparams.h"
+#include "state/innetconnectivitystate.h"
 
-#include <interface/cbmsimcore.h>
+#include "interface/cbmsimcore.h"
 
-#include <ecmfpopulation.h>
-#include <poissonregencells.h>
-#include <interfaces/ectrialsdata.h>
-#include <eyelidintegrator.h>
+#include "ecmfpopulation.h"
+#include "poissonregencells.h"
+#include "interfaces/ectrialsdata.h"
+#include "eyelidintegrator.h"
 
-#include <state/innetactivitystate.h>
+#include "state/innetactivitystate.h"
 
 class Control {
 

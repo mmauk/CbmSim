@@ -8,11 +8,11 @@
 #ifndef ARRAYINITALIZE_H_
 #define ARRAYINITALIZE_H_
 
-template<typename Type> void arrayInitialize(Type *array, Type val, int numElements)
+template<typename Type> void arrayInitialize(Type *array, Type val, unsigned int numElem)
 {
-	for(int i=0; i<numElements; i++)
+	for (size_t i = 0; i < numElem; i++)
 	{
-		array[i]=val;
+		array[i] = val;
 	}
 }
 
