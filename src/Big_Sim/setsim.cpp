@@ -28,7 +28,7 @@ SetSim::SetSim(int fileNum, int goRecipParam, int simNum){
 	
 	this->state = new CBMState(actPF, conPF, 1, goRecipParam, simNum);
 	
-	std::cout << "finished opening file...(and initializing state)" << std::endl;	
+	std::cout << "finished opening file and initializing state..." << std::endl;	
 	
 	actPF.close();
 	conPF.close();
@@ -41,17 +41,16 @@ CBMState* SetSim::getstate(){
 }
 
 CBMSimCore *SetSim::getsim(){
-	
 	sim = new CBMSimCore(state, gpuIndex, gpuP2);
 	return sim;
 }	
 
 ECMFPopulation* SetSim::getMFFreq(float csMinRate, float csMaxRate){
-	unsigned int numMF = state->getConnectivityParams()->getNumMF(); 		
+	unsigned int numMF   = state->getConnectivityParams()->getNumMF(); 		
 	bool collaterals_off = false;
-	float fracImport = 0.0;
-	bool secondCS = true;
-	float fracOverlap = 0.2;
+	float fracImport     = 0.0;
+	bool secondCS        = true;
+	float fracOverlap    = 0.2;
 
 	MFFreq = new ECMFPopulation(							
 		numMF, randseed, 
@@ -64,8 +63,8 @@ ECMFPopulation* SetSim::getMFFreq(float csMinRate, float csMaxRate){
 }
 
 PoissonRegenCells* SetSim::getMFs(){
-	unsigned int numMF = state->getConnectivityParams()->getNumMF(); 		
-	unsigned int numNC = state->getConnectivityParams()->getNumNC();
+	unsigned int numMF  = state->getConnectivityParams()->getNumMF(); 		
+	unsigned int numNC  = state->getConnectivityParams()->getNumNC();
 	float msPerTimeStep = state->getActivityParams()->getMSPerTimeStep() * 1.0;
 
 	MFs = new PoissonRegenCells(						 
