@@ -10,14 +10,12 @@
 
 template<typename Type> Type** allocate2DArray(unsigned int numRows, unsigned int numCols)
 {
-	Type** retArr;
+	Type** retArr = new Type*[numRows];
+	retArr[0]     = new Type[numRows * numCols];
 
-	retArr=new Type*[numRows];
-	retArr[0]=new Type[numRows*numCols];
-
-	for(int i=1; i<numRows; i++)
+	for (size_t i = 1; i < numRows; i++)
 	{
-		retArr[i]=&(retArr[0][i*numCols]);
+		retArr[i] = &retArr[0][i * numCols];
 	}
 
 	return retArr;
@@ -30,7 +28,6 @@ template<typename Type> void delete2DArray(Type** array)
 }
 
 bool validate2DfloatArray(float ** array, unsigned int numElements);
-
 bool validate2DdoubleArray(double **array, unsigned int numElements);
 
 #endif /* DYNAMIC2DARRAY_H_ */

@@ -29,6 +29,7 @@
 class CBMState
 {
 	public:
+		virtual ~CBMState();	
 		CBMState(std::fstream &infile);
 		CBMState(std::fstream &actPFile, std::fstream &conPFile, unsigned int nZones,
 				int goRecipParam, int simNum);
@@ -58,7 +59,6 @@ class CBMState
 
 	private:
 		CBMState();
-		virtual ~CBMState();
 		
 		void newState(std::fstream &actPFile, std::fstream &conPFile, unsigned int nZones,
 				int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed, int goRecipParam, int simNum);

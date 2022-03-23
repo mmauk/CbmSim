@@ -12,6 +12,4 @@
 
 void rawBytesRW(char *arr, unsigned long byteLen, bool read, std::fstream &file);
 
-
-
 #endif /* RAWBYTERW_H_ */

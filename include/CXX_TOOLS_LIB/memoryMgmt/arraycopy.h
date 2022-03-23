@@ -8,13 +8,13 @@
 #ifndef ARRAYCOPY_H_
 #define ARRAYCOPY_H_
 
-template<typename Type> void arrayCopy(Type *destArray, Type *srcArray, int numElements)
+template<typename Type> void arrayCopy(Type *destArray, Type *srcArray, int numElem)
 {
-	for(int i=0; i<numElements; i++)
+	for (size_t i = 0; i < numElem; i++)
 	{
-		destArray[i]=srcArray[i];
+		destArray[i] = srcArray[i];
 	}
 }
 
-
 #endif /* ARRAYCOPY_H_ */
+

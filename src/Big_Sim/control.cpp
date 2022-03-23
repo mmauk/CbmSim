@@ -87,7 +87,7 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 				for (tts = 0; tts < trialTime; tts++)
 				{	
 					// TODO: get the model for these periods, update accordingly
-					if (tts == csStart + szSize)
+					if (tts == csStart + csSize)
 					{
 						// Deliver US 
 						joesim->updateErrDrive(0,0.0);
