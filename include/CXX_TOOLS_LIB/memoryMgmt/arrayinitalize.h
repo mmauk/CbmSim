@@ -16,5 +16,4 @@ template<typename Type> void arrayInitialize(Type *array, Type val, unsigned int
 	}
 }
 
-
 #endif /* ARRAYINITALIZE_H_ */
