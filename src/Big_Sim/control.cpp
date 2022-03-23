@@ -139,8 +139,6 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 					
 					if (tts == csStart + csSize)
 					{
-						int n = sizeof(goSpkCounter) / sizeof(goSpkCounter[0]);
-						
 						std::sort(goSpkCounter.begin(), goSpkCounter.begin() + 4096);
 						
 						int m = (goSpkCounter[2047] + goSpkCounter[2048]) / 2.0;
@@ -266,9 +264,6 @@ int* Control::getGRIndicies(float CStonicMFfrac)
 	int numMF = 4096;
 	int numGR = 1048576;
 
-	float CSphasicMFfrac = 0.0;
-	float contextMFfrac = 0.0;
-	
 	bool* tonicMFsA = joeMFFreq->getTonicMFInd();
 	bool* tonicMFsB = joeMFFreq->getTonicMFIndOverlap();
 	
@@ -304,7 +299,6 @@ int* Control::getGRIndicies(float CStonicMFfrac)
 	std::vector<int> MFtoGRs;	
 	int numPostSynGRs;
 	// why is this labelled a bool when its an int array?
-	int pActiveGRsBool[numGR] = {}; // initializing with {} gives every element a 0
 	int *pActiveGrsBool = new int[numGR]();
 	for (int i = 0; i < numActiveMFs; i++)
 	{
