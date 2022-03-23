@@ -4,9 +4,9 @@
 
 //using namespace std;
 
-//Control::Control(){};
+Control::Control(){};
 
-//Control::~Control(){};
+Control::~Control(){};
 
 void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuningTrials,
 		int numGrDetectionTrials, int numTrainingTrials, int simNum, int csSize, float csFracMFs,

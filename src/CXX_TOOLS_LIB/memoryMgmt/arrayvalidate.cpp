@@ -13,7 +13,7 @@ bool validateFloatArray(float *array, unsigned int numElem)
 
 	for (size_t i = 0; i < numElem; i++)
 	{
-		if (isnanf(array[i]) || isinff(array[i])
+		if (isnanf(array[i]) || isinff(array[i]))
 		{
 			valid = false;
 			break;
@@ -29,7 +29,7 @@ bool validateDoubleArray(double *array, unsigned int numElem)
 
 	for (size_t i = 0; i < numElem; i++)
 	{
-		if (isnan(array[i] || isinf(array[i])
+		if (isnan(array[i]) || isinf(array[i]))
 		{
 			valid=false;
 			break;
