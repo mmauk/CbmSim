@@ -7,21 +7,14 @@
 
 #include "params/connectivityparams.h"
 
-using namespace std;
-
 ConnectivityParams::ConnectivityParams(std::fstream &infile)
 {
 	//Assumes that file is in the following format:
 	//key\tvalue\n
 	//key\tvalue\n
 
-//	string line;
 	//loop through file and add key/value pair to map
 	//** this is done to remove the necessity of order in the original file
-//	while(getline(infile,line))
-//	{
-//		tempMap[line.substr(0,line.find_first_of("\t"))]=atof(line.substr(line.find_first_of("\t"),line.size()).c_str());
-//	}
 
 	string key;
 	ct_uint32_t val;

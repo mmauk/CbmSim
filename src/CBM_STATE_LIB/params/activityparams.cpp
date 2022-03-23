@@ -460,7 +460,6 @@ void ActivityParams::updateParamsV1()
 	numTSinMFHist = msPerHistBinMF / msPerTimeStep;
 
 	// move elements from map to public variables
- 	// 	paramMap.
 	if (paramMap.find("coupleRiRjRatioGO") == paramMap.end())
 	{
 		paramMap["coupleRiRjRatioGO"] = 0;
