@@ -2,8 +2,6 @@
 #include <time.h>
 #include "control.h"
 
-//using namespace std;
-
 Control::Control(){};
 
 Control::~Control(){};

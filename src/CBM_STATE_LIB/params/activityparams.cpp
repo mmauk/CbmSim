@@ -7,8 +7,6 @@
 
 #include "params/activityparams.h"
 
-using namespace std;
-
 ActivityParams::ActivityParams(fstream &infile)
 {
 	//Assumes that file is in the following format:
