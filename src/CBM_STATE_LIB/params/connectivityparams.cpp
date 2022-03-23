@@ -188,7 +188,7 @@ void ConnectivityParams::writeParams(std::fstream &outfile)
 
 	for (auto i = paramMap.begin(); i != paramMap.end(); i++)
 	{
-		outfile << i->first << " " << i->second << endl;
+		outfile << i->first << " " << i->second << std::endl;
 	}
 
 	outfile << "GOGOLocalMatrix" << std::endl;
@@ -275,7 +275,7 @@ void ConnectivityParams::showParams(std::ostream &outSt)
 
 	outSt << "numSC " <<numSC << std::endl;
 	outSt << "numpSCfromGRtoSC " << numpSCfromGRtoSC << std::endl;
-	outSt << "numpSCfromGRtoSCP2 " << numpSCfromGRtoSCP2 << endl;
+	outSt << "numpSCfromGRtoSCP2 " << numpSCfromGRtoSCP2 << std::endl;
 	outSt << "numpSCfromSCtoPC " << numpSCfromSCtoPC << std::endl << std::endl;
 
 	outSt << "numPC " << numPC << std::endl;
