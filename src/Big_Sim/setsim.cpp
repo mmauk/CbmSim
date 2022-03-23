@@ -5,7 +5,8 @@
 // courtesy of wcochran: https://stackoverflow.com/questions/63121776/
 // simplest-syntax-for-string-interpolation-in-c
 template<typename... Args>
-std::string Sprintf(const char *fmt, Args... args) {
+std::string Sprintf(const char *fmt, Args... args)
+{
     
 	const size_t n = snprintf(nullptr, 0, fmt, args...);
 	std::vector<char> buf(n+1);
@@ -13,7 +14,8 @@ std::string Sprintf(const char *fmt, Args... args) {
 	return std::string(buf.data());
 }
 
-SetSim::SetSim(int fileNum, int goRecipParam, int simNum){
+SetSim::SetSim(int fileNum, int goRecipParam, int simNum)
+{
 
     // Not sure how we want our act files to be named	
 	std::string inActFile = Sprintf("./resources/actParams_binChoice2_%d.txt", fileNum+1);	
@@ -36,16 +38,19 @@ SetSim::SetSim(int fileNum, int goRecipParam, int simNum){
 
 SetSim::~SetSim(){};
 
-CBMState* SetSim::getstate(){
+CBMState* SetSim::getstate()
+{
 	return state;
 }
 
-CBMSimCore *SetSim::getsim(){
+CBMSimCore *SetSim::getsim()
+{
 	sim = new CBMSimCore(state, gpuIndex, gpuP2);
 	return sim;
 }	
 
-ECMFPopulation* SetSim::getMFFreq(float csMinRate, float csMaxRate){
+ECMFPopulation* SetSim::getMFFreq(float csMinRate, float csMaxRate)
+{
 	unsigned int numMF   = state->getConnectivityParams()->getNumMF(); 		
 	bool collaterals_off = false;
 	float fracImport     = 0.0;
@@ -62,7 +67,8 @@ ECMFPopulation* SetSim::getMFFreq(float csMinRate, float csMaxRate){
 	return MFFreq;
 }
 
-PoissonRegenCells* SetSim::getMFs(){
+PoissonRegenCells* SetSim::getMFs()
+{
 	unsigned int numMF  = state->getConnectivityParams()->getNumMF(); 		
 	unsigned int numNC  = state->getConnectivityParams()->getNumNC();
 	float msPerTimeStep = state->getActivityParams()->getMSPerTimeStep() * 1.0;
