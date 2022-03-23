@@ -66,10 +66,10 @@ unsigned int ActivityParams::getMSPerTimeStep()
 
 void ActivityParams::showParams(std::ostream &outSt)
 {
-	outSt<<"msPerTimeStep "<<msPerTimeStep<<endl<<endl;
+	outSt << "msPerTimeStep " << msPerTimeStep << std::endl << std::endl;
 
-	outSt<<"msPerHistBinMF "<<msPerHistBinMF<<endl;
-	outSt<<"tsPerHistbinMF "<<numTSinMFHist<<endl<<endl;
+	outSt << "msPerHistBinMF " << msPerHistBinMF << std::endl;
+	outSt << "tsPerHistbinMF " << numTSinMFHist << std::endl << std::endl;
 
 	outSt << "coupleRiRjRatioGO " << coupleRiRjRatioGO << std::endl;
 	outSt << "eLeakGO " << eLeakGO << std::endl;
@@ -205,7 +205,7 @@ void ActivityParams::showParams(std::ostream &outSt)
 
 std::map<std::string, float> ActivityParams::getParamCopy()
 {
-	map<std::string, float> paramCopy;
+	std::map<std::string, float> paramCopy;
 
 	for (auto i = paramMap.begin(); i!=paramMap.end(); i++)
 	{
