@@ -213,8 +213,8 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	delete joeMFs;
 
 	// Save Data 
-	std::ofstream myfilegogoGbin("allGOPSTH_noGOGO_grgoConv" + to_string(conv[goRecipParam]) + 
-			"_" + to_string(simNum) + ".bin", ios::out | ios::binary);	
+	std::ofstream myfilegogoGbin("allGOPSTH_noGOGO_grgoConv" + std::to_string(conv[goRecipParam]) + 
+			"_" + std::to_string(simNum) + ".bin", std::ios::out | std::ios::binary);	
 	
 	for (int i = 0; i < numGO; i++)
 	{
@@ -229,8 +229,8 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	
 	std::cout << "Filling BC files" << std::endl;
 	
-	std::ofstream myfileBCbin("allBCRaster_paramSet" + to_string(inputStrength) +
-			"_" + to_string(simNum) + ".bin", ios::out | ios::binary);	
+	std::ofstream myfileBCbin("allBCRaster_paramSet" + std::to_string(inputStrength) +
+			"_" + std::to_string(simNum) + ".bin", std::ios::out | std::ios::binary);	
 	for (int i = 0; i < numBC; i++)
 	{
 		for (int j = 0; j < (numTotalTrials - preTrialNumber) * (csSize + msPreCS + msPostCS); j++)
@@ -299,7 +299,7 @@ int* Control::getGRIndicies(float CStonicMFfrac)
 	std::vector<int> MFtoGRs;	
 	int numPostSynGRs;
 	// why is this labelled a bool when its an int array?
-	int *pActiveGrsBool = new int[numGR]();
+	int *pActiveGRsBool = new int[numGR]();
 	for (int i = 0; i < numActiveMFs; i++)
 	{
 		MFtoGRs = joestate->getInnetConStateInternal()->getpMFfromMFtoGRCon(activeMFIndA[i]);
