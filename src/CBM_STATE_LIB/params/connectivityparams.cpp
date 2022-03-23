@@ -16,7 +16,7 @@ ConnectivityParams::ConnectivityParams(std::fstream &infile)
 	//loop through file and add key/value pair to map
 	//** this is done to remove the necessity of order in the original file
 
-	string key;
+	std::string key;
 	ct_uint32_t val;
 
 	bool hasGOGOCouple;
