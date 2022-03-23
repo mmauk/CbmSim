@@ -10,16 +10,15 @@
 using namespace std;
 
 
-InNetConnectivityState::InNetConnectivityState(ConnectivityParams *parameters, unsigned int msPerStep,
-		int randSeed, int goRecipParam, int simNum)
+InNetConnectivityState::InNetConnectivityState(ConnectivityParams *parameters,
+		unsigned int msPerStep, int randSeed, int goRecipParam, int simNum)
 {
-	
 	this->cp = parameters;
 
 	CRandomSFMT *randGen = new CRandomSFMT0(randSeed);
 	
-	std::cout << "Input net state construction:" << std::endl;
-	std::cout << "allocating memory" << std::endl;
+	std::cout << "Input net state construction..." << std::endl;
+	std::cout << "allocating memory..." << std::endl;
 	allocateMemory();
 	
 	std::cout << "Initializing connections..." << std::endl;
@@ -31,42 +30,32 @@ InNetConnectivityState::InNetConnectivityState(ConnectivityParams *parameters, u
 	// NOTE: there are different versions of this function	
 	connectGOGODecayP(randGen, goRecipParam, simNum);	
 	
-//	cout<<"connecting PF to BC"<<endl;
-//	connectPFtoBC();
-	
-//	cout<<"connecting UBC and GL"<<endl;
-//	connectGLUBC();
 	std::cout << "connecting GR and GL" << std::endl;
 	connectGRGL(randGen);
 	
 	std::cout << "connecting GO and GL" << std::endl;
 	connectGOGL(randGen);
-//	cout<<"connecting UBC to GL"<<endl;
-//	connectUBCGL();	
 	
-	std::cout<<"connecting MF and GL"<<std::endl;
+	std::cout << "connecting MF and GL" << std::endl;
 	connectMFGL_noUBC(randGen);
-//	connectMFGL_withUBC(randGen);	
-//	std::cout<<"translating UBC GL"<<std::endl;
-//	translateUBCGL();
 	
-	std::cout<<"translating MF GL"<<std::endl;
+	std::cout << "translating MF GL" << std::endl;
 	translateMFGL();
 	
-	std::cout<<"translating GO and GL"<<std::endl;
+	std::cout << "translating GO and GL" << std::endl;
 	translateGOGL(randGen);
 	
-	std::cout<<"connecting GR to GO"<<std::endl;
+	std::cout << "connecting GR to GO" << std::endl;
 	connectGRGO(randGen, goRecipParam);
 	
-	std::cout<<"connecting GO to GO gap junctions"<<std::endl;
+	std::cout << "connecting GO to GO gap junctions" << std::endl;
 	connectGOGO_GJ(randGen);
 	
-	std::cout<<"assigning GR delays"<<std::endl;
+	std::cout << "assigning GR delays" << std::endl;
 	assignGRDelays(msPerStep);
 	
-	std::cout<<"assigning PF to BC delays"<<std::endl;
-	std::cout<<"done"<<std::endl;
+	std::cout << "assigning PF to BC delays" << std::endl;
+	std::cout << "done" << std::endl;
 	
 	delete randGen;
 }
