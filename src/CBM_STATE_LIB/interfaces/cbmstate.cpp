@@ -72,7 +72,7 @@ CBMState::~CBMState()
 	delete innetConState;
 	std::cout << "Successfully deleted input network connectivity state." << std::endl;
 
-	std::cout << "Deleting Mzone connectivity states..." << std::endl:	
+	std::cout << "Deleting Mzone connectivity states..." << std::endl;	
 	for (int i = 0; i < numZones; i++)
 	{
 		delete mzoneConStates[i];
@@ -86,7 +86,7 @@ CBMState::~CBMState()
 	std::cout << "Successfully deleted input network activity states." << std::endl;
 
 	std::cout << "Deleting Mzone activity states..." << std::endl;	
-	for(int i=0; i<numZones; i++)
+	for(int i = 0; i < numZones; i++)
 	{
 		delete mzoneActStates[i];
 	}
