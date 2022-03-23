@@ -4,9 +4,9 @@
 
 //using namespace std;
 
-//Control::Control(){};
+Control::Control(){};
 
-//Control::~Control(){};
+Control::~Control(){};
 
 void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuningTrials,
 		int numGrDetectionTrials, int numTrainingTrials, int simNum, int csSize, float csFracMFs,
@@ -267,7 +267,7 @@ int* Control::getGRIndicies(float CStonicMFfrac)
 	int numGR = 1048576;
 
 	float CSphasicMFfrac = 0.0;
-	float contextMFfrac = 0.00;
+	float contextMFfrac = 0.0;
 	
 	bool* tonicMFsA = joeMFFreq->getTonicMFInd();
 	bool* tonicMFsB = joeMFFreq->getTonicMFIndOverlap();
@@ -277,10 +277,8 @@ int* Control::getGRIndicies(float CStonicMFfrac)
 
 	std::cout << "Number of CS MossyFibers:	" << numActiveMFs << std::endl;
 	
-	int *activeMFIndA;
-	activeMFIndA = new int[numActiveMFs];
-	int *activeMFIndB;
-	activeMFIndB = new int[numActiveMFs];
+	int *activeMFIndA = new int[numActiveMFs];
+	int *activeMFIndB = new int[numActiveMFs];
 	
 	int counterMFA=0;
 	int counterMFB=0;
@@ -293,23 +291,20 @@ int* Control::getGRIndicies(float CStonicMFfrac)
 			counterMFA++;
 		}
 		
-		if(tonicMFsB[i])
+		if (tonicMFsB[i])
 		{
 			activeMFIndB[counterMFB] = i;
 			counterMFB++;
 		}
 	}
+
 	std::cout << "NumMFs in A: " << counterMFA << std::endl;
 	std::cout << "NumMFs in B: " << counterMFB << std::endl;
 	
 	std::vector<int> MFtoGRs;	
 	int numPostSynGRs;
-	int *pActiveGRsBool;
-	pActiveGRsBool = new int[numGR];
-	
-	for (int i = 0; i<numGR; i++) {
-		pActiveGRsBool[i] = 0;
-	}
+	// why is this labelled a bool when its an int array?
+	int pActiveGRsBool[numGr] = {}; // initializing with {} gives every element a 0
 
 	for (int i = 0; i < numActiveMFs; i++)
 	{
@@ -318,26 +313,20 @@ int* Control::getGRIndicies(float CStonicMFfrac)
 		
 		for (int j = 0; j < numPostSynGRs; j++)
 		{
-			pActiveGRsBool[MFtoGRs[j]] = pActiveGRsBool[MFtoGRs[j]] + 1;
+			pActiveGRsBool[MFtoGRs[j]]++;
 		}
 	}
 	
 	int counterGR = 0;
-	for (int i=0; i<numGR; i++)
+	
+	for (int i = 0; i < numGR; i++)
 	{
-		if(pActiveGRsBool[i] >= 1)
-		{		
-			counterGR++;
-		}
+		if (pActiveGRsBool[i] >= 1) counterGR++;
 	}
 
-	int *pActiveGRs;
-	pActiveGRs = new int[counterGR];
-	for (int i = 0; i < counterGR; i++) {
-		pActiveGRs[i] = 0;
-	}
-
+	int pActiveGRs[counterGR] = {}; 
 	int counterAGR = 0;
+	
 	for (int i = 0; i < numGR; i++)
 	{
 		if (pActiveGRsBool[i] >= 1)
@@ -350,6 +339,7 @@ int* Control::getGRIndicies(float CStonicMFfrac)
 	return pActiveGRs;
 }
 
+// NOTE: this function is basically the same as the above.
 int Control::getNumGRIndicies(float CStonicMFfrac) 
 {
 	int numMF = 4096;
@@ -382,23 +372,16 @@ int Control::getNumGRIndicies(float CStonicMFfrac)
 
 	std::vector<int> MFtoGRs;	
 	int numPostSynGRs;
-	int *pActiveGRsBool;
-	pActiveGRsBool = new int[numGR];
-	
-	for (int i = 0; i < numGR; i++)
-	{ 
-		pActiveGRsBool[i] = 0;
-	}
-
+	int pActiveGRsBool[numGR] = {};
 
 	for (int i = 0; i < numActiveMFs; i++)
 	{
 		MFtoGRs = joestate->getInnetConStateInternal()->getpMFfromMFtoGRCon(activeMFInd[i]);
 		numPostSynGRs = MFtoGRs.size();
 		
-		for(int j = 0; j < numPostSynGRs; j++)
+		for (int j = 0; j < numPostSynGRs; j++)
 		{
-			pActiveGRsBool[MFtoGRs[j]] = pActiveGRsBool[MFtoGRs[j]] + 1;
+			pActiveGRsBool[MFtoGRs[j]]++;
 		}
 	}
 	

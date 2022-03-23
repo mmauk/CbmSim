@@ -39,8 +39,6 @@ int main() {
 	float csRateMax = 110.0;
 
 	float mfW = 0.0035;
-	float numcon[21] = { 1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40 }; 
-
 	float ws = 0.3275;
 	float gogr = 0.0105;
 
@@ -50,7 +48,7 @@ int main() {
 	float gogoW = 0.0125;
 
 	std::cout << "Starting simulation..." << std::endl;
-	clock_t time = std::clock();
+	clock_t time = clock();
     	
 	for(int fileNum=0; fileNum < 1; fileNum++){	
 		std::cout << "ParamNum:  " << fileNum << std::endl;
@@ -73,7 +71,7 @@ int main() {
 		}
 	}
 
-	time = std::clock() - time;
+	time = clock() - time;
 	std::cout << "Simulation completed." << std::endl;
 	std::cout << "Total elapsed time: " << (float) time / CLOCKS_PER_SEC << std::endl;
 }
