@@ -8,6 +8,8 @@
 #ifndef DYNAMIC2DARRAY_H_
 #define DYNAMIC2DARRAY_H_
 
+#include <cstddef>
+
 template<typename Type> Type** allocate2DArray(unsigned int numRows, unsigned int numCols)
 {
 	Type** retArr = new Type*[numRows];
