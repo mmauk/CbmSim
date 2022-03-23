@@ -13,8 +13,6 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 		float goMin, float GOGR, float GRGO, float MFGO, float csMinRate, float csMaxRate,
 		float gogoW, int inputStrength, int inputWeight_two, float spillFrac)
 {
-
-	//TODO: Need to create separate logger
 	std::cout << "fileNum: " << fileNum << std::endl;
 	
 	SetSim simulation(fileNum, goRecipParam, simNum);
@@ -25,7 +23,7 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 
 	int numTotalTrials = numTuningTrials + numGrDetectionTrials + numTrainingTrials;  
 	int preTrialNumber = numTuningTrials + numGrDetectionTrials;
-	int collectionTrials = numTotalTrials;//numTrials - preTrialNumber;
+	int collectionTrials = numTotalTrials;
 	
 	std::cout << "Done filling MF arrays" << std::endl;	
 
@@ -55,19 +53,15 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	float *mfgoGall = new float[numTotalTrials];
 	
 	clock_t timer;
+	
+	int trialTime     = 5000; // in milliseconds, i think
 	int rasterCounter = 0;
 	
-	std::vector<int> goSpkCounter;
-	goSpkCounter.assign(numGO, 0);
+	std::vector<int> goSpkCounter(numGO);
 	
 	for (int trial = 0; trial < numTotalTrials; trial++)
 	{
 		timer = clock();
-
-		for(int i=0; i < numGO; i++)
-		{	
-			goSpkCounter[i] = 0;
-		}
 
 		float gGRGO_sum = 0;
 		float gMFGO_sum = 0;
@@ -75,15 +69,12 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 		if (trial <= numTuningTrials)
 	   	{
 			std::cout << "Pre-tuning trial number: " << trial << std::endl;
-			trialTime = 5000;	
 		}
-
-		if (trial > numTuningTrials)
+		else 
 		{
 			std::cout << "Post-tuning trial number: " << trial << std::endl;
-			trialTime = 5000;	
 		}
-
+		
 		int PSTHCounter = 0;	
 
 		// Homeostatic plasticity trials
@@ -93,9 +84,10 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 			// Run active granule cell detection 	
 			if (trial == preTrialNumber)
 			{			
-				for (tts = 0 ; tts < trialTime; tts++)
+				for (tts = 0; tts < trialTime; tts++)
 				{	
-					if (tts == csSize + csStart)
+					// TODO: get the model for these periods, update accordingly
+					if (tts == csStart + szSize)
 					{
 						// Deliver US 
 						joesim->updateErrDrive(0,0.0);
@@ -114,6 +106,7 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 					else
 					{
 						// Tonic MF activity during the CS period
+						// this never gets reached...
 						mfAP = joeMFs->calcPoissActivity(joeMFFreq->getMFInCSTonicA(), joesim->getMZoneList());
 					}
 
@@ -122,7 +115,7 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 					joesim->updateMFInput(mfAP);
 					joesim->calcActivity(goMin, simNum, GOGR, GRGO, MFGO, gogoW, spillFrac);	
 					
-					if(tts >= csStart && tts < csStart + csSize)
+					if (tts >= csStart && tts < csStart + csSize)
 					{
 
 						mfgoG = joesim->getInputNet()->exportgSum_MFGO();
@@ -134,9 +127,9 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 								gGRGO_sum += grgoG[i];
 								gMFGO_sum += mfgoG[i];
 						}
-
 					}
 					
+					// why is this case separate from the above	
 					if (tts == csStart + csSize)
 					{
 						std::sort(goSpkCounter.begin(), goSpkCounter.begin() + 4096);
@@ -180,7 +173,6 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 							allNCRaster[i][rasterCounter] = ncSpks[i];
 						}
 						
-						
 						//BC
 						const ct_uint8_t* bcSpks=joesim->getMZoneList()[0]->exportAPBC();
 						for (int i = 0; i < numBC; i++){
@@ -200,9 +192,10 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 
 				}
 
-			}
+		 	}
 		}	
-		
+		// re-initialize spike counter vector	
+		goSpkCounter.assign(numGO, 0);	
 		timer = clock() - timer;
 		std::cout << "Trial time seconds: " << (float)timer / CLOCKS_PER_SEC << std::endl;
 	}
@@ -231,6 +224,7 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	
 	std::ofstream myfileBCbin("allBCRaster_paramSet" + std::to_string(inputStrength) +
 			"_" + std::to_string(simNum) + ".bin", std::ios::out | std::ios::binary);	
+	
 	for (int i = 0; i < numBC; i++)
 	{
 		for (int j = 0; j < (numTotalTrials - preTrialNumber) * (csSize + msPreCS + msPostCS); j++)
