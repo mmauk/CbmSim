@@ -58,12 +58,6 @@ CBMState::CBMState(std::fstream &actPFile, std::fstream &conPFile, unsigned int 
 	delete[] mzoneARSeed;
 }
 
-CBMState::CBMState(std::fstream &actPFile, std::fstream &conPFile, unsigned int nZones,
-		int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed)
-{
-	newState(actPFile, conPFile, nZones, innetCRSeed, mzoneCRSeed, mzoneARSeed);
-}
-
 CBMState::~CBMState()
 {
 	std::cout << "Deleting activity parameters..." << std::endl;
@@ -78,7 +72,7 @@ CBMState::~CBMState()
 	delete innetConState;
 	std::cout << "Successfully deleted input network connectivity state." << std::endl;
 
-	std::cout << "Deleting Mzone connectivity states..." std::endl:	
+	std::cout << "Deleting Mzone connectivity states..." << std::endl:	
 	for (int i = 0; i < numZones; i++)
 	{
 		delete mzoneConStates[i];
@@ -126,7 +120,7 @@ void CBMState::writeState(std::fstream &outfile)
 	{
 		mzoneActStates[i]->writeState(outfile);
 	}
-	std::cout << "Done writing Mzone activity states to files..." std::endl;
+	std::cout << "Done writing Mzone activity states to files..." << std::endl;
 }
 
 bool CBMState::equivalent(CBMState &compState)
