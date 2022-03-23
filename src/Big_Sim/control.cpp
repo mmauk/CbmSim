@@ -243,8 +243,8 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	delete2DArray<ct_uint8_t>(allBCRaster);
 
 	std::cout << "Filling SC files" << std::endl;
-	std::ofstream myfileSCbin("allSCRaster_paramSet" + to_string(inputStrength) +
-			"_" + to_string(simNum) + ".bin", ios::out | ios::binary);	
+	std::ofstream myfileSCbin("allSCRaster_paramSet" + std::to_string(inputStrength) +
+			"_" + std::to_string(simNum) + ".bin", std::ios::out | std::ios::binary);	
 	
 	for (int i = 0; i < numSC; i++)
 	{
