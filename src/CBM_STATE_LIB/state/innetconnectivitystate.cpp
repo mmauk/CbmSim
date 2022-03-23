@@ -7,13 +7,10 @@
 
 #include "state/innetconnectivitystate.h"
 
-using namespace std;
-
-
 InNetConnectivityState::InNetConnectivityState(ConnectivityParams *parameters,
 		unsigned int msPerStep, int randSeed, int goRecipParam, int simNum)
 {
-	this->cp = parameters;
+	cp = parameters;
 
 	CRandomSFMT *randGen = new CRandomSFMT0(randSeed);
 	
@@ -60,10 +57,9 @@ InNetConnectivityState::InNetConnectivityState(ConnectivityParams *parameters,
 	delete randGen;
 }
 
-InNetConnectivityState::InNetConnectivityState
-	(ConnectivityParams *parameters, fstream &infile)
+InNetConnectivityState::InNetConnectivityState(ConnectivityParams *parameters, fstream &infile)
 {
-	cp=parameters;
+	cp = parameters;
 
 	allocateMemory();
 
@@ -72,7 +68,7 @@ InNetConnectivityState::InNetConnectivityState
 
 InNetConnectivityState::InNetConnectivityState(const InNetConnectivityState &state)
 {
-	cp=state.cp;
+	cp = state.cp;
 
 	allocateMemory();
 
@@ -84,13 +80,10 @@ InNetConnectivityState::InNetConnectivityState(const InNetConnectivityState &sta
 			cp->numGL*cp->maxnumpGLfromGLtoGO);
 
 	arrayCopy<int>(numpGLfromGOtoGL, state.numpGLfromGOtoGL, cp->numGL);
-	//arrayCopy<int>(pGLfromGOtoGL, state.pGLfromGOtoGL,
-	//		cp->numGL);
 
 	arrayCopy<int>(numpGLfromGLtoGR, state.numpGLfromGLtoGR, cp->numGL);
 	arrayCopy<int>(pGLfromGLtoGR[0], state.pGLfromGLtoGR[0],
 			cp->numGL*cp->maxnumpGLfromGOtoGL);
-
 
 	arrayCopy<int>(numpMFfromMFtoGL, state.numpMFfromMFtoGL, cp->numMF);
 	arrayCopy<int>(pMFfromMFtoGL[0], state.pMFfromMFtoGL[0],
@@ -103,7 +96,6 @@ InNetConnectivityState::InNetConnectivityState(const InNetConnectivityState &sta
 	arrayCopy<int>(numpMFfromMFtoGO, state.numpMFfromMFtoGO, cp->numMF);
 	arrayCopy<int>(pMFfromMFtoGO[0], state.pMFfromMFtoGO[0],
 			cp->numMF*cp->maxnumpMFfromMFtoGO);
-
 
 	arrayCopy<int>(numpGOfromGLtoGO, state.numpGOfromGLtoGO, cp->numGO);
 	arrayCopy<int>(pGOfromGLtoGO[0], state.pGOfromGLtoGO[0],
@@ -133,8 +125,6 @@ InNetConnectivityState::InNetConnectivityState(const InNetConnectivityState &sta
 	arrayCopy<int>(pGOGABAOutGOGO[0], state.pGOGABAOutGOGO[0],
 			cp->numGO*cp->maxGOGOsyn);
 
-
-	
 	arrayCopy<int>(numpGOCoupInGOGO, state.numpGOCoupInGOGO, cp->numGO);
 	arrayCopy<int>(pGOCoupInGOGO[0], state.pGOCoupInGOGO[0],
 			cp->numGO*49);
@@ -142,7 +132,6 @@ InNetConnectivityState::InNetConnectivityState(const InNetConnectivityState &sta
 	arrayCopy<int>(numpGOCoupOutGOGO, state.numpGOCoupOutGOGO, cp->numGO);
 	arrayCopy<int>(pGOCoupOutGOGO[0], state.pGOCoupOutGOGO[0],
 			cp->numGO*49);
-
 
 	arrayCopy<ct_uint32_t>(pGRDelayMaskfromGRtoBSP, state.pGRDelayMaskfromGRtoBSP, cp->numGR);
 
@@ -167,15 +156,11 @@ InNetConnectivityState::InNetConnectivityState(const InNetConnectivityState &sta
 
 InNetConnectivityState::~InNetConnectivityState()
 {
-//	delete[] glomeruli;
-	//cout << "		check" << endl;
-	//glomeruli
 	delete[] numpGLfromGLtoGO;
 	delete2DArray<int>(pGLfromGLtoGO);
 
 	delete[] haspGLfromGOtoGL;
 	delete[] numpGLfromGOtoGL;
-	//delete[] pGLfromGOtoGL;
 	delete2DArray<int>(pGLfromGOtoGL);
 	delete[] numpGLfromGLtoGR;
 	delete2DArray<int>(pGLfromGLtoGR);
@@ -183,264 +168,112 @@ InNetConnectivityState::~InNetConnectivityState()
 	delete[] spanArrayGRtoGLY;
 	delete[] xCoorsGRGL;
 	delete[] yCoorsGRGL;
-	//cout << "		check1" << endl;
-
-	//unipolar brush cells
-//	delete[] numpGLfromUBCtoGL;
-//	delete2DArray<int>(pGLfromUBCtoGL);	
-	
-//	delete[] numpUBCfromUBCtoGL;
-//	delete2DArray<int>(pUBCfromUBCtoGL);
-//	delete[] spanArrayUBCtoGLX;
-//	delete[] spanArrayUBCtoGLY;
-//	delete[] xCoorsUBCGL;
-//	delete[] yCoorsUBCGL;
-
-//	delete[] pUBCfromGLtoUBC;
-//	delete[] numpUBCfromGLtoUBC;
-//	delete[] pGLfromGLtoUBC;
-//	delete[] numpGLfromGLtoUBC;
-//	delete[] spanArrayGLtoUBCX;	
-//	delete[] spanArrayGLtoUBCY;	
-//	delete[] xCoorsGLUBC;
-//	delete[] yCoorsGLUBC;
-	cout << "		check2" << endl;
+	cout << "check2" << endl;
 
 	//mossy fibers
 	delete[] haspGLfromMFtoGL;
-//	cout << "	check" << endl;
 	delete[] pGLfromMFtoGL;	
-//	cout << "	check" << endl;
 	delete[] numpMFfromMFtoGL;
-//	cout << "	check" << endl;
 	delete2DArray<int>(pMFfromMFtoGL);
-//	cout << "	check" << endl;
 	delete[] spanArrayMFtoGLX;
-//	cout << "	check" << endl;
 	delete[] spanArrayMFtoGLY;
-//	cout << "	check" << endl;
-	delete[] xCoorsMFGL;		/*free(): invalid next size (normal)*/
-//	cout << "	check" << endl;
-	delete[] yCoorsMFGL;		/*munmap_chunck(): invalid pointer*/
-//	cout << "	check" << endl;
-
+	delete[] xCoorsMFGL;		
+	delete[] yCoorsMFGL;		
 	delete[] numpMFfromMFtoGR;
-//	cout << "	check" << endl;
 	delete2DArray<int>(pMFfromMFtoGR);
-//	cout << "	check" << endl;
 	delete[] numpMFfromMFtoGO;
-//	cout << "	check" << endl;
-	delete2DArray<int>(pMFfromMFtoGO); /*munmap_chunck(): invalid pointer*/
-//	cout << "	check" << endl;
-	
-//	delete[] numpUBCfromUBCtoGR;
-//	cout << "	check" << endl;
-//	delete2DArray<int>(pUBCfromUBCtoGR);
-//	cout << "	check" << endl;
-//	delete[] numpGRfromUBCtoGR;
-//	cout << "	check" << endl;
-//	delete2DArray<int>(pGRfromUBCtoGR);
-//	cout << "	check" << endl;
-	
-//	delete[] numpUBCfromUBCtoGO;
-//	cout << "	check" << endl;
-//	delete2DArray<int>(pUBCfromUBCtoGO);
-//	cout << "	check" << endl;
-///	delete[] numpGOfromUBCtoGO;
-//	cout << "	check" << endl;
-//	delete2DArray<int>(pGOfromUBCtoGO);
-//	cout << "	check" << endl;
-	
-//	delete[] numpUBCfromUBCOutUBC;
-//	cout << "	check" << endl;
-//	delete2DArray<int>(pUBCfromUBCOutUBC);
-//	cout << "	check" << endl;
-
-//	delete[] numpMFfromMFtoUBC;
-//	cout << "	check" << endl;
-//	delete2DArray<int>(pMFfromMFtoUBC);
-//	cout << "	check" << endl;
-//	delete[] numpUBCfromMFtoUBC;
-//	cout << "	check" << endl;
-//	delete[] pUBCfromMFtoUBC;
-//	cout << "		check3" << endl;
+	delete2DArray<int>(pMFfromMFtoGO); 	
 
 	//golgi
 	delete[] numpGOfromGLtoGO;
-//	cout << "	check" << endl;
 	delete2DArray<int>(pGOfromGLtoGO);
-//	cout << "	check" << endl;
-
 	delete[] numpGOfromGOtoGL;
-//	cout << "	check" << endl;
 	delete2DArray<int>(pGOfromGOtoGL);
-//	cout << "	check" << endl;
 	delete[] spanArrayGOtoGLY;
-//	cout << "	check" << endl;
 	delete[] spanArrayGOtoGLX;
-//	cout << "	check" << endl;
 	delete[] xCoorsGOGL;
-//	cout << "	check" << endl;
 	delete[] yCoorsGOGL;
-
-//	cout << "		check4" << endl;
-
-
 	delete[] numpGOfromMFtoGO;
-//	cout << "	check" << endl;
 	delete2DArray<int>(pGOfromMFtoGO);
-//	cout << "	check" << endl;
-
 	delete[] numpGOfromGOtoGR;
-//	cout << "	check" << endl;
 	delete2DArray<int>(pGOfromGOtoGR);
-//	cout << "	check" << endl;
-
-
-//	delete[] numpGOfromGOtoUBC;
-//	cout << "	check" << endl;
-//	delete2DArray<int>(pGOfromGOtoUBC);
-//	cout << "	check" << endl;
-///	delete[] numpUBCfromGOtoUBC;
-//	cout << "	check" << endl;
-//	delete2DArray<int>(pUBCfromGOtoUBC);
-//	cout << "	check" << endl;
 
 	delete[] numpGOfromGRtoGO;
-//	cout << "	check" << endl;
 	delete2DArray<int>(pGOfromGRtoGO);
-//	cout << "	check" << endl;
 	delete[] spanArrayPFtoGOX;
-//	cout << "	check" << endl;
 	delete[] spanArrayPFtoGOY;
-//	cout << "	check" << endl;
 	delete[] spanArrayAAtoGOX;
-//	cout << "	check" << endl;
 	delete[] spanArrayAAtoGOY;
-//	cout << "	check" << endl;
 	delete[] xCoorsPFGO;
-///	cout << "	check" << endl;
 	delete[] yCoorsPFGO;
-//	cout << "	check" << endl;
 	delete[] xCoorsAAGO;
-	//cout << "	check" << endl;
 	delete[] yCoorsAAGO;
-//	cout << "		check5" << endl;
-
 
 	delete[] numpGOGABAInGOGO;
-//	cout << "	check" << endl;
 	delete2DArray<int>(pGOGABAInGOGO);
-//	cout << "	check" << endl;
 	delete[] numpGOGABAOutGOGO;
-//	cout << "	check" << endl;
 	delete2DArray<int>(pGOGABAOutGOGO);
-//	cout << "	check" << endl;
 	delete2DArray<bool>(conGOGOBoolOut);
-//	cout << "	check" << endl;
 	delete[] spanArrayGOtoGOsynX;
-//	cout << "	check" << endl;
 	delete[] spanArrayGOtoGOsynY;
-//	cout << "	check" << endl;
 	delete[] xCoorsGOGOsyn;
-//	cout << "	check" << endl;
 	delete[] yCoorsGOGOsyn;
-//	cout << "	check" << endl;
 
 	delete[] numpGOCoupInGOGO;
-//	cout << "	check" << endl;
 	delete2DArray<int>(pGOCoupInGOGO);
-//	cout << "	check" << endl;
 	delete2DArray<float>(pGOCoupInGOGOCCoeff);
-//	cout << "	check" << endl;
 	delete[] numpGOCoupOutGOGO;
-//	cout << "	check" << endl;
 	delete2DArray<int>(pGOCoupOutGOGO);
-//	cout << "	check" << endl;
 	delete2DArray<float>(pGOCoupOutGOGOCCoeff);
-//	cout << "	check" << endl;
 	delete2DArray<bool>(gjConBool);
-//	cout << "		check6" << endl;
 	
 	delete[] spanArrayGOtoGOgjX;
-//	cout << "	check" << endl;
 	delete[] spanArrayGOtoGOgjY;
-//	cout << "	check" << endl;
 	delete[] xCoorsGOGOgj;
-//	cout << "	check" << endl;
 	delete[] yCoorsGOGOgj;
-//	cout << "	check" << endl;
 	delete[] gjPcon;
-//	cout << "	check" << endl;
 	delete[] gjCC;
-//
-//	cout << "		check7" << endl;
-
-
 
 	//granule
 	delete[] pGRDelayMaskfromGRtoBSP;
-//	cout << "	check" << endl;
-
 	delete[] numpGRfromGLtoGR;
-///	cout << "	check" << endl;
 	delete2DArray<int>(pGRfromGLtoGR);
-//	cout << "	check" << endl;
 
 	delete[] numpGRfromGRtoGO;
-//	cout << "	check" << endl;
 	delete2DArray<int>(pGRfromGRtoGO);
-//	cout << "	check" << endl;
 	delete2DArray<int>(pGRDelayMaskfromGRtoGO);
-//	cout << "	check" << endl;
 
 	delete[] numpGRfromGOtoGR;
-//	cout << "	check" << endl;
 	delete2DArray<int>(pGRfromGOtoGR);
-//	cout << "	check" << endl;
 
 	delete[] numpGRfromMFtoGR;
-//	cout << "	check" << endl;
 	delete2DArray<int>(pGRfromMFtoGR);
-
-
-
-
-
-
-
-
-
-
-
-
 }
 
-void InNetConnectivityState::writeState(fstream &outfile)
+void InNetConnectivityState::writeState(std::fstream &outfile)
 {
-	cout<<"start innetOut"<<endl;
+	std::cout << "Writing input network connectivity state to disk..." << std:endl;
 	stateRW(false, (fstream &)outfile);
-	cout<<"end innetOut"<<endl;
+	std::cout << "finished writing input network connectivity to disk." << std::endl;
 }
 
 bool InNetConnectivityState::equivalent(const InNetConnectivityState &compState)
 {
-	bool eq;
-
-	eq=true;
-	for(int i=0; i<cp->numGL; i++)
+	bool eq = true;
+	
+	for (int i = 0; i < cp->numGL; i++)
 	{
-		eq=eq && (haspGLfromMFtoGL[i]==compState.haspGLfromMFtoGL[i]);
+		eq = eq && (haspGLfromMFtoGL[i] == compState.haspGLfromMFtoGL[i]);
 	}
 
-	for(int i=0; i<cp->numGO; i++)
+	for(int i = 0; i < cp->numGO; i++)
 	{
-		eq=eq && (numpGOfromGOtoGR[i]==compState.numpGOfromGOtoGR[i]);
+		eq = eq && (numpGOfromGOtoGR[i] == compState.numpGOfromGOtoGR[i]);
 	}
 
-	for(int i=0; i<cp->numGR; i++)
+	for (int i = 0; i < cp->numGR; i++)
 	{
-		eq=eq && (numpGRfromGOtoGR[i]==compState.numpGRfromGOtoGR[i]);
+		eq = eq && (numpGRfromGOtoGR[i] == compState.numpGRfromGOtoGR[i]);
 	}
 	return eq;
 }
@@ -749,20 +582,11 @@ bool InNetConnectivityState::addGOGOConPair(int srcGON, int destGON)
 void InNetConnectivityState::allocateMemory()
 {
 
-//	numpMFfromMFtoUBC=new int[cp->numMF];
-//	pMFfromMFtoUBC=allocate2DArray<int>(cp->numMF, 32);
-//	numpUBCfromMFtoUBC=new int[cp->numUBC];
-//	pUBCfromMFtoUBC=new int[cp->numUBC];
-
-//	glomeruli=new Glomerulus[p->numGL](p->maxNumGODenPerGL, p->maxNumGOAxPerGL, p->maxNumGRDenPerGL);
-//	glomeruli.resize(p->numGL, Glomerulus(p->maxNumGODenPerGL, p->maxNumGOAxPerGL, p->maxNumGRDenPerGL));
-
 	numpGLfromGLtoGO=new int[cp->numGL];
 	pGLfromGLtoGO=allocate2DArray<int>(cp->numGL, cp->maxnumpGLfromGLtoGO);
 
 	haspGLfromGOtoGL=new int[cp->numGL];
 	numpGLfromGOtoGL=new int[cp->numGL];
-	//pGLfromGOtoGL=new int[cp->numGL];
 	pGLfromGOtoGL=allocate2DArray<int>(cp->numGL, cp->maxnumpGLfromGOtoGL);
 
 	numpGLfromGLtoGR=new int[cp->numGL];
@@ -772,25 +596,6 @@ void InNetConnectivityState::allocateMemory()
 	xCoorsGRGL = new int[25];
 	yCoorsGRGL = new int[25];
 	
-	//ubc
-//	numpUBCfromGLtoUBC=new int[cp->numUBC];
-//	pGLfromGLtoUBC=new int[cp->numGL];
-//	numpGLfromGLtoUBC=new int[cp->numGL];
-//	pUBCfromGLtoUBC=new int[cp->numUBC];
-//	spanArrayGLtoUBCX=new int[cp->spanGLtoUBCX+1];
-//	spanArrayGLtoUBCY=new int[cp->spanGLtoUBCY+1];
-//	xCoorsGLUBC=new int[cp->numpGLtoUBC];
-//	yCoorsGLUBC=new int[cp->numpGLtoUBC];
-	
-//	numpGLfromUBCtoGL=new int[cp->numGL];	
-//	pGLfromUBCtoGL=allocate2DArray<int>(cp->numGL,1);
-//	numpUBCfromUBCtoGL=new int[cp->numUBC];
-//	pUBCfromUBCtoGL=allocate2DArray<int>(cp->numUBC, 10);
-//	spanArrayUBCtoGLX = new int[cp->spanUBCtoGLX+1];
-//	spanArrayUBCtoGLY = new int[cp->spanUBCtoGLY+1];
-//	xCoorsUBCGL = new int[cp->numpUBCtoGL];
-//	yCoorsUBCGL = new int[cp->numpUBCtoGL];
-
 	//mf
 	haspGLfromMFtoGL=new int[cp->numGL];
 	pGLfromMFtoGL=new int[cp->numGL];
@@ -806,26 +611,6 @@ void InNetConnectivityState::allocateMemory()
 	numpMFfromMFtoGO=new int[cp->numMF];
 	pMFfromMFtoGO=allocate2DArray<int>(cp->numMF, cp->maxnumpMFfromMFtoGO);
 
-	
-	
-//	numpUBCfromUBCtoGR=new int[cp->numUBC];
-//	pUBCfromUBCtoGR=allocate2DArray<int>(cp->numUBC, 2000);
-//	numpGRfromUBCtoGR=new int[cp->numGR];
-//	pGRfromUBCtoGR=allocate2DArray<int>(cp->numGR, cp->maxnumpGRfromGLtoGR);
-	
-//	numpUBCfromUBCtoGO=new int[cp->numUBC];
-//	pUBCfromUBCtoGO=allocate2DArray<int>(cp->numUBC, 100);
-//	numpGOfromUBCtoGO=new int[cp->numGO];
-//	pGOfromUBCtoGO=allocate2DArray<int>(cp->numGO, 40);
-
-//	numpUBCfromUBCOutUBC=new int[cp->numUBC];
-//	pUBCfromUBCOutUBC=allocate2DArray<int>(cp->numUBC, 10);
-//	numpUBCfromUBCInUBC=new int[cp->numUBC];
-//	pUBCfromUBCInUBC=allocate2DArray<int>(cp->numUBC, 10);
-	
-
-	
-	
 	//golgi
 	numpGOfromGLtoGO=new int[cp->numGO];
 	pGOfromGLtoGO=allocate2DArray<int>(cp->numGO, cp->maxnumpGOfromGLtoGO);
@@ -838,18 +623,11 @@ void InNetConnectivityState::allocateMemory()
 	yCoorsGOGL=new int[cp->numpGOGL];
 	PconGOGL=new float[cp->numpGOGL];
 
-
 	numpGOfromMFtoGO=new int[cp->numGO];
 	pGOfromMFtoGO=allocate2DArray<int>(cp->numGO, 40);
 
 	numpGOfromGOtoGR=new int[cp->numGO];
 	pGOfromGOtoGR=allocate2DArray<int>(cp->numGO, cp->maxnumpGOfromGOtoGR);
-
-//	numpGOfromGOtoUBC=new int[cp->numGO];
-//	pGOfromGOtoUBC=allocate2DArray<int>(cp->numGO, 32);
-//	numpUBCfromGOtoUBC=new int[cp->numUBC];
-//	pUBCfromGOtoUBC=allocate2DArray<int>(cp->numUBC, 1);
-
 
 	numpGOfromGRtoGO=new int[cp->numGO];
 	pGOfromGRtoGO=allocate2DArray<int>(cp->numGO, cp->maxnumpGOfromGRtoGO);
@@ -861,18 +639,6 @@ void InNetConnectivityState::allocateMemory()
 	spanArrayAAtoGOY = new int[202];
 	xCoorsAAGO = new int[202*202];
 	yCoorsAAGO = new int[202*202];
-
-	/*numpGOGABAInGOGO=new int[cp->numGO];
-	pGOGABAInGOGO=allocate2DArray<int>(cp->numGO, cp->maxGOGOsyn);
-	numpGOGABAOutGOGO=new int[cp->numGO];
-	pGOGABAOutGOGO=allocate2DArray<int>(cp->numGO, cp->maxGOGOsyn);	
-	conGOGOBoolOut=allocate2DArray<bool>(cp->numGO, cp->numGO);
-	spanArrayGOtoGOsynX = new int[cp->spanGOGOsynX+1];
-	spanArrayGOtoGOsynY = new int[cp->spanGOGOsynY+1];
-	xCoorsGOGOsyn = new int[cp->numpGOGOsyn];
-	yCoorsGOGOsyn = new int[cp->numpGOGOsyn];
-	Pcon=new float[cp->numpGOGOsyn];
-*/
 
 	numpGOCoupInGOGO=new int[cp->numGO];
 	pGOCoupInGOGO=allocate2DArray<int>(cp->numGO, 81);
@@ -887,9 +653,6 @@ void InNetConnectivityState::allocateMemory()
 	yCoorsGOGOgj=new int[9*9];
 	gjPcon=new float[9*9];
 	gjCC=new float[9*9];
-
-	//pGOGABAUniOutGOGO=allocate2DArray<bool>(cp->numGO, cp->maxnumpGOGABAOutGOGO);	
-
 
 	//granule
 	pGRDelayMaskfromGRtoBSP=new ct_uint32_t[cp->numGR];
@@ -906,21 +669,6 @@ void InNetConnectivityState::allocateMemory()
 
 	numpGRfromMFtoGR=new int[cp->numGR];
 	pGRfromMFtoGR=allocate2DArray<int>(cp->numGR, cp->maxnumpGRfromMFtoGR);
-
-	//spanArrayPFtoBCX = new int[cp->grX+1];
-	//spanArrayPFtoBCY = new int[(cp->grY/cp->numBC)+1];
-	//xCoorsPFBC = new int[26637];
-	//yCoorsPFBC = new int[26637];
-	
-	//pBCfromPFtoBC=allocate2DArray<int>(128, 5000);
-	//numpBCfromPFtoBC = new int[128];
-	//pGRfromPFtoBC=allocate2DArray<int>(cp->numGR, 128);
-	//numpGRfromPFtoBC = new int[cp->numGR];
-	
-	//pGRDelayMaskfromGRtoBC=allocate2DArray<int>(cp->numGR, cp->numBC);	
-
-
-
 }
 
 void InNetConnectivityState::stateRW(bool read, std::fstream &file)
@@ -1006,46 +754,6 @@ void InNetConnectivityState::stateRW(bool read, std::fstream &file)
 
 void InNetConnectivityState::initializeVals()
 {
-	//glomerulus
-//	for(int i=0; i<cp->numGL; i++)
-//	{
-//		haspGLfromMFtoGL[i]=false;
-//		numpGLfromGLtoGO[i]=0;
-//		numpGLfromGOtoGL[i]=0;
-//		numpGLfromGLtoGR[i]=0;
-//	}
-//
-//	//mossy fiber
-//	for(int i=0; i<cp->numMF; i++)
-//	{
-//		numpMFfromMFtoGL[i]=0;
-//		numpMFfromMFtoGR[i]=0;
-//		numpMFfromMFtoGO[i]=0;
-//	}
-//
-//	//golgi cell
-//	for(int i=0; i<cp->numGO; i++)
-//	{
-//		numpGOfromGLtoGO[i]=0;
-//		numpGOfromGOtoGL[i]=0;
-//		numpGOfromMFtoGO[i]=0;
-//		numpGOfromGOtoGR[i]=0;
-//		numpGOfromGRtoGO[i]=0;
-//		numpGOInGOGO[i]=0;
-//		numpGOOutGOGO[i]=0;
-//	}
-//
-//	//granule cell
-//	for(int i=0; i<cp->numGR; i++)
-//	{
-//		pGRDelayMaskfromGRtoBSP[i]=1;
-//
-//		numpGRfromGLtoGR[i]=0;
-//		numpGRfromGRtoGO[i]=0;
-//		numpGRfromGOtoGR[i]=0;
-//		numpGRfromMFtoGR[i]=0;
-//	}
-
 	arrayInitialize<int>(haspGLfromMFtoGL, 0, cp->numGL);
 	arrayInitialize<int>(pGLfromMFtoGL, UINT_MAX, cp->numGL);
 
@@ -1054,9 +762,7 @@ void InNetConnectivityState::initializeVals()
 
 	arrayInitialize<int>(haspGLfromGOtoGL, 0, cp->numGL);
 	arrayInitialize<int>(numpGLfromGOtoGL, 0, cp->numGL);
-	//arrayInitialize<int>(pGLfromGOtoGL, UINT_MAX, cp->numGL);
 	arrayInitialize<int>(pGLfromGOtoGL[0], UINT_MAX, cp->numGL*cp->maxnumpGLfromGOtoGL);
-
 
 	arrayInitialize<int>(numpGLfromGLtoGR, 0, cp->numGL);
 	arrayInitialize<int>(pGLfromGLtoGR[0], UINT_MAX, cp->numGL*cp->maxnumpGLfromGOtoGL);
@@ -1065,27 +771,6 @@ void InNetConnectivityState::initializeVals()
 	arrayInitialize<int>(xCoorsGRGL, 0, 25);
 	arrayInitialize<int>(yCoorsGRGL, 0, 25);
 	
-	//ubc
-//	arrayInitialize<int>(numpGLfromUBCtoGL, 0, cp->numGL);	
-//	arrayInitialize<int>(pGLfromUBCtoGL[0], 0, cp->numGL*1);
-
-//	arrayInitialize<int>(numpUBCfromUBCtoGL, 0, cp->numUBC);
-//	arrayInitialize<int>(pUBCfromUBCtoGL[0], UINT_MAX, cp->numUBC*10);
-//	arrayInitialize<int>(spanArrayUBCtoGLX, 0, cp->spanUBCtoGLX+1);
-//	arrayInitialize<int>(spanArrayUBCtoGLY, 0, cp->spanUBCtoGLY+1);
-//	arrayInitialize<int>(xCoorsUBCGL, 0, cp->numpUBCtoGL);
-//	arrayInitialize<int>(yCoorsUBCGL, 0, cp->numpUBCtoGL);
-	
-//	arrayInitialize<int>(pGLfromGLtoUBC, 0, cp->numGL);
-//	arrayInitialize<int>(numpGLfromGLtoUBC, 0, cp->numGL);
-//	arrayInitialize<int>(pUBCfromGLtoUBC, 0, cp->numUBC);
-//	arrayInitialize<int>(numpUBCfromGLtoUBC, 0, cp->numUBC);
-
-//	arrayInitialize<int>(spanArrayGLtoUBCX, 0, cp->spanGLtoUBCX+1);
-//	arrayInitialize<int>(spanArrayGLtoUBCY, 0, cp->spanGLtoUBCY+1);
-//	arrayInitialize<int>(xCoorsGLUBC, 0, cp->numpGLtoUBC);
-//	arrayInitialize<int>(yCoorsGLUBC, 0, cp->numpGLtoUBC);
-
 	//mf
 	arrayInitialize<int>(haspGLfromMFtoGL, 0, cp->numGL);
 	arrayInitialize<int>(numpMFfromMFtoGL, 0, cp->numMF);
@@ -1100,27 +785,6 @@ void InNetConnectivityState::initializeVals()
 	arrayInitialize<int>(numpMFfromMFtoGO, 0, cp->numMF);
 	arrayInitialize<int>(pMFfromMFtoGO[0], UINT_MAX, cp->numMF*cp->maxnumpMFfromMFtoGO);
 
-//	arrayInitialize<int>(numpMFfromMFtoUBC, 0, cp->numMF);
-//	arrayInitialize<int>(pMFfromMFtoUBC[0], UINT_MAX, cp->numMF*32);
-//	arrayInitialize<int>(numpUBCfromMFtoUBC, 0, cp->numUBC);
-//	arrayInitialize<int>(pUBCfromMFtoUBC, UINT_MAX, cp->numUBC);
-
-//	arrayInitialize<int>(numpUBCfromUBCtoGR, 0, cp->numUBC);
-//	arrayInitialize<int>(pUBCfromUBCtoGR[0], UINT_MAX, cp->numUBC*2000);
-//	arrayInitialize<int>(numpGRfromUBCtoGR, 0, cp->numGR);
-//	arrayInitialize<int>(pGRfromUBCtoGR[0], UINT_MAX, cp->numGR*cp->maxnumpGRfromGLtoGR);
-	
-//	arrayInitialize<int>(numpUBCfromUBCtoGO, 0, cp->numUBC);
-//	arrayInitialize<int>(pUBCfromUBCtoGO[0], UINT_MAX, cp->numUBC*100);
-//	arrayInitialize<int>(numpGOfromUBCtoGO, 0, cp->numGO);
-//	arrayInitialize<int>(pGOfromUBCtoGO[0], UINT_MAX, cp->numGO*40);
-	
-//	arrayInitialize<int>(numpUBCfromUBCOutUBC, 0, cp->numUBC);
-//	arrayInitialize<int>(pUBCfromUBCOutUBC[0], UINT_MAX, cp->numUBC*10);
-//	arrayInitialize<int>(numpUBCfromUBCInUBC, 0, cp->numUBC);
-//	arrayInitialize<int>(pUBCfromUBCInUBC[0], UINT_MAX, cp->numUBC*10);
-	
-
 	arrayInitialize<int>(numpGOfromGLtoGO, 0, cp->numGO);
 	arrayInitialize<int>(pGOfromGLtoGO[0], UINT_MAX, cp->numGO*cp->maxnumpGOfromGLtoGO);
 
@@ -1134,13 +798,6 @@ void InNetConnectivityState::initializeVals()
 	arrayInitialize<int>(numpGOfromGOtoGR, 0, cp->numGO);
 	arrayInitialize<int>(pGOfromGOtoGR[0], UINT_MAX, cp->numGO*cp->maxnumpGOfromGOtoGR);
 
-
-//	arrayInitialize<int>(numpGOfromGOtoUBC, 0, cp->numGO);
-//	arrayInitialize<int>(pGOfromGOtoUBC[0], UINT_MAX, cp->numGO*32);
-//	arrayInitialize<int>(numpUBCfromGOtoUBC, 0, cp->numUBC);
-//	arrayInitialize<int>(pUBCfromGOtoUBC[0], UINT_MAX, cp->numUBC*1);
-
-
 	arrayInitialize<int>(numpGOfromGRtoGO, 0, cp->numGO);
 	arrayInitialize<int>(pGOfromGRtoGO[0], UINT_MAX, cp->numGO*cp->maxnumpGOfromGRtoGO);
 	
@@ -1153,23 +810,6 @@ void InNetConnectivityState::initializeVals()
 	arrayInitialize<int>(spanArrayAAtoGOY, 0, 202);
 	arrayInitialize<int>(xCoorsAAGO, 0, 202*202);
 	arrayInitialize<int>(yCoorsAAGO, 0, 202*202);
-
-
-
-	/*arrayInitialize<int>(numpGOGABAInGOGO, 0, cp->numGO);
-	arrayInitialize<int>(pGOGABAInGOGO[0], UINT_MAX, cp->numGO*cp->maxGOGOsyn);
-	arrayInitialize<int>(numpGOGABAOutGOGO, 0, cp->numGO);
-	arrayInitialize<int>(pGOGABAOutGOGO[0], UINT_MAX, cp->numGO*cp->maxGOGOsyn);
-	arrayInitialize<bool>(conGOGOBoolOut[0], false, cp->numGO*cp->numGO);
-	arrayInitialize<int>(spanArrayGOtoGOsynX, 0, cp->spanGOGOsynX+1);
-	arrayInitialize<int>(spanArrayGOtoGOsynY, 0, cp->spanGOGOsynY+1);
-	arrayInitialize<int>(xCoorsGOGOsyn, 0, cp->numpGOGOsyn);
-	arrayInitialize<int>(yCoorsGOGOsyn, 0, cp->numpGOGOsyn);
-	arrayInitialize<float>(Pcon, 0, cp->numpGOGOsyn);
-	*/
-
-
-	
 
 	arrayInitialize<int>(numpGOCoupInGOGO, 0, cp->numGO);
 	arrayInitialize<int>(pGOCoupInGOGO[0], UINT_MAX, cp->numGO*81);
@@ -1186,9 +826,6 @@ void InNetConnectivityState::initializeVals()
 	arrayInitialize<float>(gjPcon, 0, 9*9);
 	arrayInitialize<float>(gjCC, 0, 9*9);
 	
-
-
-
 	arrayInitialize<ct_uint32_t>(pGRDelayMaskfromGRtoBSP, 0, cp->numGR);
 
 	arrayInitialize<int>(numpGRfromGLtoGR, 0, cp->numGR);
@@ -1203,29 +840,7 @@ void InNetConnectivityState::initializeVals()
 
 	arrayInitialize<int>(numpGRfromMFtoGR, 0, cp->numGR);
 	arrayInitialize<int>(pGRfromMFtoGR[0], UINT_MAX, cp->numGR*cp->maxnumpGRfromMFtoGR);
-	
-	
-	
-	
-	
-//	arrayInitialize<int>(spanArrayPFtoBCX, 0, cp->grX+1);
-//	arrayInitialize<int>(spanArrayPFtoBCY, 0, (cp->grY/cp->numBC)+1);
-//	arrayInitialize<int>(xCoorsPFBC, 0, 26637);
-//	arrayInitialize<int>(yCoorsPFBC, 0, 26637);
-
-//	arrayInitialize<int>(pBCfromPFtoBC[0], UINT_MAX, 128*5000);
-//	arrayInitialize<int>(numpBCfromPFtoBC, 0, cp->numBC);	
-//	arrayInitialize<int>(pGRfromPFtoBC[0], UINT_MAX, cp->numGR*128);
-//	arrayInitialize<int>(numpGRfromPFtoBC, 0, cp->numGR);
-	
-//	arrayInitialize<int>(pGRDelayMaskfromGRtoBC[0], 0, cp->numGR*cp->numBC);
-
-//	cout << "		" << numpBCfromPFtoBC[0] << endl;
-
 }
-
-
-
 
 void InNetConnectivityState::connectGLUBC()
 {

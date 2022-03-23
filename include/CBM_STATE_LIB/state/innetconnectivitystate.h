@@ -86,8 +86,6 @@ public:
 	virtual bool addGOGOConPair(int srcGON, int destGON);
 
 	//glomerulus
-//	std::vector<Glomerulus> glomeruli;
-
 
 	int *numpGLfromGLtoGO;
 	int **pGLfromGLtoGO;
