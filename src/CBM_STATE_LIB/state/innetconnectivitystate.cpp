@@ -57,7 +57,7 @@ InNetConnectivityState::InNetConnectivityState(ConnectivityParams *parameters,
 	delete randGen;
 }
 
-InNetConnectivityState::InNetConnectivityState(ConnectivityParams *parameters, fstream &infile)
+InNetConnectivityState::InNetConnectivityState(ConnectivityParams *parameters, std::fstream &infile)
 {
 	cp = parameters;
 
@@ -168,7 +168,7 @@ InNetConnectivityState::~InNetConnectivityState()
 	delete[] spanArrayGRtoGLY;
 	delete[] xCoorsGRGL;
 	delete[] yCoorsGRGL;
-	cout << "check2" << endl;
+	std::cout << "check2" << std::endl;
 
 	//mossy fibers
 	delete[] haspGLfromMFtoGL;
@@ -253,7 +253,7 @@ InNetConnectivityState::~InNetConnectivityState()
 void InNetConnectivityState::writeState(std::fstream &outfile)
 {
 	std::cout << "Writing input network connectivity state to disk..." << std:endl;
-	stateRW(false, (fstream &)outfile);
+	stateRW(false, (std::fstream &)outfile);
 	std::cout << "finished writing input network connectivity to disk." << std::endl;
 }
 
@@ -278,39 +278,38 @@ bool InNetConnectivityState::equivalent(const InNetConnectivityState &compState)
 	return eq;
 }
 
-vector<int> InNetConnectivityState::getpGOfromGOtoGLCon(int goN)
+std::vector<int> InNetConnectivityState::getpGOfromGOtoGLCon(int goN)
 {
 	return getConCommon(goN, numpGOfromGOtoGL, pGOfromGOtoGL);
 }
 
-vector<int> InNetConnectivityState::getpGOfromGLtoGOCon(int goN)
+std::vector<int> InNetConnectivityState::getpGOfromGLtoGOCon(int goN)
 {
 	return getConCommon(goN, numpGOfromGLtoGO, pGOfromGLtoGO);
 }
 
-vector<int> InNetConnectivityState::getpMFfromMFtoGLCon(int mfN)
+std::vector<int> InNetConnectivityState::getpMFfromMFtoGLCon(int mfN)
 {
 	return getConCommon(mfN, numpMFfromMFtoGL, pMFfromMFtoGL);
 }
 
-vector<int> InNetConnectivityState::getpGLfromGLtoGRCon(int glN)
+std::vector<int> InNetConnectivityState::getpGLfromGLtoGRCon(int glN)
 {
 	return getConCommon(glN, numpGLfromGLtoGR, pGLfromGLtoGR);
 }
 
-
-vector<int> InNetConnectivityState::getpGRfromMFtoGR(int grN)
+std::vector<int> InNetConnectivityState::getpGRfromMFtoGR(int grN)
 {
 	return getConCommon(grN, numpGRfromMFtoGR, pGRfromMFtoGR);
 }
 
-vector<vector<int> > InNetConnectivityState::getpGRPopfromMFtoGR()
+std::vector<std::vector<int> > InNetConnectivityState::getpGRPopfromMFtoGR()
 {
-	vector<vector<int> > retVect;
+	std::vector<std::vector<int>> retVect;
 
 	retVect.resize(cp->numGR);
 
-	for(int i=0; i<cp->numGR; i++)
+	for (int i = 0; i < cp->numGR; i++)
 	{
 		retVect[i]=getpGRfromMFtoGR(i);
 	}
@@ -318,171 +317,133 @@ vector<vector<int> > InNetConnectivityState::getpGRPopfromMFtoGR()
 	return retVect;
 }
 
-
-vector<int> InNetConnectivityState::getpGRfromGOtoGRCon(int grN)
+std::vector<int> InNetConnectivityState::getpGRfromGOtoGRCon(int grN)
 {
 	return getConCommon(grN, numpGRfromGOtoGR, pGRfromGOtoGR);
 }
-vector<vector<int> > InNetConnectivityState::getpGRPopfromGOtoGRCon()
+
+std::vector<std::vector<int>> InNetConnectivityState::getpGRPopfromGOtoGRCon()
 {
 	return getPopConCommon(cp->numGR, numpGRfromGOtoGR, pGRfromGOtoGR);
 }
 
-/* old Method
-vector<vector<ct_uint32_t> > InNetConnectivityState::getpGRPopfromGOtoGR()
-{
-	vector<vector<ct_uint32_t> > retVect;
-
-	retVect.resize(cp->numGR);
-
-	for(int i=0; i<cp->numGR; i++)
-	{
-		retVect[i]=getpGRfromGOtoGR(i);
-	}
-
-	return retVect;
-}
-*/
-
-
-vector<int> InNetConnectivityState::getpGRfromGRtoGOCon(int grN)
+std::vector<int> InNetConnectivityState::getpGRfromGRtoGOCon(int grN)
 {
 	return getConCommon(grN, numpGRfromGRtoGO, pGRfromGRtoGO);
 }
-vector<vector<int> > InNetConnectivityState::getpGRPopfromGRtoGOCon()
+
+std::vector<std::vector<int>> InNetConnectivityState::getpGRPopfromGRtoGOCon()
 {
 	return getPopConCommon(cp->numGR, numpGRfromGRtoGO, pGRfromGRtoGO);
 }
 
-
-vector<int> InNetConnectivityState::getpGOfromGRtoGOCon(int goN)
+std::vector<int> InNetConnectivityState::getpGOfromGRtoGOCon(int goN)
 {
 	return getConCommon(goN, numpGOfromGRtoGO, pGOfromGRtoGO);
 }
-vector<vector<int> > InNetConnectivityState::getpGOPopfromGRtoGOCon()
+
+std::vector<std::vector<int>> InNetConnectivityState::getpGOPopfromGRtoGOCon()
 {
 	return getPopConCommon(cp->numGO, numpGOfromGRtoGO, pGOfromGRtoGO);
 }
 
-
-vector<int> InNetConnectivityState::getpGOfromGOtoGRCon(int goN)
+std::vector<int> InNetConnectivityState::getpGOfromGOtoGRCon(int goN)
 {
 	return getConCommon(goN, numpGOfromGOtoGR, pGOfromGOtoGR);
 }
-vector<vector<int> > InNetConnectivityState::getpGOPopfromGOtoGRCon()
+
+std::vector<std::vector<int>> InNetConnectivityState::getpGOPopfromGOtoGRCon()
 {
 	return getPopConCommon(cp->numGO, numpGOfromGOtoGR, pGOfromGOtoGR);
 }
 
-
-vector<int> InNetConnectivityState::getpGOOutGOGOCon(int goN)
+std::vector<int> InNetConnectivityState::getpGOOutGOGOCon(int goN)
 {
 	return getConCommon(goN, numpGOGABAOutGOGO, pGOGABAOutGOGO);
 }
-vector<vector<int> > InNetConnectivityState::getpGOPopOutGOGOCon()
+
+std::vector<std::vector<int>> InNetConnectivityState::getpGOPopOutGOGOCon()
 {
 	return getPopConCommon(cp->numGO, numpGOGABAOutGOGO, pGOGABAOutGOGO);
 }
 
-
-vector<int> InNetConnectivityState::getpGOInGOGOCon(int goN)
+std::vector<int> InNetConnectivityState::getpGOInGOGOCon(int goN)
 {
 	return getConCommon(goN, numpGOGABAInGOGO, pGOGABAInGOGO);
 }
-vector<vector<int> > InNetConnectivityState::getpGOPopInGOGOCon()
+
+std::vector<std::vector<int>> InNetConnectivityState::getpGOPopInGOGOCon()
 {
 	return getPopConCommon(cp->numGO, numpGOGABAInGOGO, pGOGABAInGOGO);
 }
 
-
-vector<int> InNetConnectivityState::getpGOCoupOutGOGOCon(int goN)
+std::vector<int> InNetConnectivityState::getpGOCoupOutGOGOCon(int goN)
 {
 	return getConCommon(goN, numpGOCoupOutGOGO, pGOCoupOutGOGO);
 }
-vector<vector<int> > InNetConnectivityState::getpGOPopCoupOutGOGOCon()
+
+std::vector<std::vector<int>> InNetConnectivityState::getpGOPopCoupOutGOGOCon()
 {
 	return getPopConCommon(cp->numGO, numpGOCoupOutGOGO, pGOCoupOutGOGO);
 }
 
-
-vector<int> InNetConnectivityState::getpGOCoupInGOGOCon(int goN)
+std::vector<int> InNetConnectivityState::getpGOCoupInGOGOCon(int goN)
 {
 	return getConCommon(goN, numpGOCoupInGOGO, pGOCoupInGOGO);
 }
-vector<vector<int> > InNetConnectivityState::getpGOPopCoupInGOGOCon()
+
+std::vector<std::vector<int>> InNetConnectivityState::getpGOPopCoupInGOGOCon()
 {
 	return getPopConCommon(cp->numGO, numpGOCoupInGOGO, pGOCoupInGOGO);
 }
 
-
-vector<int> InNetConnectivityState::getpMFfromMFtoGRCon(int mfN)
+std::vector<int> InNetConnectivityState::getpMFfromMFtoGRCon(int mfN)
 {
 	return getConCommon(mfN, numpMFfromMFtoGR, pMFfromMFtoGR);
 }
 
-vector<int> InNetConnectivityState::getpMFfromMFtoGOCon(int mfN)
+std::vector<int> InNetConnectivityState::getpMFfromMFtoGOCon(int mfN)
 {
 	return getConCommon(mfN, numpMFfromMFtoGO, pMFfromMFtoGO);
 }
 
-
-vector<int> InNetConnectivityState::getpGOfromMFtoGOCon(int goN)
+std::vector<int> InNetConnectivityState::getpGOfromMFtoGOCon(int goN)
 {
 	return getConCommon(goN, numpGOfromMFtoGO, pGOfromMFtoGO);
 }
 
-vector<vector<int> > InNetConnectivityState::getpGOPopfromMFtoGOCon()
+std::vector<std::vector<int>> InNetConnectivityState::getpGOPopfromMFtoGOCon()
 {
-	vector<vector<int> > con;
+	std::vector<std::vector<int>> con;
 
 	con.resize(cp->numGO);
-	for(int i=0; i<cp->numGO; i++)
+	for (int i = 0; i < cp->numGO; i++)
 	{
-		con[i]=getpGOfromMFtoGOCon(i);
+		con[i] = getpGOfromMFtoGOCon(i);
 	}
 
 	return con;
 }
 
-vector<ct_uint32_t> InNetConnectivityState::getConCommon(int cellN, ct_int32_t *numpCellCon, ct_uint32_t **pCellCon)
+std::vector<ct_uint32_t> InNetConnectivityState::getConCommon(int cellN, ct_int32_t *numpCellCon,
+		ct_uint32_t **pCellCon)
 {
-	vector<ct_uint32_t> inds;
+	std::vector<ct_uint32_t> inds;
 	inds.resize(numpCellCon[cellN]);
-	for(int i=0; i<numpCellCon[cellN]; i++)
+	for (int i = 0; i < numpCellCon[cellN]; i++)
 	{
-		inds[i]=pCellCon[cellN][i];
+		inds[i] = pCellCon[cellN][i];
 	}
 
 	return inds;
 }
 
-vector<vector<ct_uint32_t> > InNetConnectivityState::getPopConCommon(int numCells, ct_int32_t *numpCellCon, ct_uint32_t **pCellCon)
+std::vector<std::vector<ct_uint32_t>> InNetConnectivityState::getPopConCommon(int numCells,
+		ct_int32_t *numpCellCon, ct_uint32_t **pCellCon)
 {
-	vector<vector<ct_uint32_t> > con;
+	std::vector<std::vector<ct_uint32_t>> con;
 	con.resize(numCells);
-	for(int i=0; i<numCells; i++)
-	{
-		con[i].insert(con[i].end(), &pCellCon[i][0], &pCellCon[i][numpCellCon[i]]);
-	}
-
-	return con;
-}
-vector<int> InNetConnectivityState::getConCommon(int cellN, int *numpCellCon, int **pCellCon)
-{
-	vector<int> inds;
-	inds.resize(numpCellCon[cellN]);
-	for(int i=0; i<numpCellCon[cellN]; i++)
-	{
-		inds[i]=pCellCon[cellN][i];
-	}
-
-	return inds;
-}
-vector<vector<int> > InNetConnectivityState::getPopConCommon(int numCells, int *numpCellCon, int **pCellCon)
-{
-	vector<vector<int> > con;
-	con.resize(numCells);
-	for(int i=0; i<numCells; i++)
+	for (int i = 0; i < numCells; i++)
 	{
 		con[i].insert(con[i].end(), &pCellCon[i][0], &pCellCon[i][numpCellCon[i]]);
 	}
@@ -490,13 +451,38 @@ vector<vector<int> > InNetConnectivityState::getPopConCommon(int numCells, int *
 	return con;
 }
 
-vector<ct_uint32_t> InNetConnectivityState::getGOIncompIndfromGRtoGO()
+std::vector<int> InNetConnectivityState::getConCommon(int cellN, int *numpCellCon, int **pCellCon)
 {
-	vector<ct_uint32_t> goInds;
-
-	for(int i=0; i<cp->numGO; i++)
+	std::vector<int> inds;
+	inds.resize(numpCellCon[cellN]);
+	for (int i = 0; i < numpCellCon[cellN]; i++)
 	{
-		if(numpGOfromGRtoGO[i]<cp->maxnumpGOfromGRtoGO)
+		inds[i] = pCellCon[cellN][i];
+	}
+
+	return inds;
+}
+
+std::vector<std::vector<int>> InNetConnectivityState::getPopConCommon(int numCells, int *numpCellCon,
+		int **pCellCon)
+{
+	std::vector<std::vector<int>> con;
+	con.resize(numCells);
+	for (int i = 0; i < numCells; i++)
+	{
+		con[i].insert(con[i].end(), &pCellCon[i][0], &pCellCon[i][numpCellCon[i]]);
+	}
+
+	return con;
+}
+
+std::vector<ct_uint32_t> InNetConnectivityState::getGOIncompIndfromGRtoGO()
+{
+	std::vector<ct_uint32_t> goInds;
+
+	for (int i = 0; i < cp->numGO; i++)
+	{
+		if (numpGOfromGRtoGO[i] < cp->maxnumpGOfromGRtoGO)
 		{
 			goInds.push_back(i);
 		}
@@ -505,13 +491,13 @@ vector<ct_uint32_t> InNetConnectivityState::getGOIncompIndfromGRtoGO()
 	return goInds;
 }
 
-vector<ct_uint32_t> InNetConnectivityState::getGRIncompIndfromGRtoGO()
+std::vector<ct_uint32_t> InNetConnectivityState::getGRIncompIndfromGRtoGO()
 {
-	vector<ct_uint32_t> grInds;
+	std::vector<ct_uint32_t> grInds;
 
-	for(int i=0; i<cp->numGR; i++)
+	for (int i = 0; i < cp->numGR; i++)
 	{
-		if(numpGRfromGRtoGO[i]<cp->maxnumpGRfromGRtoGO)
+		if (numpGRfromGRtoGO[i] < cp->maxnumpGRfromGRtoGO)
 		{
 			grInds.push_back(i);
 		}
@@ -522,40 +508,41 @@ vector<ct_uint32_t> InNetConnectivityState::getGRIncompIndfromGRtoGO()
 
 bool InNetConnectivityState::deleteGOGOConPair(int srcGON, int destGON)
 {
-	bool hasCon;
-
+	bool hasCon = false;
 	int conN;
-	hasCon=false;
-	for(int i=0; i<numpGOGABAOutGOGO[srcGON]; i++)
+	
+	for (int i = 0; i < numpGOGABAOutGOGO[srcGON]; i++)
 	{
-		if(pGOGABAOutGOGO[srcGON][i]==destGON)
+		if (pGOGABAOutGOGO[srcGON][i] == destGON)
 		{
-			hasCon=true;
-			conN=i;
+			hasCon = true;
+			conN = i;
 			break;
 		}
 	}
-	if(!hasCon)
+
+	if (!hasCon)
 	{
 		return hasCon;
 	}
 
-	for(int i=conN; i<numpGOGABAOutGOGO[srcGON]-1; i++)
+	for (int i = conN; i < numpGOGABAOutGOGO[srcGON] - 1; i++)
 	{
-		pGOGABAOutGOGO[srcGON][i]=pGOGABAOutGOGO[srcGON][i+1];
+		pGOGABAOutGOGO[srcGON][i] = pGOGABAOutGOGO[srcGON][i + 1];
 	}
 	numpGOGABAOutGOGO[srcGON]--;
 
-	for(int i=0; i<numpGOGABAInGOGO[destGON]; i++)
+	for (int i = 0; i < numpGOGABAInGOGO[destGON]; i++)
 	{
-		if(pGOGABAInGOGO[destGON][i]==srcGON)
+		if (pGOGABAInGOGO[destGON][i] == srcGON)
 		{
-			conN=i;
+			conN = i;
 		}
 	}
-	for(int i=conN; i<numpGOGABAInGOGO[destGON]-1; i++)
+
+	for(int i = conN; i < numpGOGABAInGOGO[destGON] - 1; i++)
 	{
-		pGOGABAInGOGO[destGON][i]=pGOGABAInGOGO[destGON][i+1];
+		pGOGABAInGOGO[destGON][i] = pGOGABAInGOGO[destGON][i + 1];
 	}
 	numpGOGABAInGOGO[destGON]--;
 
@@ -564,16 +551,16 @@ bool InNetConnectivityState::deleteGOGOConPair(int srcGON, int destGON)
 
 bool InNetConnectivityState::addGOGOConPair(int srcGON, int destGON)
 {
-	if(numpGOGABAOutGOGO[srcGON]>=cp->maxnumpGOGABAOutGOGO ||
-			numpGOGABAInGOGO[destGON]>=cp->maxnumpGOGABAInGOGO)
+	if (numpGOGABAOutGOGO[srcGON] >= cp->maxnumpGOGABAOutGOGO ||
+			numpGOGABAInGOGO[destGON] >= cp->maxnumpGOGABAInGOGO)
 	{
 		return false;
 	}
 
-	pGOGABAOutGOGO[srcGON][numpGOGABAOutGOGO[srcGON]]=destGON;
+	pGOGABAOutGOGO[srcGON][numpGOGABAOutGOGO[srcGON]] = destGON;
 	numpGOGABAOutGOGO[srcGON]++;
 
-	pGOGABAInGOGO[destGON][numpGOGABAInGOGO[destGON]]=srcGON;
+	pGOGABAInGOGO[destGON][numpGOGABAInGOGO[destGON]] = srcGON;
 	numpGOGABAInGOGO[destGON]++;
 
 	return true;
@@ -582,55 +569,55 @@ bool InNetConnectivityState::addGOGOConPair(int srcGON, int destGON)
 void InNetConnectivityState::allocateMemory()
 {
 
-	numpGLfromGLtoGO=new int[cp->numGL];
-	pGLfromGLtoGO=allocate2DArray<int>(cp->numGL, cp->maxnumpGLfromGLtoGO);
+	numpGLfromGLtoGO = new int[cp->numGL];
+	pGLfromGLtoGO = allocate2DArray<int>(cp->numGL, cp->maxnumpGLfromGLtoGO);
 
-	haspGLfromGOtoGL=new int[cp->numGL];
-	numpGLfromGOtoGL=new int[cp->numGL];
-	pGLfromGOtoGL=allocate2DArray<int>(cp->numGL, cp->maxnumpGLfromGOtoGL);
+	haspGLfromGOtoGL = new int[cp->numGL];
+	numpGLfromGOtoGL = new int[cp->numGL];
+	pGLfromGOtoGL = allocate2DArray<int>(cp->numGL, cp->maxnumpGLfromGOtoGL);
 
-	numpGLfromGLtoGR=new int[cp->numGL];
-	pGLfromGLtoGR=allocate2DArray<int>(cp->numGL, cp->maxnumpGLfromGLtoGR);
+	numpGLfromGLtoGR = new int[cp->numGL];
+	pGLfromGLtoGR = allocate2DArray<int>(cp->numGL, cp->maxnumpGLfromGLtoGR);
 	spanArrayGRtoGLX = new int[5];
 	spanArrayGRtoGLY = new int[5];
 	xCoorsGRGL = new int[25];
 	yCoorsGRGL = new int[25];
 	
 	//mf
-	haspGLfromMFtoGL=new int[cp->numGL];
-	pGLfromMFtoGL=new int[cp->numGL];
-	numpMFfromMFtoGL=new int[cp->numMF];
-	pMFfromMFtoGL=allocate2DArray<int>(cp->numMF, 40);
+	haspGLfromMFtoGL = new int[cp->numGL];
+	pGLfromMFtoGL = new int[cp->numGL];
+	numpMFfromMFtoGL = new int[cp->numMF];
+	pMFfromMFtoGL = allocate2DArray<int>(cp->numMF, 40);
 	spanArrayMFtoGLX = new int[cp->glX];
 	spanArrayMFtoGLY = new int[cp->glY];
 	xCoorsMFGL = new int[cp->numpMFtoGL];
 	yCoorsMFGL = new int[cp->numpMFtoGL];
 
-	numpMFfromMFtoGR=new int[cp->numMF];
+	numpMFfromMFtoGR = new int[cp->numMF];
 	pMFfromMFtoGR=allocate2DArray<int>(cp->numMF, cp->maxnumpMFfromMFtoGR);
-	numpMFfromMFtoGO=new int[cp->numMF];
-	pMFfromMFtoGO=allocate2DArray<int>(cp->numMF, cp->maxnumpMFfromMFtoGO);
+	numpMFfromMFtoGO = new int[cp->numMF];
+	pMFfromMFtoGO = allocate2DArray<int>(cp->numMF, cp->maxnumpMFfromMFtoGO);
 
 	//golgi
-	numpGOfromGLtoGO=new int[cp->numGO];
-	pGOfromGLtoGO=allocate2DArray<int>(cp->numGO, cp->maxnumpGOfromGLtoGO);
+	numpGOfromGLtoGO = new int[cp->numGO];
+	pGOfromGLtoGO = allocate2DArray<int>(cp->numGO, cp->maxnumpGOfromGLtoGO);
 
-	numpGOfromGOtoGL=new int[cp->numGO];
-	pGOfromGOtoGL=allocate2DArray<int>(cp->numGO, cp->maxnumpGOfromGOtoGL);
-	spanArrayGOtoGLX=new int[cp->spanGOtoGLX+1];
-	spanArrayGOtoGLY=new int [cp->spanGOtoGLY+1];
-	xCoorsGOGL=new int[cp->numpGOGL];
-	yCoorsGOGL=new int[cp->numpGOGL];
-	PconGOGL=new float[cp->numpGOGL];
+	numpGOfromGOtoGL = new int[cp->numGO];
+	pGOfromGOtoGL = allocate2DArray<int>(cp->numGO, cp->maxnumpGOfromGOtoGL);
+	spanArrayGOtoGLX = new int[cp->spanGOtoGLX+1];
+	spanArrayGOtoGLY = new int [cp->spanGOtoGLY+1];
+	xCoorsGOGL = new int[cp->numpGOGL];
+	yCoorsGOGL = new int[cp->numpGOGL];
+	PconGOGL = new float[cp->numpGOGL];
 
-	numpGOfromMFtoGO=new int[cp->numGO];
-	pGOfromMFtoGO=allocate2DArray<int>(cp->numGO, 40);
+	numpGOfromMFtoGO = new int[cp->numGO];
+	pGOfromMFtoGO = allocate2DArray<int>(cp->numGO, 40);
 
-	numpGOfromGOtoGR=new int[cp->numGO];
-	pGOfromGOtoGR=allocate2DArray<int>(cp->numGO, cp->maxnumpGOfromGOtoGR);
+	numpGOfromGOtoGR = new int[cp->numGO];
+	pGOfromGOtoGR = allocate2DArray<int>(cp->numGO, cp->maxnumpGOfromGOtoGR);
 
-	numpGOfromGRtoGO=new int[cp->numGO];
-	pGOfromGRtoGO=allocate2DArray<int>(cp->numGO, cp->maxnumpGOfromGRtoGO);
+	numpGOfromGRtoGO = new int[cp->numGO];
+	pGOfromGRtoGO = allocate2DArray<int>(cp->numGO, cp->maxnumpGOfromGRtoGO);
 	spanArrayPFtoGOX = new int[cp->grX + 1];
 	spanArrayPFtoGOY = new int[150 + 1];
 	xCoorsPFGO = new int[(cp->grX + 1)*(151)];
@@ -640,59 +627,59 @@ void InNetConnectivityState::allocateMemory()
 	xCoorsAAGO = new int[202*202];
 	yCoorsAAGO = new int[202*202];
 
-	numpGOCoupInGOGO=new int[cp->numGO];
-	pGOCoupInGOGO=allocate2DArray<int>(cp->numGO, 81);
-	pGOCoupInGOGOCCoeff=allocate2DArray<float>(cp->numGO, 81);
-	numpGOCoupOutGOGO=new int[cp->numGO];
-	pGOCoupOutGOGO=allocate2DArray<int>(cp->numGO, 81);
-	pGOCoupOutGOGOCCoeff=allocate2DArray<float>(cp->numGO, 81);
-	gjConBool=allocate2DArray<bool>(cp->numGO, cp->numGO);
-	spanArrayGOtoGOgjX=new int[9];
-	spanArrayGOtoGOgjY=new int[9];
-	xCoorsGOGOgj=new int[9*9];
-	yCoorsGOGOgj=new int[9*9];
-	gjPcon=new float[9*9];
-	gjCC=new float[9*9];
+	numpGOCoupInGOGO =new int[cp->numGO];
+	pGOCoupInGOGO = allocate2DArray<int>(cp->numGO, 81);
+	pGOCoupInGOGOCCoeff = allocate2DArray<float>(cp->numGO, 81);
+	numpGOCoupOutGOGO = new int[cp->numGO];
+	pGOCoupOutGOGO = allocate2DArray<int>(cp->numGO, 81);
+	pGOCoupOutGOGOCCoeff = allocate2DArray<float>(cp->numGO, 81);
+	gjConBool = allocate2DArray<bool>(cp->numGO, cp->numGO);
+	spanArrayGOtoGOgjX = new int[9];
+	spanArrayGOtoGOgjY = new int[9];
+	xCoorsGOGOgj = new int[9*9];
+	yCoorsGOGOgj = new int[9*9];
+	gjPcon = new float[9*9];
+	gjCC = new float[9*9];
 
 	//granule
-	pGRDelayMaskfromGRtoBSP=new ct_uint32_t[cp->numGR];
+	pGRDelayMaskfromGRtoBSP = new ct_uint32_t[cp->numGR];
 
-	numpGRfromGLtoGR=new int[cp->numGR];
-	pGRfromGLtoGR=allocate2DArray<int>(cp->numGR, cp->maxnumpGRfromGLtoGR);
+	numpGRfromGLtoGR = new int[cp->numGR];
+	pGRfromGLtoGR = allocate2DArray<int>(cp->numGR, cp->maxnumpGRfromGLtoGR);
 
-	numpGRfromGRtoGO=new int[cp->numGR];
-	pGRfromGRtoGO=allocate2DArray<int>(cp->numGR, cp->maxnumpGRfromGRtoGO);
-	pGRDelayMaskfromGRtoGO=allocate2DArray<int>(cp->numGR, cp->maxnumpGRfromGRtoGO);
+	numpGRfromGRtoGO = new int[cp->numGR];
+	pGRfromGRtoGO = allocate2DArray<int>(cp->numGR, cp->maxnumpGRfromGRtoGO);
+	pGRDelayMaskfromGRtoGO = allocate2DArray<int>(cp->numGR, cp->maxnumpGRfromGRtoGO);
 
-	numpGRfromGOtoGR=new int[cp->numGR];
-	pGRfromGOtoGR=allocate2DArray<int>(cp->numGR, cp->maxnumpGRfromGOtoGR);
+	numpGRfromGOtoGR = new int[cp->numGR];
+	pGRfromGOtoGR = allocate2DArray<int>(cp->numGR, cp->maxnumpGRfromGOtoGR);
 
-	numpGRfromMFtoGR=new int[cp->numGR];
-	pGRfromMFtoGR=allocate2DArray<int>(cp->numGR, cp->maxnumpGRfromMFtoGR);
+	numpGRfromMFtoGR = new int[cp->numGR];
+	pGRfromMFtoGR = allocate2DArray<int>(cp->numGR, cp->maxnumpGRfromMFtoGR);
 }
 
 void InNetConnectivityState::stateRW(bool read, std::fstream &file)
 {
-	cout<<"glomerulus"<<endl;
+	std::cout << "glomerulus" << std::endl;
 	//glomerulus
 	rawBytesRW((char *)haspGLfromMFtoGL, cp->numGL*sizeof(int), read, file);
-	cout<<"glomerulus 1.1"<<endl;
+	std::cout << "glomerulus 1.1" << std::endl;
 	rawBytesRW((char *)pGLfromMFtoGL, cp->numGL*sizeof(int), read, file);
 
-	cout<<"glomerulus 2"<<endl;
+	std::cout << "glomerulus 2" << std::endl;
 	rawBytesRW((char *)numpGLfromGLtoGO, cp->numGL*sizeof(int), read, file);
 	rawBytesRW((char *)pGLfromGLtoGO[0], cp->numGL*cp->maxnumpGLfromGLtoGO*sizeof(int), read, file);
 
-	cout<<"glomerulus 3"<<endl;
+	std::cout << "glomerulus 3" << std::endl;
 	rawBytesRW((char *)numpGLfromGOtoGL, cp->numGL*sizeof(int), read, file);
 	rawBytesRW((char *)haspGLfromGOtoGL, cp->numGL*sizeof(int), read, file);
 	//rawBytesRW((char *)pGLfromGOtoGL, cp->numGL*sizeof(int), read, file);
 
-	cout<<"glomerulus 4"<<endl;
+	std::cout << "glomerulus 4" << std::endl;
 	rawBytesRW((char *)numpGLfromGLtoGR, cp->numGL*sizeof(int), read, file);
 	rawBytesRW((char *)pGLfromGLtoGR[0], cp->numGL*cp->maxnumpGLfromGLtoGR*sizeof(int), read, file);
 
-	cout<<"mf"<<endl;
+	std::cout << "mf" << std::endl;
 	//mossy fibers
 	rawBytesRW((char *)numpMFfromMFtoGL, cp->numMF*sizeof(int), read, file);
 	rawBytesRW((char *)pMFfromMFtoGL[0], cp->numMF*20*sizeof(int), read, file);
@@ -703,7 +690,7 @@ void InNetConnectivityState::stateRW(bool read, std::fstream &file)
 	rawBytesRW((char *)numpMFfromMFtoGO, cp->numMF*sizeof(int), read, file);
 	rawBytesRW((char *)pMFfromMFtoGO[0], cp->numMF*cp->maxnumpMFfromMFtoGO*sizeof(int), read, file);
 
-	cout<<"golgi"<<endl;
+	std::cout << "golgi" << std::endl;
 	//golgi
 	rawBytesRW((char *)numpGOfromGLtoGO, cp->numGO*sizeof(int), read, file);
 	rawBytesRW((char *)pGOfromGLtoGO[0], cp->numGO*cp->maxnumpGOfromGLtoGO*sizeof(int), read, file);
@@ -726,15 +713,13 @@ void InNetConnectivityState::stateRW(bool read, std::fstream &file)
 	rawBytesRW((char *)numpGOGABAOutGOGO, cp->numGO*sizeof(int), read, file);
 	rawBytesRW((char *)pGOGABAOutGOGO[0], cp->numGO*cp->maxnumpGOGABAOutGOGO*sizeof(int), read, file);
 	
-	
-
 	rawBytesRW((char *)numpGOCoupInGOGO, cp->numGO*sizeof(int), read, file);
 	rawBytesRW((char *)pGOCoupInGOGO[0], cp->numGO*49*sizeof(int), read, file);
 
 	rawBytesRW((char *)numpGOCoupOutGOGO, cp->numGO*sizeof(int), read, file);
 	rawBytesRW((char *)pGOCoupOutGOGO[0], cp->numGO*49*sizeof(int), read, file);
 
-	cout<<"granule"<<endl;
+	std::cout << "granule" << std::endl;
 	//granule
 	rawBytesRW((char *)pGRDelayMaskfromGRtoBSP, cp->numGR*sizeof(ct_uint32_t), read, file);
 
@@ -844,53 +829,46 @@ void InNetConnectivityState::initializeVals()
 
 void InNetConnectivityState::connectGLUBC()
 {
-
-//ubcX = 64;
-//ubcY = 48;
-//numUBC = ubcX*ubcY;
-
-//int spanGLtoUBCX = 2; //cp->glX; //50 
-//int spanGLtoUBCY = 2; //cp->glY; //160
-//int numpGLtoUBC = (spanGLtoUBCX+1)*(spanGLtoUBCY+1);
-
-//Make Span Array: Complete	
-	for(int i=0; i<cp->spanGLtoUBCX+1;i++){
-		int ind = cp->spanGLtoUBCX - i;
-		spanArrayGLtoUBCX[i] = (cp->spanGLtoUBCX/2) - ind;}
-	for(int i=0; i<cp->spanGLtoUBCY+1;i++){
-		int ind = cp->spanGLtoUBCY - i;
-		spanArrayGLtoUBCY[i] = (cp->spanGLtoUBCY/2) - ind;}
-		
-	for(int i=0; i<cp->numpGLtoUBC; i++)
+	for (int i = 0; i < cp->spanGLtoUBCX + 1; i++)
 	{
-		xCoorsGLUBC[i] = spanArrayGLtoUBCX[ i%(cp->spanGLtoUBCX+1) ];
-		yCoorsGLUBC[i] = spanArrayGLtoUBCY[ i/(cp->spanGLtoUBCX+1) ];		
+		int ind = cp->spanGLtoUBCX - i;
+		spanArrayGLtoUBCX[i] = (cp->spanGLtoUBCX / 2) - ind;
+	}
+	for (int i = 0; i < cp->spanGLtoUBCY + 1; i++)
+	{
+		int ind = cp->spanGLtoUBCY - i;
+		spanArrayGLtoUBCY[i] = (cp->spanGLtoUBCY / 2) - ind;
+	}
+		
+	for (int i = 0; i < cp->numpGLtoUBC; i++)
+	{
+		xCoorsGLUBC[i] = spanArrayGLtoUBCX[i % (cp->spanGLtoUBCX + 1)];
+		yCoorsGLUBC[i] = spanArrayGLtoUBCY[i / (cp->spanGLtoUBCX + 1)];		
 	}
 
+	// Grid Scale: Complete
+	float gridXScaleSrctoDest = (float)cp->ubcX / (float)cp->glX; 
+	float gridYScaleSrctoDest = (float)cp->ubcY / (float)cp->glY; 
 
-
-// Grid Scale: Complete
-	float gridXScaleSrctoDest =(float)cp->ubcX / (float)cp->glX; 
-	float gridYScaleSrctoDest =(float)cp->ubcY / (float)cp->glY; 
-
-//Make Random Mossy Fiber Index Array: Complete	
-	vector<int> rUBCInd;
+	// Make Random Mossy Fiber Index Array: Complete	
+	std::vector<int> rUBCInd;
 	rUBCInd.assign(cp->numUBC,0);
-	for(int i=0; i<cp->numUBC; i++)
+	for (int i = 0; i < cp->numUBC; i++)
 	{
 		rUBCInd[i] = i;
 	}
 
-	random_shuffle(rUBCInd.begin(), rUBCInd.end());
+	std::random_shuffle(rUBCInd.begin(), rUBCInd.end());
 
-//Make Random Span Array: Complete
-	vector<int> rUBCSpanInd;
+	//Make Random Span Array: Complete
+	std::vector<int> rUBCSpanInd;
 	rUBCSpanInd.assign(cp->numpGLtoUBC,0);
-	for(int ind=0; ind<cp->numpGLtoUBC; ind++)
-	{rUBCSpanInd[ind] = ind;}
+	for (int ind = 0; ind < cp->numpGLtoUBC; ind++)
+	{
+		rUBCSpanInd[ind] = ind;
+	}
 	
-	random_shuffle(rUBCSpanInd.begin(), rUBCSpanInd.end());	
-	
+	std::random_shuffle(rUBCSpanInd.begin(), rUBCSpanInd.end());	
 
 	int srcPosX;
 	int srcPosY;
@@ -901,55 +879,54 @@ void InNetConnectivityState::connectGLUBC()
 	int destInd;
 	int UBCInputs = 1;
 
-int glX = cp->glX;
-int glY = cp->glY;
-for(int attempts=0; attempts<4; attempts++)
-{
-	random_shuffle(rUBCInd.begin(), rUBCInd.end());	
+	int glX = cp->glX;
+	int glY = cp->glY;
 
-	for(int i=0; i<cp->numUBC; i++)
-	{	
-		//Select MF Coordinates from random index array: Complete	
-		srcPosX = rUBCInd[i]%cp->ubcX;
-		srcPosY = rUBCInd[i]/cp->ubcX;		
-		
-		random_shuffle(rUBCSpanInd.begin(), rUBCSpanInd.end());	
-		for(int j=0; j<cp->numpGLtoUBC; j++)
+	for (int attempts = 0; attempts < 4; attempts++)
+	{
+		std::random_shuffle(rUBCInd.begin(), rUBCInd.end());	
+
+		for (int i = 0; i < cp->numUBC; i++)
 		{	
+			//Select MF Coordinates from random index array: Complete	
+			srcPosX = rUBCInd[i] % cp->ubcX;
+			srcPosY = rUBCInd[i] / cp->ubcX;		
 			
-			if( numpUBCfromGLtoUBC[ rUBCInd[i] ] == UBCInputs ){ break; }
-			
-			preDestPosX = xCoorsGLUBC[ rUBCSpanInd[j] ]; 
-			preDestPosY = yCoorsGLUBC[ rUBCSpanInd[j] ];	
+			std::random_shuffle(rUBCSpanInd.begin(), rUBCSpanInd.end());	
 
-			tempDestPosX = (int)round(srcPosX/gridXScaleSrctoDest) + preDestPosX;
-			tempDestPosY = (int)round(srcPosY/gridYScaleSrctoDest) + preDestPosY;	
-			
-			tempDestPosX = ((tempDestPosX%glX+glX)%glX);
-			tempDestPosY = ((tempDestPosY%glY+glY)%glY);
-			
-			destInd = tempDestPosY*glX+tempDestPosX;
+			for (int j = 0; j < cp->numpGLtoUBC; j++)
+			{	
 				
-			pUBCfromGLtoUBC[ rUBCInd[i] ] = destInd;
-			numpUBCfromGLtoUBC[ rUBCInd[i] ]++;
+				if (numpUBCfromGLtoUBC[rUBCInd[i]] == UBCInputs) break; 
 				
-			pGLfromGLtoUBC[destInd] = rUBCInd[i];
-			numpGLfromGLtoUBC[destInd]++;		
-		
+				preDestPosX = xCoorsGLUBC[rUBCSpanInd[j]]; 
+				preDestPosY = yCoorsGLUBC[rUBCSpanInd[j]];	
+
+				tempDestPosX = (int)round(srcPosX / gridXScaleSrctoDest) + preDestPosX;
+				tempDestPosY = (int)round(srcPosY / gridYScaleSrctoDest) + preDestPosY;	
+				
+				tempDestPosX = (tempDestPosX%glX + glX) % glX;
+				tempDestPosY = (tempDestPosY%glY+glY) % glY;
+				
+				destInd = tempDestPosY * glX + tempDestPosX;
+					
+				pUBCfromGLtoUBC[rUBCInd[i]] = destInd;
+				numpUBCfromGLtoUBC[rUBCInd[i]]++;
+					
+				pGLfromGLtoUBC[destInd] = rUBCInd[i];
+				numpGLfromGLtoUBC[destInd]++;		
+			}
 		}
 	}
+
+	int totalGLtoUBC = 0;
+	
+	for (int i = 0; i < cp->numUBC; i++)
+	{
+		totalGLtoUBC += numpUBCfromGLtoUBC[i];
+	}
+	std::cout << "Total GL to UBC connections:" << totalGLtoUBC << std::endl; 
 }
-
-int totalGLtoUBC = 0;
-for(int i=0; i<cp->numUBC; i++)
-{
-	totalGLtoUBC = totalGLtoUBC + numpUBCfromGLtoUBC[i];
-}
-cout << "Total GL to UBC connections:		" << totalGLtoUBC << endl; 
-
-
-}
-
 
 void InNetConnectivityState::connectGRGL(CRandomSFMT *randGen)
 {
@@ -962,32 +939,19 @@ void InNetConnectivityState::connectGRGL(CRandomSFMT *randGen)
 			20000, 50000, true,
 			randGen);
 
-	//for(int i=0; i<10; i++)
-	//{
-	//	cout<<"numpGLfromGLtoGR["<<i<<"]: "<<numpGLfromGLtoGR[i]<<endl;
-	//}
-//	cout << endl;
-//	for(int i=0; i<cp->numGR; i++)
-//	{
-//		if(numpGRfromGLtoGR[i] < 4)
-//		{
-//			cout << "	FUCK_GRtoGL!	" << endl;
-//		}
-//	}
 	int count = 0;
-	for(int i=0; i<cp->numGL; i++)
+
+	for (int i = 0; i < cp->numGL; i++)
 	{
-		count = count + numpGLfromGLtoGR[i];
+		count += numpGLfromGLtoGR[i];
 	}
-	cout << "Total number of Glomeruli to Granule connections:	" << count << endl; 
-	cout << "Correct number:                                 	" << cp->numGR*cp->maxnumpGRfromGLtoGR << endl;
 
+	std::cout << "Total number of Glomeruli to Granule connections:	" << count << std::endl; 
+	std::cout << "Correct number: " << cp->numGR*cp->maxnumpGRfromGLtoGR << std::endl;
 }
-
 
 void InNetConnectivityState::connectGOGL(CRandomSFMT *randGen)
 {
-
 	connectCommon(pGOfromGLtoGO, numpGOfromGLtoGO,
 			pGLfromGLtoGO, numpGLfromGLtoGO,
 			cp->maxnumpGOfromGLtoGO, cp->numGO,
@@ -997,224 +961,182 @@ void InNetConnectivityState::connectGOGL(CRandomSFMT *randGen)
 			20000, 50000, false,
 			randGen);
 
+	int initialGOOutput = 1;
+	float sigmaML = 100;//10.5;
+	float sigmaS = 100;//10.5;
+	float A = 0.01;//0.095;
+	float PconX;
+	float PconY;
 
-//int spanGOtoGLX_local = 56;
-//int spanGOtoGLY_local = 56;
-//int numpGOtoGL_local = (spanGOtoGLX_local+1)*(spanGOtoGLY_local+1);
-int initialGOOutput = 1;
-float sigmaML = 100;//10.5;
-float sigmaS = 100;//10.5;
-float A = 0.01;//0.095;
-float PconX;
-float PconY;
-
-
-// Make span Array
-	for(int i=0; i<cp->spanGOGLX+1;i++){
-		int ind = cp->spanGOGLX - i;
-		spanArrayGOtoGLX[i] = (cp->spanGOGLX/2) - ind;}
-	for(int i=0; i<cp->spanGOGLY+1;i++){
-		int ind = cp->spanGOGLY - i;
-		spanArrayGOtoGLY[i] = (cp->spanGOGLY/2) - ind;}
-		
-	for(int i=0; i<cp->numpGOGL; i++)
+	// Make span Array
+	for (int i = 0; i < cp->spanGOGLX + 1; i++)
 	{
-		xCoorsGOGL[i] = spanArrayGOtoGLX[ i%(cp->spanGOGLX+1) ];
-		yCoorsGOGL[i] = spanArrayGOtoGLY[ i/(cp->spanGOGLY+1) ];	
+		int ind = cp->spanGOGLX - i;
+		spanArrayGOtoGLX[i] = (cp->spanGOGLX / 2) - ind;
 	}
 
-//Make Random Golgi cell Index Array	
-	vector<int> rGOInd;
+	for (int i = 0; i < cp->spanGOGLY + 1; i++)
+	{
+		int ind = cp->spanGOGLY - i;
+		spanArrayGOtoGLY[i] = (cp->spanGOGLY / 2) - ind;
+	}
+		
+	for (int i = 0; i < cp->numpGOGL; i++)
+	{
+		xCoorsGOGL[i] = spanArrayGOtoGLX[i % (cp->spanGOGLX + 1)];
+		yCoorsGOGL[i] = spanArrayGOtoGLY[i / (cp->spanGOGLY + 1)];	
+	}
+
+	//Make Random Golgi cell Index Array	
+	std::vector<int> rGOInd;
 	rGOInd.assign(cp->numGO,0);
-	for(int i=0; i<cp->numGO; i++)
+	for (int i = 0; i < cp->numGO; i++)
 	{
 		rGOInd[i] = i;
 	}
-	random_shuffle(rGOInd.begin(), rGOInd.end());
-	
 
-//Make Random Span Array
-	vector<int> rGOSpanInd;
+	std::random_shuffle(rGOInd.begin(), rGOInd.end());
+
+	//Make Random Span Array
+	std::vector<int> rGOSpanInd;
 	rGOSpanInd.assign(cp->numpGOGL,0);
-	for(int ind=0; ind<cp->numpGOGL; ind++)
-	{rGOSpanInd[ind] = ind;}
+	for (int ind = 0; ind < cp->numpGOGL; ind++) rGOSpanInd[ind] = ind;
 	
-	
-	
-// Probability of connection as a function of distance
-	for(int i=0; i<cp->numpGOGL; i++)
+	// Probability of connection as a function of distance
+	for (int i = 0; i < cp->numpGOGL; i++)
 	{
-	
-		PconX =  (xCoorsGOGL[i]*xCoorsGOGL[i]) / (2*(sigmaML*sigmaML));
-		PconY = (yCoorsGOGL[i]*yCoorsGOGL[i]) / (2*(sigmaS*sigmaS));
-		PconGOGL[i] = A * exp(-(PconX + PconY) );
-	
+		PconX = (xCoorsGOGL[i] * xCoorsGOGL[i]) / (2 * sigmaML*sigmaML);
+		PconY = (yCoorsGOGL[i] * yCoorsGOGL[i]) / (2 * sigmaS*sigmaS);
+		PconGOGL[i] = A * exp(-(PconX + PconY));
 	}
 	
 	// Remove self connection 
-	for(int i=0; i<cp->numpGOGL;i++)
+	for (int i = 0; i < cp->numpGOGL; i++)
 	{
-		if( (xCoorsGOGL[i] == 0) && (yCoorsGOGL[i] == 0) )
+		if ((xCoorsGOGL[i] == 0) && (yCoorsGOGL[i] == 0))
 		{
 			PconGOGL[i] = 0;
 		}
 	}
 
-int srcPosX;
-int srcPosY;
-int preDestPosX;
-int preDestPosY;
-int tempDestPosX;
-int tempDestPosY;
-int destInd;
+	int srcPosX;
+	int srcPosY;
+	int preDestPosX;
+	int preDestPosY;
+	int tempDestPosX;
+	int tempDestPosY;
+	int destInd;
 
-float gridXScaleSrctoDest = (float)cp->goX / (float)cp->glX;
-float gridYScaleSrctoDest = (float)cp->goY / (float)cp->glY;
-int shitCounter;
-for(int attempts=0; attempts<100; attempts++)
-{
-	//cout << attempts << endl;
-	random_shuffle(rGOSpanInd.begin(), rGOSpanInd.end());	
+	float gridXScaleSrctoDest = (float)cp->goX / (float)cp->glX;
+	float gridYScaleSrctoDest = (float)cp->goY / (float)cp->glY;
 	
-	if(shitCounter == 0 ){ break; }
-	
-		
-	for(int i=0; i<cp->numGO; i++) // Go through each golgi cell 
+	int shitCounter;
+
+	for (int attempts = 0; attempts < 100; attempts++)
 	{
+		std::random_shuffle(rGOSpanInd.begin(), rGOSpanInd.end());	
 		
-		//Select GO Coordinates from random index array: Complete	
-		srcPosX = rGOInd[i]%cp->goX;
-		srcPosY = rGOInd[i]/cp->goX;	
-		
-		random_shuffle(rGOSpanInd.begin(), rGOSpanInd.end());	
-		
-		for(int j=0; j<cp->numpGOGL; j++)   
-		{	
+		if (shitCounter == 0 ) break; 
+
+		// Go through each golgi cell 
+		for (int i = 0; i < cp->numGO; i++)
+		{
+			//Select GO Coordinates from random index array: Complete	
+			srcPosX = rGOInd[i] % cp->goX;
+			srcPosY = rGOInd[i] / cp->goX;	
 			
-			preDestPosX = xCoorsGOGL[ rGOSpanInd[j] ]; // relative position of connection
-			preDestPosY = yCoorsGOGL[ rGOSpanInd[j] ];	
-
-			tempDestPosX = (int)round(srcPosX/gridXScaleSrctoDest) + preDestPosX; // relative position in terms of the other cell grid. 
-			tempDestPosY = (int)round(srcPosY/gridYScaleSrctoDest) + preDestPosY;
-
-			tempDestPosX = (tempDestPosX%cp->glX+cp->glX)%cp->glX; // Wrap around 
-			tempDestPosY = (tempDestPosY%cp->glY+cp->glY)%cp->glY;
-					
-			destInd = tempDestPosY*cp->glX+tempDestPosX;// Change position to Index
-				
-			if( numpGOfromGOtoGL[ rGOInd[i] ] >= initialGOOutput + attempts ){ break; }
-			//if ( randGen->Random()>=1-PconGOGL[ rGOSpanInd[j] ] && !haspGLfromGOtoGL[destInd]) 
-			if ( randGen->Random()>=1-PconGOGL[ rGOSpanInd[j] ] && numpGLfromGOtoGL[destInd] < cp->maxnumpGLfromGOtoGL) 
+			std::random_shuffle(rGOSpanInd.begin(), rGOSpanInd.end());	
+			
+			for (int j = 0; j < cp->numpGOGL; j++)   
 			{	
-				pGOfromGOtoGL[ rGOInd[i] ][ numpGOfromGOtoGL[rGOInd[i]] ] = destInd;
-				numpGOfromGOtoGL[ rGOInd[i] ]++;
+				// relative position of connection
+				preDestPosX = xCoorsGOGL[rGOSpanInd[j]];
+				preDestPosY = yCoorsGOGL[rGOSpanInd[j]];	
 
-				pGLfromGOtoGL[ destInd ][ numpGLfromGOtoGL[destInd] ]  = rGOInd[i];
-				//haspGLfromGOtoGL[destInd] = true;
-				numpGLfromGOtoGL[destInd]++;
+				tempDestPosX = (int)round(srcPosX / gridXScaleSrctoDest) + preDestPosX; 
+				tempDestPosY = (int)round(srcPosY / gridYScaleSrctoDest) + preDestPosY;
+
+				tempDestPosX = (tempDestPosX % cp->glX + cp->glX) % cp->glX;  
+				tempDestPosY = (tempDestPosY % cp->glY + cp->glY) % cp->glY;
+				
+				// Change position to Index	
+				destInd = tempDestPosY*cp->glX+tempDestPosX;
+					
+				if (numpGOfromGOtoGL[rGOInd[i]] >= initialGOOutput + attempts) break; 
+				if ( randGen->Random() >= 1 - PconGOGL[rGOSpanInd[j]] && 
+						numpGLfromGOtoGL[destInd] < cp->maxnumpGLfromGOtoGL) 
+				{	
+					pGOfromGOtoGL[rGOInd[i]][numpGOfromGOtoGL[rGOInd[i]]] = destInd;
+					numpGOfromGOtoGL[rGOInd[i]]++;
+
+					pGLfromGOtoGL[destInd][numpGLfromGOtoGL[destInd]] = rGOInd[i];
+					numpGLfromGOtoGL[destInd]++;
+				}
 			}
 		}
-	}
 
-shitCounter = 0;
-totalGOGL = 0;
-for(int i=0; i<cp->numGL; i++)
-{
-	//if(haspGLfromGOtoGL[i] == false)
-	if(numpGLfromGOtoGL[i] < cp->maxnumpGLfromGOtoGL)
-	{
-		shitCounter++;
-	}
-	totalGOGL += numpGLfromGOtoGL[i];
-	
-}
-}
+		shitCounter = 0;
+		totalGOGL = 0;
 
-
-//for(int i=0; i<10; i++){
-//	for(int j=0; j<numpGLfromGOtoGL[i]; j++){
-//		cout << pGLfromGOtoGL[i][j] << " ";
-//	}
-//	cout << endl;
-//}
-
-for(int i=0; i<20; i++){
-	for(int j=0; j<numpGLfromGOtoGL[i]; j++){
-		cout << pGLfromGOtoGL[i][j] << " ";
-	}
-	cout << endl;
-}
-
-
-
-	cout << "			Empty Glomeruli Counter:  " << shitCounter << endl;
-	cout << "			total GO -> GL: " << totalGOGL << endl;
-	cout << "			avg Num  GO -> GL Per GL: " << (float)totalGOGL / (float)cp->numGL << endl;
-
-	
-
-
-	/*ofstream fileGOGLconIn;
-	fileGOGLconIn.open("GOGLInputcon.txt");
-	for(int i=0; i<cp->numGO; i++){
-		for(int j=0; j<55; j++){
-			fileGOGLconIn << pGOfromGOtoGL[i][j] << " ";
+		for (int i = 0; i < cp->numGL; i++)
+		{
+			if (numpGLfromGOtoGL[i] < cp->maxnumpGLfromGOtoGL) shitCounter++;
+			totalGOGL += numpGLfromGOtoGL[i];
 		}
-		fileGOGLconIn << endl;
 	}
-	
-*/
 
-	
+	for (int i = 0; i < 20; i++)
+	{
+		for (int j = 0; j < numpGLfromGOtoGL[i]; j++)
+		{
+			std::cout << pGLfromGOtoGL[i][j] << " ";
+		}
+		std::cout << std::endl;
+	}
+
+	std::cout << "Empty Glomeruli Counter: " << shitCounter << std::endl;
+	std::cout << "Total GO -> GL: " << totalGOGL << std::endl;
+	std::cout << "avg Num  GO -> GL Per GL: " << (float)totalGOGL / (float)cp->numGL << std::endl;
 }
-
-
 
 void InNetConnectivityState::connectUBCGL()
 {
-
-//spanUBCtoGLX = 50;
-//spanUBCtoGLY = 50;
-//numpUBCtoGL = (spanUBCtoGLX+1)*(spanUBCtoGLY+1);
-//ubcX = 64;
-//ubcY = 48;
-//numUBC = ubcX*ubcY;
-
-
-	for(int i=0; i<cp->spanUBCtoGLX+1;i++){
-		int ind = cp->spanUBCtoGLX - i;
-		spanArrayUBCtoGLX[i] = (cp->spanUBCtoGLX/2) - ind;}
-	for(int i=0; i<cp->spanUBCtoGLY+1;i++){
-		int ind = cp->spanUBCtoGLY - i;
-		spanArrayUBCtoGLY[i] = (cp->spanUBCtoGLY/2) - ind;}
-		
-	for(int i=0; i<cp->numpUBCtoGL; i++)
+	for (int i = 0; i < cp->spanUBCtoGLX + 1; i++)
 	{
-		xCoorsUBCGL[i] = spanArrayUBCtoGLX[ i%(cp->spanUBCtoGLX+1) ];
-		yCoorsUBCGL[i] = spanArrayUBCtoGLY[ i/(cp->spanUBCtoGLX+1) ];		
-		
+		int ind = cp->spanUBCtoGLX - i;
+		spanArrayUBCtoGLX[i] = (cp->spanUBCtoGLX / 2) - ind;
 	}
 
+	for (int i = 0; i < cp->spanUBCtoGLY + 1; i++)
+	{
+		int ind = cp->spanUBCtoGLY - i;
+		spanArrayUBCtoGLY[i] = (cp->spanUBCtoGLY / 2) - ind;
+	}
+		
+	for(int i = 0; i < cp->numpUBCtoGL; i++)
+	{
+		xCoorsUBCGL[i] = spanArrayUBCtoGLX[i % (cp->spanUBCtoGLX + 1)];
+		yCoorsUBCGL[i] = spanArrayUBCtoGLY[i / (cp->spanUBCtoGLX + 1)];		
+	}
 
-// Grid Scale: Complete
-	float gridXScaleSrctoDest =(float)cp->ubcX / (float)cp->glX; 
-	float gridYScaleSrctoDest =(float)cp->ubcY / (float)cp->glY; 
+	// Grid Scale: Complete
+	float gridXScaleSrctoDest = (float)cp->ubcX / (float)cp->glX; 
+	float gridYScaleSrctoDest = (float)cp->ubcY / (float)cp->glY; 
 
-//Make Random Mossy Fiber Index Array: Complete	
-	vector<int> rUBCInd;
+	//Make Random Mossy Fiber Index Array: Complete	
+	std::vector<int> rUBCInd;
 	rUBCInd.assign(cp->numUBC,0);
-	for(int i=0; i<cp->numUBC; i++)
+	
+	for (int i = 0; i < cp->numUBC; i++)
 	{
 		rUBCInd[i] = i;
 	}
-	random_shuffle(rUBCInd.begin(), rUBCInd.end());
+	std::random_shuffle(rUBCInd.begin(), rUBCInd.end());
 
-//Make Random Span Array: Complete
-	vector<int> rUBCSpanInd;
+	//Make Random Span Array: Complete
+	std::vector<int> rUBCSpanInd;
 	rUBCSpanInd.assign(cp->numpUBCtoGL,0);
-	for(int ind=0; ind<cp->numpUBCtoGL; ind++)
-	{rUBCSpanInd[ind] = ind;}
-	
+	for (int ind = 0; ind < cp->numpUBCtoGL; ind++) rUBCSpanInd[ind] = ind;
 
 	int srcPosX;
 	int srcPosY;
@@ -1224,116 +1146,98 @@ void InNetConnectivityState::connectUBCGL()
 	int tempDestPosY;
 	int destInd;
 
+	int glX = cp->glX;
+	int glY = cp->glY;
 
-int glX = cp->glX;
-int glY = cp->glY;
+	int UBCOutput = 10;
 
-int UBCOutput = 10;
+	for (int attempts = 0; attempts < 3; attempts++)
+	{
+		std::random_shuffle(rUBCInd.begin(), rUBCInd.end());	
 
-for(int attempts=0; attempts<3; attempts++)
-{
-	random_shuffle(rUBCInd.begin(), rUBCInd.end());	
-
-	for(int i=0; i<cp->numUBC; i++)
-	{	
-		
-		//Select MF Coordinates from random index array: Complete	
-		srcPosX = rUBCInd[i]%cp->ubcX;
-		srcPosY = rUBCInd[i]/cp->ubcX;		
-		
-
-		random_shuffle(rUBCSpanInd.begin(), rUBCSpanInd.end());	
-		
-		for(int j=0; j<cp->numpUBCtoGL; j++)
+		for (int i = 0; i < cp->numUBC; i++)
 		{	
-			
-			preDestPosX = xCoorsUBCGL[ rUBCSpanInd[j] ]; 
-			preDestPosY = yCoorsUBCGL[ rUBCSpanInd[j] ];	
+			//Select MF Coordinates from random index array: Complete	
+			srcPosX = rUBCInd[i] % cp->ubcX;
+			srcPosY = rUBCInd[i] / cp->ubcX;		
 
-			tempDestPosX = (int)round(srcPosX/gridXScaleSrctoDest) + preDestPosX;
-			tempDestPosY = (int)round(srcPosY/gridYScaleSrctoDest) + preDestPosY;	
+			std::random_shuffle(rUBCSpanInd.begin(), rUBCSpanInd.end());	
 			
-			tempDestPosX = ((tempDestPosX%glX+glX)%glX);
-			tempDestPosY = ((tempDestPosY%glY+glY)%glY);
-			
-			destInd = tempDestPosY*glX+tempDestPosX;
-			
-			
-			if( destInd == pUBCfromGLtoUBC[rUBCInd[i]]  ||  numpUBCfromUBCtoGL[ rUBCInd[i] ] == UBCOutput ){ break; }
-			
-			if ( numpGLfromUBCtoGL[destInd] == 0 ) 
+			for (int j = 0; j < cp->numpUBCtoGL; j++)
 			{	
-				pUBCfromUBCtoGL[ rUBCInd[i] ][ numpUBCfromUBCtoGL[rUBCInd[i]] ] = destInd;
-				numpUBCfromUBCtoGL[ rUBCInd[i] ]++;	
+				preDestPosX = xCoorsUBCGL[rUBCSpanInd[j]]; 
+				preDestPosY = yCoorsUBCGL[rUBCSpanInd[j]];	
 
+				tempDestPosX = (int)round(srcPosX / gridXScaleSrctoDest) + preDestPosX;
+				tempDestPosY = (int)round(srcPosY / gridYScaleSrctoDest) + preDestPosY;	
+				
+				tempDestPosX = ((tempDestPosX%glX + glX) % glX);
+				tempDestPosY = ((tempDestPosY%glY + glY) % glY);
+				
+				destInd = tempDestPosY*glX+tempDestPosX;
+				
+				if (destInd == pUBCfromGLtoUBC[rUBCInd[i]] ||
+						numpUBCfromUBCtoGL[rUBCInd[i]] == UBCOutput) break; 
+				
+				if (numpGLfromUBCtoGL[destInd] == 0) 
+				{	
+					pUBCfromUBCtoGL[ rUBCInd[i] ][ numpUBCfromUBCtoGL[rUBCInd[i]] ] = destInd;
+					numpUBCfromUBCtoGL[ rUBCInd[i] ]++;	
 
-				pGLfromUBCtoGL[destInd][ numpGLfromUBCtoGL[destInd] ] = rUBCInd[i];
-				numpGLfromUBCtoGL[destInd]++;	
-			
+					pGLfromUBCtoGL[destInd][ numpGLfromUBCtoGL[destInd] ] = rUBCInd[i];
+					numpGLfromUBCtoGL[destInd]++;	
+				
+				}
 			}
 		}
-	}
 
-}	
-
-
-for(int i=0; i<10; i++)
-{
-	for(int j=0; j<numpUBCfromUBCtoGL[i]; j++)
-	{
-	//	cout << pUBCfromUBCtoGL[i][j] << " ";
-	}
-	//cout << endl;
+	}	
 }
-
-
-
-}
-
-
-
 
 void InNetConnectivityState::connectMFGL_withUBC(CRandomSFMT *randGen)
 {
 
+	int initialMFOutput = 14;
 
-int initialMFOutput = 14;
-
-//Make Span Array: Complete	
-	for(int i=0; i<cp->spanMFtoGLX+1;i++){
-		int ind = cp->spanMFtoGLX - i;
-		spanArrayMFtoGLX[i] = (cp->spanMFtoGLX/2) - ind;}
-	for(int i=0; i<cp->spanMFtoGLY+1;i++){
-		int ind = cp->spanMFtoGLY - i;
-		spanArrayMFtoGLY[i] = (cp->spanMFtoGLY/2) - ind;}
-		
-	for(int i=0; i<cp->numpMFtoGL; i++)
+	//Make Span Array: Complete	
+	for (int i = 0; i < cp->spanMFtoGLX + 1;i++)
 	{
-		xCoorsMFGL[i] = spanArrayMFtoGLX[ i%(cp->spanMFtoGLX+1) ];
-		yCoorsMFGL[i] = spanArrayMFtoGLY[ i/(cp->spanMFtoGLX+1) ];		
+		int ind = cp->spanMFtoGLX - i;
+		spanArrayMFtoGLX[i] = (cp->spanMFtoGLX / 2) - ind;
 	}
 
+	for(int i = 0; i < cp->spanMFtoGLY + 1; i++)
+	{
+		int ind = cp->spanMFtoGLY - i;
+		spanArrayMFtoGLY[i] = (cp->spanMFtoGLY / 2) - ind;
+	}
+		
+	for (int i = 0; i < cp->numpMFtoGL; i++)
+	{
+		xCoorsMFGL[i] = spanArrayMFtoGLX[i % (cp->spanMFtoGLX + 1)];
+		yCoorsMFGL[i] = spanArrayMFtoGLY[i / (cp->spanMFtoGLX + 1)];		
+	}
 
+	// Grid Scale: Complete
+	float gridXScaleSrctoDest = (float)cp->mfX / (float)cp->glX; 
+	float gridYScaleSrctoDest = (float)cp->mfY / (float)cp->glY; 
 
-// Grid Scale: Complete
-	float gridXScaleSrctoDest =(float)cp->mfX / (float)cp->glX; 
-	float gridYScaleSrctoDest =(float)cp->mfY / (float)cp->glY; 
-
-//Make Random Mossy Fiber Index Array: Complete	
-	vector<int> rMFInd;
+	//Make Random Mossy Fiber Index Array: Complete	
+	std::vector<int> rMFInd;
 	rMFInd.assign(cp->numMF,0);
-	for(int i=0; i<cp->numMF; i++)
+	
+	for (int i = 0; i < cp->numMF; i++)
 	{
 		rMFInd[i] = i;	
 	}
-	random_shuffle(rMFInd.begin(), rMFInd.end());
 
-//Make Random Span Array: Complete
-	vector<int> rMFSpanInd;
+	std::random_shuffle(rMFInd.begin(), rMFInd.end());
+
+	//Make Random Span Array: Complete
+	std::vector<int> rMFSpanInd;
 	rMFSpanInd.assign(cp->numpMFtoGL,0);
-	for(int ind=0; ind<cp->numpMFtoGL; ind++)
-	{rMFSpanInd[ind] = ind;}
 	
+	for (int ind = 0; ind < cp->numpMFtoGL; ind++) rMFSpanInd[ind] = ind;
 
 	int srcPosX;
 	int srcPosY;
@@ -1343,154 +1247,129 @@ int initialMFOutput = 14;
 	int tempDestPosY;
 	int destInd;
 
-int glX = cp->glX;
-int glY = cp->glY;
-int shitCounter;
-for(int attempts=0; attempts<3; attempts++)
-{
-//	cout << "MF attempt:	" << attempts << endl;
-	random_shuffle(rMFInd.begin(), rMFInd.end());	
-	//if(shitCounter == 0 ){ break; }
+	int glX = cp->glX;
+	int glY = cp->glY;
+	int shitCounter;
+	
+	for(int attempts = 0; attempts < 3; attempts++)
+	{
+		std::random_shuffle(rMFInd.begin(), rMFInd.end());	
 
-	for(int i=0; i<cp->numMF; i++)
-	{	
-		//Select MF Coordinates from random index array: Complete	
-		srcPosX = rMFInd[i]%cp->mfX;
-		srcPosY = rMFInd[i]/cp->mfX;		
-		
-		random_shuffle(rMFSpanInd.begin(), rMFSpanInd.end());	
-		for(int j=0; j<cp->numpMFtoGL; j++)
+		for (int i = 0; i < cp->numMF; i++)
 		{	
+			//Select MF Coordinates from random index array: Complete	
+			srcPosX = rMFInd[i] % cp->mfX;
+			srcPosY = rMFInd[i] / cp->mfX;		
 			
-			preDestPosX = xCoorsMFGL[ rMFSpanInd[j] ]; 
-			preDestPosY = yCoorsMFGL[ rMFSpanInd[j] ];	
-
-			tempDestPosX = (int)round(srcPosX/gridXScaleSrctoDest) + preDestPosX;
-			tempDestPosY = (int)round(srcPosY/gridYScaleSrctoDest) + preDestPosY;	
+			std::random_shuffle(rMFSpanInd.begin(), rMFSpanInd.end());	
 			
-			tempDestPosX = ((tempDestPosX%glX+glX)%glX);
-			tempDestPosY = ((tempDestPosY%glY+glY)%glY);
-			
-			destInd = tempDestPosY*glX+tempDestPosX;
-			
-			if( numpMFfromMFtoGL[ rMFInd[i] ] == initialMFOutput + attempts ){ break; }
-				
-			if ( !haspGLfromMFtoGL[destInd] && numpGLfromUBCtoGL[destInd]==0 ) 
+			for (int j = 0; j < cp->numpMFtoGL; j++)
 			{	
+				preDestPosX = xCoorsMFGL[ rMFSpanInd[j] ]; 
+				preDestPosY = yCoorsMFGL[ rMFSpanInd[j] ];	
+
+				tempDestPosX = (int)round(srcPosX / gridXScaleSrctoDest) + preDestPosX;
+				tempDestPosY = (int)round(srcPosY / gridYScaleSrctoDest) + preDestPosY;	
 				
-				pMFfromMFtoGL[ rMFInd[i] ][ numpMFfromMFtoGL[rMFInd[i]] ] = destInd;
-				numpMFfromMFtoGL[ rMFInd[i] ]++;
+				tempDestPosX = (tempDestPosX%glX+glX) % glX;
+				tempDestPosY = (tempDestPosY%glY+glY) % glY;
 				
-				pGLfromMFtoGL[destInd] = rMFInd[i];
-				haspGLfromMFtoGL[destInd] = true;	
-			}
-		}
-	}
-shitCounter = 0;
-for(int i=0; i<cp->numGL; i++)
-{
-	if(haspGLfromMFtoGL[i] == false)
-	{
-		shitCounter++;
-	}
-}
-
-
-}	
-	cout << "			Empty Glomeruli Counter:  " << shitCounter << endl << endl;
-
-
-	
-	int count = 0;
-	for(int i=0; i<cp->numMF; i++)
-	{
-		count = count + numpMFfromMFtoGL[i];
-	}
-	cout << "Total number of Mossy Fiber to Glomeruli connections:	" << count << endl;
-	cout << "Correct number:                                    	" << cp->numGL << endl;
-
-
-	/*for(int i=0; i<10; i++)
-	{
-		cout<<"numpMFfromMFtoGL["<<i<<"]: "<<numpMFfromMFtoGL[i]<<endl;
-		for(int j=0; j<numpMFfromMFtoGL[i]; j++)
-		{
-			cout<<pMFfromMFtoGL[i][j]<<" ";
-		}
-		cout<<endl;
-	}*/ 
-	
-	count = 0;
-	for(int i=0; i<cp->numMF; i++)
-	{
-		for(int j=0; j<numpMFfromMFtoGL[i]; j++)
-		{
-			for(int k=0; k<numpMFfromMFtoGL[i]; k++)
-			{
-				if((pMFfromMFtoGL[i][j] == pMFfromMFtoGL[i][k]) & (j != k))
-				{
-					count = count + 1;
+				destInd = tempDestPosY * glX + tempDestPosX;
+				
+				if ( numpMFfromMFtoGL[rMFInd[i]] == initialMFOutput + attempts ) break;
+					
+				if ( !haspGLfromMFtoGL[destInd] && numpGLfromUBCtoGL[destInd] == 0 ) 
+				{	
+					pMFfromMFtoGL[rMFInd[i]][numpMFfromMFtoGL[rMFInd[i]]] = destInd;
+					numpMFfromMFtoGL[rMFInd[i]]++;
+					
+					pGLfromMFtoGL[destInd] = rMFInd[i];
+					haspGLfromMFtoGL[destInd] = true;	
 				}
 			}
 		}
+		
+		shitCounter = 0;
+		
+		for (int i = 0; i < cp->numGL; i++)
+		{
+			if (!haspGLfromMFtoGL[i]) shitCounter++;
+		}
+	}	
+	
+	std::cout << "Empty Glomeruli Counter: " << shitCounter << std::endl << std::endl;
+	
+	int count = 0;
+	
+	for (int i = 0; i < cp->numMF; i++)
+	{
+		count += numpMFfromMFtoGL[i];
 	}
 
-	cout << "Double Mossy Fiber to Glomeruli connecitons: 		" << count << endl;
-	
+	std::cout << "Total number of Mossy Fiber to Glomeruli connections:	" << count << std::endl;
+	std::cout << "Correct number: " << cp->numGL << std::endl;
 
+	count = 0;
+
+	for (int i = 0; i < cp->numMF; i++)
+	{
+		for (int j = 0; j < numpMFfromMFtoGL[i]; j++)
+		{
+			for (int k = 0; k < numpMFfromMFtoGL[i]; k++)
+			{
+				if (pMFfromMFtoGL[i][j] == pMFfromMFtoGL[i][k] && j != k) count++ 
+			}
+		}
+	}
+
+	std::cout << "Double Mossy Fiber to Glomeruli connecitons: " << count << std::endl;
 }
 
 void InNetConnectivityState::connectMFGL_noUBC(CRandomSFMT *randGen)
 {
 
-//int spanMFtoGLX = 50; //cp->glX; //50 
-//int spanMFtoGLY = 200; //cp->glY; //160
-//int numpMFtoGL = (spanMFtoGLX+1)*(spanMFtoGLY+1);
+	std::cout << cp->mfX   << std::endl;
+	std::cout << cp->mfY   << std::endl;
+	std::cout << cp->numMF << std::endl;
 
-//int mfX = 128;
-//int mfY = 96;
+	int initialMFOutput = 14;
 
-cout << cp->mfX << endl;
-cout << cp->mfY << endl;
-cout << cp->numMF << endl;
-
-int initialMFOutput = 14;
-
-//Make Span Array: Complete	
-	for(int i=0; i<cp->spanMFtoGLX+1;i++){
+	//Make Span Array: Complete	
+	for(int i = 0; i < cp->spanMFtoGLX + 1;i++)
+	{
 		int ind = cp->spanMFtoGLX - i;
-		spanArrayMFtoGLX[i] = (cp->spanMFtoGLX/2) - ind;}
-	for(int i=0; i<cp->spanMFtoGLY+1;i++){
+		spanArrayMFtoGLX[i] = (cp->spanMFtoGLX / 2) - ind;
+	}
+
+	for(int i = 0; i < cp->spanMFtoGLY + 1;i++)
+	{
 		int ind = cp->spanMFtoGLY - i;
-		spanArrayMFtoGLY[i] = (cp->spanMFtoGLY/2) - ind;}
+		spanArrayMFtoGLY[i] = (cp->spanMFtoGLY / 2) - ind;
+	}
 		
-	for(int i=0; i<cp->numpMFtoGL; i++)
+	for(int i = 0; i < cp->numpMFtoGL; i++)
 	{
-		xCoorsMFGL[i] = spanArrayMFtoGLX[ i%(cp->spanMFtoGLX+1) ];
-		yCoorsMFGL[i] = spanArrayMFtoGLY[ i/(cp->spanMFtoGLX+1) ];		
+		xCoorsMFGL[i] = spanArrayMFtoGLX[i % (cp->spanMFtoGLX+1)];
+		yCoorsMFGL[i] = spanArrayMFtoGLY[i / (cp->spanMFtoGLX+1)];		
 	}
 
+	// Grid Scale: Complete
+	float gridXScaleSrctoDest = (float)cp->mfX / (float)cp->glX; 
+	float gridYScaleSrctoDest = (float)cp->mfY / (float)cp->glY; 
 
-
-// Grid Scale: Complete
-	float gridXScaleSrctoDest =(float)cp->mfX / (float)cp->glX; 
-	float gridYScaleSrctoDest =(float)cp->mfY / (float)cp->glY; 
-
-//Make Random Mossy Fiber Index Array: Complete	
-	vector<int> rMFInd;
+	//Make Random Mossy Fiber Index Array: Complete	
+	std::vector<int> rMFInd;
 	rMFInd.assign(cp->numMF,0);
-	for(int i=0; i<cp->numMF; i++)
-	{
-		rMFInd[i] = i;	
-	}
-	random_shuffle(rMFInd.begin(), rMFInd.end());
-
-//Make Random Span Array: Complete
-	vector<int> rMFSpanInd;
-	rMFSpanInd.assign(cp->numpMFtoGL,0);
-	for(int ind=0; ind<cp->numpMFtoGL; ind++)
-	{rMFSpanInd[ind] = ind;}
 	
+	for(int i = 0; i < cp->numMF; i++) rMFInd[i] = i;	
+	
+	std::random_shuffle(rMFInd.begin(), rMFInd.end());
+
+	//Make Random Span Array: Complete
+	std::vector<int> rMFSpanInd;
+	rMFSpanInd.assign(cp->numpMFtoGL,0);
+	
+	for (int ind = 0; ind < cp->numpMFtoGL; ind++) rMFSpanInd[ind] = ind;
 
 	int srcPosX;
 	int srcPosY;
@@ -1500,462 +1379,282 @@ int initialMFOutput = 14;
 	int tempDestPosY;
 	int destInd;
 
-int glX = cp->glX;
-int glY = cp->glY;
-for(int attempts=0; attempts<4; attempts++)
-{
-	random_shuffle(rMFInd.begin(), rMFInd.end());	
+	int glX = cp->glX;
+	int glY = cp->glY;
 
-	for(int i=0; i<cp->numMF; i++)
-	{	
-		//Select MF Coordinates from random index array: Complete	
-		srcPosX = rMFInd[i]%cp->mfX;
-		srcPosY = rMFInd[i]/cp->mfX;		
-		
-		random_shuffle(rMFSpanInd.begin(), rMFSpanInd.end());	
-		for(int j=0; j<cp->numpMFtoGL; j++)
+	for (int attempts = 0; attempts < 4; attempts++)
+	{
+		std::random_shuffle(rMFInd.begin(), rMFInd.end());	
+
+		for (int i = 0; i < cp->numMF; i++)
 		{	
+			//Select MF Coordinates from random index array: Complete	
+			srcPosX = rMFInd[i] % cp->mfX;
+			srcPosY = rMFInd[i] / cp->mfX;		
 			
-			preDestPosX = xCoorsMFGL[ rMFSpanInd[j] ]; 
-			preDestPosY = yCoorsMFGL[ rMFSpanInd[j] ];	
+			std::random_shuffle(rMFSpanInd.begin(), rMFSpanInd.end());	
 
-			tempDestPosX = (int)round(srcPosX/gridXScaleSrctoDest) + preDestPosX;
-			tempDestPosY = (int)round(srcPosY/gridYScaleSrctoDest) + preDestPosY;	
-			
-			tempDestPosX = ((tempDestPosX%glX+glX)%glX);
-			tempDestPosY = ((tempDestPosY%glY+glY)%glY);
-			
-			destInd = tempDestPosY*glX+tempDestPosX;
-			
-			if( numpMFfromMFtoGL[ rMFInd[i] ] == initialMFOutput + attempts ){ break; }
-				
-			if ( !haspGLfromMFtoGL[destInd] ) 
+			for (int j = 0; j < cp->numpMFtoGL; j++)
 			{	
+				preDestPosX = xCoorsMFGL[rMFSpanInd[j]]; 
+				preDestPosY = yCoorsMFGL[rMFSpanInd[j]];	
+
+				tempDestPosX = (int)round(srcPosX / gridXScaleSrctoDest) + preDestPosX;
+				tempDestPosY = (int)round(srcPosY / gridYScaleSrctoDest) + preDestPosY;	
 				
-				pMFfromMFtoGL[ rMFInd[i] ][ numpMFfromMFtoGL[rMFInd[i]] ] = destInd;
-				numpMFfromMFtoGL[ rMFInd[i] ]++;
+				tempDestPosX = (tempDestPosX%glX + glX) % glX;
+				tempDestPosY = (tempDestPosY%glY + glY) % glY;
 				
-				pGLfromMFtoGL[destInd] = rMFInd[i];
-				haspGLfromMFtoGL[destInd] = true;	
-			}
-		}
-	}
-
-}	
-
-
-	
-	int count = 0;
-	for(int i=0; i<cp->numMF; i++)
-	{
-		count = count + numpMFfromMFtoGL[i];
-	}
-	cout << "Total number of Mossy Fiber to Glomeruli connections:	" << count << endl;
-	cout << "Correct number:                                    	" << cp->numGL << endl;
-
-
-/*	for(int i=0; i<10; i++)
-	{
-		cout<<"numpMFfromMFtoGL["<<i<<"]: "<<numpMFfromMFtoGL[i]<<endl;
-		for(int j=0; j<numpMFfromMFtoGL[i]; j++)
-		{
-			cout<<pMFfromMFtoGL[i][j]<<" ";
-		}
-		cout<<endl;
-	} 
-	
-	count = 0;
-	for(int i=0; i<cp->numMF; i++)
-	{
-		for(int j=0; j<numpMFfromMFtoGL[i]; j++)
-		{
-			for(int k=0; k<numpMFfromMFtoGL[i]; k++)
-			{
-				if((pMFfromMFtoGL[i][j] == pMFfromMFtoGL[i][k]) & (j != k))
-				{
-					count = count + 1;
+				destInd = tempDestPosY * glX + tempDestPosX;
+				
+				if (numpMFfromMFtoGL[rMFInd[i]] == (initialMFOutput + attempts)) break;
+					
+				if (!haspGLfromMFtoGL[destInd]) 
+				{	
+					pMFfromMFtoGL[rMFInd[i]][numpMFfromMFtoGL[rMFInd[i]]] = destInd;
+					numpMFfromMFtoGL[rMFInd[i]]++;
+					
+					pGLfromMFtoGL[destInd] = rMFInd[i];
+					haspGLfromMFtoGL[destInd] = true;	
 				}
 			}
 		}
-	}
+	}	
 
-	cout << "Double Mossy Fiber to Glomeruli connecitons: 		" << count << endl;
-*/	
-
+	int count = 0;
+	
+	for (int i = 0; i < cp->numMF; i++) count += numpMFfromMFtoGL[i];
+	
+	std::cout << "Total number of Mossy Fiber to Glomeruli connections:	" << count << std::endl;
+	std::cout << "Correct number: " << cp->numGL << std::endl;
 }
-
 
 void InNetConnectivityState::translateUBCGL()
 {
 
-int numUBCfromUBCtoGL = 10;
-//UBC to GR 
+	int numUBCfromUBCtoGL = 10;
+	//UBC to GR 
 	int grIndex;
-	for(int i=0; i<cp->numUBC; i++)
+	for (int i = 0; i < cp->numUBC; i++)
 	{
-		for(int j=0; j<numUBCfromUBCtoGL; j++)
+		for (int j = 0; j < numUBCfromUBCtoGL; j++)
 		{
-				  	
 			glIndex = pUBCfromUBCtoGL[i][j]; 
 			
-			for(int k=0; k<numpGLfromGLtoGR[glIndex]; k++)
+			for (int k = 0; k < numpGLfromGLtoGR[glIndex]; k++)
 			{
 				grIndex = pGLfromGLtoGR[glIndex][k];
 
-				pUBCfromUBCtoGR[i][ numpUBCfromUBCtoGR[i] ] = grIndex; 
+				pUBCfromUBCtoGR[i][numpUBCfromUBCtoGR[i]] = grIndex; 
 				numpUBCfromUBCtoGR[i]++;			
 
-				pGRfromUBCtoGR[grIndex][ numpGRfromUBCtoGR[grIndex] ] = i;
+				pGRfromUBCtoGR[grIndex][numpGRfromUBCtoGR[grIndex]] = i;
 				numpGRfromUBCtoGR[grIndex]++;
 			}
 		}
-
 	}
-ofstream fileUBCGRconIn;
+
+	std::ofstream fileUBCGRconIn;
 	fileUBCGRconIn.open("UBCGRInputcon.txt");
-	for(int i=0; i<cp->numGR; i++){
-		for(int j=0; j<cp->maxnumpGRfromGLtoGR; j++){
+	
+	for (int i = 0; i < cp->numGR; i++)
+	{
+		for (int j = 0; j < cp->maxnumpGRfromGLtoGR; j++)
+		{
 			fileUBCGRconIn << pGRfromUBCtoGR[i][j] << " ";
 		}
-		fileUBCGRconIn << endl;
+
+		fileUBCGRconIn << std::endl;
 	}
 
+	int grUBCInputCounter = 0;
+	
+	for (int i = 0; i < cp->numGR; i++) grUBCInputCounter += numpGRfromUBCtoGR[i];
+	std::cout << "Total UBC inputs: " << grUBCInputCounter << std::endl;
 
-
-
-
-
-int grUBCInputCounter = 0;
-for(int i=0; i<cp->numGR; i++)
-{
-	grUBCInputCounter = grUBCInputCounter + numpGRfromUBCtoGR[i];
-
-}
-cout << "	Total UBC inputs:		" << grUBCInputCounter << endl;
-
-/*
-for(int i=0; i<10; i++)
-{
-	for(int j=0; j<numpUBCfromUBCtoGR[i]; j++)
-	{
-		cout << pUBCfromUBCtoGR[i][j] << " ";
-	}
-	cout << endl;
-}
-*/
-//UBC to GO
-
+	//UBC to GO
 	int goIndex;
-	for(int i=0; i<cp->numUBC; i++)
+	
+	for (int i = 0; i < cp->numUBC; i++)
 	{
-		for(int j=0; j<numUBCfromUBCtoGL; j++)
+		for (int j = 0; j < numUBCfromUBCtoGL; j++)
 		{
-				  	
 			glIndex = pUBCfromUBCtoGL[i][j]; 
 			
-			for(int k=0; k<numpGLfromGLtoGO[glIndex]; k++)
+			for (int k = 0; k < numpGLfromGLtoGO[glIndex]; k++)
 			{
 				goIndex = pGLfromGLtoGO[glIndex][k];
 
-				pUBCfromUBCtoGO[i][ numpUBCfromUBCtoGO[i] ] = goIndex; 
+				pUBCfromUBCtoGO[i][numpUBCfromUBCtoGO[i]] = goIndex; 
 				numpUBCfromUBCtoGO[i]++;			
 
-				pGOfromUBCtoGO[goIndex][ numpGOfromUBCtoGO[goIndex] ] = i;
+				pGOfromUBCtoGO[goIndex][numpGOfromUBCtoGO[goIndex]] = i;
 				numpGOfromUBCtoGO[goIndex]++;
 			}
 		}
-
 	}
-ofstream fileUBCGOconIn;
+	
+	std::ofstream fileUBCGOconIn;
 	fileUBCGOconIn.open("UBCGOInputcon.txt");
-	for(int i=0; i<cp->numGO; i++){
-		for(int j=0; j<16; j++){
-			fileUBCGOconIn << pGOfromUBCtoGO[i][j] << " ";
-		}
-		fileUBCGOconIn << endl;
-	}
-
-/*
-for(int i=0; i<20; i++)
-{
-	for(int j=0; j<numpUBCfromUBCtoGO[i]; j++)
+	for (int i = 0; i < cp->numGO; i++)
 	{
-		cout << pUBCfromUBCtoGO[i][j] << " ";
+		for (int j = 0; j < 16; j++) fileUBCGOconIn << pGOfromUBCtoGO[i][j] << " ";
+		fileUBCGOconIn << std::endl;
 	}
-	cout << endl;
-}
-*/
 
-
-
-
-
-//UBC to UBC
+	//UBC to UBC
 	int ubcIndex;
-	for(int i=0; i<cp->numUBC; i++)
+
+	for (int i = 0; i < cp->numUBC; i++)
 	{
-		for(int j=0; j<numUBCfromUBCtoGL; j++)
+		for (int j = 0; j < numUBCfromUBCtoGL; j++)
 		{
-				  	
 			glIndex = pUBCfromUBCtoGL[i][j]; 
 			
-			//for(int k=0; k<numpGLfromGLtoUBC[glIndex]; k++)
-			if(numpGLfromGLtoUBC[glIndex]==1)
+			if (numpGLfromGLtoUBC[glIndex] == 1)
 			{
 				ubcIndex = pGLfromGLtoUBC[glIndex];
 
-				pUBCfromUBCOutUBC[i][ numpUBCfromUBCOutUBC[i] ] = ubcIndex; 
+				pUBCfromUBCOutUBC[i][numpUBCfromUBCOutUBC[i]] = ubcIndex; 
 				numpUBCfromUBCOutUBC[i]++;			
 
-				pUBCfromUBCInUBC[ubcIndex][ numpUBCfromUBCInUBC[ubcIndex] ] = i;
+				pUBCfromUBCInUBC[ubcIndex][numpUBCfromUBCInUBC[ubcIndex]] = i;
 				numpUBCfromUBCInUBC[ubcIndex]++;
 			}
 		}
-
 	}
-
-
-/*for(int i=0; i<50; i++)
-{
-	for(int j=0; j<numpUBCfromUBCOutUBC[i]; j++)
-	{
-		cout << pUBCfromUBCOutUBC[i][j] << " ";
-	}
-	cout << endl;
 }
-*/
-
-}
-
-
-
 
 void InNetConnectivityState::translateMFGL()
 {
 
-
-// Mossy fiber to Granule
-	for(int i=0; i<cp->numGR; i++)
+	// Mossy fiber to Granule
+	
+	for (int i = 0; i<cp->numGR; i++)
 	{
-		for(int j=0; j<numpGRfromGLtoGR[i]; j++)
+		for (int j = 0; j < numpGRfromGLtoGR[i]; j++)
 		{
-		
 			glIndex = pGRfromGLtoGR[i][j];
-			if(haspGLfromMFtoGL[glIndex])
+			if (haspGLfromMFtoGL[glIndex])
 			{
 				mfIndex = pGLfromMFtoGL[glIndex];
 
-				pMFfromMFtoGR[mfIndex][ numpMFfromMFtoGR[mfIndex] ] = i; 
+				pMFfromMFtoGR[mfIndex][numpMFfromMFtoGR[mfIndex]] = i; 
 				numpMFfromMFtoGR[mfIndex]++;			
 
-				pGRfromMFtoGR[i][ numpGRfromMFtoGR[i] ] = mfIndex;
+				pGRfromMFtoGR[i][numpGRfromMFtoGR[i]] = mfIndex;
 				numpGRfromMFtoGR[i]++;
 			}
 		}
 	}	
 
-	/*ofstream fileMFGRconIn;
-	fileMFGRconIn.open("MFGRInputcon.txt");
-	for(int i=0; i<cp->numGR; i++){
-		for(int j=0; j<4; j++){
-			fileMFGRconIn << pGRfromMFtoGR[i][j] << " ";
-		}
-		fileMFGRconIn << endl;
-	}
-*/	
+	int grMFInputCounter = 0;
+	
+	std::cout << cp->numGR << std::endl;
 
-
-int grMFInputCounter = 0;
-cout << cp->numGR << endl;
-for(int i=0; i<100; i++){
-	cout << numpGRfromMFtoGR[i] << " ";
-}
-cout << endl;
-for(int i=0; i<cp->numGR; i++)
-{
-	grMFInputCounter = grMFInputCounter + numpGRfromMFtoGR[i];
-
-}
-cout << "	Total MF inputs:		" << grMFInputCounter << endl;
-
-// Mossy fiber to Golgi	
-	for(int i=0; i<cp->numGO; i++)
+	for (int i = 0; i < 100; i++)
 	{
-		for(int j=0; j<numpGOfromGLtoGO[i]; j++)
+		std::cout << numpGRfromMFtoGR[i] << " ";
+	}
+
+	std::cout << std::endl;
+
+	for (int i = 0; i < cp->numGR; i++)
+	{
+		grMFInputCounter += numpGRfromMFtoGR[i];
+	}
+
+	std::cout << "Total MF inputs: " << grMFInputCounter << std::endl;
+
+	// Mossy fiber to Golgi	
+	
+	for (int i = 0; i < cp->numGO; i++)
+	{
+		for (int j = 0; j < numpGOfromGLtoGO[i]; j++)
 		{
-		
 			glIndex = pGOfromGLtoGO[i][j];
 			
-			if(haspGLfromMFtoGL[glIndex])
+			if (haspGLfromMFtoGL[glIndex])
 			{
 				mfIndex = pGLfromMFtoGL[glIndex];
 
-				pMFfromMFtoGO[mfIndex][ numpMFfromMFtoGO[mfIndex] ] = i; 
+				pMFfromMFtoGO[mfIndex][numpMFfromMFtoGO[mfIndex]] = i; 
 				numpMFfromMFtoGO[mfIndex]++;			
 
-				pGOfromMFtoGO[i][ numpGOfromMFtoGO[i] ] = mfIndex;
+				pGOfromMFtoGO[i][numpGOfromMFtoGO[i]] = mfIndex;
 				numpGOfromMFtoGO[i]++;
 			}
 		}
-
 	}
-
-
-
-
-
-
-
-
-
-	
-/*
-// Mossy fiber to UBC
-	for(int i=0; i<cp->numUBC; i++)
-	{
-		
-		glIndex = pUBCfromGLtoUBC[i];
-		
-		if(haspGLfromMFtoGL[glIndex])
-		{
-			mfIndex = pGLfromMFtoGL[glIndex];
-		
-
-			pMFfromMFtoUBC[mfIndex][ numpMFfromMFtoUBC[mfIndex] ] = i; 
-			numpMFfromMFtoUBC[mfIndex]++;			
-
-			pUBCfromMFtoUBC[i] = mfIndex;
-			numpUBCfromMFtoUBC[i]++;
-
-		}
-	
-	}
-*/
-	
-
-//	cout << endl << endl;
-//	for(int i=0; i<cp->numUBC; i++)
-//	{
-//		cout << pUBCfromMFtoUBC[i] << "  ";
-//	}
-
-
 }
 
 void InNetConnectivityState::translateGOGL(CRandomSFMT *randGen)
 {
-/*
-	translateCommon(pGOfromGOtoGL, numpGOfromGOtoGL,
-			pGLfromGLtoGR, numpGLfromGLtoGR,
-			pGOfromGOtoGR, numpGOfromGOtoGR,
-			pGRfromGOtoGR, numpGRfromGOtoGR,
-			cp->numGO);
-	*/
-	for(int i=0; i<cp->numGR; i++)
+	for (int i = 0; i < cp->numGR; i++)
 	{
-		for(int j=0; j<cp->maxnumpGRfromGOtoGR; j++)
+		for (int j = 0; j < cp->maxnumpGRfromGOtoGR; j++)
 		{
-			for(int k=0; k<cp->maxnumpGLfromGOtoGL; k++){	
-			
-				if(numpGRfromGOtoGR[i] < cp->maxnumpGRfromGOtoGR){	
+			for (int k = 0; k < cp->maxnumpGLfromGOtoGL; k++)
+			{	
+				if (numpGRfromGOtoGR[i] < cp->maxnumpGRfromGOtoGR)
+				{	
 					glIndex = pGRfromGLtoGR[i][j];
-				
 					goIndex = pGLfromGOtoGL[glIndex][k];
 					
-					pGOfromGOtoGR[goIndex][ numpGOfromGOtoGR[goIndex] ] = i; 
+					pGOfromGOtoGR[goIndex][numpGOfromGOtoGR[goIndex]] = i; 
 					numpGOfromGOtoGR[goIndex]++;			
 
-					pGRfromGOtoGR[i][ numpGRfromGOtoGR[i] ] = goIndex;
+					pGRfromGOtoGR[i][numpGRfromGOtoGR[i]] = goIndex;
 					numpGRfromGOtoGR[i]++;
 				}
 			}
 		}
-
 	}
 
-	for(int i=0; i<cp->numGR; i++){
-		totalGOGR += numpGRfromGOtoGR[i];
-	}
-	cout << "		total GO->GR:  " << totalGOGR << endl;
-	cout << "		GO->GR Per GR:  " << (float)totalGOGR/(float)cp->numGR << endl;
-
-	/*ofstream fileGOGRconIn;
-	fileGOGRconIn.open("GOGRInputcon.txt");
-	for(int i=0; i<cp->numGR; i++){
-		for(int j=0; j<numpGRfromGOtoGR[i]; j++){
-			fileGOGRconIn << pGRfromGOtoGR[i][j] << " ";
-		}
-		fileGOGRconIn << endl;
-	}
-*/
-/*
-// Golgi to UBC
-	for(int i=0; i<cp->numUBC; i++)
-	{
-		
-		glIndex = pUBCfromGLtoUBC[i];
-		goIndex = pGLfromGOtoGL[glIndex];
-
-		pGOfromGOtoUBC[goIndex][ numpGOfromGOtoUBC[goIndex] ] = i; 
-		numpGOfromGOtoUBC[goIndex]++;			
-
-		pUBCfromGOtoUBC[i][ numpUBCfromGOtoUBC[i] ] = goIndex;
-		numpUBCfromGOtoUBC[i]++;
-
-	}
-
-*/
-/*
-for(int i=0; i<20; i++)
-{
-	cout << "numpUBCfromGOtoUBC: " << numpUBCfromGOtoUBC[i] << endl;
-
-	for(int j=0; j<numpUBCfromGOtoUBC[i]; j++)
-	{
-		cout << pUBCfromGOtoUBC[i][j] << " ";
-	}
-	cout << endl;
+	for (int i = 0; i < cp->numGR; i++) totalGOGR += numpGRfromGOtoGR[i];
+	
+	std::cout << "total GO->GR: " << totalGOGR << std::endl;
+	std::cout << "GO->GR Per GR: " << (float)totalGOGR / (float)cp->numGR << std::endl;
 }
-*/
-
-}
-
 
 void InNetConnectivityState::connectGRGO(CRandomSFMT *randGen, int goRecipParam)
 {
 
-int pfConv[8] = {3750, 3000, 2250, 1500, 750, 375, 188, 93}; 
+	int pfConv[8] = {3750, 3000, 2250, 1500, 750, 375, 188, 93}; 
 
-int spanPFtoGOX = cp->grX;
-int spanPFtoGOY = 150;
-int numpPFtoGO = (spanPFtoGOX+1)*(spanPFtoGOY+1);
-int maxPFtoGOInput = pfConv[goRecipParam];
+	int spanPFtoGOX = cp->grX;
+	int spanPFtoGOY = 150;
+	int numpPFtoGO = (spanPFtoGOX + 1) * (spanPFtoGOY + 1);
+	int maxPFtoGOInput = pfConv[goRecipParam];
 
-//PARALLEL FIBER TO GOLGI 
-	for(int i=0; i<spanPFtoGOX+1;i++){
-		int ind = spanPFtoGOX - i;
-		spanArrayPFtoGOX[i] = (spanPFtoGOX/2) - ind;}
-	for(int i=0; i<spanPFtoGOY+1;i++){
-		int ind = spanPFtoGOY - i;
-		spanArrayPFtoGOY[i] = (spanPFtoGOY/2) - ind;}
-		
-	for(int i=0; i<numpPFtoGO; i++)
+	//PARALLEL FIBER TO GOLGI 
+	for (int i = 0; i < spanPFtoGOX + 1;i++)
 	{
-		xCoorsPFGO[i] = spanArrayPFtoGOX[ i%(spanPFtoGOX+1) ];
-		yCoorsPFGO[i] = spanArrayPFtoGOY[ i/(spanPFtoGOX+1) ];	
+		int ind = spanPFtoGOX - i;
+		spanArrayPFtoGOX[i] = (spanPFtoGOX / 2) - ind;
 	}
 
-// Grid Scale: Complete
-	float gridXScaleSrctoDest =(float)cp->goX / (float)cp->grX; 
-	float gridYScaleSrctoDest =(float)cp->goY / (float)cp->grY; 
+	for (int i = 0; i < spanPFtoGOY + 1;i++)
+	{
+		int ind = spanPFtoGOY - i;
+		spanArrayPFtoGOY[i] = (spanPFtoGOY / 2) - ind;
+	}
+		
+	for (int i = 0; i < numpPFtoGO; i++)
+	{
+		xCoorsPFGO[i] = spanArrayPFtoGOX[i % (spanPFtoGOX + 1)];
+		yCoorsPFGO[i] = spanArrayPFtoGOY[i / (spanPFtoGOX + 1)];	
+	}
 
+	// Grid Scale: Complete
+	float gridXScaleSrctoDest = (float)cp->goX / (float)cp->grX; 
+	float gridYScaleSrctoDest = (float)cp->goY / (float)cp->grY; 
 
-
-//Make Random Span Array: Complete
-	vector<int> rPFSpanInd;
+	//Make Random Span Array: Complete
+	std::vector<int> rPFSpanInd;
 	rPFSpanInd.assign(numpPFtoGO,0);
-	for(int ind=0; ind<numpPFtoGO; ind++)
-	{rPFSpanInd[ind] = ind;}
+
+	for (int ind = 0; ind < numpPFtoGO; ind++) rPFSpanInd[ind] = ind;
 
 	int srcPosX;
 	int srcPosY;
@@ -1965,154 +1664,135 @@ int maxPFtoGOInput = pfConv[goRecipParam];
 	int tempDestPosY;
 	int destInd;
 
+	int grX = cp->grX;
+	int grY = cp->grY;
 
-
-int grX = cp->grX;
-int grY = cp->grY;
-for(int atmps = 0; atmps<5; atmps++){
-	for(int i=0; i<cp->numGO; i++)
-	{	
-		srcPosX = i%cp->goX;
-		srcPosY = i/cp->goX;
-		
-		random_shuffle(rPFSpanInd.begin(), rPFSpanInd.end());		
-		
-		for(int j=0; j<maxPFtoGOInput; j++)
-		{	
-
-			preDestPosX = xCoorsPFGO[ rPFSpanInd[j] ]; 
-			preDestPosY = yCoorsPFGO[ rPFSpanInd[j] ];	
-			
-			tempDestPosX = (int)round(srcPosX/gridXScaleSrctoDest) + preDestPosX;
-			tempDestPosY = (int)round(srcPosY/gridYScaleSrctoDest) + preDestPosY;
-			
-			tempDestPosX = (tempDestPosX%grX+grX)%grX;
-			tempDestPosY = (tempDestPosY%grY+grY)%grY;
-					
-			destInd = tempDestPosY*cp->grX+tempDestPosX;
-
-			if(/*numpGRfromGRtoGO[destInd] < 22 &&*/ numpGOfromGRtoGO[i] <  maxPFtoGOInput){	
-				pGOfromGRtoGO[i][ numpGOfromGRtoGO[i] ] = destInd;
-				numpGOfromGRtoGO[i]++;
-
-				pGRfromGRtoGO[destInd][ numpGRfromGRtoGO[destInd] ] = i;
-				numpGRfromGRtoGO[destInd]++;	
-			}
-		}
-	}
-}
-
-//ASCENDING AXON TO GOLGI 
-int aaConv[8] = {1250, 1000, 750, 500, 250, 125, 62, 32}; 
-
-int spanAAtoGOX = 150;
-int spanAAtoGOY = 150;
-int numpAAtoGO = (spanAAtoGOX+1)*(spanAAtoGOY+1);
-int maxAAtoGOInput = aaConv[goRecipParam];
-
-
-//Make Span Array: Complete	
-	for(int i=0; i<spanAAtoGOX+1;i++){
-		int ind = spanAAtoGOX - i;
-		spanArrayAAtoGOX[i] = (spanAAtoGOX/2) - ind;}
-	for(int i=0; i<spanAAtoGOY+1;i++){
-		int ind = spanAAtoGOY - i;
-		spanArrayAAtoGOY[i] = (spanAAtoGOY/2) - ind;}
-		
-	for(int i=0; i<numpAAtoGO; i++)
+	for (int atmps = 0; atmps < 5; atmps++)
 	{
-		xCoorsAAGO[i] = spanArrayAAtoGOX[ i%(spanAAtoGOX+1) ];
-		yCoorsAAGO[i] = spanArrayAAtoGOY[ i/(spanAAtoGOX+1) ];	
-	}
-
-
-
-
-//Make Random Span Array: Complete
-	vector<int> rAASpanInd;
-	rAASpanInd.assign(numpAAtoGO,0);
-	for(int ind=0; ind<numpAAtoGO; ind++)
-	{rAASpanInd[ind] = ind;}
-
-for(int atmps = 0; atmps<15; atmps++){
-
-
-	for(int i=0; i<cp->numGO; i++)
-	{	
-		srcPosX = i%cp->goX;
-		srcPosY = i/cp->goX;
-
-		random_shuffle(rAASpanInd.begin(), rAASpanInd.end());		
-		
-		for(int j=0; j<maxAAtoGOInput; j++)
+		for (int i = 0; i < cp->numGO; i++)
 		{	
-
-			preDestPosX = xCoorsAAGO[ rAASpanInd[j] ]; 
-			preDestPosY = yCoorsAAGO[ rAASpanInd[j] ];	
+			srcPosX = i % cp->goX;
+			srcPosY = i / cp->goX;
 			
-			tempDestPosX = (int)round(srcPosX/gridXScaleSrctoDest) + preDestPosX;
-			tempDestPosY = (int)round(srcPosY/gridYScaleSrctoDest) + preDestPosY;
-
-			tempDestPosX = (tempDestPosX%grX+grX)%grX;
-			tempDestPosY = (tempDestPosY%grY+grY)%grY;
-					
-			destInd = tempDestPosY*cp->grX+tempDestPosX;
+			std::random_shuffle(rPFSpanInd.begin(), rPFSpanInd.end());		
 			
-			if(/*numpGRfromGRtoGO[destInd] < 22 &&*/ numpGOfromGRtoGO[i] <  maxAAtoGOInput + maxPFtoGOInput){	
-					
-				pGOfromGRtoGO[i][ numpGOfromGRtoGO[i] ] = destInd;	
-				numpGOfromGRtoGO[i]++;
+			for (int j = 0; j < maxPFtoGOInput; j++)
+			{	
+				preDestPosX = xCoorsPFGO[rPFSpanInd[j]]; 
+				preDestPosY = yCoorsPFGO[rPFSpanInd[j]];	
+				
+				tempDestPosX = (int)round(srcPosX / gridXScaleSrctoDest) + preDestPosX;
+				tempDestPosY = (int)round(srcPosY / gridYScaleSrctoDest) + preDestPosY;
+				
+				tempDestPosX = (tempDestPosX%grX + grX) % grX;
+				tempDestPosY = (tempDestPosY%grY + grY) % grY;
+						
+				destInd = tempDestPosY * cp->grX + tempDestPosX;
 
-				pGRfromGRtoGO[destInd][ numpGRfromGRtoGO[destInd] ] = i;
-				numpGRfromGRtoGO[destInd]++;	
+				if (numpGOfromGRtoGO[i] < maxPFtoGOInput)
+				{	
+					pGOfromGRtoGO[i][numpGOfromGRtoGO[i]] = destInd;
+					numpGOfromGRtoGO[i]++;
+
+					pGRfromGRtoGO[destInd][numpGRfromGRtoGO[destInd]] = i;
+					numpGRfromGRtoGO[destInd]++;	
+				}
 			}
-
 		}
 	}
 
-}	
-int sumGOGR_GO = 0;
-for(int i=0; i<cp->numGO; i++){
-	sumGOGR_GO = sumGOGR_GO + numpGOfromGRtoGO[i];
-}
-cout << "	GRtoGO_GO:	" << sumGOGR_GO << endl;
-int sumGOGR_GR = 0;
-for(int i=0; i<cp->numGR; i++){
-	sumGOGR_GR = sumGOGR_GR + numpGRfromGRtoGO[i];
-}
-cout << "	GRtoGO_GR:	" << sumGOGR_GR << endl;
-/*	ofstream fileGOGRcon;
-	fileGOGRcon.open("pGOfromGRtoGO.txt");
-	for(int i=0; i<cp->numGO; i++){
-		for(int j=0; j<numpGOfromGRtoGO[i]; j++){
-			fileGOGRcon << pGOfromGRtoGO[i][j] << " ";
-		}
-		fileGOGRcon << endl;
+	//ASCENDING AXON TO GOLGI 
+	int aaConv[8] = {1250, 1000, 750, 500, 250, 125, 62, 32}; 
+
+	int spanAAtoGOX = 150;
+	int spanAAtoGOY = 150;
+	int numpAAtoGO = (spanAAtoGOX+1)*(spanAAtoGOY+1);
+	int maxAAtoGOInput = aaConv[goRecipParam];
+
+	//Make Span Array: Complete	
+	for (int i = 0; i < spanAAtoGOX + 1;i++)
+	{
+		int ind = spanAAtoGOX - i;
+		spanArrayAAtoGOX[i] = (spanAAtoGOX / 2) - ind;
 	}
 
-*/
+	for (int i = 0; i < spanAAtoGOY + 1;i++)
+	{
+		int ind = spanAAtoGOY - i;
+		spanArrayAAtoGOY[i] = (spanAAtoGOY / 2) - ind;
+	}
+		
+	for (int i = 0; i < numpAAtoGO; i++)
+	{
+		xCoorsAAGO[i] = spanArrayAAtoGOX[i%(spanAAtoGOX+1)];
+		yCoorsAAGO[i] = spanArrayAAtoGOY[i/(spanAAtoGOX+1)];	
+	}
+	
+	//Make Random Span Array: Complete
+	std::vector<int> rAASpanInd;
+	rAASpanInd.assign(numpAAtoGO,0);
 
-/*	connectCommon(pGOfromGRtoGO, numpGOfromGRtoGO,
-			pGRfromGRtoGO, numpGRfromGRtoGO,
-			cp->maxnumpGOfromGRtoGO, cp->numGO,
-			cp->maxnumpGRfromGRtoGO, cp->maxnumpGRfromGRtoGO,
-			cp->goX, cp->goY, cp->grX, cp->grY,
-			cp->spanGOAscDenOnGRX, cp->spanGOAscDenOnGRY,
-			20000, 50000, false,
-			randGen);
-*/
+	for (int ind = 0; ind < numpAAtoGO; ind++) rAASpanInd[ind] = ind;
+
+	for (int atmps = 0; atmps < 15; atmps++)
+	{
+		for (int i = 0; i < cp->numGO; i++)
+		{	
+			srcPosX = i % cp->goX;
+			srcPosY = i / cp->goX;
+
+			std::random_shuffle(rAASpanInd.begin(), rAASpanInd.end());		
+			
+			for (int j = 0; j < maxAAtoGOInput; j++)
+			{	
+				preDestPosX = xCoorsAAGO[rAASpanInd[j]]; 
+				preDestPosY = yCoorsAAGO[rAASpanInd[j]];	
+				
+				tempDestPosX = (int)round(srcPosX / gridXScaleSrctoDest) + preDestPosX;
+				tempDestPosY = (int)round(srcPosY / gridYScaleSrctoDest) + preDestPosY;
+
+				tempDestPosX = (tempDestPosX % grX + grX) % grX;
+				tempDestPosY = (tempDestPosY % grY + grY) % grY;
+						
+				destInd = tempDestPosY * cp->grX + tempDestPosX;
+				
+				if (numpGOfromGRtoGO[i] < maxAAtoGOInput + maxPFtoGOInput)
+				{	
+					pGOfromGRtoGO[i][numpGOfromGRtoGO[i]] = destInd;	
+					numpGOfromGRtoGO[i]++;
+
+					pGRfromGRtoGO[destInd][numpGRfromGRtoGO[destInd]] = i;
+					numpGRfromGRtoGO[destInd]++;	
+				}
+			}
+		}
+	}	
+
+	int sumGOGR_GO = 0;
+	
+	for (int i = 0; i < cp->numGO; i++)
+	{
+		sumGOGR_GO += numpGOfromGRtoGO[i];
+	}
+
+	std::cout << "GRtoGO_GO: " << sumGOGR_GO << std::endl;
+
+	int sumGOGR_GR = 0;
+
+	for (int i = 0; i < cp->numGR; i++)
+	{
+		sumGOGR_GR += numpGRfromGRtoGO[i];
+	}
+
+	std::cout << "GRtoGO_GR: " << sumGOGR_GR << std::endl;
 }
 
-
-void InNetConnectivityState::connectGOGODecayP(CRandomSFMT *randGen, int goRecipParam, int simNum) {
-
-	//int numberConnections[12] = {4,8,12,16,20,24,28,32,36,40,44,48};
-	int numberConnections[26] = {1,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50};
-
-	//int numberConnections[5] = {14, 16, 18, 20, 22};
+void InNetConnectivityState::connectGOGODecayP(CRandomSFMT *randGen, int goRecipParam, int simNum)
+{
+	int numberConnections[26] = { 1,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50 };
 
 	int span = 4;
-	int numCon = 12;//numberConnections[goRecipParam];
+	int numCon = 12;
 	int numP = (span + 1) * (span + 1); 
 
 	//Allocate Dat Shit Boi
@@ -2139,34 +1819,30 @@ void InNetConnectivityState::connectGOGODecayP(CRandomSFMT *randGen, int goRecip
 	arrayInitialize<int>(yCoorsGOGOsyn, 0, numP);
 	arrayInitialize<float>(Pcon, 0, numP);
 
-
 	float A = 0.35;
-	float sig = 1000;//1.95;
+	float sig = 1000;
 
-	float recipParamArray_P[11] = {1.0, 0.925, 0.78, 0.62, 0.47, 0.32, 0.19, 0.07, 0.0, 0.0, 0.0};
-	float recipParamArray_LowerP[11] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.8, 0.35, 0.0}; 
-	bool recipParamArray_ReduceBase[11] = {false, false, false, false, false, false, false, false, true, true, false};
-	bool recipParamArray_noRecip[11] = {false, false, false, false, false, false, false, false, false, false, true};
+	float recipParamArray_P[11] = { 1.0, 0.925, 0.78, 0.62, 0.47, 0.32, 0.19, 0.07, 0.0, 0.0, 0.0 };
+	float recipParamArray_LowerP[11] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.8, 0.35, 0.0 }; 
+	bool recipParamArray_ReduceBase[11] = { false, false, false, false, false, false, false, false, true, true, false };
+	bool recipParamArray_noRecip[11] = { false, false, false, false, false, false, false, false, false, false, true };
 	 
+	float pRecipGOGO = 1.0;
+	bool noRecip = false;
+	float pRecipLowerBase = 0.0;
+	bool reduceBaseRecip = false;
 
-	float pRecipGOGO = 1.0;//recipParamArray_P[goRecipParam];
-	bool noRecip = false;//recipParamArray_noRecip[goRecipParam];
-	float pRecipLowerBase = 0.0;//recipParamArray_LowerP[goRecipParam];
-	bool reduceBaseRecip = false;//recipParamArray_ReduceBase[goRecipParam];
-
-	//int maxGOOut = 8;
 	float PconX;
 	float PconY;
 
-
-	for (int i = 0; i < span + 1; i++) {
-		int ind = span - i;
-		spanArrayGOtoGOsynX[i] = (span / 2) - ind;
+	for (int i = 0; i < span + 1; i++)
+   	{
+		spanArrayGOtoGOsynX[i] = (span / 2) - (span - i);
 	}
 	
-	for (int i = 0; i < span + 1; i++) {
-		int ind = span - i;
-		spanArrayGOtoGOsynY[i] = (span / 2) - ind;
+	for (int i = 0; i < span + 1; i++) 
+	{
+		spanArrayGOtoGOsynY[i] = (span / 2) - (span - i);
 	}
 		
 	for (int i = 0; i < numP; i++) {
@@ -2182,16 +1858,15 @@ void InNetConnectivityState::connectGOGODecayP(CRandomSFMT *randGen, int goRecip
 	}
 	
 	// Remove self connection 
-	// NOTE: there is a more efficient way of doing this
-	for (int i = 0; i < numP; i++) {
+	for (int i = 0; i < numP; i++) 
+	{
 		if ((xCoorsGOGOsyn[i] == 0) && (yCoorsGOGOsyn[i] == 0)) Pcon[i] = 0;
 	}
 	
-	std::vector<int> rGOGOSpanInd;
+	std::std::vector<int> rGOGOSpanInd;
 	rGOGOSpanInd.assign(numP, 0);
-	for (int ind = 0; ind < numP; ind++) {
-		rGOGOSpanInd[ind] = ind;
-	}
+	
+	for (int ind = 0; ind < numP; ind++) rGOGOSpanInd[ind] = ind;
 
 	int srcPosX;
 	int srcPosY;
@@ -2201,31 +1876,33 @@ void InNetConnectivityState::connectGOGODecayP(CRandomSFMT *randGen, int goRecip
 	int tempDestPosY;
 	int destInd;
 
-	for (int atmpt = 0; atmpt < 200; atmpt++) {
-		
-		for (int i = 0; i < this->cp->numGO; i++) {	
-			srcPosX = i % this->cp->goX;
-			srcPosY = i / this->cp->goX;	
+	for (int atmpt = 0; atmpt < 200; atmpt++) 
+	{
+		for (int i = 0; i < cp->numGO; i++) 
+		{	
+			srcPosX = i % cp->goX;
+			srcPosY = i / cp->goX;	
 			
-			random_shuffle(rGOGOSpanInd.begin(), rGOGOSpanInd.end());		
+			std::random_shuffle(rGOGOSpanInd.begin(), rGOGOSpanInd.end());		
 			
-			for (int j = 0; j < numP; j++) {	
-				
+			for (int j = 0; j < numP; j++)
+		   	{	
 				preDestPosX = xCoorsGOGOsyn[rGOGOSpanInd[j]]; 
 				preDestPosY = yCoorsGOGOsyn[rGOGOSpanInd[j]];	
 
 				tempDestPosX = srcPosX + preDestPosX;
 				tempDestPosY = srcPosY + preDestPosY;
 
-				tempDestPosX = (tempDestPosX % this->cp->goX + this->cp->goX) % this->cp->goX;
-				tempDestPosY = (tempDestPosY % this->cp->goY + this->cp->goY) % this->cp->goY;
+				tempDestPosX = (tempDestPosX % cp->goX + cp->goX) % cp->goX;
+				tempDestPosY = (tempDestPosY % cp->goY + cp->goY) % cp->goY;
 						
-				destInd = tempDestPosY * this->cp->goX + tempDestPosX;
+				destInd = tempDestPosY * cp->goX + tempDestPosX;
 			
 				// Normal One	
-				if ( !noRecip && !reduceBaseRecip && randGen->Random()>= 1 - Pcon[rGOGOSpanInd[j]]
+				if (!noRecip && !reduceBaseRecip && randGen->Random()>= 1 - Pcon[rGOGOSpanInd[j]]
 						&& !conGOGOBoolOut[i][destInd] && numpGOGABAOutGOGO[i] < numCon
-						&& numpGOGABAInGOGO[destInd] < numCon) {	
+						&& numpGOGABAInGOGO[destInd] < numCon) 
+				{	
 					pGOGABAOutGOGO[i][numpGOGABAOutGOGO[i]] = destInd;
 					numpGOGABAOutGOGO[i]++;
 					
@@ -2235,8 +1912,8 @@ void InNetConnectivityState::connectGOGODecayP(CRandomSFMT *randGen, int goRecip
 					conGOGOBoolOut[i][destInd] = true;
 							
 					if (randGen->Random() >= 1 - pRecipGOGO && !conGOGOBoolOut[destInd][i]
-							&& numpGOGABAOutGOGO[destInd] < numCon && numpGOGABAInGOGO[i] < numCon) {
-						
+							&& numpGOGABAOutGOGO[destInd] < numCon && numpGOGABAInGOGO[i] < numCon) 
+					{
 						pGOGABAOutGOGO[destInd][numpGOGABAOutGOGO[destInd]] = i;
 						numpGOGABAOutGOGO[destInd]++;
 						
@@ -2250,7 +1927,8 @@ void InNetConnectivityState::connectGOGODecayP(CRandomSFMT *randGen, int goRecip
 				if (!noRecip && reduceBaseRecip && randGen->Random()>=1 - Pcon[rGOGOSpanInd[j]]
 						&& !conGOGOBoolOut[i][destInd] && (!conGOGOBoolOut[destInd][i] ||
 							randGen->Random() >= 1 - pRecipLowerBase) && numpGOGABAOutGOGO[i] < numCon
-						&& numpGOGABAInGOGO[destInd] < numCon) {	
+						&& numpGOGABAInGOGO[destInd] < numCon) 
+				{	
 					pGOGABAOutGOGO[i][numpGOGABAOutGOGO[i]] = destInd;
 					numpGOGABAOutGOGO[i]++;
 					
@@ -2261,7 +1939,8 @@ void InNetConnectivityState::connectGOGODecayP(CRandomSFMT *randGen, int goRecip
 				}
 
 				if (noRecip && !reduceBaseRecip && randGen->Random() >= 1 - Pcon[rGOGOSpanInd[j]]
-						&& (!conGOGOBoolOut[i][destInd]) && conGOGOBoolOut[destInd][i] == false && numpGOGABAOutGOGO[i] < numCon && numpGOGABAInGOGO[destInd] < numCon)
+						&& (!conGOGOBoolOut[i][destInd]) && !conGOGOBoolOut[destInd][i] && 
+						numpGOGABAOutGOGO[i] < numCon && numpGOGABAInGOGO[destInd] < numCon)
 				{	
 					pGOGABAOutGOGO[i][ numpGOGABAOutGOGO[i] ] = destInd;
 					numpGOGABAOutGOGO[i]++;
@@ -2271,139 +1950,94 @@ void InNetConnectivityState::connectGOGODecayP(CRandomSFMT *randGen, int goRecip
 					
 					conGOGOBoolOut[i][destInd] = true;
 				}
-
-
 			}
 		}
-
 	}
 
-//	int conv[7] = {4000, 3000, 2000, 1000, 500, 250, 125};
-	//ofstream fileGOGOconIn;
+	float totalGOGOcons = 0;
 
-	//fileGOGOconIn.open("GOGOInputcon_PSTH_recip100_conv"+to_string(numberConnections[goRecipParam])+"_spanFlat4_"+to_string(simNum)+".txt");
-/*	fileGOGOconIn.open("GOGOInputcon_Raster_recip100_conv"+to_string(numberConnections[goRecipParam])+"_spanFlat10_"+to_string(simNum)+".txt");
-	for(int i=0; i<cp->numGO; i++){
-		for(int j=0; j<numCon; j++){
-			fileGOGOconIn << pGOGABAInGOGO[i][j] << " ";
-		}
-		fileGOGOconIn << endl;
-	}
-*/	
-	/*ofstream fileGOGOconOut;
-	fileGOGOconOut.open("GOGOOutputcon.txt");
-	for(int i=0; i<cp->numGO; i++){
-		for(int j=0; j<numCon; j++){
-			fileGOGOconOut << pGOGABAOutGOGO[i][j] << " ";
-		}
-		fileGOGOconOut << endl;
-	}*/
-
-float totalGOGOcons = 0;
-for(int i=0; i<cp->numGO; i++)
-{
-	totalGOGOcons = totalGOGOcons + numpGOGABAInGOGO[i];
-}
-
-cout << "Total GOGO connections:		" << totalGOGOcons << endl;
-cout << "Average GOGO connections:	" << totalGOGOcons/float(cp->numGO) << endl;\
-cout << cp->numGO << endl;
-int recipCounter = 0;
-for(int i=0; i<cp->numGO; i++)
-{
-	for(int j=0; j<numpGOGABAInGOGO[i]; j++)
+	for (int i = 0; i < cp->numGO; i++)
 	{
-		for(int k=0; k<numpGOGABAOutGOGO[i]; k++)
+		totalGOGOcons += numpGOGABAInGOGO[i];
+	}
+
+	std::cout << "Total GOGO connections: " << totalGOGOcons << std::endl;
+	std::cout << "Average GOGO connections:	" << totalGOGOcons / float(cp->numGO) << std::endl;
+	std::cout << cp->numGO << std::endl;
+
+	int recipCounter = 0;
+
+	for (int i = 0; i < cp->numGO; i++)
+	{
+		for (int j = 0; j < numpGOGABAInGOGO[i]; j++)
 		{
-			if(pGOGABAInGOGO[i][j] == pGOGABAOutGOGO[i][k] && pGOGABAInGOGO[i][j] != UINT_MAX && pGOGABAOutGOGO[i][k] != UINT_MAX)
+			for (int k = 0; k < numpGOGABAOutGOGO[i]; k++)
 			{
-				recipCounter = recipCounter + 1;	
+				if (pGOGABAInGOGO[i][j] == pGOGABAOutGOGO[i][k] && pGOGABAInGOGO[i][j] != UINT_MAX 
+						&& pGOGABAOutGOGO[i][k] != UINT_MAX)
+				{
+					recipCounter++;	
+				}
 			}
 		}
-
 	}
+
+	float fracRecip = recipCounter / totalGOGOcons;
+	std::cout << "FracRecip: " << fracRecip << std::endl;
+
+	rGOGOSpanInd.clear();
 }
-float fracRecip = recipCounter / totalGOGOcons;
-cout << "FracRecip:			" << fracRecip << endl;
-
-
-
-
-
-
-
-
-rGOGOSpanInd.clear();
-
-
-}
-
-
-
-
 
 void InNetConnectivityState::connectGOGODecay(CRandomSFMT *randGen)
 {
-//int spanGOtoGOsynX = 10;
-//int spanGOtoGOsynY = 10;
-//int numpGOtoGOsyn = (cp->spanGOGOsynX+1) * (cp->spanGOGOsynY+1);
-//float sigmaML = 100;//1.89;
-//float sigmaS = 100;//1.89;
-float A = 0.01;
-float pRecipGOGO = 1;
-//int maxGOOut = 8;
-float PconX;
-float PconY;
+	float A 		 = 0.01;
+	float pRecipGOGO = 1;
+	float PconX;
+	float PconY;
 
+	std::cout << cp->spanGOGOsynX << std::endl;
+	std::cout << cp->spanGOGOsynY << std::endl;
+	std::cout << cp->sigmaGOGOsynML << std::endl;
+	std::cout << cp->sigmaGOGOsynS << std::endl;
 
+	std::cout << cp->pRecipGOGOsyn << std::endl;
+	std::cout << cp->maxGOGOsyn << std::endl;
 
-	cout << cp->spanGOGOsynX << endl;
-	cout << cp->spanGOGOsynY << endl;
-	cout << cp->sigmaGOGOsynML << endl;
-	cout << cp->sigmaGOGOsynS << endl;
-	
-	cout << cp->pRecipGOGOsyn << endl;
-	cout << cp->maxGOGOsyn << endl;
-
-
-	for(int i=0; i<cp->spanGOGOsynX+1;i++){
+	for (int i = 0; i < cp->spanGOGOsynX + 1; i++)
+	{
 		int ind = cp->spanGOGOsynX - i;
-		spanArrayGOtoGOsynX[i] = (cp->spanGOGOsynX/2) - ind;}
-	for(int i=0; i<cp->spanGOGOsynY+1;i++){
-		int ind = cp->spanGOGOsynY - i;
-		spanArrayGOtoGOsynY[i] = (cp->spanGOGOsynY/2) - ind;}
-		
-	for(int i=0; i<cp->numpGOGOsyn; i++)
-	{
-		xCoorsGOGOsyn[i] = spanArrayGOtoGOsynX[ i%(cp->spanGOGOsynX+1) ];
-		yCoorsGOGOsyn[i] = spanArrayGOtoGOsynY[ i/(cp->spanGOGOsynX+1) ];		
+		spanArrayGOtoGOsynX[i] = (cp->spanGOGOsynX / 2) - ind;
 	}
-	
 
-	for(int i=0; i<cp->numpGOGOsyn; i++)
+	for (int i = 0; i < cp->spanGOGOsynY + 1; i++)
 	{
-	
-		PconX =  (xCoorsGOGOsyn[i]*xCoorsGOGOsyn[i]) / (2*(cp->sigmaGOGOsynML*cp->sigmaGOGOsynML));
-		PconY = (yCoorsGOGOsyn[i]*yCoorsGOGOsyn[i]) / (2*(cp->sigmaGOGOsynS*cp->sigmaGOGOsynS));
-		Pcon[i] = A * exp(-(PconX + PconY) );
-	
+		int ind = cp->spanGOGOsynY - i;
+		spanArrayGOtoGOsynY[i] = (cp->spanGOGOsynY / 2) - ind;
+	}
+		
+	for (int i = 0; i < cp->numpGOGOsyn; i++)
+	{
+		xCoorsGOGOsyn[i] = spanArrayGOtoGOsynX[i % (cp->spanGOGOsynX + 1)];
+		yCoorsGOGOsyn[i] = spanArrayGOtoGOsynY[i / (cp->spanGOGOsynX+1)];		
+	}
+
+	for (int i = 0; i < cp->numpGOGOsyn; i++)
+	{
+		PconX = (xCoorsGOGOsyn[i] * xCoorsGOGOsyn[i]) / (2 * cp->sigmaGOGOsynML * cp->sigmaGOGOsynML);
+		PconY = (yCoorsGOGOsyn[i] * yCoorsGOGOsyn[i]) / (2 * cp->sigmaGOGOsynS * cp->sigmaGOGOsynS);
+		Pcon[i] = A * exp(-(PconX + PconY));
 	}
 	
 	// Remove self connection 
-	for(int i=0; i<cp->numpGOGOsyn;i++)
+	for (int i = 0; i < cp->numpGOGOsyn; i++)
 	{
-		if( (xCoorsGOGOsyn[i] == 0) && (yCoorsGOGOsyn[i] == 0) )
-		{
-			Pcon[i] = 0;
-		}
+		if ((xCoorsGOGOsyn[i] == 0) && (yCoorsGOGOsyn[i] == 0)) Pcon[i] = 0;
 	}
 	
-	vector<int> rGOGOSpanInd;
+	std::vector<int> rGOGOSpanInd;
 	rGOGOSpanInd.assign(cp->numpGOGOsyn,0);
-	for(int ind=0; ind<cp->numpGOGOsyn; ind++)
-	{rGOGOSpanInd[ind] = ind;}
+	for (int ind = 0; ind < cp->numpGOGOsyn; ind++) rGOGOSpanInd[ind] = ind;
 	
-
 	int srcPosX;
 	int srcPosY;
 	int preDestPosX;
@@ -2411,158 +2045,147 @@ float PconY;
 	int tempDestPosX;
 	int tempDestPosY;
 	int destInd;
-for(int atmpt = 0; atmpt<200; atmpt++){
-	
-	for(int i=0; i<cp->numGO; i++)
-	{	
-		srcPosX = i%cp->goX;
-		srcPosY = i/cp->goX;	
-		
-		random_shuffle(rGOGOSpanInd.begin(), rGOGOSpanInd.end());		
-		
-		for(int j=0; j<cp->numpGOGOsyn; j++)
+
+	for (int atmpt = 0; atmpt <200; atmpt++)
+	{
+		for (int i = 0; i < cp->numGO; i++)
 		{	
+			srcPosX = i % cp->goX;
+			srcPosY = i / cp->goX;	
 			
-			preDestPosX = xCoorsGOGOsyn[ rGOGOSpanInd[j] ]; 
-			preDestPosY = yCoorsGOGOsyn[ rGOGOSpanInd[j] ];	
-
-			tempDestPosX = srcPosX + preDestPosX;
-			tempDestPosY = srcPosY + preDestPosY;
-
-			tempDestPosX = (tempDestPosX%cp->goX+cp->goX)%cp->goX;
-			tempDestPosY = (tempDestPosY%cp->goY+cp->goY)%cp->goY;
-					
-			destInd = tempDestPosY*cp->goX+tempDestPosX;
-
-			if(randGen->Random()>=1-Pcon[rGOGOSpanInd[j] ] && (conGOGOBoolOut[i][destInd] == false) && numpGOGABAOutGOGO[i] < cp->maxGOGOsyn && numpGOGABAInGOGO[destInd] < cp->maxGOGOsyn)
+			std::random_shuffle(rGOGOSpanInd.begin(), rGOGOSpanInd.end());		
+			
+			for (int j = 0; j < cp->numpGOGOsyn; j++)
 			{	
-				pGOGABAOutGOGO[i][ numpGOGABAOutGOGO[i] ] = destInd;
-				numpGOGABAOutGOGO[i]++;
 				
-				pGOGABAInGOGO[destInd][ numpGOGABAInGOGO[destInd] ] = i;
-				numpGOGABAInGOGO[destInd]++;
-				
-				conGOGOBoolOut[i][destInd] = true;
-				
-				if(randGen->Random() >= 1-pRecipGOGO && conGOGOBoolOut[destInd][i] == false && numpGOGABAOutGOGO[destInd] < cp->maxGOGOsyn && numpGOGABAInGOGO[i] < cp->maxGOGOsyn){
-					
-					pGOGABAOutGOGO[destInd][ numpGOGABAOutGOGO[destInd] ] = i;
-					numpGOGABAOutGOGO[destInd]++;
+				preDestPosX = xCoorsGOGOsyn[rGOGOSpanInd[j]]; 
+				preDestPosY = yCoorsGOGOsyn[rGOGOSpanInd[j]];	
 
-					pGOGABAInGOGO[i][ numpGOGABAInGOGO[i] ] = destInd;
-					numpGOGABAInGOGO[i]++;
-					
-					conGOGOBoolOut[ destInd ][i] = true;
+				tempDestPosX = srcPosX + preDestPosX;
+				tempDestPosY = srcPosY + preDestPosY;
 
+				tempDestPosX = (tempDestPosX % cp->goX + cp->goX) % cp->goX;
+				tempDestPosY = (tempDestPosY % cp->goY + cp->goY) % cp->goY;
+						
+				destInd = tempDestPosY * cp->goX + tempDestPosX;
+
+				if (randGen->Random()>=1 - Pcon[rGOGOSpanInd[j]] && !conGOGOBoolOut[i][destInd] &&
+					   numpGOGABAOutGOGO[i] < cp->maxGOGOsyn && numpGOGABAInGOGO[destInd] < cp->maxGOGOsyn)
+				{	
+					pGOGABAOutGOGO[i][numpGOGABAOutGOGO[i]] = destInd;
+					numpGOGABAOutGOGO[i]++;
+					
+					pGOGABAInGOGO[destInd][numpGOGABAInGOGO[destInd]] = i;
+					numpGOGABAInGOGO[destInd]++;
+					
+					conGOGOBoolOut[i][destInd] = true;
+					
+					if (randGen->Random() >= 1 - pRecipGOGO && !conGOGOBoolOut[destInd][i] &&
+							numpGOGABAOutGOGO[destInd] < cp->maxGOGOsyn && numpGOGABAInGOGO[i] < cp->maxGOGOsyn)
+					{
+						pGOGABAOutGOGO[destInd][numpGOGABAOutGOGO[destInd]] = i;
+						numpGOGABAOutGOGO[destInd]++;
+
+						pGOGABAInGOGO[i][numpGOGABAInGOGO[i]] = destInd;
+						numpGOGABAInGOGO[i]++;
+						
+						conGOGOBoolOut[destInd][i] = true;
+					}
 				}
-			
 			}
 		}
 	}
 
-}
-ofstream fileGOGOconIn;
+	std::ofstream fileGOGOconIn;
 	fileGOGOconIn.open("GOGOInputcon.txt");
-	for(int i=0; i<cp->numGO; i++){
-		for(int j=0; j<cp->maxGOGOsyn; j++){
+	
+	for (int i = 0; i < cp->numGO; i++)
+	{
+		for (int j = 0; j < cp->maxGOGOsyn; j++)
+		{
 			fileGOGOconIn << pGOGABAInGOGO[i][j] << " ";
 		}
-		fileGOGOconIn << endl;
+
+		fileGOGOconIn << std::endl;
 	}
 	
-	ofstream fileGOGOconOut;
+	std::ofstream fileGOGOconOut;
 	fileGOGOconOut.open("GOGOOutputcon.txt");
-	for(int i=0; i<cp->numGO; i++){
-		for(int j=0; j<cp->maxGOGOsyn; j++){
+	
+	for (int i = 0; i < cp->numGO; i++)
+	{
+		for (int j = 0; j < cp->maxGOGOsyn; j++)
+		{
 			fileGOGOconOut << pGOGABAOutGOGO[i][j] << " ";
 		}
-		fileGOGOconOut << endl;
+
+		fileGOGOconOut << std::endl;
 	}
 
-float totalGOGOcons = 0;
-for(int i=0; i<cp->numGO; i++)
-{
-	totalGOGOcons = totalGOGOcons + numpGOGABAInGOGO[i];
-}
-
-cout << "Total GOGO connections:		" << totalGOGOcons << endl;
-cout << "Average GOGO connections:	" << totalGOGOcons/float(cp->numGO) << endl;\
-cout << cp->numGO << endl;
-int recipCounter = 0;
-for(int i=0; i<cp->numGO; i++)
-{
-	for(int j=0; j<numpGOGABAInGOGO[i]; j++)
+	float totalGOGOcons = 0;
+	
+	for (int i = 0; i < cp->numGO; i++)
 	{
-		for(int k=0; k<numpGOGABAOutGOGO[i]; k++)
+		totalGOGOcons += numpGOGABAInGOGO[i];
+	}
+
+	std::cout << "Total GOGO connections: " << totalGOGOcons << std::endl;
+	std::cout << "Average GOGO connections:	" << totalGOGOcons / float(cp->numGO) << std::endl;
+	std::cout << cp->numGO << std::endl;
+	int recipCounter = 0;
+	
+	for (int i = 0; i < cp->numGO; i++)
+	{
+		for (int j = 0; j < numpGOGABAInGOGO[i]; j++)
 		{
-			if(pGOGABAInGOGO[i][j] == pGOGABAOutGOGO[i][k] && pGOGABAInGOGO[i][j] != UINT_MAX && pGOGABAOutGOGO[i][k] != UINT_MAX)
+			for (int k = 0; k < numpGOGABAOutGOGO[i]; k++)
 			{
-				recipCounter = recipCounter + 1;	
+				if (pGOGABAInGOGO[i][j] == pGOGABAOutGOGO[i][k] && pGOGABAInGOGO[i][j] != UINT_MAX
+						&& pGOGABAOutGOGO[i][k] != UINT_MAX) recipCounter++ 
 			}
 		}
-
 	}
+
+	float fracRecip = recipCounter / totalGOGOcons;
+	std::cout << "FracRecip: " << fracRecip << std::endl;
+	rGOGOSpanInd.clear();
 }
-float fracRecip = recipCounter / totalGOGOcons;
-cout << "FracRecip:			" << fracRecip << endl;
-
-
-
-
-
-
-
-
-rGOGOSpanInd.clear();
-
-
-}
-
-
-
-
-
 
 void InNetConnectivityState::connectGOGOBias(CRandomSFMT *randGen)
 {
+	int spanGOtoGOsynX = 12;
+	int spanGOtoGOsynY = 12;
+	int numpGOtoGOsyn = (spanGOtoGOsynX + 1) *(spanGOtoGOsynY + 1); 
 
+	//Make Span Array: Complete	
+	for (int i = 0; i < spanGOtoGOsynX +1;i++)
+	{
+		spanArrayGOtoGOsynX[i] = (spanGOtoGOsynX / 2) - (spanGOtoGOsynX - i);
+	}
 
-int spanGOtoGOsynX = 12;//6
-int spanGOtoGOsynY = 12;//18
-int numpGOtoGOsyn = (spanGOtoGOsynX+1)*(spanGOtoGOsynY+1); 
-//float conProbability = 0.03;//cp->conProbabilityGOGO;
-
-
-//Make Span Array: Complete	
-	for(int i=0; i<spanGOtoGOsynX+1;i++){
-		int ind = spanGOtoGOsynX - i;
-		spanArrayGOtoGOsynX[i] = (spanGOtoGOsynX/2) - ind;}
-	for(int i=0; i<spanGOtoGOsynY+1;i++){
-		int ind = spanGOtoGOsynY - i;
-		spanArrayGOtoGOsynY[i] = (spanGOtoGOsynY/2) - ind;}
+	for (int i =0; i <spanGOtoGOsynY +1; i++)
+	{
+		spanArrayGOtoGOsynY[i] = (spanGOtoGOsynY / 2) - (spanGOtoGOsynY - i);
+	}
 		
-	for(int i=0; i<numpGOtoGOsyn; i++)
+	for (int i = 0; i < numpGOtoGOsyn; i++)
 	{
-		xCoorsGOGOsyn[i] = spanArrayGOtoGOsynX[ i%(spanGOtoGOsynX+1) ];
-		yCoorsGOGOsyn[i] = spanArrayGOtoGOsynY[ i/(spanGOtoGOsynX+1) ];		
+		xCoorsGOGOsyn[i] = spanArrayGOtoGOsynX[i % (spanGOtoGOsynX + 1)];
+		yCoorsGOGOsyn[i] = spanArrayGOtoGOsynY[i / (spanGOtoGOsynX + 1)];		
 	}
 
+	//Make Random Mossy Fiber Index Array: Complete	
+	std::vector<int> rGOInd;
+	rGOInd.assign(cp->numGO, 0);
+	
+	for (int i = 0; i < cp->numGO; i++) rGOInd[i] = i;	
+	
+	std::random_shuffle(rGOInd.begin(), rGOInd.end());
 
-//Make Random Mossy Fiber Index Array: Complete	
-	vector<int> rGOInd;
-	rGOInd.assign(cp->numGO,0);
-	for(int i=0; i<cp->numGO; i++)
-	{
-		rGOInd[i] = i;	
-	}
-	random_shuffle(rGOInd.begin(), rGOInd.end());
-
-//Make Random Span Array
-	vector<int> rGOGOSpanInd;
+	//Make Random Span Array
+	std::vector<int> rGOGOSpanInd;
 	rGOGOSpanInd.assign(numpGOtoGOsyn,0);
-	for(int ind=0; ind<numpGOtoGOsyn; ind++)
-	{rGOGOSpanInd[ind] = ind;}
-
+	for (int ind = 0; ind < numpGOtoGOsyn; ind++) rGOGOSpanInd[ind] = ind;
 
 	int srcPosX;
 	int srcPosY;
@@ -2572,168 +2195,120 @@ int numpGOtoGOsyn = (spanGOtoGOsynX+1)*(spanGOtoGOsynY+1);
 	int tempDestPosY;
 	int destInd;
 
-int numOutputs = cp->numConGOGO;
-int conType = 0;
+	int numOutputs = cp->numConGOGO;
+	int conType = 0;
 
-
-	for(int i=0; i<cp->numGO; i++)
+	for (int i = 0; i < cp->numGO; i++)
 	{	
-		srcPosX = rGOInd[i]%cp->goX;
-		srcPosY = rGOInd[i]/cp->goX;	
+		srcPosX = rGOInd[i] % cp->goX;
+		srcPosY = rGOInd[i] / cp->goX;	
 		
-		random_shuffle(rGOGOSpanInd.begin(), rGOGOSpanInd.end());		
+		std::random_shuffle(rGOGOSpanInd.begin(), rGOGOSpanInd.end());		
 			
-		
-		for(int j=0; j<numpGOtoGOsyn; j++)
+		for (int j = 0; j < numpGOtoGOsyn; j++)
 		{	
-			
-	
-			preDestPosX = xCoorsGOGOsyn[ rGOGOSpanInd[j] ]; 
-			preDestPosY = yCoorsGOGOsyn[ rGOGOSpanInd[j] ];	
+			preDestPosX = xCoorsGOGOsyn[rGOGOSpanInd[j]]; 
+			preDestPosY = yCoorsGOGOsyn[rGOGOSpanInd[j]];	
 
 			tempDestPosX = srcPosX + preDestPosX;
 			tempDestPosY = srcPosY + preDestPosY;
 
-			tempDestPosX = (tempDestPosX%cp->goX+cp->goX)%cp->goX;
-			tempDestPosY = (tempDestPosY%cp->goY+cp->goY)%cp->goY;
+			tempDestPosX = (tempDestPosX % cp->goX + cp->goX) % cp->goX;
+			tempDestPosY = (tempDestPosY % cp->goY + cp->goY) % cp->goY;
 			
-
-			destInd = tempDestPosY*cp->goX+tempDestPosX;
+			destInd = tempDestPosY * cp->goX + tempDestPosX;
+				
+			if (randGen->Random() >= 0.9695 && !conGOGOBoolOut[rGOInd[i]][destInd])
+			{
+				pGOGABAOutGOGO[rGOInd[i]][numpGOGABAOutGOGO[rGOInd[i]]] = destInd;
+				numpGOGABAOutGOGO[rGOInd[i]]++;
 					
-				
-				
-				
-			if(randGen->Random() >= 1-0.0305 && conGOGOBoolOut[rGOInd[i]][destInd] == false){
-
-				pGOGABAOutGOGO[ rGOInd[i] ][ numpGOGABAOutGOGO[rGOInd[i]] ] = destInd;
-				numpGOGABAOutGOGO[ rGOInd[i] ]++;
-					
-				pGOGABAInGOGO[destInd][ numpGOGABAInGOGO[destInd] ] = rGOInd[i];
+				pGOGABAInGOGO[destInd][numpGOGABAInGOGO[destInd]] = rGOInd[i];
 				numpGOGABAInGOGO[destInd]++;	
 					
-				conGOGOBoolOut[ rGOInd[i] ][destInd] = true;
+				conGOGOBoolOut[rGOInd[i]][destInd] = true;
 			
 				// conditional statement against making double output
 
-				if(randGen->Random() >= 1-1 && conGOGOBoolOut[destInd][rGOInd[i]] == false){
-					
-					pGOGABAOutGOGO[destInd][ numpGOGABAOutGOGO[destInd] ] = rGOInd[i];
+				if (randGen->Random() > && !conGOGOBoolOut[destInd][rGOInd[i]])
+				{
+					pGOGABAOutGOGO[destInd][numpGOGABAOutGOGO[destInd]] = rGOInd[i];
 					numpGOGABAOutGOGO[destInd]++;
 
-					pGOGABAInGOGO[ rGOInd[i] ][ numpGOGABAInGOGO[rGOInd[i]] ] = destInd;
+					pGOGABAInGOGO[rGOInd[i]][numpGOGABAInGOGO[rGOInd[i]]] = destInd;
 					numpGOGABAInGOGO[rGOInd[i]]++;
 					
-					conGOGOBoolOut[ destInd ][ rGOInd[i] ] = true;
-
+					conGOGOBoolOut[destInd][rGOInd[i]] = true;
 				}
-			
-			
 			}	
-		
 		}
 	}
-		
 	
-	
-
-	
-/*
-	ofstream fileGOGOconIn;
-	fileGOGOconIn.open("GOGOInputcon.txt");
-	for(int i=0; i<cp->numGO; i++){
-		for(int j=0; j<30; j++){
-			fileGOGOconIn << pGOGABAInGOGO[i][j] << " ";
-		}
-		fileGOGOconIn << endl;
-	}
-	
-	ofstream fileGOGOconOut;
-	fileGOGOconOut.open("GOGOOutputcon.txt");
-	for(int i=0; i<cp->numGO; i++){
-		for(int j=0; j<30; j++){
-			fileGOGOconOut << pGOGABAOutGOGO[i][j] << " ";
-		}
-		fileGOGOconOut << endl;
-	}
-	
-*/
-if(conType == 0){
-	
-	for(int k=0; k<20; k++)
+	if (conType == 0)
 	{
-		cout<<"numpGOGABAInGOGO["<<k<<"]: "<<numpGOGABAInGOGO[k]<<endl;
-		for(int j=0; j<numpGOGABAInGOGO[k]; j++)
+		for (int k = 0; k < 20; k++)
 		{
-			cout<<pGOGABAInGOGO[k][j]<<" ";
+			std::cout << "numpGOGABAInGOGO[" << k << "]: " << numpGOGABAInGOGO[k] << std::endl;
+			for (int j = 0; j < numpGOGABAInGOGO[k]; j++) std::cout << pGOGABAInGOGO[k][j] << " ";
+			std::cout << endl;
 		}
-		cout<<endl;
 	}
+	else if (conType == 1)
+	{	
+		int pNonRecip 	 = 0;
+		int missedOutCon = 0;
+		int missedInCon  = 0;
 
+		for (int i = 0; i < cp->numGO; i++)
+		{
+
+			if (numpGOGABAInGOGO[i]  != numpGOGABAOutGOGO[i]) pNonRecip++; 
+			if (numpGOGABAInGOGO[i]  != numOutputs) missedInCon++; 
+			if (numpGOGABAOutGOGO[i] != numOutputs) missedOutCon++; 
+		}
+
+		std::cout << "Potential non-reciprocal connection: " << pNonRecip << std::endl;
+		std::cout << "Missing Input: " << missedInCon << std::endl;
+		std::cout << "Missing Output: " << missedOutCon << std::endl;
 	}
-
-
-
-if(conType == 1){	
-	
-	int pNonRecip = 0;
-	int missedOutCon = 0;
-	int missedInCon = 0;
-
-	for(int i=0; i<cp->numGO; i++){
-
-		if(numpGOGABAInGOGO[i] != numpGOGABAOutGOGO[i]){ pNonRecip++; }
-		if(numpGOGABAInGOGO[i] != numOutputs) { missedInCon++; }
-		if(numpGOGABAOutGOGO[i] != numOutputs) { missedOutCon++; }
-	}
-
-	cout << "		" << "Potential non-reciprocal connection:		" << pNonRecip << endl;
-	cout << "		" << "Missing Input:					" << missedInCon << endl;
-	cout << "		" << "Missing Output:					" << missedOutCon << endl;
-	}
-
-
 }
 
 void InNetConnectivityState::connectGOGO(CRandomSFMT *randGen)
 {
+	int spanGOtoGOsynX = 12;
+	int spanGOtoGOsynY = 12;
+	int numpGOtoGOsyn = (spanGOtoGOsynX + 1) * (spanGOtoGOsynY + 1); 
 
+	//Make Span Array: Complete	
+	for (int i = 0; i < spanGOtoGOsynX + 1;i++)
+	{
+		spanArrayGOtoGOsynX[i] = (spanGOtoGOsynX / 2) - (spanGOtoGOsynX - i);
+	}
 
-int spanGOtoGOsynX = 12;//6
-int spanGOtoGOsynY = 12;//18
-int numpGOtoGOsyn = (spanGOtoGOsynX+1)*(spanGOtoGOsynY+1); 
-//float conProbability = 0.03;//cp->conProbabilityGOGO;
-
-
-//Make Span Array: Complete	
-	for(int i=0; i<spanGOtoGOsynX+1;i++){
-		int ind = spanGOtoGOsynX - i;
-		spanArrayGOtoGOsynX[i] = (spanGOtoGOsynX/2) - ind;}
-	for(int i=0; i<spanGOtoGOsynY+1;i++){
+	for (int i = 0; i < spanGOtoGOsynY + 1; i++)
+	{
 		int ind = spanGOtoGOsynY - i;
-		spanArrayGOtoGOsynY[i] = (spanGOtoGOsynY/2) - ind;}
+		spanArrayGOtoGOsynY[i] = (spanGOtoGOsynY / 2) - (spanGOtoGOsynY - i);
+	}
 		
-	for(int i=0; i<numpGOtoGOsyn; i++)
+	for (int i = 0; i < numpGOtoGOsyn; i++)
 	{
-		xCoorsGOGOsyn[i] = spanArrayGOtoGOsynX[ i%(spanGOtoGOsynX+1) ];
-		yCoorsGOGOsyn[i] = spanArrayGOtoGOsynY[ i/(spanGOtoGOsynX+1) ];		
+		xCoorsGOGOsyn[i] = spanArrayGOtoGOsynX[i % (spanGOtoGOsynX + 1)];
+		yCoorsGOGOsyn[i] = spanArrayGOtoGOsynY[i / (spanGOtoGOsynX + 1)];		
 	}
 
-
-//Make Random Mossy Fiber Index Array: Complete	
-	vector<int> rGOInd;
+	//Make Random Mossy Fiber Index Array: Complete	
+	std::vector<int> rGOInd;
 	rGOInd.assign(cp->numGO,0);
-	for(int i=0; i<cp->numGO; i++)
-	{
-		rGOInd[i] = i;	
-	}
-	random_shuffle(rGOInd.begin(), rGOInd.end());
+	
+	for (int i = 0; i < cp->numGO; i++) rGOInd[i] = i;	
+	
+	std::random_shuffle(rGOInd.begin(), rGOInd.end());
 
-//Make Random Span Array
-	vector<int> rGOGOSpanInd;
+	//Make Random Span Array
+	std::vector<int> rGOGOSpanInd;
 	rGOGOSpanInd.assign(numpGOtoGOsyn,0);
-	for(int ind=0; ind<numpGOtoGOsyn; ind++)
-	{rGOGOSpanInd[ind] = ind;}
-
+	for (int ind = 0; ind < numpGOtoGOsyn; ind++) rGOGOSpanInd[ind] = ind;
 
 	int srcPosX;
 	int srcPosY;
@@ -2743,183 +2318,156 @@ int numpGOtoGOsyn = (spanGOtoGOsynX+1)*(spanGOtoGOsynY+1);
 	int tempDestPosY;
 	int destInd;
 
-int numOutputs = cp->numConGOGO;
-int conType = 2;
+	int numOutputs = cp->numConGOGO;
+	int conType = 2;
 
-for(int attempt = 1; attempt<numOutputs+1; attempt++)
-{
-
-	for(int i=0; i<cp->numGO; i++)
-	{	
-		srcPosX = rGOInd[i]%cp->goX;
-		srcPosY = rGOInd[i]/cp->goX;	
-		
-		random_shuffle(rGOGOSpanInd.begin(), rGOGOSpanInd.end());		
-			
-		
-		for(int j=0; j<numpGOtoGOsyn; j++)
+	for (int attempt = 1; attempt < numOutputs + 1; attempt++)
+	{
+		for (int i = 0; i < cp->numGO; i++)
 		{	
+			srcPosX = rGOInd[i] % cp->goX;
+			srcPosY = rGOInd[i] / cp->goX;	
 			
-	
-			preDestPosX = xCoorsGOGOsyn[ rGOGOSpanInd[j] ]; 
-			preDestPosY = yCoorsGOGOsyn[ rGOGOSpanInd[j] ];	
-
-			tempDestPosX = srcPosX + preDestPosX;
-			tempDestPosY = srcPosY + preDestPosY;
-
-			tempDestPosX = (tempDestPosX%cp->goX+cp->goX)%cp->goX;
-			tempDestPosY = (tempDestPosY%cp->goY+cp->goY)%cp->goY;
+			std::random_shuffle(rGOGOSpanInd.begin(), rGOGOSpanInd.end());		
 			
+			for (int j = 0; j < numpGOtoGOsyn; j++)
+			{	
+				preDestPosX = xCoorsGOGOsyn[rGOGOSpanInd[j]]; 
+				preDestPosY = yCoorsGOGOsyn[rGOGOSpanInd[j]];	
 
-			destInd = tempDestPosY*cp->goX+tempDestPosX;
+				tempDestPosX = srcPosX + preDestPosX;
+				tempDestPosY = srcPosY + preDestPosY;
+
+				tempDestPosX = (tempDestPosX % cp->goX + cp->goX) % cp->goX;
+				tempDestPosY = (tempDestPosY % cp->goY + cp->goY) % cp->goY;
+
+				destInd = tempDestPosY * cp->goX + tempDestPosX;
 					
-				
-				
-			if(conType == 0){ 	// Normal random connectivity		
-				
-				if(numpGOGABAOutGOGO[ rGOInd[i] ] == numOutputs){ break; }
+				if (conType == 0)
+				{ 	
+					// Normal random connectivity		
+					if (numpGOGABAOutGOGO[rGOInd[i]] == numOutputs) break;
 
-				// conditional statment blocking the ability to make two outputs to the same cell
-				pGOGABAOutGOGO[ rGOInd[i] ][ numpGOGABAOutGOGO[rGOInd[i]] ] = destInd;
-				numpGOGABAOutGOGO[ rGOInd[i] ]++;
-				
-				pGOGABAInGOGO[destInd][ numpGOGABAInGOGO[destInd] ] = rGOInd[i];
-				numpGOGABAInGOGO[destInd]++;
-			
-			}
-			if(conType == 1){	// 100% reciprocal	
-				
-				
-				if( (conGOGOBoolOut[rGOInd[i]][destInd] == false)&&
-				    (numpGOGABAOutGOGO[rGOInd[i]] < attempt )&&
-				    (numpGOGABAInGOGO[rGOInd[i]] < attempt)&&
-				    (numpGOGABAOutGOGO[destInd] < attempt )&&
-				    (numpGOGABAInGOGO[destInd] < attempt)&&
-				    (destInd != rGOInd[i])	
-				  ) 
-				{	
-			
-				
-					pGOGABAOutGOGO[ rGOInd[i] ][ numpGOGABAOutGOGO[rGOInd[i]] ] = destInd;
-					numpGOGABAOutGOGO[ rGOInd[i] ]++;
-					pGOGABAOutGOGO[destInd][ numpGOGABAOutGOGO[destInd] ] = rGOInd[i];
-					numpGOGABAOutGOGO[destInd]++;
-				
-					pGOGABAInGOGO[destInd][ numpGOGABAInGOGO[destInd] ] = rGOInd[i];
+					// conditional statment blocking the ability to make two outputs to the same cell
+					pGOGABAOutGOGO[rGOInd[i]][numpGOGABAOutGOGO[rGOInd[i]]] = destInd;
+					numpGOGABAOutGOGO[rGOInd[i]]++;
+					
+					pGOGABAInGOGO[destInd][numpGOGABAInGOGO[destInd]] = rGOInd[i];
 					numpGOGABAInGOGO[destInd]++;
-					pGOGABAInGOGO[ rGOInd[i] ][ numpGOGABAInGOGO[rGOInd[i]] ] = destInd;
-					numpGOGABAInGOGO[rGOInd[i]]++;
-			
-					conGOGOBoolOut[ rGOInd[i] ][destInd] = true;
-			
 				}
-			
-			
-			}
-		
-			if(conType == 2){	// variable %reciprocal	
-				
-				
-				if( (conGOGOBoolOut[rGOInd[i]][destInd] == false)&&
-				    (numpGOGABAOutGOGO[rGOInd[i]] < attempt )&&
-				    (numpGOGABAInGOGO[rGOInd[i]] < attempt)&&
-				    (numpGOGABAOutGOGO[destInd] < attempt )&&
-				    (numpGOGABAInGOGO[destInd] < attempt)&&
-				    (destInd != rGOInd[i])	
-				  ) 
-				{	
-			
-				
-					pGOGABAOutGOGO[ rGOInd[i] ][ numpGOGABAOutGOGO[rGOInd[i]] ] = destInd;
-					numpGOGABAOutGOGO[ rGOInd[i] ]++;
-				
-					pGOGABAInGOGO[destInd][ numpGOGABAInGOGO[destInd] ] = rGOInd[i];
-					numpGOGABAInGOGO[destInd]++;
-					
-					if(randGen->Random() >= 1-0.05){
-						pGOGABAInGOGO[ rGOInd[i] ][ numpGOGABAInGOGO[rGOInd[i]] ] = destInd;
-						numpGOGABAInGOGO[rGOInd[i]]++;
-						pGOGABAOutGOGO[destInd][ numpGOGABAOutGOGO[destInd] ] = rGOInd[i];
+				else if (conType == 1){	
+					// 100% reciprocal	
+					if (!conGOGOBoolOut[rGOInd[i]][destInd]&&
+						(numpGOGABAOutGOGO[rGOInd[i]] < attempt ) &&
+						(numpGOGABAInGOGO[rGOInd[i]] < attempt) &&
+						(numpGOGABAOutGOGO[destInd] < attempt) &&
+						(numpGOGABAInGOGO[destInd] < attempt) &&
+						(destInd != rGOInd[i])) 
+					{	
+						pGOGABAOutGOGO[rGOInd[i]][numpGOGABAOutGOGO[rGOInd[i]]] = destInd;
+						numpGOGABAOutGOGO[rGOInd[i]]++;
+						pGOGABAOutGOGO[destInd][numpGOGABAOutGOGO[destInd]] = rGOInd[i];
 						numpGOGABAOutGOGO[destInd]++;
-			
-						conGOGOBoolOut[ rGOInd[i] ][destInd] = true;
+					
+						pGOGABAInGOGO[destInd][numpGOGABAInGOGO[destInd]] = rGOInd[i];
+						numpGOGABAInGOGO[destInd]++;
+						pGOGABAInGOGO[rGOInd[i]][numpGOGABAInGOGO[rGOInd[i]]] = destInd;
+						numpGOGABAInGOGO[rGOInd[i]]++;
+				
+						conGOGOBoolOut[rGOInd[i]][destInd] = true;
 					}
 				}
 			
-			
+				else if (conType == 2)
+				{	
+					// variable %reciprocal	
+					if (!conGOGOBoolOut[rGOInd[i]][destInd] &&
+						(numpGOGABAOutGOGO[rGOInd[i]] < attempt) &&
+						(numpGOGABAInGOGO[rGOInd[i]] < attempt) &&
+						(numpGOGABAOutGOGO[destInd] < attempt) &&
+						(numpGOGABAInGOGO[destInd] < attempt) &&
+						destInd != rGOInd[i]) 
+					{	
+						pGOGABAOutGOGO[rGOInd[i]][numpGOGABAOutGOGO[rGOInd[i]]] = destInd;
+						numpGOGABAOutGOGO[rGOInd[i]]++;
+					
+						pGOGABAInGOGO[destInd][numpGOGABAInGOGO[destInd]] = rGOInd[i];
+						numpGOGABAInGOGO[destInd]++;
+						
+						if (randGen->Random() >= 0.95)
+						{
+							pGOGABAInGOGO[rGOInd[i]][numpGOGABAInGOGO[rGOInd[i]]] = destInd;
+							numpGOGABAInGOGO[rGOInd[i]]++;
+							pGOGABAOutGOGO[destInd][numpGOGABAOutGOGO[destInd]] = rGOInd[i];
+							numpGOGABAOutGOGO[destInd]++;
+				
+							conGOGOBoolOut[rGOInd[i]][destInd] = true;
+						}
+					}
+				}
 			}
-		
-		
-		
 		}
-	}
-		
-}	
+	}	
 	
-
-	
-	
-	ofstream fileGOGOconIn;
+	std::ofstream fileGOGOconIn;
 	fileGOGOconIn.open("GOGOInputcon.txt");
-	for(int i=0; i<cp->numGO; i++){
-		for(int j=0; j<30; j++){
+	
+	for (int i = 0; i < cp->numGO; i++)
+	{
+		for (int j = 0; j < 30; j++)
+		{
 			fileGOGOconIn << pGOGABAInGOGO[i][j] << " ";
 		}
-		fileGOGOconIn << endl;
+
+		fileGOGOconIn << std::endl;
 	}
 	
-	ofstream fileGOGOconOut;
+	std::ofstream fileGOGOconOut;
 	fileGOGOconOut.open("GOGOOutputcon.txt");
-	for(int i=0; i<cp->numGO; i++){
-		for(int j=0; j<30; j++){
+	
+	for (int i = 0; i < cp->numGO; i++)
+	{
+		for (int j = 0; j < 30; j++)
+		{
 			fileGOGOconOut << pGOGABAOutGOGO[i][j] << " ";
 		}
-		fileGOGOconOut << endl;
+		fileGOGOconOut << std::endl;
 	}
-	
 
-if(conType == 0){
-	
-	for(int k=0; k<20; k++)
+	if (conType == 0)
 	{
-		cout<<"numpGOGABAInGOGO["<<k<<"]: "<<numpGOGABAInGOGO[k]<<endl;
-		for(int j=0; j<numpGOGABAInGOGO[k]; j++)
+		for (int k = 0; k < 20; k++)
 		{
-			cout<<pGOGABAInGOGO[k][j]<<" ";
+			std::cout << "numpGOGABAInGOGO[" << k << "]: " << numpGOGABAInGOGO[k] << std::endl;
+			for (int j = 0; j < numpGOGABAInGOGO[k]; j++)
+			{
+				std::cout << pGOGABAInGOGO[k][j] << " ";
+			}
+			std::cout<<endl;
 		}
-		cout<<endl;
 	}
 
+	else if (conType == 1)
+	{	
+		int pNonRecip = 0;
+		int missedOutCon = 0;
+		int missedInCon = 0;
+
+		for (int i = 0; i < cp->numGO; i++)
+		{
+			if (numpGOGABAInGOGO[i] != numpGOGABAOutGOGO[i]) pNonRecip++;
+			if (numpGOGABAInGOGO[i] != numOutputs) missedInCon++;
+			if (numpGOGABAOutGOGO[i] != numOutputs) missedOutCon++;
+		}
+
+		std::cout << "Potential non-reciprocal connection: " << pNonRecip << std::endl;
+		std::cout << "Missing Input: " << missedInCon << std::endl;
+		std::cout << "Missing Output: " << missedOutCon << std::endl;
 	}
-
-
-
-if(conType == 1){	
-	
-	int pNonRecip = 0;
-	int missedOutCon = 0;
-	int missedInCon = 0;
-
-	for(int i=0; i<cp->numGO; i++){
-
-		if(numpGOGABAInGOGO[i] != numpGOGABAOutGOGO[i]){ pNonRecip++; }
-		if(numpGOGABAInGOGO[i] != numOutputs) { missedInCon++; }
-		if(numpGOGABAOutGOGO[i] != numOutputs) { missedOutCon++; }
-	}
-
-	cout << "		" << "Potential non-reciprocal connection:		" << pNonRecip << endl;
-	cout << "		" << "Missing Input:					" << missedInCon << endl;
-	cout << "		" << "Missing Output:					" << missedOutCon << endl;
-	}
-
-
 }
-
-
 
 void InNetConnectivityState::connectGOGO_GJ(CRandomSFMT *randGen)
 {
-
 	int srcPosX;
 	int srcPosY;
 	int preDestPosX;
@@ -2928,76 +2476,59 @@ void InNetConnectivityState::connectGOGO_GJ(CRandomSFMT *randGen)
 	int tempDestPosY;
 	int destInd;
 
-//GOLGI TO GOLGI GAP JUNCTIONS
+	//GOLGI TO GOLGI GAP JUNCTIONS
 
-int spanGOtoGOgjX = 8;
-int spanGOtoGOgjY = 8;
-int numpGOtoGOgj = (spanGOtoGOgjX+1) * (spanGOtoGOgjY+1);
+	int spanGOtoGOgjX = 8;
+	int spanGOtoGOgjY = 8;
+	int numpGOtoGOgj  = (spanGOtoGOgjX + 1) * (spanGOtoGOgjY + 1);
 
+	for (int i = 0; i < spanGOtoGOgjX + 1; i++)
+	{
+		spanArrayGOtoGOgjX[i] = (spanGOtoGOgjX / 2) - (spanGOtoGOgjX - i);
+	}
 
-	for(int i=0; i<spanGOtoGOgjX+1;i++){
-		int ind = spanGOtoGOgjX - i;
-		spanArrayGOtoGOgjX[i] = (spanGOtoGOgjX/2) - ind;}
-	for(int i=0; i<spanGOtoGOgjY+1;i++){
-		int ind = spanGOtoGOgjY - i;
-		spanArrayGOtoGOgjY[i] = (spanGOtoGOgjY/2) - ind;}
+	for (int i = 0; i < spanGOtoGOgjY +1; i++)
+	{
+		spanArrayGOtoGOgjY[i] = (spanGOtoGOgjY/2) - (spanGOtoGOgjY - i);
+	}
 		
-	for(int i=0; i<numpGOtoGOgj; i++)
+	for (int i = 0; i < numpGOtoGOgj; i++)
 	{
-		xCoorsGOGOgj[i] = spanArrayGOtoGOgjX[ i%(spanGOtoGOgjX+1) ];
-		yCoorsGOGOgj[i] = spanArrayGOtoGOgjY[ i/(spanGOtoGOgjX+1) ];		
-		//cout << yCoorsGOGOgj[i] << " ";		
-	}
-/*	
-//Real Measurements
-for(int i=0; i<numpGOtoGOgj; i++)
-{
-
-	gjPconX = exp( ((abs(xCoorsGOGOgj[i])*48) - 267) / 39.0 );	
-	gjPconY = exp( ((abs(yCoorsGOGOgj[i])*48) - 267) / 39.0 );
-	gjPcon[i] = (( -1745 + (1836 / (1 + (gjPconX + gjPconY)) ) ) * 0.01);
-	
-	gjCCX = exp( abs(xCoorsGOGOgj[i]*56) / 70.4 );
-	gjCCY = exp( abs(yCoorsGOGOgj[i]*56) / 70.4 );
-	gjCC[i] = (-2.3+(29.7 / ( (gjCCX + gjCCY)/2.0) )) * 0.09;
-}*/
-
-// "In Vivo additions"
-for(int i=0; i<numpGOtoGOgj; i++)
-{
-
-	//gjPcon(i) = exp( ((abs(i)*38) - 267) / 39.0 );
-
-	gjPconX = exp( ((abs(xCoorsGOGOgj[i])*36.0) - 267.0) / 39.0 );	
-	gjPconY = exp( ((abs(yCoorsGOGOgj[i])*36.0) - 267.0) / 39.0 );
-	gjPcon[i] = (( -1745.0 + (1836.0 / (1 + (gjPconX + gjPconY)) ) ) * 0.01);
-	
-	gjCCX = exp( abs(xCoorsGOGOgj[i]*100.0) / 190.0 );
-	gjCCY = exp( abs(yCoorsGOGOgj[i]*100.0) / 190.0 );
-	gjCC[i] = (-2.3+(23.0 / ( (gjCCX + gjCCY)/2.0) )) * 0.09;
-}
-
-// Remove self connection 
-for(int i=0; i<numpGOtoGOgj;i++)
-{
-	if( (xCoorsGOGOgj[i] == 0) && (yCoorsGOGOgj[i] == 0) )
-	{
-		gjPcon[i] = 0;
-		gjCC[i] = 0;
+		xCoorsGOGOgj[i] = spanArrayGOtoGOgjX[i % (spanGOtoGOgjX + 1)];
+		yCoorsGOGOgj[i] = spanArrayGOtoGOgjY[i / (spanGOtoGOgjX + 1)];		
 	}
 
-}
+	// "In Vivo additions"
+	for (int i = 0; i < numpGOtoGOgj; i++)
+	{
+		gjPconX = exp(((abs(xCoorsGOGOgj[i]) * 36.0) - 267.0) / 39.0 );	
+		gjPconY = exp(((abs(yCoorsGOGOgj[i]) * 36.0) - 267.0) / 39.0 );
+		gjPcon[i] = ((-1745.0 + (1836.0 / (1 + (gjPconX + gjPconY)))) * 0.01);
+		
+		gjCCX = exp(abs(xCoorsGOGOgj[i] * 100.0) / 190.0);
+		gjCCY = exp(abs(yCoorsGOGOgj[i] * 100.0) / 190.0);
+		gjCC[i] = (-2.3 + (23.0 / ((gjCCX + gjCCY)/2.0))) * 0.09;
+	}
 
-float tempCC;
+	// Remove self connection 
+	for (int i = 0; i < numpGOtoGOgj; i++)
+	{
+		if ((xCoorsGOGOgj[i] == 0) && (yCoorsGOGOgj[i] == 0))
+		{
+			gjPcon[i] = 0;
+			gjCC[i] = 0;
+		}
+	}
 
-	for(int i=0; i<cp->numGO; i++)
+	float tempCC;
+
+	for (int i = 0; i < cp->numGO; i++)
 	{	
-		srcPosX = i%cp->goX;
-		srcPosY = i/cp->goX;	
+		srcPosX = i % cp->goX;
+		srcPosY = i / cp->goX;	
 		
-		for(int j=0; j<numpGOtoGOgj; j++)
+		for (int j = 0; j < numpGOtoGOgj; j++)
 		{	
-			
 			preDestPosX = xCoorsGOGOgj[j]; 
 			preDestPosY = yCoorsGOGOgj[j];	
 
@@ -3006,97 +2537,56 @@ float tempCC;
 			tempDestPosX = srcPosX + preDestPosX;
 			tempDestPosY = srcPosY + preDestPosY;
 
-			tempDestPosX = (tempDestPosX%cp->goX+cp->goX)%cp->goX;
-			tempDestPosY = (tempDestPosY%cp->goY+cp->goY)%cp->goY;
+			tempDestPosX = (tempDestPosX % cp->goX + cp->goX) % cp->goX;
+			tempDestPosY = (tempDestPosY % cp->goY + cp->goY) % cp->goY;
 					
-			destInd = tempDestPosY*cp->goX+tempDestPosX;
+			destInd = tempDestPosY * cp->goX + tempDestPosX;
 
-
-			//TODO: add CC to connectivtiy array
-
-			if( (randGen->Random()>=1-gjPcon[j]) && (gjConBool[i][destInd ] == false) && (gjConBool[destInd][i] == false))
+			if ((randGen->Random()>= 1 - gjPcon[j]) && !gjConBool[i][destInd ] && 
+					!gjConBool[destInd][i])
 			{	
-				
-
-				pGOCoupInGOGO[destInd][ numpGOCoupInGOGO[destInd] ] = i;
-				pGOCoupInGOGOCCoeff[destInd][ numpGOCoupInGOGO[destInd] ] = tempCC;
+				pGOCoupInGOGO[destInd][numpGOCoupInGOGO[destInd]] = i;
+				pGOCoupInGOGOCCoeff[destInd][numpGOCoupInGOGO[destInd]] = tempCC;
 				numpGOCoupInGOGO[destInd]++;
 					
-				pGOCoupInGOGO[i][ numpGOCoupInGOGO[i] ] = destInd;
-				pGOCoupInGOGOCCoeff[i][ numpGOCoupInGOGO[i] ] = tempCC;
+				pGOCoupInGOGO[i][numpGOCoupInGOGO[i]] = destInd;
+				pGOCoupInGOGOCCoeff[i][numpGOCoupInGOGO[i]] = tempCC;
 				numpGOCoupInGOGO[i]++;
 
 				gjConBool[i][destInd] = true;
-				
-			
 			}
 		}
 	}
-/*
-	ofstream fileGOGOGJcon;
-	fileGOGOGJcon.open("GOGOGJInputcon.txt");
-	for(int i=0; i<cp->numGO; i++){
-		for(int j=0; j<numpGOtoGOgj; j++){
-			fileGOGOGJcon << pGOCoupInGOGO[i][j] << " ";
-		}
-		fileGOGOGJcon << endl;
-	}
-	
-	ofstream fileGOGOCC;
-	fileGOGOCC.open("GOGOCCInputcon.txt");
-	for(int i=0; i<cp->numGO; i++){
-		for(int j=0; j<numpGOtoGOgj; j++){
-			fileGOGOCC << pGOCoupInGOGOCCoeff[i][j] << " ";
-		}
-		fileGOGOCC << endl;
-	}
-*/
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 void InNetConnectivityState::connectPFtoBC()
 {
+	int spanPFtoBCX = cp->grX;
+	int spanPFtoBCY = cp->grY / cp->numBC;
+	int numpPFtoBC = (spanPFtoBCX + 1) * (spanPFtoBCY + 1);
 
-int spanPFtoBCX = cp->grX;
-int spanPFtoBCY = cp->grY/cp->numBC;
-int numpPFtoBC = (spanPFtoBCX+1)*(spanPFtoBCY+1);
-
-
-	for(int i=0; i<spanPFtoBCX + 1; i++){
-		int ind = spanPFtoBCX - i;
-		spanArrayPFtoBCX[i] = (spanPFtoBCX/2) - ind;}
-	for(int i=0; i<spanPFtoBCY + 1; i++){
-		int ind = spanPFtoBCY - i;
-		spanArrayPFtoBCY[i] = (spanPFtoBCY/2) - ind;}
-	
-	for(int i=0; i<numpPFtoBC; i++){
-		xCoorsPFBC[i] = spanArrayPFtoBCX[ i%(spanPFtoBCX+1) ];
-		yCoorsPFBC[i] = spanArrayPFtoBCY[ i/(spanPFtoBCX+1) ];
+	for (int i = 0; i < spanPFtoBCX + 1; i++)
+	{
+		spanArrayPFtoBCX[i] = (spanPFtoBCX / 2) - (spanPFtoBCX - i);
 	}
 
+	for (int i = 0; i < spanPFtoBCY + 1; i++)
+	{
+		int ind = spanPFtoBCY - i;
+		spanArrayPFtoBCY[i] = (spanPFtoBCY / 2) - (spanPFtoBCY - i);
+	}
+	
+	for (int i = 0; i < numpPFtoBC; i++)
+	{
+		xCoorsPFBC[i] = spanArrayPFtoBCX[i % (spanPFtoBCX + 1)];
+		yCoorsPFBC[i] = spanArrayPFtoBCY[i / (spanPFtoBCX + 1)];
+	}
 
-//Random Span Array
-	vector<int> rPFBCSpanInd;
-	rPFBCSpanInd.assign(numpPFtoBC,0);
-	for(int ind=0; ind<numpPFtoBC; ind++){ rPFBCSpanInd[ind]=ind; }
+	//Random Span Array
+	std::vector<int> rPFBCSpanInd;
+	rPFBCSpanInd.assign(numpPFtoBC, 0);
+	
+	for (int ind = 0; ind < numpPFtoBC; ind++) rPFBCSpanInd[ind] = ind;
 
 	float gridXScaleSrctoDest = 1;
 	float gridYScaleSrctoDest = (float)cp->numBC / cp->grY;
@@ -3109,120 +2599,59 @@ int numpPFtoBC = (spanPFtoBCX+1)*(spanPFtoBCY+1);
 	int tempDestPosY;
 	int destInd;
 
-	for(int i=0; i<cp->numBC; i++)
+	for (int i =0; i < cp->numBC; i++)
 	{
-		srcPosX = cp->grX/2;
+		srcPosX = cp->grX / 2;
 		srcPosY = i;
-		random_shuffle(rPFBCSpanInd.begin(), rPFBCSpanInd.end());
-		
-		for(int j=0; j<5000; j++)
-		{
-			preDestPosX = xCoorsPFBC[ rPFBCSpanInd[j] ];
-			preDestPosY = yCoorsPFBC[ rPFBCSpanInd[j] ];
-			
-			tempDestPosX = (int)round(srcPosX/gridXScaleSrctoDest) + preDestPosX;
-			tempDestPosY = (int)round(srcPosY/gridYScaleSrctoDest) + preDestPosY;
-			
-			tempDestPosX = (tempDestPosX%cp->grX+cp->grX)%cp->grX;
-			tempDestPosY = (tempDestPosY%cp->grY+cp->grY)%cp->grY;
-			
 
-			destInd = tempDestPosY*cp->grX+tempDestPosX;	
+		std::random_shuffle(rPFBCSpanInd.begin(), rPFBCSpanInd.end());
+		
+		for (int j = 0; j < 5000; j++)
+		{
+			preDestPosX = xCoorsPFBC[rPFBCSpanInd[j]];
+			preDestPosY = yCoorsPFBC[rPFBCSpanInd[j]];
+			
+			tempDestPosX = (int)round(srcPosX / gridXScaleSrctoDest) + preDestPosX;
+			tempDestPosY = (int)round(srcPosY / gridYScaleSrctoDest) + preDestPosY;
+			
+			tempDestPosX = (tempDestPosX%cp->grX + cp->grX) % cp->grX;
+			tempDestPosY = (tempDestPosY%cp->grY + cp->grY) % cp->grY;
+
+			destInd = tempDestPosY * cp->grX + tempDestPosX;	
 
 			pBCfromPFtoBC[i][numpBCfromPFtoBC[i]] = destInd;
 			numpBCfromPFtoBC[i]++;
 
 			pGRfromPFtoBC[destInd][numpGRfromPFtoBC[destInd]] = i;
 			numpGRfromPFtoBC[destInd]++;
-		
 		}
-
 	}
-
-
-
-for(int i=0; i<2000; i++)
-{
-	for(int j=0; j<numpGRfromPFtoBC[i]; j++)
-	{
-		//cout << pGRfromPFtoBC[i][j] << " ";
-	}
-//	cout << endl;
 }
-
-
-
-
-}
-
-
-
-
 
 void InNetConnectivityState::assignPFtoBCDelays(unsigned int msPerStep)
 {
 	
-	for(int i=0; i<cp->numGR; i++)
+	for (int i = 0; i < cp->numGR; i++)
 	{
 		int grPosX;
-//		int grBCPCSCDist;
 
 		//calculate x coordinate of GR position
 		grPosX=i%cp->grX;
 
-		//calculate distance of GR to BC, PC, and SC, and assign time delay.
-//		grBCPCSCDist=abs((int)(cp->grX/2-grPosX));
-//		pGRDelayMaskfromGRtoBSP[i]=0x1<<
-//				(int)((grBCPCSCDist/cp->grPFVelInGRXPerTStep+
-//						cp->grAFDelayInTStep)/msPerStep);
-
-		for(int j=0; j<numpGRfromPFtoBC[i]; j++)
+		for (int j = 0; j < numpGRfromPFtoBC[i]; j++)
 		{
 			int dfromGRtoBC;
 			int bcPosX;
 
-			//bcPosX=(pGRfromPFtoBC[i][j]%cp->goX)*(((float)cp->grX)/cp->goX);
-			bcPosX = cp->grX/2; 
-
-
+			bcPosX = cp->grX / 2; 
 			dfromGRtoBC=abs(bcPosX-grPosX);
-
-			/*if(dfromGRtoBC > cp->grX/2)
-			{
-				if(bcPosX<grPosX)
-				{
-					dfromGRtoBC=bcPosX+cp->grX-grPosX;
-				}
-				else
-				{
-					dfromGRtoBC=grPosX+cp->grX-bcPosX;
-				}
-			}*/
-
-			//pGRDelayMaskfromGRtoBC[i][j]=0x1<<
-			//		(int)((dfromGRtoBC/cp->grPFVelInGRXPerTStep+
-			//				cp->grAFDelayInTStep)/msPerStep);
 		}
 	}
-
-	/*for(int i=0; i<500; i++)
-	{
-		cout<<"numpGRfromPFtoBC["<<i<<"]: "<<numpGRfromPFtoBC[i]<<endl;
-		for(int j=0; j<numpGRfromPFtoBC[i]; j++)
-		{
-			cout<<pGRDelayMaskfromGRtoBC[i][j]<<" ";
-		}
-		cout<<endl;
-	}*/
-
-
 }
-
 
 void InNetConnectivityState::assignGRDelays(unsigned int msPerStep)
 {
-	
-	for(int i=0; i<cp->numGR; i++)
+	for (int i = 0; i < cp->numGR; i++)
 	{
 		int grPosX;
 		int grBCPCSCDist;
@@ -3231,254 +2660,63 @@ void InNetConnectivityState::assignGRDelays(unsigned int msPerStep)
 		grPosX=i%cp->grX;
 
 		//calculate distance of GR to BC, PC, and SC, and assign time delay.
-		grBCPCSCDist=abs((int)(cp->grX/2-grPosX));
-		pGRDelayMaskfromGRtoBSP[i]=0x1<<
-				(int)((grBCPCSCDist/cp->grPFVelInGRXPerTStep+
-						cp->grAFDelayInTStep)/msPerStep);
+		grBCPCSCDist = abs((int)(cp->grX / 2 - grPosX));
+		pGRDelayMaskfromGRtoBSP[i] = 0x1 << (int)((grBCPCSCDist / cp->grPFVelInGRXPerTStep +
+					cp->grAFDelayInTStep) / msPerStep);
 
-		for(int j=0; j<numpGRfromGRtoGO[i]; j++)
+		for (int j = 0; j < numpGRfromGRtoGO[i]; j++)
 		{
 			int dfromGRtoGO;
 			int goPosX;
 
-			goPosX=(pGRfromGRtoGO[i][j]%cp->goX)*(((float)cp->grX)/cp->goX);
+			goPosX = (pGRfromGRtoGO[i][j] % cp->goX) * (((float)cp->grX) / cp->goX);
 
-			dfromGRtoGO=abs(goPosX-grPosX);
+			dfromGRtoGO = abs(goPosX - grPosX);
 
-			if(dfromGRtoGO > cp->grX/2)
+			if (dfromGRtoGO > cp->grX / 2)
 			{
-				if(goPosX<grPosX)
-				{
-					dfromGRtoGO=goPosX+cp->grX-grPosX;
-				}
-				else
-				{
-					dfromGRtoGO=grPosX+cp->grX-goPosX;
-				}
+				if (goPosX < grPosX) dfromGRtoGO = goPosX + cp->grX - grPosX;
+				else dfromGRtoGO = grPosX + cp->grX - goPosX;
 			}
 
-			pGRDelayMaskfromGRtoGO[i][j]=0x1<<
-					(int)((dfromGRtoGO/cp->grPFVelInGRXPerTStep+
-							cp->grAFDelayInTStep)/msPerStep);
+			pGRDelayMaskfromGRtoGO[i][j] = 0x1<< (int)((dfromGRtoGO/cp->grPFVelInGRXPerTStep +
+							cp->grAFDelayInTStep) / msPerStep);
 		}
 	}
-/*
-	for(int i=0; i<10; i++)
-	{
-		cout<<"numpGRfromGRtoGO["<<i<<"]: "<<numpGRfromGRtoGO[i]<<endl;
-		for(int j=0; j<numpGRfromGRtoGO[i]; j++)
-		{
-			cout<<pGRDelayMaskfromGRtoGO[i][j]<<" ";
-		}
-		cout<<endl;
-	}
-*/
-
 }
-
-/*
-void InNetConnectivityState::connectCommon(ct_uint32_t **srcConArr, ct_int32_t *srcNumCon,
-		ct_uint32_t **destConArr, ct_int32_t *destNumCon,
-		ct_uint32_t srcMaxNumCon, ct_uint32_t numSrcCells,
-		ct_uint32_t destMaxNumCon, ct_uint32_t destNormNumCon,
-		ct_uint32_t srcGridX, ct_uint32_t srcGridY, ct_uint32_t destGridX, ct_uint32_t destGridY,
-		ct_uint32_t srcSpanOnDestGridX, ct_uint32_t srcSpanOnDestGridY,
-		ct_uint32_t normConAttempts, ct_uint32_t maxConAttempts, bool needUnique,
-		CRandomSFMT *randGen)
-{
-	bool *srcConnected;
-	float gridXScaleStoD;
-	float gridYScaleStoD;
-
-	gridXScaleStoD=((float)srcGridX)/((float)destGridX);
-	gridYScaleStoD=((float)srcGridY)/((float)destGridY);
-
-	srcConnected=new bool[numSrcCells];
-
-	cout<<"srcMaxNumCon "<<srcMaxNumCon<<" numSrcCells "<<numSrcCells<<endl;
-	cout<<"destMaxNumCon "<<destMaxNumCon<<" destNormNumCon "<<destNormNumCon<<endl;
-	cout<<"srcGridX "<<srcGridX<<" srcGridY "<<srcGridY<<" destGridX "<<destGridX<<" destGridY "<<destGridY<<endl;
-	cout<<"srcSpanOnDestGridX "<<srcSpanOnDestGridX<<" srcSpanOnDestGridY "<<srcSpanOnDestGridY<<endl;
-	cout<<"gridXScaleStoD "<<gridXScaleStoD<<" gridYScaleStoD "<<gridYScaleStoD<<endl;
-
-	for(int i=0; i<srcMaxNumCon; i++)
-	{
-		int srcNumConnected;
-
-		memset(srcConnected, false, numSrcCells*sizeof(bool));
-		srcNumConnected=0;
-
-//		cout<<"i "<<i<<endl;
-
-		while(srcNumConnected<numSrcCells)
-		{
-			int srcInd;
-			int srcPosX;
-			int srcPosY;
-			int attempts;
-			int tempDestNumConLim;
-			bool complete;
-
-			srcInd=randGen->IRandom(0, numSrcCells-1);
-
-			if(srcConnected[srcInd])
-			{
-				continue;
-			}
-//			cout<<"i "<<i<<" srcInd "<<srcInd<<" srcNumConnected "<<srcNumConnected<<endl;
-			srcConnected[srcInd]=true;
-			srcNumConnected++;
-
-			srcPosX=srcInd%srcGridX;
-			srcPosY=(int)(srcInd/srcGridX);
-
-			tempDestNumConLim=destNormNumCon;
-
-			for(attempts=0; attempts<maxConAttempts; attempts++)
-			{
-				int tempDestPosX;
-				int tempDestPosY;
-				int derivedDestInd;
-
-				if(attempts==normConAttempts)
-				{
-					tempDestNumConLim=destMaxNumCon;
-				}
-
-				tempDestPosX=(int)round(srcPosX/gridXScaleStoD);
-				tempDestPosY=(int)round(srcPosY/gridXScaleStoD);
-//				cout<<"before rand: tempDestPosX "<<tempDestPosX<<" tempDestPosY "<<tempDestPosY<<endl;
-
-				tempDestPosX+=round((randGen->Random()-0.5)*srcSpanOnDestGridX);//randGen->IRandom(-srcSpanOnDestGridX/2, srcSpanOnDestGridX/2);
-				tempDestPosY+=round((randGen->Random()-0.5)*srcSpanOnDestGridY);//.randGen->IRandom(-srcSpanOnDestGridY/2, srcSpanOnDestGridY/2);
-//				cout<<"after  rand: tempDestPosX "<<tempDestPosX<<" tempDestPosY "<<tempDestPosY<<endl;
-
-				tempDestPosX=((tempDestPosX%destGridX+destGridX)%destGridX);
-				tempDestPosY=((tempDestPosY%destGridY+destGridY)%destGridY);
-//				cout<<"after mod: tempDestPosX "<<tempDestPosX<<" tempDestPosY "<<tempDestPosY<<endl;
-
-				derivedDestInd=tempDestPosY*destGridX+tempDestPosX;
-//				cout<<"derivedDestInd "<<derivedDestInd<<endl;
-
-				if(needUnique)
-				{
-					bool unique=true;
-
-					for(int j=0; j<i; j++)
-					{
-						if(derivedDestInd==srcConArr[srcInd][j])
-						{
-							unique=false;
-							break;
-						}
-					}
-					if(!unique)
-					{
-						continue;
-					}
-				}
-
-				if(destNumCon[derivedDestInd]<tempDestNumConLim)
-				{
-					destConArr[derivedDestInd][destNumCon[derivedDestInd]]=srcInd;
-					destNumCon[derivedDestInd]++;
-					srcConArr[srcInd][i]=derivedDestInd;
-					srcNumCon[srcInd]++;
-
-					break;
-				}
-			}
-			if(attempts==maxConAttempts)
-			{
-//				cout<<"incomplete connection for cell #"<<srcInd<<endl;
-			}
-		}
-	}
-
-	delete[] srcConnected;
-}
-
-void InNetConnectivityState::translateCommon(ct_uint32_t **pPreGLConArr, ct_int32_t *numpPreGLCon,
-		ct_uint32_t **pGLPostGLConArr, ct_int32_t *numpGLPostGLCon,
-		ct_uint32_t **pPreConArr, ct_int32_t *numpPreCon,
-		ct_uint32_t **pPostConArr, ct_int32_t *numpPostCon,
-		ct_uint32_t numPre)
-{
-//	cout<<"numPre "<<endl;
-	for(int i=0; i<numPre; i++)
-	{
-		numpPreCon[i]=0;
-
-		for(int j=0; j<numpPreGLCon[i]; j++)
-		{
-			ct_uint32_t glInd;
-
-			glInd=pPreGLConArr[i][j];
-
-			for(int k=0; k<numpGLPostGLCon[glInd]; k++)
-			{
-				ct_uint32_t postInd;
-
-				postInd=pGLPostGLConArr[glInd][k];
-//				cout<<"i "<<i<<" j "<<j<<" k "<<k<<" numpPreCon "<<numpPreCon[i]<<" glInd "<<glInd<<" postInd "<<postInd;
-//				cout.flush();
-
-				pPreConArr[i][numpPreCon[i]]=postInd;
-				numpPreCon[i]++;
-
-				pPostConArr[postInd][numpPostCon[postInd]]=i;
-				numpPostCon[postInd]++;
-
-//				cout<<" "<<numpGLPostGLCon[glInd]<<" "<<numpPreGLCon[i]<<" "<<numPre<<" "<<" done "<<endl;
-			}
-//			cout<<"k done"<<endl;
-		}
-	}
-//	cout<<"i done"<<endl;
-}
-*/
-
-
-
-
-
-
-
 
 void InNetConnectivityState::connectCommon(int **srcConArr, int *srcNumCon,
-		int **destConArr, int *destNumCon,
-		int srcMaxNumCon, int numSrcCells,
-		int destMaxNumCon, int destNormNumCon,
-		int srcGridX, int srcGridY, int destGridX, int destGridY,
-		int srcSpanOnDestGridX, int srcSpanOnDestGridY,
-		int normConAttempts, int maxConAttempts, bool needUnique,
-		CRandomSFMT *randGen)
+		int **destConArr, int *destNumCon, int srcMaxNumCon, int numSrcCells,
+		int destMaxNumCon, int destNormNumCon, int srcGridX, int srcGridY,
+		int destGridX, int destGridY, int srcSpanOnDestGridX, int srcSpanOnDestGridY,
+		int normConAttempts, int maxConAttempts, bool needUnique, CRandomSFMT *randGen)
 {
 	bool *srcConnected;
 	float gridXScaleStoD;
 	float gridYScaleStoD;
 
-	gridXScaleStoD=((float)srcGridX)/((float)destGridX);
-	gridYScaleStoD=((float)srcGridY)/((float)destGridY);
+	gridXScaleStoD = (float)srcGridX / (float)destGridX;
+	gridYScaleStoD = (float)srcGridY / (float)destGridY;
 
-	srcConnected=new bool[numSrcCells];
+	srcConnected = new bool[numSrcCells];
 
-	cout<<"srcMaxNumCon "<<srcMaxNumCon<<" numSrcCells "<<numSrcCells<<endl;
-	cout<<"destMaxNumCon "<<destMaxNumCon<<" destNormNumCon "<<destNormNumCon<<endl;
-	cout<<"srcGridX "<<srcGridX<<" srcGridY "<<srcGridY<<" destGridX "<<destGridX<<" destGridY "<<destGridY<<endl;
-	cout<<"srcSpanOnDestGridX "<<srcSpanOnDestGridX<<" srcSpanOnDestGridY "<<srcSpanOnDestGridY<<endl;
-	cout<<"gridXScaleStoD "<<gridXScaleStoD<<" gridYScaleStoD "<<gridYScaleStoD<<endl;
+	std::cout << "srcMaxNumCon: " << srcMaxNumCon <<" numSrcCells: " << numSrcCells << std::endl;
+	std::cout << "destMaxNumCon " << destMaxNumCon <<" destNormNumCon "<< destNormNumCon << std::endl;
+	std::cout << "srcGridX: " << srcGridX <<" srcGridY: "<< srcGridY << " destGridX: "<< destGridX << 
+		" destGridY: " << destGridY << std::endl;
+	std::cout << "srcSpanOnDestGridX: " << srcSpanOnDestGridX << " srcSpanOnDestGridY: " <<
+		srcSpanOnDestGridY << std::endl;
+	std::cout << "gridXScaleStoD: " << gridXScaleStoD << " gridYScaleStoD: "<< gridYScaleStoD << std::endl;
 
-	for(int i=0; i<srcMaxNumCon; i++)
+	for (int i = 0; i < srcMaxNumCon; i++)
 	{
-		int srcNumConnected;
-
+		// NOTE: watch out with initialization with memset. There are better ways.	
+		int srcNumConnected = 0;
 		memset(srcConnected, false, numSrcCells*sizeof(bool));
-		srcNumConnected=0;
 
-		cout<<"i "<<i<<endl;
+		std::cout << "i: " << i << std::endl;
 
-		while(srcNumConnected<numSrcCells)
+		while (srcNumConnected < numSrcCells)
 		{
 			int srcInd;
 			int srcPosX;
@@ -3487,78 +2725,65 @@ void InNetConnectivityState::connectCommon(int **srcConArr, int *srcNumCon,
 			int tempDestNumConLim;
 			bool complete;
 
-			srcInd=randGen->IRandom(0, numSrcCells-1);
+			srcInd = randGen->IRandom(0, numSrcCells - 1);
 
-			if(srcConnected[srcInd])
+			if (srcConnected[srcInd])
 			{
 				continue;
 			}
-//			cout<<"i "<<i<<" srcInd "<<srcInd<<" srcNumConnected "<<srcNumConnected<<endl;
-			srcConnected[srcInd]=true;
+			
+			srcConnected[srcInd] = true;
 			srcNumConnected++;
 
-			srcPosX=srcInd%srcGridX;
-			srcPosY=(int)(srcInd/srcGridX);
+			srcPosX = srcInd % srcGridX;
+			srcPosY = (int)(srcInd / srcGridX);
 
-			tempDestNumConLim=destNormNumCon;
+			tempDestNumConLim = destNormNumCon;
 
-			for(attempts=0; attempts<maxConAttempts; attempts++)
+			for (attempts = 0; attempts < maxConAttempts; attempts++)
 			{
 				int tempDestPosX;
 				int tempDestPosY;
 				int derivedDestInd;
 
-				if(attempts==normConAttempts)
+				if (attempts == normConAttempts) tempDestNumConLim = destMaxNumCon;
+
+				tempDestPosX = (int)round(srcPosX / gridXScaleStoD);
+				tempDestPosY = (int)round(srcPosY / gridXScaleStoD);
+
+				tempDestPosX += round((randGen->Random() - 0.5) * srcSpanOnDestGridX);
+				tempDestPosY += round((randGen->Random() - 0.5) * srcSpanOnDestGridY);
+
+				tempDestPosX = ((tempDestPosX % destGridX + destGridX) % destGridX);
+				tempDestPosY = ((tempDestPosY % destGridY + destGridY) % destGridY);
+
+				derivedDestInd = tempDestPosY *destGridX + tempDestPosX;
+
+				if (needUnique)
 				{
-					tempDestNumConLim=destMaxNumCon;
-				}
-
-				tempDestPosX=(int)round(srcPosX/gridXScaleStoD);
-				tempDestPosY=(int)round(srcPosY/gridXScaleStoD);
-//				cout<<"before rand: tempDestPosX "<<tempDestPosX<<" tempDestPosY "<<tempDestPosY<<endl;
-
-				tempDestPosX+=round((randGen->Random()-0.5)*srcSpanOnDestGridX);//randGen->IRandom(-srcSpanOnDestGridX/2, srcSpanOnDestGridX/2);
-				tempDestPosY+=round((randGen->Random()-0.5)*srcSpanOnDestGridY);//.randGen->IRandom(-srcSpanOnDestGridY/2, srcSpanOnDestGridY/2);
-//				cout<<"after  rand: tempDestPosX "<<tempDestPosX<<" tempDestPosY "<<tempDestPosY<<endl;
-
-				tempDestPosX=((tempDestPosX%destGridX+destGridX)%destGridX);
-				tempDestPosY=((tempDestPosY%destGridY+destGridY)%destGridY);
-//				cout<<"after mod: tempDestPosX "<<tempDestPosX<<" tempDestPosY "<<tempDestPosY<<endl;
-
-				derivedDestInd=tempDestPosY*destGridX+tempDestPosX;
-//				cout<<"derivedDestInd "<<derivedDestInd<<endl;
-
-				if(needUnique)
-				{
-					bool unique=true;
-
-					for(int j=0; j<i; j++)
+					//NOTE: JUST USE A SET!	
+					bool unique = true;
+					
+					for (int j = 0; j < i; j++)
 					{
-						if(derivedDestInd==srcConArr[srcInd][j])
+						if (derivedDestInd == srcConArr[srcInd][j])
 						{
-							unique=false;
+							unique = false;
 							break;
 						}
 					}
-					if(!unique)
-					{
-						continue;
-					}
+
+					if (!unique) continue;
 				}
 
-				if(destNumCon[derivedDestInd]<tempDestNumConLim)
+				if (destNumCon[derivedDestInd] < tempDestNumConLim)
 				{
-					destConArr[derivedDestInd][destNumCon[derivedDestInd]]=srcInd;
+					destConArr[derivedDestInd][destNumCon[derivedDestInd]] = srcInd;
 					destNumCon[derivedDestInd]++;
-					srcConArr[srcInd][i]=derivedDestInd;
+					srcConArr[srcInd][i] = derivedDestInd;
 					srcNumCon[srcInd]++;
-
 					break;
 				}
-			}
-			if(attempts==maxConAttempts)
-			{
-//				cout<<"incomplete connection for cell #"<<srcInd<<endl;
 			}
 		}
 	}
@@ -3566,44 +2791,34 @@ void InNetConnectivityState::connectCommon(int **srcConArr, int *srcNumCon,
 	delete[] srcConnected;
 }
 
-
 void InNetConnectivityState::translateCommon(int **pPreGLConArr, int *numpPreGLCon,
-		int **pGLPostGLConArr, int *numpGLPostGLCon,
-		int **pPreConArr, int *numpPreCon,
-		int **pPostConArr, int *numpPostCon,
-		int numPre)
+		int **pGLPostGLConArr, int *numpGLPostGLCon, int **pPreConArr, int *numpPreCon,
+		int **pPostConArr, int *numpPostCon, int numPre)
 {
-//	cout<<"numPre "<<endl;
-	for(int i=0; i<numPre; i++)
+	
+	for (int i = 0; i < numPre; i++)
 	{
-		numpPreCon[i]=0;
+		numpPreCon[i] = 0;
 
-		for(int j=0; j<numpPreGLCon[i]; j++)
+		for (int j = 0; j < numpPreGLCon[i]; j++)
 		{
 			int glInd;
 
-			glInd=pPreGLConArr[i][j];
+			glInd = pPreGLConArr[i][j];
 
-			for(int k=0; k<numpGLPostGLCon[glInd]; k++)
+			for (int k = 0; k < numpGLPostGLCon[glInd]; k++)
 			{
 				int postInd;
 
-				postInd=pGLPostGLConArr[glInd][k];
-//				cout<<"i "<<i<<" j "<<j<<" k "<<k<<" numpPreCon "<<numpPreCon[i]<<" glInd "<<glInd<<" postInd "<<postInd;
-//				cout.flush();
+				postInd = pGLPostGLConArr[glInd][k];
 
-				pPreConArr[i][numpPreCon[i]]=postInd;
+				pPreConArr[i][numpPreCon[i]] = postInd;
 				numpPreCon[i]++;
 
-				pPostConArr[postInd][numpPostCon[postInd]]=i;
+				pPostConArr[postInd][numpPostCon[postInd]] = i;
 				numpPostCon[postInd]++;
-
-//				cout<<" "<<numpGLPostGLCon[glInd]<<" "<<numpPreGLCon[i]<<" "<<numPre<<" "<<" done "<<endl;
 			}
-//			cout<<"k done"<<endl;
 		}
 	}
-//	cout<<"i done"<<endl;
 }
-
 
