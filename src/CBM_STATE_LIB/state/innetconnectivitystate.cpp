@@ -23,7 +23,7 @@ InNetConnectivityState::InNetConnectivityState(ConnectivityParams *parameters,
 	
 	srand(time(0));	
 
-	std::cout << "connecting GO to GO" << endl;
+	std::cout << "connecting GO to GO" << std::endl;
 	// NOTE: there are different versions of this function	
 	connectGOGODecayP(randGen, goRecipParam, simNum);	
 	
@@ -252,7 +252,7 @@ InNetConnectivityState::~InNetConnectivityState()
 
 void InNetConnectivityState::writeState(std::fstream &outfile)
 {
-	std::cout << "Writing input network connectivity state to disk..." << std:endl;
+	std::cout << "Writing input network connectivity state to disk..." << std::endl;
 	stateRW(false, (std::fstream &)outfile);
 	std::cout << "finished writing input network connectivity to disk." << std::endl;
 }
@@ -1317,7 +1317,7 @@ void InNetConnectivityState::connectMFGL_withUBC(CRandomSFMT *randGen)
 		{
 			for (int k = 0; k < numpMFfromMFtoGL[i]; k++)
 			{
-				if (pMFfromMFtoGL[i][j] == pMFfromMFtoGL[i][k] && j != k) count++ 
+				if (pMFfromMFtoGL[i][j] == pMFfromMFtoGL[i][k] && j != k) count++; 
 			}
 		}
 	}
@@ -1863,7 +1863,7 @@ void InNetConnectivityState::connectGOGODecayP(CRandomSFMT *randGen, int goRecip
 		if ((xCoorsGOGOsyn[i] == 0) && (yCoorsGOGOsyn[i] == 0)) Pcon[i] = 0;
 	}
 	
-	std::std::vector<int> rGOGOSpanInd;
+	std::vector<int> rGOGOSpanInd;
 	rGOGOSpanInd.assign(numP, 0);
 	
 	for (int ind = 0; ind < numP; ind++) rGOGOSpanInd[ind] = ind;
@@ -2141,7 +2141,7 @@ void InNetConnectivityState::connectGOGODecay(CRandomSFMT *randGen)
 			for (int k = 0; k < numpGOGABAOutGOGO[i]; k++)
 			{
 				if (pGOGABAInGOGO[i][j] == pGOGABAOutGOGO[i][k] && pGOGABAInGOGO[i][j] != UINT_MAX
-						&& pGOGABAOutGOGO[i][k] != UINT_MAX) recipCounter++ 
+						&& pGOGABAOutGOGO[i][k] != UINT_MAX) recipCounter++; 
 			}
 		}
 	}
@@ -2230,7 +2230,7 @@ void InNetConnectivityState::connectGOGOBias(CRandomSFMT *randGen)
 			
 				// conditional statement against making double output
 
-				if (randGen->Random() > && !conGOGOBoolOut[destInd][rGOInd[i]])
+				if (randGen->Random() > 0 && !conGOGOBoolOut[destInd][rGOInd[i]])
 				{
 					pGOGABAOutGOGO[destInd][numpGOGABAOutGOGO[destInd]] = rGOInd[i];
 					numpGOGABAOutGOGO[destInd]++;
@@ -2250,7 +2250,7 @@ void InNetConnectivityState::connectGOGOBias(CRandomSFMT *randGen)
 		{
 			std::cout << "numpGOGABAInGOGO[" << k << "]: " << numpGOGABAInGOGO[k] << std::endl;
 			for (int j = 0; j < numpGOGABAInGOGO[k]; j++) std::cout << pGOGABAInGOGO[k][j] << " ";
-			std::cout << endl;
+			std::cout << std::endl;
 		}
 	}
 	else if (conType == 1)
@@ -2443,7 +2443,7 @@ void InNetConnectivityState::connectGOGO(CRandomSFMT *randGen)
 			{
 				std::cout << pGOGABAInGOGO[k][j] << " ";
 			}
-			std::cout<<endl;
+			std::cout << std::endl;
 		}
 	}
 
