@@ -38,7 +38,8 @@ class CBMState
 
 		void writeState(std::fstream &outfile);
 
-		bool equivalent(CBMState &compState);
+		bool operator==(CBMState &compState);
+		bool operator!=(CBMState &compState);
 
 		ct_uint32_t getNumZones();
 

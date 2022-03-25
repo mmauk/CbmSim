@@ -9,26 +9,22 @@
 
 CBMState::CBMState(std::fstream &infile)
 {
-	std::cout << "State constructor for a single input file" << std::endl;	
 	infile >> numZones;
 
 	conParams = new ConnectivityParams(infile);
 	actParams = new ActivityParams(infile);
 
 	infile.seekg(1, std::ios::cur);
+
 	innetConState = new InNetConnectivityState(conParams, infile);
 	mzoneConStates = new MZoneConnectivityState*[numZones];
-
-	for (int i = 0; i < numZones; i++)
-	{
-		mzoneConStates[i] = new MZoneConnectivityState(conParams, infile);
-	}
 
 	innetActState = new InNetActivityState(conParams, infile);
 	mzoneActStates = new MZoneActivityState*[numZones];
 
 	for (int i = 0; i < numZones; i++)
 	{
+		mzoneConStates[i] = new MZoneConnectivityState(conParams, infile);
 		mzoneActStates[i] = new MZoneActivityState(conParams, actParams, infile);
 	}
 }
@@ -36,9 +32,6 @@ CBMState::CBMState(std::fstream &infile)
 CBMState::CBMState(std::fstream &actPFile, std::fstream &conPFile, unsigned int nZones,
 		int goRecipParam, int simNum)
 {
-	// NOTE: again, should separate printing from the constructors
-	std::cout << "State constructor using activity and connectivity files" << std::endl;
-
 	int innetCRSeed;
 	int *mzoneCRSeed = new int[nZones];
 	int *mzoneARSeed = new int[nZones];
@@ -60,38 +53,41 @@ CBMState::CBMState(std::fstream &actPFile, std::fstream &conPFile, unsigned int 
 
 CBMState::~CBMState()
 {
-	std::cout << "Deleting activity parameters..." << std::endl;
 	delete actParams;	
-	std::cout << "Successfully deleted activity parameters." << std::endl;	
-
-	std::cout << "Deleting connectivity parameters..." << std::endl;
 	delete conParams;
-	std::cout << "Successfully deleted connectivity parameters." << std::endl;
 
-	std::cout << "Deleting input network connectivity state..." << std::endl;
 	delete innetConState;
-	std::cout << "Successfully deleted input network connectivity state." << std::endl;
+	delete innetActState;
 
-	std::cout << "Deleting Mzone connectivity states..." << std::endl;	
-	for (int i = 0; i < numZones; i++)
+	for (int i = 0; i < numZones; i++) 
 	{
 		delete mzoneConStates[i];
-	}
-	
-	delete[] mzoneConStates;
-	std::cout << "Successfully deleted Mzone connectivity states." << std::endl;
-	
-	std::cout << "Deleting input network activity states..." << std::endl;
-	delete innetActState;
-	std::cout << "Successfully deleted input network activity states." << std::endl;
-
-	std::cout << "Deleting Mzone activity states..." << std::endl;	
-	for(int i = 0; i < numZones; i++)
-	{
 		delete mzoneActStates[i];
-	}
+	}	
+
+	delete[] mzoneConStates;
 	delete[] mzoneActStates;
-	std::cout << "Successfully deleted Mzone activity states." << std::endl;
+}
+
+void CBMState::newState(std::fstream &actPFile, std::fstream &conPFile, unsigned int nZones,
+			int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed, int goRecipParam, int simNum)
+{
+	numZones = nZones;
+
+	conParams = new ConnectivityParams(conPFile);
+	actParams = new ActivityParams(actPFile);
+
+	innetConState  = new InNetConnectivityState(conParams, actParams->msPerTimeStep,
+			innetCRSeed, goRecipParam, simNum);
+	mzoneConStates = new MZoneConnectivityState*[numZones];
+	innetActState  = new InNetActivityState(conParams, actParams);
+	mzoneActStates = new MZoneActivityState*[numZones];
+
+	for (int i = 0; i < numZones; i++)
+	{
+		mzoneConStates[i] = new MZoneConnectivityState(conParams, mzoneCRSeed[i]);
+		mzoneActStates[i] = new MZoneActivityState(conParams, actParams, mzoneARSeed[i]);
+	}
 }
 
 void CBMState::writeState(std::fstream &outfile)
@@ -100,39 +96,30 @@ void CBMState::writeState(std::fstream &outfile)
 	// after sending a newline, but doing this too often can lead to poor disk
 	// access performance. Whatever that means.
 	outfile << numZones << std::endl;
+
 	conParams->writeParams(outfile);
 	actParams->writeParams(outfile);
-	innetConState->writeState(outfile);
 	
-	std::cout << "Writing "	<< numZones << " Mzone connectivity states to files..." << std::endl;
-	for(int i=0; i<numZones; i++)
+	innetConState->writeState(outfile);
+	innetActState->writeState(outfile);
+	
+	for (int i=0; i < numZones; i++)
 	{
 		mzoneConStates[i]->writeState(outfile);
-	}
-	std::cout << "Done writing Mzone connectivity states to files." << std::endl;
-
-	std::cout << "Writing input network activity state to file..." << std::endl;
-	innetActState->writeState(outfile);
-	std::cout << "Done writing input network activity state to file." << std::endl;
-
-	std::cout << "Writing Mzone activity states to files..." << std::endl;
-	for (int i = 0; i < numZones; i++)
-	{
 		mzoneActStates[i]->writeState(outfile);
 	}
-	std::cout << "Done writing Mzone activity states to files..." << std::endl;
 }
 
-bool CBMState::equivalent(CBMState &compState)
+bool CBMState::operator==(CBMState &compState)
 {
-	if (numZones != compState.getNumZones())
-	{
-		return false;
-	} 
-	else
-	{
-		return innetConState->equivalent(*(compState.getInnetConStateInternal()));
-	}
+	return numZones == compState.getNumZones() ? true : 
+		innetConState->equivalent(*(compState.getInnetConStateInternal())) 
+}
+
+bool CBMState::operator!=(CBMState & compState)
+{
+	return numZones != compState.getNumZones() ? true :
+		!innetConState->equivalent(*(compState.getInnetConStateInternal()))
 }
 
 ct_uint32_t CBMState::getNumZones()
@@ -188,42 +175,5 @@ InNetConnectivityState* CBMState::getInnetConStateInternal()
 MZoneConnectivityState* CBMState::getMZoneConStateInternal(unsigned int zoneN)
 {
 	return mzoneConStates[zoneN];
-}
-
-void CBMState::newState(std::fstream &actPFile, std::fstream &conPFile, unsigned int nZones,
-			int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed, int goRecipParam, int simNum)
-{
-	numZones = nZones;
-
-	conParams = new ConnectivityParams(conPFile);
-	actParams = new ActivityParams(actPFile);
-
-	std::cout << "parameters loaded" << std::endl;
-
-	std::cout << "Constructing input network connectivity states..." << std::endl;	
-	innetConState = new InNetConnectivityState(conParams, actParams->msPerTimeStep, innetCRSeed, goRecipParam, simNum);
-	std::cout << "Input network connectivity states constructed." << std::endl;
-
-	std::cout << "Constructing MZone connectivity states..." << std::endl;
-	mzoneConStates = new MZoneConnectivityState*[numZones];
-	
-	for (int i = 0; i < numZones; i++)
-	{
-		mzoneConStates[i] = new MZoneConnectivityState(conParams, mzoneCRSeed[i]);
-	}
-	std::cout << "Mzone connectivity states constructed." << std::endl;
-
-	std::cout << "Constructing input network activity states..." << std::endl;
-	innetActState = new InNetActivityState(conParams, actParams);
-	std::cout << "Innet activity states constructed" << std::endl;
-	
-	std::cout << "Constructing MZone activity states..." << std::endl;
-	mzoneActStates = new MZoneActivityState*[numZones];
-	
-	for (int i = 0; i < numZones; i++)
-	{
-		mzoneActStates[i] = new MZoneActivityState(conParams, actParams, mzoneARSeed[i]);
-	}
-	std::cout << "Mzone activity states constructed" << std::endl;
 }
 
