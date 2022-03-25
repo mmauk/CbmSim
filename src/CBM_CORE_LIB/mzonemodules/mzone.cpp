@@ -222,7 +222,7 @@ void MZone::calcPCActivities()
 
 			as->threshPC[i] = as->threshPC[i] + (ap->threshDecPC * (ap->threshRestPC - as->threshPC[i]));
 
-			as->apPC[i] = as->vPC[i]l > as->threshPC[i];
+			as->apPC[i] = as->vPC[i] > as->threshPC[i];
 			as->apBufPC[i] = (as->apBufPC[i] << 1) | (as->apPC[i] * 0x00000001);
 
 			as->threshPC[i] = as->apPC[i] * ap->threshMaxPC + (!as->apPC[i]) * as->threshPC[i];
