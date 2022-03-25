@@ -118,8 +118,7 @@ bool CBMState::operator==(CBMState &compState)
 
 bool CBMState::operator!=(CBMState & compState)
 {
-	return numZones != compState.getNumZones() ? true :
-		!innetConState->equivalent(*(compState.getInnetConStateInternal()));
+	return !(*this == compState);
 }
 
 ct_uint32_t CBMState::getNumZones()

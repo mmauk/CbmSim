@@ -39,7 +39,9 @@ public:
 
 	virtual void writeState(std::fstream &outfile);
 
-	virtual bool equivalent(const InNetConnectivityState &compState);
+	//TODO: change equivalent abstract def in interface	
+	virtual bool operator==(const InNetConnectivityState &compState);
+	virtual bool operator!=(const InNetConnectivityState &compState);
 
 	virtual std::vector<int> getpGOfromGOtoGLCon(int goN);
 	virtual std::vector<int> getpGOfromGLtoGOCon(int goN);

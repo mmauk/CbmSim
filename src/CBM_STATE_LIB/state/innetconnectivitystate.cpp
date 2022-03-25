@@ -257,10 +257,11 @@ void InNetConnectivityState::writeState(std::fstream &outfile)
 	std::cout << "finished writing input network connectivity to disk." << std::endl;
 }
 
-bool InNetConnectivityState::equivalent(const InNetConnectivityState &compState)
+bool InNetConnectivityState::operator==(const InNetConnectivityState &compState)
 {
 	bool eq = true;
-	
+	//NOTE: haspGLfromMFtoGL and the like are excellent candidates for std::arrays,
+	//      so that we can run STL algs on them	
 	for (int i = 0; i < cp->numGL; i++)
 	{
 		eq = eq && (haspGLfromMFtoGL[i] == compState.haspGLfromMFtoGL[i]);
@@ -275,7 +276,13 @@ bool InNetConnectivityState::equivalent(const InNetConnectivityState &compState)
 	{
 		eq = eq && (numpGRfromGOtoGR[i] == compState.numpGRfromGOtoGR[i]);
 	}
+
 	return eq;
+}
+
+bool InNetConnectivityState::operator!=(const InNetConnectivityState &compState)
+{
+	return !(*this == compState);
 }
 
 std::vector<int> InNetConnectivityState::getpGOfromGOtoGLCon(int goN)
