@@ -40,8 +40,6 @@
 class MZone : virtual public MZoneInterface
 {
 public:
-//	MZone(const bool *actSCIn, const bool *actMFIn, const bool *hMFIn,
-//			const unsigned int *pfBCSumIn, unsigned int *actBufGRGPU, unsigned int *delayMaskGRGPU, unsigned long *histGRGPU);
 	MZone(ConnectivityParams *conParams, ActivityParams *actParams,
 			MZoneConnectivityState *conState, MZoneActivityState *actState, int randSeed,
 			ct_uint32_t **actBufGRGPU, ct_uint32_t **delayMaskGRGPU, ct_uint64_t **histGRGPU,
@@ -66,7 +64,6 @@ public:
 
 	void calcPCActivities();
 	void calcBCActivities(ct_uint32_t **pfInput);
-	//void calcBCActivities();
 	void calcIOActivities();
 	void calcNCActivities();
 
@@ -128,8 +125,6 @@ private:
 	const ct_uint8_t *apMFInput;
 	const ct_uint8_t *histMFInput;
 	bool *isTrueMF;
-
-//	static const float timeStep;
 
 	//stellate cell variables
 	const ct_uint8_t *apSCInput;

@@ -38,12 +38,6 @@ CBMSimCore::~CBMSimCore()
 {
 	delete inputNet;
 
-//	for(int i=0; i<numZones; i++)
-//	{
-//		delete zones[i];
-//	}
-//	delete[] zones;
-
 	for(int i=0; i<numGPUs; i++)
 	{
 		cudaSetDevice(i+gpuIndStart);
@@ -452,15 +446,6 @@ void CBMSimCore::calcActivity(float goMin, int simNum, float GOGR, float GRGO, f
 		syncCUDA("2iu");
 #endif
 		
-		// Only allow plasticity once HomeoTuning in GCL is complete.
-/*		if(curTime > (1000000*10000)+(1000*5000)){
-			zones[i]->updateMFNCSyn(inputNet->exportHistMF(), curTime);
-			
-			#ifdef NO_ASYNC
-				syncCUDA("2iv");
-			#endif
-		}
-	*/
 	}
 
 
@@ -559,9 +544,6 @@ void CBMSimCore::construct(CBMState *state, int *mzoneRSeed, int gpuIndStart, in
 	inputNet=new InNet(simState->getConParamsInternal(), simState->getActParamsInternal(),
 			simState->getInnetConStateInternal(), simState->getInnetActStateInternal(),
 			this->gpuIndStart, numGPUs);
-//		new InNetAllGRMFGO(simState->getConParamsInternal(), simState->getActParamsInternal(),
-//			simState->getInnetConStateInternal(), simState->getInnetActStateInternal(),
-//			this->gpuIndStart, numGPUs);
 	cout << "FUCKCKCK" << endl;
 	zones=new MZone*[numZones];
 	for(int i=0; i<numZones; i++)

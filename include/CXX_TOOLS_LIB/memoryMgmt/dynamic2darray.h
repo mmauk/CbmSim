@@ -5,8 +5,8 @@
  *      Author: consciousness
  */
 
-#ifndef DYNAMIC2DARRAY_H_
-#define DYNAMIC2DARRAY_H_
+#ifndef _DYNAMIC2DARRAY_H
+#define _DYNAMIC2DARRAY_H
 
 #include <cstddef>
 
@@ -32,4 +32,4 @@ template<typename Type> void delete2DArray(Type** array)
 bool validate2DfloatArray(float ** array, unsigned int numElements);
 bool validate2DdoubleArray(double **array, unsigned int numElements);
 
-#endif /* DYNAMIC2DARRAY_H_ */
+#endif /* _DYNAMIC2DARRAY_H */

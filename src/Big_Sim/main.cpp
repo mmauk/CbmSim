@@ -21,7 +21,8 @@
 int **paramArrayPre;
 int **paramArray;
 
-int main() {
+int main() 
+{
 
 	int numTrainingTrials = 50;
 	int homeoTuningTrials = 0;
@@ -50,17 +51,21 @@ int main() {
 	std::cout << "Starting simulation..." << std::endl;
 	clock_t time = clock();
     	
-	for(int fileNum=0; fileNum < 1; fileNum++){	
-		std::cout << "ParamNum:  " << fileNum << std::endl;
+	for (int fileNum = 0; fileNum < 1; fileNum++)
+	{	
+		std::cout << "ParamNum: " << fileNum << std::endl;
 		
-		for(int inputWeightNum = 0; inputWeightNum < 1; inputWeightNum++){
+		for (int inputWeightNum = 0; inputWeightNum < 1; inputWeightNum++)
+		{
 			
-			for(int goRecipParamNum = 0; goRecipParamNum < grWLength; goRecipParamNum++){
+			for (int goRecipParamNum = 0; goRecipParamNum < grWLength; goRecipParamNum++)
+			{
 				GRGO = grW[goRecipParamNum] * ws;
 				MFGO = mfW * ws;
 				GOGR = gogr;
 
-				for(int simNum = 0; simNum < 10; simNum++){
+				for (int simNum = 0; simNum < 10; simNum++)
+				{
 					Control joeSimulation;
 					joeSimulation.runSimulationWithGRdata(fileNum, goRecipParamNum, homeoTuningTrials,
 							granuleActivityDetectionTrials, numTrainingTrials, simNum, CSlength[fileNum],
