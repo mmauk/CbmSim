@@ -644,6 +644,7 @@ void MZone::runPFPCPlastCUDA(cudaStream_t **sts, int streamN, unsigned long t)
 					historyGRGPU[curGPUInd], ap->grPCHistCheckBinIO, curGROffset, pfPCPlastStepIO[curIOInd]);
 
 			curGROffset += cp->numpPCfromGRtoPC;
+		}
 	}
 }
 
