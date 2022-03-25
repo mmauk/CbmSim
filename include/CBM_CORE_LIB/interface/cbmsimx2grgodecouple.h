@@ -66,5 +66,4 @@ private:
 	unsigned long curTime;
 };
 
-
 #endif /* CBMSIMX2GRGODECOUPLE_H_ */

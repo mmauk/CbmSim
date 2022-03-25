@@ -50,38 +50,33 @@ public:
 	void printVGRGPU();
 	void getnumGPUs();
 	void grStim(int startGR, int numGR);
-		unsigned int totalGRIn;
 	
-		
-		float goalRate = 7.0;
-		float avgISI = 1000.0/goalRate;
-		float weightScalerEX = 0.0000005;
-	        float weightScalerINH = 0.0000005;
-		
-		float exDecrease = weightScalerEX*avgISI;
-		float exIncrease = weightScalerEX;
-		
-		float inhDecrease = weightScalerINH*avgISI;
-		float inhIncrease = weightScalerINH;
-		
-		float **goGRGOScaler;	
-		
-		
-		
-		
-		
-		
-		virtual void setGIncGRtoGO(float inc);
+	unsigned int totalGRIn;
+	
+	float goalRate 		  = 7.0;
+	float avgISI 		  = 1000.0 / goalRate;
+	float weightScalerEX  = 0.0000005;
+	float weightScalerINH = 0.0000005;
+	
+	float exDecrease = weightScalerEX * avgISI;
+	float exIncrease = weightScalerEX;
+	
+	float inhDecrease = weightScalerINH * avgISI;
+	float inhIncrease = weightScalerINH;
+	
+	float **goGRGOScaler;	
+	
+	
+	virtual void setGIncGRtoGO(float inc);
 	virtual void resetGIncGRtoGO();
 
 	virtual const ct_uint8_t* exportAPMF();
 	virtual const ct_uint8_t* exportAPSC();
 	virtual const ct_uint8_t* exportAPGO();
-	//virtual const int* exportSPKGO();
 	virtual const ct_uint8_t* exportAPGR();
 	virtual const ct_uint8_t* exportAPUBC();
 
-	virtual const ct_uint8_t* exportHistMF();
+	virtual const ct_uint8_t*  exportHistMF();
 	virtual const ct_uint32_t* exportAPBufMF();
 	virtual const ct_uint32_t* exportAPBufGR();
 	virtual const ct_uint32_t* exportAPBufGO();
@@ -102,20 +97,19 @@ public:
 	
 	virtual const float* exportVmSC();
 	virtual const float* exportGESumGR();
-//	virtual const float* exportDepSumMFGR();
 	virtual const float* exportGUBCESumGR();
 	virtual const float* exportDepSumUBCGR();
 	
 	virtual const float* exportDepSumGOGR();
 	virtual const float* exportDynamicSpillSumGOGR();
 	virtual const float* exportgNMDAGR();
-	virtual const int* exportAPfromMFtoGR();
+	virtual const int*   exportAPfromMFtoGR();
 	virtual const float* exportGISumGR();
 
 	virtual const ct_uint32_t* exportSumGRInputGO();
-	virtual const float* exportSumGOInputGO();
-	virtual const float* exportGOOutSynScaleGOGO();
-	virtual const float* exportgGOGO();
+	virtual const float* 	   exportSumGOInputGO();
+	virtual const float* 	   exportGOOutSynScaleGOGO();
+	virtual const float* 	   exportgGOGO();
 
 	virtual const ct_uint32_t* exportPFBCSum();
 
@@ -170,7 +164,6 @@ public:
 	virtual void runUpdateGROutGOCUDA(cudaStream_t **sts, int streamN);
 	virtual void runUpdateGROutBCCUDA(cudaStream_t **sts, int streamN);
 	
-	
 	virtual void cpyPFBCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN);
 	virtual void cpyPFSCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN);
 	virtual void cpyGRBCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN);
@@ -188,16 +181,13 @@ protected:
 	virtual void initBCCUDA();
 	virtual void initSCCUDA();
 
-//	virtual void connectNetwork();
-
 	ConnectivityParams *cp;
-	ActivityParams *ap;
+	ActivityParams 	   *ap;
 
 	InNetConnectivityState *cs;
-	InNetActivityState *as;
+	InNetActivityState 	   *as;
 
 	CRandomSFMT0 *randGen;
-	
 
 	int gpuIndStart;
 	int numGPUs;
@@ -233,13 +223,10 @@ protected:
 	unsigned int updateGRHistNumGRPerB;
 	unsigned int updateGRHistNumBlocks;
 
-//	float *testA;
-//	float *testB;
-//	float *testC;
-
 	//UBC
 	ct_uint32_t **apUBCH;
 	ct_uint32_t **apUBCGPU;
+
 	float **depAmpUBCH;
 	float **depAmpUBCGPU;	
 	float **depAmpUBCGRGPU;	
@@ -247,14 +234,18 @@ protected:
 
 	//mossy fibers
 	const ct_uint8_t *apMFOut;
+	//
 	//gpu related variables
 	ct_uint32_t **apMFH;
 	ct_uint32_t **apMFGPU;
+
 	float **depAmpMFH;
 	float **depAmpMFGPU;
 	float **depAmpMFGRGPU;
+
 	int **numMFperGR;
 	int **numUBCperGR;
+	//
 	//end gpu related variables
 
 	//---------golgi cell variables
@@ -263,12 +254,15 @@ protected:
 
 	ct_uint32_t **apGOH;
 	ct_uint32_t **grInputGOSumH;
+
 	float **depAmpGOH;
 	float **dynamicAmpGOH;
+
 	int *counter;
 
-	ct_uint32_t **grInputBCGPU;
 	size_t *grInputBCGPUP;
+
+	ct_uint32_t **grInputBCGPU;
 	ct_uint32_t **pGRDelayfromPFtoBCT;
 	ct_uint32_t **pGRfromPFtoBCT;
 	ct_uint32_t **grInputBCSumGPU;
@@ -277,8 +271,10 @@ protected:
 
 	ct_uint32_t **apGOGPU;
 	ct_uint32_t **grInputGOGPU;
-	size_t *grInputGOGPUP;
 	ct_uint32_t **grInputGOSumGPU;
+
+	size_t *grInputGOGPUP;
+
 	float **depAmpGOGRGPU;
 	float **depAmpGOGPU;
 	float **dynamicAmpGOGPU;
@@ -286,6 +282,7 @@ protected:
 	//end gpu variables
 
 	ct_uint32_t *sumGRInputGO;
+
 	float *sumInputGOGABASynDepGO;
 	float tempGIncGRtoGO;
 	//---------end golgi cell variables
@@ -294,6 +291,7 @@ protected:
 	float **gMFGRT;
 	float **gUBCGRT;
 	float **gGOGRT;
+
 	ct_uint32_t **pGRDelayfromGRtoGOT;
 	ct_uint32_t **pGRfromMFtoGRT;
 	ct_uint32_t **pGRfromUBCtoGRT;
@@ -313,8 +311,8 @@ protected:
 	float **gESpilloverGPU;
 	float **gIDirectGPU;
 	float **gISpilloverGPU;
-	int **apMFtoGRGPU;
-	int **apUBCtoGRGPU;
+	int   **apMFtoGRGPU;
+	int   **apUBCtoGRGPU;
 	float **gUBC_EGRGPU;
 	size_t *gUBC_EGRGPUP;
 	float **gUBC_EGRSumGPU;
@@ -327,7 +325,7 @@ protected:
 	float **gIGRSumGPU;
 
 	ct_uint32_t **apBufGRGPU;
-	ct_uint8_t **outputGRGPU;
+	ct_uint8_t  **outputGRGPU;
 	ct_uint32_t **apGRGPU;
 
 	float **threshGRGPU;
@@ -340,10 +338,10 @@ protected:
 
 	//conduction delays
 	ct_uint32_t **delayGOMasksGRGPU;
-	size_t *delayGOMasksGRGPUP;
+	size_t 		*delayGOMasksGRGPUP;
 	ct_uint32_t **delayBCPCSCMaskGRGPU;
 	ct_uint32_t **delayBCMasksGRGPU;
-	size_t *delayBCMasksGRGPUP;
+	size_t 		*delayBCMasksGRGPUP;
 
 	//connectivity
 	float *plasScalerEx;
@@ -352,37 +350,36 @@ protected:
 	float **goExScaler;
 	float **goInhScaler;
 	float **goFRArray;
-	int counterGOweight;	
+	int   counterGOweight;	
 	
-	
-	int contVar = 1;
-	int contVarOther = 1;
-	float sumGOFR=0;
+	int contVar 	  = 1;
+	int contVarOther  = 1;
+	float sumGOFR	  = 0;
 	float sumExScaler = 0;
-	int slowCounter=0;
+	int slowCounter	  = 0;
 	int timeStepPOne;
-	int thingCounter = 0;
+	int thingCounter  = 0;
 
-	ct_int32_t **numGOOutPerGRGPU;
+	ct_int32_t  **numGOOutPerGRGPU;
 	ct_uint32_t **grConGROutGOGPU;
-	size_t *grConGROutGOGPUP;
+	size_t 		*grConGROutGOGPUP;
 	
-	ct_int32_t **numBCOutPerGRGPU;
+	ct_int32_t  **numBCOutPerGRGPU;
 	ct_uint32_t **grConGROutBCGPU;
-	size_t *grConGROutBCGPUP;
+	size_t 		*grConGROutBCGPUP;
 
-	ct_int32_t **numGOInPerGRGPU;
+	ct_int32_t  **numGOInPerGRGPU;
 	ct_uint32_t **grConGOOutGRGPU;
-	size_t *grConGOOutGRGPUP;
+	size_t 		*grConGOOutGRGPUP;
 
-	ct_int32_t **numMFInPerGRGPU;
+	ct_int32_t  **numMFInPerGRGPU;
 	ct_uint32_t **grConMFOutGRGPU;
-	size_t *grConMFOutGRGPUP;
+	size_t 		*grConMFOutGRGPUP;
 	
 	
-	ct_int32_t **numUBCInPerGRGPU;	
+	ct_int32_t 	**numUBCInPerGRGPU;	
 	ct_uint32_t **grConUBCOutGRGPU;
-	size_t *grConUBCOutGRGPUP;
+	size_t 		*grConUBCOutGRGPUP;
 	
 	//end gpu variables
 
@@ -396,7 +393,7 @@ protected:
 	//end host variables
 
 	ct_uint32_t **inputPFSCGPU;
-	size_t *inputPFSCGPUP;
+	size_t 		*inputPFSCGPUP;
 	ct_uint32_t **inputSumPFSCGPU;
 	//end gpu related variables
 
@@ -409,7 +406,7 @@ protected:
 
 	//device variables
 	ct_uint32_t **inputPFBCGPU;
-	size_t *inputPFBCGPUP;
+	size_t 		*inputPFBCGPUP;
 	ct_uint32_t **inputSumPFBCGPU;
 	//end gpu related variables
 	//-----------end basket cell variables
@@ -418,9 +415,7 @@ private:
 	InNet();
 	
 	template<typename Type> cudaError_t getGRGPUData(Type **gpuData, Type *hostData);
-//	template<typename Type> cudaError_t sendGRGPUData(Type **gpuData, Type *hostData);
 
 };
-
 
 #endif /* INNET_H_ */

@@ -504,7 +504,7 @@ MZoneInterface** CBMSimCore::getMZoneList()
 void CBMSimCore::construct(CBMState *state, int *mzoneRSeed, int gpuIndStart, int numGPUP2)
 {
 	int maxNumGPUs;
-	simState=state;
+	simState=state; // assignment operator deep or shallow copy?
 
 	numZones=simState->getNumZones();
 
@@ -529,7 +529,6 @@ void CBMSimCore::construct(CBMState *state, int *mzoneRSeed, int gpuIndStart, in
 	}
 	else
 	{
-		//numGPUs=(((unsigned int)1)<<numGPUP2);
 		numGPUs=(unsigned int)numGPUP2;
 	}
 

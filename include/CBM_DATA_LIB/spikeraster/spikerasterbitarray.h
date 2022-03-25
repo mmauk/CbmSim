@@ -38,6 +38,7 @@ public:
 protected:
 	ct_uint32_t msPerTS;
 
+	// why not make arrays of booleans? (spiker or no spike?)
 	std::vector<ct_uint32_t **> rasterBitArr;
 
 	unsigned int curTrialN;

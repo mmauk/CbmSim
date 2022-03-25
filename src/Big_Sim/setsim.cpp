@@ -28,12 +28,18 @@ SetSim::SetSim(int fileNum, int goRecipParam, int simNum)
 	// which we run through stdout in main
 	std::cout << "Opening file...(and initializing state)" << std::endl;
 	
-	this->state = new CBMState(actPF, conPF, 1, goRecipParam, simNum);
+	state = new CBMState(actPF, conPF, 1, goRecipParam, simNum);
 	
 	std::cout << "finished opening file and initializing state..." << std::endl;	
-	
+
 	actPF.close();
 	conPF.close();
+
+	std::cout << "Initializing simulation..." << std::endl;
+	
+	sim = new CBMSimCore(state, gpuIndex, gpuP2);
+
+	std::cout << "Finished initializing simulation." << std::endl;
 };
 
 SetSim::~SetSim(){};
@@ -45,7 +51,6 @@ CBMState* SetSim::getstate()
 
 CBMSimCore *SetSim::getsim()
 {
-	sim = new CBMSimCore(state, gpuIndex, gpuP2);
 	return sim;
 }	
 

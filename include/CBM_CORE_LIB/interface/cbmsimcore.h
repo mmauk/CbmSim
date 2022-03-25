@@ -32,8 +32,8 @@
 class CBMSimCore
 {
 public:
-	CBMSimCore(CBMState *state, int gpuIndStart=-1, int numGPUP2=-1);
-	CBMSimCore(CBMState *state, int *mzoneRSeed, int gpuIndStart=-1, int numGPUP2=-1);
+	CBMSimCore(CBMState *state, int gpuIndStart = -1, int numGPUP2 = -1);
+	CBMSimCore(CBMState *state, int *mzoneRSeed, int gpuIndStart = -1, int numGPUP2 = -1);
 
 	~CBMSimCore();
 
@@ -63,17 +63,17 @@ protected:
 	InNet *inputNet;
 	MZone **zones;
 
-//	cudaStream_t streams[8];
 	cudaStream_t **streams;
 	int gpuIndStart;
 	int numGPUs;
 
 private:
 	CBMSimCore();
-	bool isGRStim = false;
-	int numGRStim = 0;
-	int startGRStim = 0;
 	void construct(CBMState *state, int *mzoneRSeed, int gpuIndStart, int numGPUP2);
+
+	bool isGRStim  	 =  false;
+	int numGRStim  	 =  0;
+	int startGRStim  =  0;
 
 	unsigned long curTime;
 };

@@ -30,6 +30,7 @@ public:
 	CBMState* state;
 	CBMState* getstate();
 	void delstate();	
+	
 	//Sim
 	int gpuIndex = 0;
 	int gpuP2    = 2;

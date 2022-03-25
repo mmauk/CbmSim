@@ -29,5 +29,4 @@ private:
 	InNetAllGRMFGO();
 };
 
-
 #endif /* INNETALLGRMFGO_H_ */
