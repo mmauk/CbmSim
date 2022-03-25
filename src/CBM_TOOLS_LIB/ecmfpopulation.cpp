@@ -278,7 +278,7 @@ void ECMFPopulation::writeMFLabels(std::string labelFileName)
 	mflabels.close();
 }
 
-void ECMFPopulation::writeToFile(fstream &outfile)
+void ECMFPopulation::writeToFile(std::fstream &outfile)
 {
 	outfile.write((char *)&numMF, sizeof(numMF));
 	outfile.write((char *)mfFreqBG, numMF*sizeof(float));
