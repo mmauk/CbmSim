@@ -113,7 +113,7 @@ void CBMState::writeState(std::fstream &outfile)
 bool CBMState::operator==(CBMState &compState)
 {
 	return numZones == compState.getNumZones() ? true : 
-		innetConState->equivalent(*(compState.getInnetConStateInternal()));
+		innetConState == compState.getInnetConStateInternal();
 }
 
 bool CBMState::operator!=(CBMState & compState)
