@@ -26,7 +26,7 @@ MZoneConnectivityState::MZoneConnectivityState(ConnectivityParams *parameters, i
 	connectIOtoIO();
 }
 
-MZoneConnectivityState::MZoneConnectivityState(ConnectivityParams *parameters, fstream &infile)
+MZoneConnectivityState::MZoneConnectivityState(ConnectivityParams *parameters, std::fstream &infile)
 {
 	cp = parameters;
 
@@ -173,7 +173,7 @@ bool MZoneConnectivityState::operator==(const MZoneConnectivityState &compState)
 
 bool MZoneConnectivityState::operator!=(const MZoneConnectivityState &compState)
 {
-	return !(this == compState);
+	return !(*this == compState);
 }
 
 void MZoneConnectivityState::initalizeVars()
@@ -257,7 +257,7 @@ void MZoneConnectivityState::connectSCtoPC()
 void MZoneConnectivityState::connectPCtoNC(int randSeed)
 {
 	// NOTE: this was heap-allocated before. why???
-	int pcNumConnected = int[cp->numPC]{1};
+	int pcNumConnected[cp->numPC] = {1};
 
 	CRandomSFMT0 randGen(randSeed);
 
