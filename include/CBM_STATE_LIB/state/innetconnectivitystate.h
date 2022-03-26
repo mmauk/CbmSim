@@ -39,7 +39,6 @@ public:
 
 	virtual void writeState(std::fstream &outfile);
 
-	//TODO: change equivalent abstract def in interface	
 	virtual bool operator==(const InNetConnectivityState &compState);
 	virtual bool operator!=(const InNetConnectivityState &compState);
 

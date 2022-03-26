@@ -34,7 +34,8 @@ public:
 
 	void writeState(std::fstream &outfile);
 
-	bool equivalent(const MZoneConnectivityState &compState);
+	bool operator==(const MZoneConnectivityState &compState);
+	bool operator!=(const MZoneConnectivityState &compState);
 
 	ConnectivityParams *cp;
 

@@ -276,7 +276,7 @@ void InNetActivityState::writeState(std::fstream &outfile)
 	stateRW(false, (std::fstream &)outfile);
 }
 
-bool InNetActivityState::equivalent(const InNetActivityState &compState)
+bool InNetActivityState::operator==(const InNetActivityState &compState)
 {
 	bool equal = true;
 
@@ -302,6 +302,10 @@ bool InNetActivityState::equivalent(const InNetActivityState &compState)
 
 	return equal;
 }
+
+bool InNetActivityState::operator!=(const InNetActivityState &compState)
+{
+	return !(*this == compState);
 
 bool InNetActivityState::validateState()
 {
@@ -335,10 +339,8 @@ void InNetActivityState::allocateMemory()
 {
 	
 	int goTimeStep;
-	std::cout << "actCheck" << std::endl;
 	histMF = new ct_uint8_t[cp->numMF];
 	apBufMF = new ct_uint32_t[cp->numMF];
-	std::cout << "actCheck" << std::endl;
 
 	spkGO  = new int[cp->numGO];
 	goFR_HP = new float[cp->numGO];
@@ -346,7 +348,6 @@ void InNetActivityState::allocateMemory()
 	synWscalerGRtoGO = new float[cp->numGO];
 	synWscalerGOtoGO = new float[cp->numGO];
 	apGO = new ct_uint8_t[cp->numGO];
-	std::cout << "actCheck" << std::endl;
 	apBufGO = new ct_uint32_t[cp->numGO];
 	vGO = new float[cp->numGO];
 	exGOInput = new float[cp->numGO];
@@ -355,14 +356,12 @@ void InNetActivityState::allocateMemory()
 	threshCurGO = new float[cp->numGO];
 	inputMFGO = new ct_uint32_t[cp->numGO];
 	inputUBCGO = new ct_uint32_t[cp->numGO];
-	std::cout << "actCheck" << std::endl;
 	depAmpMFGO = new float[cp->numMF];
 	gi_MFtoGO = new float[cp->numMF];
 	gSum_MFGO = new float[cp->numGO];
 	inputGOGO = new ct_uint32_t[cp->numGO];
 
 	gi_GOtoGO = new float[cp->numGO];
-	std::cout << "actCheck" << std::endl;
 	depAmpGOGO = new float[cp->numGO];
 	gSum_GOGO = new float[cp->numGO];
 	depAmpGOGR = new float[cp->numGO];
@@ -377,7 +376,6 @@ void InNetActivityState::allocateMemory()
 	//todo: synaptic depression test
 	inputGOGABASynDepGO = new float[cp->numGO];
 	goGABAOutSynScaleGOGO = new float[cp->numGO];
-	std::cout << "actCheck" << std::endl;
 
 	gMFGO = new float[cp->numGO];
 	gNMDAMFGO = new float[cp->numGO];
@@ -390,7 +388,6 @@ void InNetActivityState::allocateMemory()
 	gMGluRIncGO = new float[cp->numGO];
 	mGluRGO = new float[cp->numGO];
 	gluGO = new float[cp->numGO];
-	std::cout << "actCheck" << std::endl;
 
 	//New GR stuff
 	depAmpMFGR = new float[cp->numMF];
@@ -398,10 +395,8 @@ void InNetActivityState::allocateMemory()
 	gi_MFtoGR = new float[cp->numMF];
 	gSum_MFGR = new float[cp->numGR];
 	
-	
 	apGR = new ct_uint8_t[cp->numGR];
 	apBufGR =  new ct_uint32_t[cp->numGR];
-	std::cout << "actCheck" << std::endl;
 	gMFGR = allocate2DArray<float>(cp->numGR, cp->maxnumpGRfromMFtoGR);
 	gUBCGR = allocate2DArray<float>(cp->numGR, cp->maxnumpGRfromMFtoGR);
 	gMFSumGR = new float[cp->numGR];
@@ -411,7 +406,6 @@ void InNetActivityState::allocateMemory()
 	gGOSpilloverGR = new float[cp->numGR];	
 	apMFtoGR = new int[cp->numGR];
 	apUBCtoGR = new int[cp->numGR];
-	std::cout << "actCheck" << std::endl;
 	gUBCSumGR = new float[cp->numGR];
 	gUBCDirectGR = new float[cp->numGR];
 	gUBCSpilloverGR = new float[cp->numGR];	
@@ -423,7 +417,6 @@ void InNetActivityState::allocateMemory()
 	depAmpGOtoGR = new float[cp->numGR];
 	dynamicAmpGOtoGR = new float[cp->numGR];	
 	gGOGR = allocate2DArray<float>(cp->numGR, cp->maxnumpGRfromGOtoGR);
-	std::cout << "actCheck" << std::endl;
 	gGOSumGR = new float[cp->numGR];
 	threshGR = new float[cp->numGR];
 	vGR = new float[cp->numGR];
@@ -438,7 +431,6 @@ void InNetActivityState::allocateMemory()
 	inputSumPFSC = new ct_uint32_t[cp->numSC];
 
 	//UBC
-	std::cout << "actCheck" << std::endl;
 	gRise_MFtoUBC = new float[cp->numUBC];
 	gDecay_MFtoUBC = new float[cp->numUBC];
 	gSum_MFtoUBC = new float[cp->numUBC];
@@ -447,13 +439,11 @@ void InNetActivityState::allocateMemory()
 	gDecay_UBCNMDA = new float[cp->numUBC];
 	gSum_UBCNMDA = new float[cp->numUBC];
 	gK_UBC = new float[cp->numUBC];
-	std::cout << "actCheck" << std::endl;
 	
 	gRise_UBCtoUBC = new float[cp->numUBC];
 	gDecay_UBCtoUBC = new float[cp->numUBC];
 	gSumOutUBCtoUBC = new float[cp->numUBC];
 	gSumInUBCtoUBC = new float[cp->numUBC];
-	std::cout << "actCheck" << std::endl;
 	
 	inputMFUBC = new int[cp->numUBC];
 	inputGOUBC = new int[cp->numUBC];
@@ -462,12 +452,10 @@ void InNetActivityState::allocateMemory()
 	apUBC = new ct_uint8_t[cp->numUBC];	
 	threshUBC = new float[cp->numUBC];	
 	inputUBCtoUBC = new int[cp->numUBC];	
-	std::cout << "actCheck" << std::endl;
 
 	gi_UBCtoGO = new float[cp->numUBC];
 	depAmpUBCGO = new float[cp->numUBC];
 	depAmpUBCGR = new float[cp->numUBC];
-	std::cout << "actCheck" << std::endl;
 }
 
 void InNetActivityState::stateRW(bool read, std::fstream &file)
@@ -588,8 +576,8 @@ void InNetActivityState::stateRW(bool read, std::fstream &file)
 
 void InNetActivityState::initializeVals(ActivityParams *ap)
 {
+	// TODO: rewrite so that we arent looping here: leverage the STL!	
 	goTimeStep = 0;
-	std::cout << "	MFCHECK" << std::endl;
 	for (int i = 0; i < cp->numMF; i++)
 	{
 		histMF[i] = false;
@@ -602,8 +590,6 @@ void InNetActivityState::initializeVals(ActivityParams *ap)
 		gi_MFtoGR[i] = 0;
 	
 	}
-
-	std::cout << "GOCHECK" << std::endl;
 
 	for (int i = 0; i < cp->numGO; i++)
 	{
@@ -652,8 +638,6 @@ void InNetActivityState::initializeVals(ActivityParams *ap)
 		gluGO[i] = 0;
 	}
 
-	std::cout << "GRCHECK" << std::endl;
-
 	for (int i = 0; i < cp->numGR; i++)
 	{
 		apGR[i] = false;
@@ -697,7 +681,6 @@ void InNetActivityState::initializeVals(ActivityParams *ap)
 		historyGR[i] = 0;
 	}
 
-	std::cout << "SCCHECK" << std::endl;
 
 	for (int i = 0; i < cp->numSC; i++)
 	{
@@ -708,8 +691,6 @@ void InNetActivityState::initializeVals(ActivityParams *ap)
 		vSC[i] = ap->eLeakSC;
 		inputSumPFSC[i] = 0;
 	}
-
-	std::cout << "UBCCHECK" << std::endl;
 
 	for (int i = 0; i < cp->numUBC; i++)
 	{

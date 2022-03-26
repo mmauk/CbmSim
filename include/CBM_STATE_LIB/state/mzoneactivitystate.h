@@ -35,10 +35,10 @@ public:
 
 	void writeState(std::fstream &outfile);
 
-	bool equivalent(const MZoneActivityState &compState);
+	bool operator==(const MZoneActivityState &compState);
+	bool operator!=(const MZoneActivityState &compState);
 
 	std::vector<float> getGRPCSynWeightLinear();
-//	std::vector<std::vector<float> > getGRPCSynWeight();
 	void resetGRPCSynWeight();
 
 	ConnectivityParams *cp;

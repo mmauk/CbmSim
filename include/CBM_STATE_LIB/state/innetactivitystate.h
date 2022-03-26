@@ -32,7 +32,8 @@ public:
 
 	void writeState(std::fstream &outfile);
 
-	bool equivalent(const InNetActivityState &compState);
+	bool operator==(const InNetActivityState &compState);
+	bool operator!=(const InNetActivityState &compState);
 
 	bool validateState();
 
