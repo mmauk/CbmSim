@@ -306,6 +306,7 @@ bool InNetActivityState::operator==(const InNetActivityState &compState)
 bool InNetActivityState::operator!=(const InNetActivityState &compState)
 {
 	return !(*this == compState);
+}
 
 bool InNetActivityState::validateState()
 {
