@@ -207,7 +207,7 @@ bool MZoneActivityState::operator==(const MZoneActivityState &compState)
 
 bool MZoneActivityState::operator!=(const MZoneActivityState &compState) 
 {
-	return !(this == compState);
+	return !(*this == compState);
 }
 
 std::vector<float> MZoneActivityState::getGRPCSynWeightLinear()
@@ -287,7 +287,7 @@ void MZoneActivityState::allocateMemory()
 	synIOPReleaseNC	 = new float[cp->numNC];
 }
 
-void MZoneActivityState::stateRW(bool read, fstream &file)
+void MZoneActivityState::stateRW(bool read, std::fstream &file)
 {
 	rawBytesRW((char *)apBC, cp->numBC*sizeof(ct_uint8_t), read, file);
 	rawBytesRW((char *)apBufBC, cp->numBC*sizeof(ct_uint32_t), read, file);
