@@ -257,7 +257,14 @@ void MZoneConnectivityState::connectSCtoPC()
 void MZoneConnectivityState::connectPCtoNC(int randSeed)
 {
 	// NOTE: this was heap-allocated before. why???
-	int pcNumConnected[cp->numPC] = {1};
+	// FIXME: This is not working properly: '{1}' does not
+	// expand to all 1's
+	int pcNumConnected[cp->numPC];
+
+	for (int i = 0; i < cp->numPC; i++)
+	{
+		pcNumConnected[i] = 1;
+	}	
 
 	CRandomSFMT0 randGen(randSeed);
 
@@ -287,7 +294,7 @@ void MZoneConnectivityState::connectPCtoNC(int randSeed)
 				pcInd = randGen.IRandomX(0, cp->numPC - 1);
 
 				if (pcNumConnected[pcInd] >= cp->numpPCfromPCtoNC) continue;
-				for(int k=0; k<pcNumConnected[pcInd]; k++)
+				for (int k = 0; k < pcNumConnected[pcInd]; k++)
 				{
 					if (pPCfromPCtoNC[pcInd][k] == i)
 					{
