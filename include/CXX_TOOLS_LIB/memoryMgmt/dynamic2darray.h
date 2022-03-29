@@ -17,7 +17,7 @@ template<typename Type> Type** allocate2DArray(unsigned int numRows, unsigned in
 
 	for (size_t i = 1; i < numRows; i++)
 	{
-		retArr[i] = &retArr[0][i * numCols];
+		retArr[i] = &(retArr[0][i * numCols]);
 	}
 
 	return retArr;
