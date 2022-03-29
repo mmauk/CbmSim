@@ -73,7 +73,6 @@ void CBMState::newState(std::fstream &actPFile, std::fstream &conPFile, unsigned
 			int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed, int goRecipParam, int simNum)
 {
 	numZones = nZones;
-
 	conParams = new ConnectivityParams(conPFile);
 	actParams = new ActivityParams(actPFile);
 

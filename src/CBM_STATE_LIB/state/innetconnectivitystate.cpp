@@ -53,7 +53,7 @@ InNetConnectivityState::InNetConnectivityState(ConnectivityParams *parameters,
 	
 	std::cout << "assigning PF to BC delays" << std::endl;
 	std::cout << "done" << std::endl;
-	
+
 	delete randGen;
 }
 
