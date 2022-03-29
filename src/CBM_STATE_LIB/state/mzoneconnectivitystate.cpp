@@ -257,14 +257,13 @@ void MZoneConnectivityState::connectSCtoPC()
 void MZoneConnectivityState::connectPCtoNC(int randSeed)
 {
 	// NOTE: this was heap-allocated before. why???
-	// FIXME: This is not working properly: '{1}' does not
-	// expand to all 1's
 	int pcNumConnected[cp->numPC];
 
-	for (int i = 0; i < cp->numPC; i++)
-	{
-		pcNumConnected[i] = 1;
-	}	
+	std::fill(pcNumConnected, pcNumConnected + cp->numPC, 1);
+	 //for (int i = 0; i < cp->numPC; i++)
+	 //{
+	 //	pcNumConnected[i] = 1;
+	 //}	
 
 	CRandomSFMT0 randGen(randSeed);
 
