@@ -337,7 +337,7 @@ void InNetActivityState::resetState(ActivityParams *ap)
 }
 
 void InNetActivityState::allocateMemory()
-	
+{	
 	int goTimeStep;
 	histMF = new ct_uint8_t[cp->numMF];
 	apBufMF = new ct_uint32_t[cp->numMF];
