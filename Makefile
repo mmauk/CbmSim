@@ -19,7 +19,7 @@ ROOT          = ./
 
 CXX              = g++
 CXXFLAGS         = -m64 -pipe -std=c++11 -O3 -g -O2 -Wall  
-MODULE_CXX_FLAGS = -m64 -pipe -std=c++11 -O2 -fPIC 
+MODULE_CXX_FLAGS = -m64 -pipe -std=c++11 -O2 -g -fPIC 
 INCPATH          = -I. -Iinclude/Big_Sim -I/usr/local/cuda/include -I$(ROOT)include/CBM_CORE_LIB -I$(ROOT)include/CBM_DATA_LIB \
 			       -I$(ROOT)include/CBM_STATE_LIB -I$(ROOT)include/CBM_TOOLS_LIB -I$(ROOT)include/CXX_TOOLS_LIB 
 LIBS             = -L/user/local/cuda/lib64 -L/usr/local/cuda/lib64 -L/usr/lib64 -L/opt/cuda/lib64 -lcudart
