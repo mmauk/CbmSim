@@ -178,25 +178,25 @@ bool MZoneConnectivityState::operator!=(const MZoneConnectivityState &compState)
 
 void MZoneConnectivityState::initalizeVars()
 {
-	arrayInitialize<ct_uint32_t>(pBCfromBCtoPC[0], UINT_MAX, cp->numBC*cp->numpBCfromBCtoPC);
-	arrayInitialize<ct_uint32_t>(pBCfromPCtoBC[0], UINT_MAX, cp->numBC*cp->numpBCfromPCtoBC);
+	std::fill(pBCfromBCtoPC[0], pBCfromBCtoPC[0] + cp->numBC*cp->numpBCfromBCtoPC, UINT_MAX);
+	std::fill(pBCfromPCtoBC[0], pBCfromPCtoBC[0] + cp->numBC*cp->numpBCfromPCtoBC, UINT_MAX);
 
-	arrayInitialize<ct_uint32_t>(pSCfromSCtoPC[0], UINT_MAX, cp->numSC*cp->numpSCfromSCtoPC);
+	std::fill(pSCfromSCtoPC[0], pSCfromSCtoPC[0] + cp->numSC*cp->numpSCfromSCtoPC, UINT_MAX);
 
-	arrayInitialize<ct_uint32_t>(pPCfromBCtoPC[0], UINT_MAX, cp->numPC*cp->numpPCfromBCtoPC);
-	arrayInitialize<ct_uint32_t>(pPCfromPCtoBC[0], UINT_MAX, cp->numPC*cp->numpPCfromPCtoBC);
-	arrayInitialize<ct_uint32_t>(pPCfromSCtoPC[0], UINT_MAX, cp->numPC*cp->numpPCfromSCtoPC);
-	arrayInitialize<ct_uint32_t>(pPCfromPCtoNC[0], UINT_MAX, cp->numPC*cp->numpPCfromPCtoNC);
-	arrayInitialize<ct_uint32_t>(pPCfromIOtoPC, UINT_MAX, cp->numPC);
+	std::fill(pPCfromBCtoPC[0], pPCfromBCtoPC[0] + cp->numPC*cp->numpPCfromBCtoPC, UINT_MAX);
+	std::fill(pPCfromPCtoBC[0], pPCfromPCtoBC[0] + cp->numPC*cp->numpPCfromPCtoBC, UINT_MAX);
+	std::fill(pPCfromSCtoPC[0], pPCfromSCtoPC[0] + cp->numPC*cp->numpPCfromSCtoPC, UINT_MAX);
+	std::fill(pPCfromPCtoNC[0], pPCfromPCtoNC[0] + cp->numPC*cp->numpPCfromPCtoNC, UINT_MAX);
+	std::fill(pPCfromIOtoPC, pPCfromIOtoPC + cp->numPC, UINT_MAX);
 
-	arrayInitialize<ct_uint32_t>(pNCfromPCtoNC[0], UINT_MAX, cp->numNC*cp->numpNCfromPCtoNC);
-	arrayInitialize<ct_uint32_t>(pNCfromNCtoIO[0], UINT_MAX, cp->numNC*cp->numpNCfromNCtoIO);
-	arrayInitialize<ct_uint32_t>(pNCfromMFtoNC[0], UINT_MAX, cp->numNC*cp->numpNCfromMFtoNC);
+	std::fill(pNCfromPCtoNC[0], pNCfromPCtoNC[0] + cp->numNC*cp->numpNCfromPCtoNC, UINT_MAX);
+	std::fill(pNCfromNCtoIO[0], pNCfromNCtoIO[0] + cp->numNC*cp->numpNCfromNCtoIO, UINT_MAX);
+	std::fill(pNCfromMFtoNC[0], pNCfromMFtoNC[0] + cp->numNC*cp->numpNCfromMFtoNC, UINT_MAX);
 
-	arrayInitialize<ct_uint32_t>(pIOfromIOtoPC[0], UINT_MAX, cp->numIO*cp->numpIOfromIOtoPC);
-	arrayInitialize<ct_uint32_t>(pIOfromNCtoIO[0], UINT_MAX, cp->numIO*cp->numpIOfromNCtoIO);
-	arrayInitialize<ct_uint32_t>(pIOInIOIO[0], UINT_MAX, cp->numIO*cp->numpIOInIOIO);
-	arrayInitialize<ct_uint32_t>(pIOOutIOIO[0], UINT_MAX, cp->numIO*cp->numpIOOutIOIO);
+	std::fill(pIOfromIOtoPC[0], pIOfromIOtoPC[0] + cp->numIO*cp->numpIOfromIOtoPC, UINT_MAX);
+	std::fill(pIOfromNCtoIO[0], pIOfromNCtoIO[0] + cp->numIO*cp->numpIOfromNCtoIO, UINT_MAX);
+	std::fill(pIOInIOIO[0], pIOInIOIO[0] + cp->numIO*cp->numpIOInIOIO, UINT_MAX);
+	std::fill(pIOOutIOIO[0], pIOOutIOIO[0] + cp->numIO*cp->numpIOOutIOIO, UINT_MAX);
 }
 
 void MZoneConnectivityState::connectBCtoPC()
@@ -260,10 +260,6 @@ void MZoneConnectivityState::connectPCtoNC(int randSeed)
 	int pcNumConnected[cp->numPC];
 
 	std::fill(pcNumConnected, pcNumConnected + cp->numPC, 1);
-	 //for (int i = 0; i < cp->numPC; i++)
-	 //{
-	 //	pcNumConnected[i] = 1;
-	 //}	
 
 	CRandomSFMT0 randGen(randSeed);
 
