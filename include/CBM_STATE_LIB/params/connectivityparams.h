@@ -110,11 +110,9 @@ public:
 	float pRecipGOGOsyn;
 	int maxGOGOsyn;
 
-
 	int spanGOGLX;
 	int spanGOGLY;
 	int numpGOGL;
-
 
 	int maxnumpGOfromGRtoGO;
 
@@ -162,10 +160,6 @@ public:
 	ct_uint32_t maxnumpGRfromGOtoGR;
 	int maxnumpGRfromMFtoGR;
 
-//	ct_uint32_t numPCOutPerPF; place holders
-//	ct_uint32_t numBCOutPerPF;
-//	ct_uint32_t numSCOutPerPF;
-
 	int spanGRDenOnGLX;
 	int spanGRDenOnGLY;
 	//end granule cells
@@ -212,7 +206,6 @@ private:
 	ConnectivityParams();
 
 	std::map<std::string, ct_uint32_t> paramMap;
-	//std::map<std::string, int> paramMap;
 };
 
 #endif /* CONNECTIVITYPARAMS_H_ */
