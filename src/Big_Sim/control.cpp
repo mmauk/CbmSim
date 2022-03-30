@@ -212,52 +212,56 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	delete joeMFs;
 	
 	delete[] goSpkCounter;
-	// Save Data 
-	std::ofstream myfilegogoGbin("allGOPSTH_noGOGO_grgoConv" + std::to_string(conv[goRecipParam]) + 
-			"_" + std::to_string(simNum) + ".bin", std::ios::out | std::ios::binary);	
 	
-	for (int i = 0; i < numGO; i++)
-	{
-		for (int j = 0; j < (csSize + msPreCS + msPostCS); j++)
-		{
-			myfilegogoGbin.write((char*) &allGOPSTH[i][j], sizeof(ct_uint8_t));
-		}
-	}
+	// Save Data 
 
-	myfilegogoGbin.close();
+	std::string allGOPSTHFileName = "allGOPSTH_noGOGO_grgoConv" + std::to_string(conv[goRecipParam]) +
+			"_" + std::to_string(simNum) + ".bin";
+	write2DArray(allGOPSTHFileName, allGOPSTH, numGO, (csSize + msPreCS + msPostCS));
 	delete2DArray<ct_uint8_t>(allGOPSTH);
+
 	
 	std::cout << "Filling BC files" << std::endl;
 	
-	std::ofstream myfileBCbin("allBCRaster_paramSet" + std::to_string(inputStrength) +
-			"_" + std::to_string(simNum) + ".bin", std::ios::out | std::ios::binary);	
-	
-	for (int i = 0; i < numBC; i++)
-	{
-		for (int j = 0; j < (numTotalTrials - preTrialNumber) * (csSize + msPreCS + msPostCS); j++)
-		{
-			myfileBCbin.write((char*) &allBCRaster[i][j], sizeof(ct_uint8_t));
-		}
-	}
-	
-	myfileBCbin.close();
+	std::string allBCRasterFileName = "allBCRaster_paramSet" + std::to_string(inputStrength) +
+		"_" + std::to_string(simNum) + ".bin";
+	write2DArray(allBCRasterFileName, allBCRaster, numBC,
+			(numTotalTrials - preTrialNumber) * (csSize + msPreCS + msPostCS));
 	delete2DArray<ct_uint8_t>(allBCRaster);
 
+
 	std::cout << "Filling SC files" << std::endl;
-	std::ofstream myfileSCbin("allSCRaster_paramSet" + std::to_string(inputStrength) +
-			"_" + std::to_string(simNum) + ".bin", std::ios::out | std::ios::binary);	
-	
-	for (int i = 0; i < numSC; i++)
-	{
-		for (int j = 0; j < (numTotalTrials - preTrialNumber) * (csSize + msPreCS + msPostCS); j++)
-		{
-			myfileSCbin.write((char*) &allSCRaster[i][j], sizeof(ct_uint8_t));
-		}
-	}
-	
-	myfileSCbin.close();
+
+	std::string allSCRasterFileName = "allSCRaster_paramSet" + std::to_string(inputStrength) +
+		"_" + std::to_string(sinNum) + ".bin";
+	write2DArray(allSCRasterFileName, allSCRaster, numSC,
+			(numTotalTrials - preTrialNumber) * (csSize + msPreCS + msPostCS));
 	delete2DArray<ct_uint8_t>(allSCRaster);
 }
+
+void Control::write2DCharArray(std::string outFileName, ct_uint8_t** &inArr,
+		unsigned int numRow, unsigned int numCol)
+{
+	std::ofstream outStream(outFileName.c_str(), std::ios::out | std::ios::binary);
+
+	if (!outStream.is_open())
+	{
+		// NOTE: should throw an error, which would be caught in main
+		std::cerr << "couldn't open '" << outFileName << "' for writing." << std::endl;
+		return;
+	}	
+		
+	for (size_t i = 0; i < numRow; i++)
+	{
+		for (size_t j = 0; j < numCol; j++)
+		{
+			outStream.write(inArr[i][j], sizeof(ct_uint8_t));
+		}
+	}
+
+	outStream.close();
+}
+
 
 int* Control::getGRIndicies(float CStonicMFfrac) 
 {
