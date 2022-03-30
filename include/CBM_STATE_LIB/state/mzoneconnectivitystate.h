@@ -15,7 +15,6 @@
 #include <limits.h>
 
 #include <memoryMgmt/dynamic2darray.h>
-#include <memoryMgmt/arrayinitalize.h>
 #include <memoryMgmt/arraycopy.h>
 #include <fileIO/rawbytesrw.h>
 #include <stdDefinitions/pstdint.h>

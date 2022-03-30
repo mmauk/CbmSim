@@ -13,7 +13,6 @@
 #include <vector>
 
 #include <memoryMgmt/dynamic2darray.h>
-#include <memoryMgmt/arrayinitalize.h>
 #include <memoryMgmt/arrayvalidate.h>
 #include <fileIO/rawbytesrw.h>
 #include <stdDefinitions/pstdint.h>

@@ -791,14 +791,12 @@ void InNet::initGOCUDA()
 	plasScalerInh = new float[80];
 	goExScaler = allocate2DArray<float>(cp->numGO, 1000);	
 	std::fill(goExScaler[0], goExScaler[0] + cp->numGO * 1000, 0);
-	//arrayInitialize<float>(goExScaler[0], 0, cp->numGO*1000);
+
 	goInhScaler = allocate2DArray<float>(cp->numGO, 1000);	
 	std::fill(goInhScaler[0], goInhScaler[0] + cp->numGO * 1000, 0);
-	//arrayInitialize<float>(goInhScaler[0], 0, cp->numGO*1000);
 	
 	goFRArray = allocate2DArray<float>(cp->numGO, 1000);	
 	std::fill(goFRArray[0], goFRArray[0] + cp->numGO * 1000, 0);
-	//arrayInitialize<float>(goFRArray[0], 0, cp->numGO*1000);
 		
 	counterGOweight = 0;
 
