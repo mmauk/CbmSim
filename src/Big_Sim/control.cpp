@@ -2,9 +2,9 @@
 #include <time.h>
 #include "control.h"
 
-Control::Control(){};
+Control::Control() {};
 
-Control::~Control(){};
+Control::~Control() {};
 
 void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuningTrials,
 		int numGrDetectionTrials, int numTrainingTrials, int simNum, int csSize, float csFracMFs,
@@ -50,17 +50,20 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	std::fill(allGOPSTH[0], allGOPSTH[0] + numGO * (csSize + msPreCS + msPostCS), 0);
 
 	float medTrials;
-	float *mTall    = new float[numTotalTrials];
-	float *grgoGall = new float[numTotalTrials];
-	float *mfgoGall = new float[numTotalTrials];
+	//float *mTall    = new float[numTotalTrials];
+	//float *grgoGall = new float[numTotalTrials];
+	//float *mfgoGall = new float[numTotalTrials];
 	
 	clock_t timer;
 	
 	int trialTime     = 5000; // in milliseconds, i think
 	int rasterCounter = 0;
 	
-	std::vector<int> goSpkCounter(numGO);
-	
+	// so why is this a vector???
+	int *goSpkCounter = new int[numGO];
+
+
+	//to do: break into smaller functions	
 	for (int trial = 0; trial < numTotalTrials; trial++)
 	{
 		timer = clock();
@@ -92,7 +95,7 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 					if (tts == csStart + csSize)
 					{
 						// Deliver US 
-						joesim->updateErrDrive(0,0.0);
+						joesim->updateErrDrive(0, 0.0);
 					}
 					
 					if (tts < csStart || tts >= csStart + csSize)
@@ -134,9 +137,9 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 					// why is this case separate from the above	
 					if (tts == csStart + csSize)
 					{
-						std::sort(goSpkCounter.begin(), goSpkCounter.begin() + 4096);
+						std::sort(goSpkCounter, goSpkCounter + 4096);
 						
-						int m = (goSpkCounter[2047] + goSpkCounter[2048]) / 2.0;
+						int m = (goSpkCounter[2047] + goSpkCounter[2048]) / 2;
 						float goSpkSum = 0;
 						
 						for (int i = 0; i < numGO; i++)
@@ -149,20 +152,20 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 						medTrials += m / 2.0;
 						std::cout << "Median GO Rate: " << m / 2.0 << std::endl;
 
-						mTall[trial] = m / 2.0;
+						//mTall[trial] = m / 2.0;
 						std::cout << "mean gGRGO   = " << gGRGO_sum / (numGO * csSize) << std::endl;
 						std::cout << "mean gMFGO   = " << gMFGO_sum / (numGO * csSize) << std::endl;
 						std::cout << "GR:MF ratio  = " << gGRGO_sum / gMFGO_sum << std::endl;
 
-						grgoGall[trial] = gGRGO_sum / (numGO * csSize);
-						mfgoGall[trial] = gMFGO_sum / (numGO * csSize);
+						//grgoGall[trial] = gGRGO_sum / (numGO * csSize);
+						//mfgoGall[trial] = gMFGO_sum / (numGO * csSize);
 
 					}
 					
 					if (trial >= preTrialNumber && tts >= csStart-msPreCS && tts < csStart + csSize + msPostCS)
 					{
 						//PKJ
-						const ct_uint8_t* pcSpks=joesim->getMZoneList()[0]->exportAPPC();
+						const ct_uint8_t* pcSpks = joesim->getMZoneList()[0]->exportAPPC();
 						for (int i = 0; i < numPC; i++)
 						{
 							allPCRaster[i][rasterCounter] = pcSpks[i];
@@ -197,7 +200,8 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 		 	}
 		}	
 		// re-initialize spike counter vector	
-		goSpkCounter.assign(numGO, 0);	
+		std::fill(goSpkCounter, goSpkCounter + numGO, 0);	
+		//goSpkCounter.assign(numGO, 0);	
 		timer = clock() - timer;
 		std::cout << "Trial time seconds: " << (float)timer / CLOCKS_PER_SEC << std::endl;
 	}
@@ -206,7 +210,8 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	delete joesim;
 	delete joeMFFreq;
 	delete joeMFs;
-
+	
+	delete[] goSpkCounter;
 	// Save Data 
 	std::ofstream myfilegogoGbin("allGOPSTH_noGOGO_grgoConv" + std::to_string(conv[goRecipParam]) + 
 			"_" + std::to_string(simNum) + ".bin", std::ios::out | std::ios::binary);	
