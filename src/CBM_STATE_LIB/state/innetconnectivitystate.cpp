@@ -746,92 +746,109 @@ void InNetConnectivityState::stateRW(bool read, std::fstream &file)
 
 void InNetConnectivityState::initializeVals()
 {
-	arrayInitialize<int>(haspGLfromMFtoGL, 0, cp->numGL);
-	arrayInitialize<int>(pGLfromMFtoGL, UINT_MAX, cp->numGL);
+	std::fill(haspGLfromMFtoGL, haspGLfromMFtoGL + cp->numGL, 0);
+	std::fill(pGLfromMFtoGL, pGLfromMFtoGL + cp->numGL, UINT_MAX);
 
-	arrayInitialize<int>(numpGLfromGLtoGO, 0, cp->numGL);
-	arrayInitialize<int>(pGLfromGLtoGO[0], UINT_MAX, cp->numGL*cp->maxnumpGLfromGLtoGO);
+	std::fill(numpGLfromGLtoGO, numpGLfromGLtoGO + cp->numGL, 0);
+	std::fill(pGLfromGLtoGO[0], pGLfromGLtoGO[0] +
+			cp->numGL*cp->maxnumpGLfromGLtoGO, UINT_MAX);
 
-	arrayInitialize<int>(haspGLfromGOtoGL, 0, cp->numGL);
-	arrayInitialize<int>(numpGLfromGOtoGL, 0, cp->numGL);
-	arrayInitialize<int>(pGLfromGOtoGL[0], UINT_MAX, cp->numGL*cp->maxnumpGLfromGOtoGL);
+	std::fill(haspGLfromGOtoGL, haspGLfromGOtoGL + cp->numGL, 0);
+	std::fill(numpGLfromGOtoGL, numpGLfromGOtoGL + cp->numGL, 0);
+	std::fill(pGLfromGOtoGL[0], pGLfromGOtoGL[0] +
+			cp->numGL*cp->maxnumpGLfromGOtoGL, UINT_MAX);
 
-	arrayInitialize<int>(numpGLfromGLtoGR, 0, cp->numGL);
-	arrayInitialize<int>(pGLfromGLtoGR[0], UINT_MAX, cp->numGL*cp->maxnumpGLfromGOtoGL);
-	arrayInitialize<int>(spanArrayGRtoGLX, 0, 5);
-	arrayInitialize<int>(spanArrayGRtoGLY, 0, 5);
-	arrayInitialize<int>(xCoorsGRGL, 0, 25);
-	arrayInitialize<int>(yCoorsGRGL, 0, 25);
-	
+	std::fill(numpGLfromGLtoGR, numpGLfromGLtoGR + cp->numGL, 0);
+	std::fill(pGLfromGLtoGR[0], pGLfromGLtoGR[0] +
+			cp->numGL*cp->maxnumpGLfromGOtoGL, UINT_MAX);
+
+	std::fill(spanArrayGRtoGLX, spanArrayGRtoGLX + 5, 0);
+	std::fill(spanArrayGRtoGLY, spanArrayGRtoGLY + 5, 0);
+
+	std::fill(xCoorsGRGL, xCoorsGRGL + 25, 0);
+	std::fill(yCoorsGRGL, yCoorsGRGL + 25, 0);
+
 	//mf
-	arrayInitialize<int>(haspGLfromMFtoGL, 0, cp->numGL);
-	arrayInitialize<int>(numpMFfromMFtoGL, 0, cp->numMF);
-	arrayInitialize<int>(pMFfromMFtoGL[0], UINT_MAX, cp->numMF*20);
-	arrayInitialize<int>(spanArrayMFtoGLX, 0, cp->glX);
-	arrayInitialize<int>(spanArrayMFtoGLY, 0, cp->glY);
-	arrayInitialize<int>(xCoorsMFGL, 0, cp->numpMFtoGL);
-	arrayInitialize<int>(yCoorsMFGL, 0, cp->numpMFtoGL);
+	std::fill(haspGLfromMFtoGL, haspGLfromMFtoGL + cp->numGL, 0);
 
-	arrayInitialize<int>(numpMFfromMFtoGR, 0, cp->numMF);
-	arrayInitialize<int>(pMFfromMFtoGR[0], UINT_MAX, cp->numMF*cp->maxnumpMFfromMFtoGR);
-	arrayInitialize<int>(numpMFfromMFtoGO, 0, cp->numMF);
-	arrayInitialize<int>(pMFfromMFtoGO[0], UINT_MAX, cp->numMF*cp->maxnumpMFfromMFtoGO);
+	std::fill(numpMFfromMFtoGL, numpMFfromMFtoGL + cp->numMF, 0);
+	std::fill(pMFfromMFtoGL[0], pMFfromMFtoGL[0] + cp->numMF * 20, UINT_MAX);
+	std::fill(spanArrayMFtoGLX, spanArrayMFtoGLX + cp->glX, 0);
+	std::fill(spanArrayMFtoGLY, spanArrayMFtoGLY + cp->glY, 0);
+	std::fill(xCoorsMFGL, xCoorsMFGL + cp->numpMFtoGL, 0);
+	std::fill(yCoorsMFGL, yCoorsMFGL + cp->numpMFtoGL, 0);
 
-	arrayInitialize<int>(numpGOfromGLtoGO, 0, cp->numGO);
-	arrayInitialize<int>(pGOfromGLtoGO[0], UINT_MAX, cp->numGO*cp->maxnumpGOfromGLtoGO);
+	std::fill(numpMFfromMFtoGR, numpMFfromMFtoGR + cp->numMF, 0);
+	std::fill(pMFfromMFtoGR[0], pMFfromMFtoGR[0] +
+			cp->numMF * cp->maxnumpMFfromMFtoGR, UINT_MAX);
+	std::fill(numpMFfromMFtoGO, numpMFfromMFtoGO + cp->numMF, 0);
+	std::fill(pMFfromMFtoGO[0], pMFfromMFtoGO[0] +
+			cp->numMF * cp->maxnumpMFfromMFtoGO, UINT_MAX);
 
-	arrayInitialize<int>(numpGOfromGOtoGL, 0, cp->numGO);
-	arrayInitialize<int>(pGOfromGOtoGL[0], UINT_MAX, cp->numGO*cp->maxnumpGOfromGOtoGL);
-	arrayInitialize<float>(PconGOGL, 0, cp->numpGOGL);
+	std::fill(numpGOfromGLtoGO, numpGOfromGLtoGO + cp->numGO, 0);
+	std::fill(pGOfromGLtoGO[0], pGOfromGLtoGO[0] +
+			cp->numGO * cp->maxnumpGOfromGLtoGO, UINT_MAX);
 
-	arrayInitialize<int>(numpGOfromMFtoGO, 0, cp->numGO);
-	arrayInitialize<int>(pGOfromMFtoGO[0], UINT_MAX, cp->numGO*16);
+	std::fill(numpGOfromGOtoGL, numpGOfromGOtoGL + cp->numGO, 0);
+	std::fill(pGOfromGOtoGL[0], pGOfromGOtoGL[0] +
+			cp->numGO * cp->maxnumpGOfromGOtoGL, UINT_MAX);
+	std::fill(PconGOGL, PconGOGL + cp->numpGOGL, 0);
 
-	arrayInitialize<int>(numpGOfromGOtoGR, 0, cp->numGO);
-	arrayInitialize<int>(pGOfromGOtoGR[0], UINT_MAX, cp->numGO*cp->maxnumpGOfromGOtoGR);
+	std::fill(numpGOfromMFtoGO, numpGOfromMFtoGO + cp->numGO, 0);
+	std::fill(pGOfromMFtoGO[0], pGOfromMFtoGO[0] + cp->numGO * 16, UINT_MAX);
 
-	arrayInitialize<int>(numpGOfromGRtoGO, 0, cp->numGO);
-	arrayInitialize<int>(pGOfromGRtoGO[0], UINT_MAX, cp->numGO*cp->maxnumpGOfromGRtoGO);
+	std::fill(numpGOfromGOtoGR, numpGOfromGOtoGR + cp->numGO, 0);
+	std::fill(pGOfromGOtoGR[0], pGOfromGOtoGR[0] +
+			cp->numGO * cp->maxnumpGOfromGOtoGR, UINT_MAX);
+
+	std::fill(numpGOfromGRtoGO, numpGOfromGRtoGO + cp->numGO, 0);
+	std::fill(pGOfromGRtoGO[0], pGOfromGRtoGO[0] +
+			cp->numGO * cp->maxnumpGOfromGRtoGO, UINT_MAX);
 	
-	arrayInitialize<int>(spanArrayPFtoGOX, 0, cp->grX+1);
-	arrayInitialize<int>(spanArrayPFtoGOY, 0, 121);
-	arrayInitialize<int>(xCoorsPFGO, 0, (cp->grX+1)*121);
-	arrayInitialize<int>(yCoorsPFGO, 0, (cp->grX+1)*121);
+	std::fill(spanArrayPFtoGOX, spanArrayPFtoGOX + cp->grX + 1, 0);
+	std::fill(spanArrayPFtoGOY, spanArrayPFtoGOY + 121, 0);
+	std::fill(xCoorsPFGO, xCoorsPFGO + (cp->grX + 1) * 121, 0);
+	std::fill(yCoorsPFGO, yCoorsPFGO + (cp->grX + 1) * 121, 0);
 	
-	arrayInitialize<int>(spanArrayAAtoGOX, 0, 202);
-	arrayInitialize<int>(spanArrayAAtoGOY, 0, 202);
-	arrayInitialize<int>(xCoorsAAGO, 0, 202*202);
-	arrayInitialize<int>(yCoorsAAGO, 0, 202*202);
+	std::fill(spanArrayAAtoGOX, spanArrayAAtoGOX + 202, 0);
+	std::fill(spanArrayAAtoGOY, spanArrayAAtoGOY + 202, 0);
+	std::fill(xCoorsAAGO, xCoorsAAGO + 202 * 202, 0);
+	std::fill(yCoorsAAGO, yCoorsAAGO + 202 * 202, 0);
 
-	arrayInitialize<int>(numpGOCoupInGOGO, 0, cp->numGO);
-	arrayInitialize<int>(pGOCoupInGOGO[0], UINT_MAX, cp->numGO*81);
-	arrayInitialize<float>(pGOCoupInGOGOCCoeff[0], UINT_MAX, cp->numGO*81);
-	arrayInitialize<int>(numpGOCoupOutGOGO, 0, cp->numGO);
-	arrayInitialize<int>(pGOCoupOutGOGO[0], UINT_MAX, cp->numGO*81);
-	arrayInitialize<float>(pGOCoupOutGOGOCCoeff[0], UINT_MAX, cp->numGO*81);
-	arrayInitialize<bool>(gjConBool[0], false, cp->numGO*cp->numGO);
+	std::fill(numpGOCoupInGOGO, numpGOCoupInGOGO + cp->numGO, 0);
+	std::fill(pGOCoupInGOGO[0], pGOCoupInGOGO[0] + cp->numGO * 81, UINT_MAX);
+	std::fill(pGOCoupInGOGOCCoeff[0], pGOCoupInGOGOCCoeff[0] + cp->numGO * 81, UINT_MAX);
+	std::fill(numpGOCoupOutGOGO, numpGOCoupOutGOGO + cp->numGO, 0);
+	std::fill(pGOCoupOutGOGO[0], pGOCoupOutGOGO[0] + cp->numGO * 81, UINT_MAX);
+	std::fill(pGOCoupOutGOGOCCoeff[0], pGOCoupOutGOGOCCoeff[0] + cp->numGO * 81, UINT_MAX);
+	std::fill(gjConBool[0], gjConBool[0] + cp->numGO * cp->numGO, false);
 	
-	arrayInitialize<int>(spanArrayGOtoGOgjX, 0, 9);
-	arrayInitialize<int>(spanArrayGOtoGOgjY, 0, 9);
-	arrayInitialize<int>(xCoorsGOGOgj, 0, 9*9);
-	arrayInitialize<int>(yCoorsGOGOgj, 0, 9*9);
-	arrayInitialize<float>(gjPcon, 0, 9*9);
-	arrayInitialize<float>(gjCC, 0, 9*9);
+	std::fill(spanArrayGOtoGOgjX, spanArrayGOtoGOgjX + 9, 0);
+	std::fill(spanArrayGOtoGOgjY, spanArrayGOtoGOgjY + 9, 0);
+	std::fill(xCoorsGOGOgj, xCoorsGOGOgj + 9 * 9, 0);
+	std::fill(yCoorsGOGOgj, yCoorsGOGOgj + 9 * 9, 0);
+	std::fill(gjPcon, gjPcon + 9 * 9, 0);
+	std::fill(gjCC, gjCC + 9 * 9, 0);
 	
-	arrayInitialize<ct_uint32_t>(pGRDelayMaskfromGRtoBSP, 0, cp->numGR);
+	std::fill(pGRDelayMaskfromGRtoBSP, pGRDelayMaskfromGRtoBSP + cp->numGR, 0);
 
-	arrayInitialize<int>(numpGRfromGLtoGR, 0, cp->numGR);
-	arrayInitialize<int>(pGRfromGLtoGR[0], UINT_MAX, cp->numGR*cp->maxnumpGRfromGLtoGR);
+	std::fill(numpGRfromGLtoGR, numpGRfromGLtoGR + cp->numGR, 0);
+	std::fill(pGRfromGLtoGR[0], pGRfromGLtoGR[0] +
+			cp->numGR * cp->maxnumpGRfromGLtoGR, UINT_MAX);
 
-	arrayInitialize<int>(numpGRfromGRtoGO, 0, cp->numGR);
-	arrayInitialize<int>(pGRfromGRtoGO[0], UINT_MAX, cp->numGR*cp->maxnumpGRfromGRtoGO);
-	arrayInitialize<int>(pGRDelayMaskfromGRtoGO[0], UINT_MAX, cp->numGR*cp->maxnumpGRfromGRtoGO);
+	std::fill(numpGRfromGRtoGO, numpGRfromGRtoGO + cp->numGR, 0);
+	std::fill(pGRfromGRtoGO[0], pGRfromGRtoGO[0] +
+			cp->numGR * cp->maxnumpGRfromGRtoGO, UINT_MAX);
+	std::fill(pGRDelayMaskfromGRtoGO[0], pGRDelayMaskfromGRtoGO[0] +
+			cp->numGR * cp->maxnumpGRfromGRtoGO, UINT_MAX);
 
-	arrayInitialize<int>(numpGRfromGOtoGR, 0, cp->numGR);
-	arrayInitialize<int>(pGRfromGOtoGR[0], UINT_MAX, cp->numGR*cp->maxnumpGRfromGOtoGR);
+	std::fill(numpGRfromGOtoGR, numpGRfromGOtoGR + cp->numGR, 0);
+	std::fill(pGRfromGOtoGR[0], pGRfromGOtoGR[0] +
+			cp->numGR * cp->maxnumpGRfromGOtoGR, UINT_MAX);
 
-	arrayInitialize<int>(numpGRfromMFtoGR, 0, cp->numGR);
-	arrayInitialize<int>(pGRfromMFtoGR[0], UINT_MAX, cp->numGR*cp->maxnumpGRfromMFtoGR);
+	std::fill(numpGRfromMFtoGR, numpGRfromMFtoGR + cp->numGR, 0);
+	std::fill(pGRfromMFtoGR[0], pGRfromMFtoGR[0] +
+			cp->numGR * cp->maxnumpGRfromMFtoGR, UINT_MAX);
 }
 
 void InNetConnectivityState::connectGLUBC()
