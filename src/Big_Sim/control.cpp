@@ -29,21 +29,25 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 
 	// Allocate and Initialize PSTH and Raster arrays
 	allPCRaster = allocate2DArray<ct_uint8_t>(numPC, (csSize+msPreCS+msPostCS)*(collectionTrials));	
-	arrayInitialize<ct_uint8_t>(allPCRaster[0], 0, numPC*(csSize+msPreCS+msPostCS)*(collectionTrials));
+	std::fill(allPCRaster[0], allPCRaster[0] +
+			numPC * (csSize + msPreCS + msPostCS) * (collectionTrials), 0);
 	
 	allNCRaster = allocate2DArray<ct_uint8_t>(numNC, (csSize+msPreCS+msPostCS)*(collectionTrials));	
-	arrayInitialize<ct_uint8_t>(allNCRaster[0], 0, numNC*(csSize+msPreCS+msPostCS)*(collectionTrials));
+	std::fill(allNCRaster[0], allNCRaster[0] +
+			numNC * (csSize + msPreCS + msPostCS) * (collectionTrials), 0);
 
 	allSCRaster = allocate2DArray<ct_uint8_t>(numSC, (csSize+msPreCS+msPostCS)*(collectionTrials));	
-	arrayInitialize<ct_uint8_t>(allSCRaster[0], 0, numSC*(csSize+msPreCS+msPostCS)*(collectionTrials));
+	std::fill(allSCRaster[0], allSCRaster[0] +
+			numSC * (csSize + msPreCS + msPostCS) * (collectionTrials), 0);
 
 	allBCRaster = allocate2DArray<ct_uint8_t>(numBC, (csSize+msPreCS+msPostCS)*(collectionTrials));	
-	arrayInitialize<ct_uint8_t>(allBCRaster[0], 0, numBC*(csSize+msPreCS+msPostCS)*(collectionTrials));
+	std::fill(allBCRaster[0], allBCRaster[0] +
+			numBC * (csSize + msPreCS + msPostCS) * (collectionTrials), 0);
 	
 	std::cout << "PC arrays" << std::endl;	
 
 	allGOPSTH = allocate2DArray<ct_uint8_t>(numGO, (csSize+msPreCS+msPostCS));	
-	arrayInitialize<ct_uint8_t>(allGOPSTH[0], 0, numGO*(csSize+msPreCS+msPostCS));
+	std::fill(allGOPSTH[0], allGOPSTH[0] + numGO * (csSize + msPreCS + msPostCS), 0);
 
 	float medTrials;
 	float *mTall    = new float[numTotalTrials];
