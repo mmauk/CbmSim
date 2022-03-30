@@ -1832,16 +1832,17 @@ void InNetConnectivityState::connectGOGODecayP(CRandomSFMT *randGen, int goRecip
 	Pcon 				= new float[numP];
 	
 	//Initialize MaaFuka
-	arrayInitialize<int>(numpGOGABAInGOGO, 0, cp->numGO);
-	arrayInitialize<int>(pGOGABAInGOGO[0], UINT_MAX, cp->numGO*numCon);
-	arrayInitialize<int>(numpGOGABAOutGOGO, 0, cp->numGO);
-	arrayInitialize<int>(pGOGABAOutGOGO[0], UINT_MAX, cp->numGO*numCon);
-	arrayInitialize<bool>(conGOGOBoolOut[0], false, cp->numGO*cp->numGO);
-	arrayInitialize<int>(spanArrayGOtoGOsynX, 0, span+1);
-	arrayInitialize<int>(spanArrayGOtoGOsynY, 0, span+1);
-	arrayInitialize<int>(xCoorsGOGOsyn, 0, numP);
-	arrayInitialize<int>(yCoorsGOGOsyn, 0, numP);
-	arrayInitialize<float>(Pcon, 0, numP);
+	std::fill(numpGOGABAInGOGO, numpGOGABAInGOGO + cp->numGO, 0);
+	std::fill(pGOGABAInGOGO[0], pGOGABAInGOGO[0] +
+			cp->numGO * numCon, UINT_MAX);
+	std::fill(numpGOGABAOutGOGO, numpGOGABAOutGOGO + cp->numGO, 0);
+	std::fill(pGOGABAOutGOGO[0], pGOGABAOutGOGO[0] + cp->numGO * numCon, UINT_MAX);
+	std::fill(conGOGOBoolOut[0], conGOGOBoolOut[0] + cp->numGO * cp->numGO, false);
+	std::fill(spanArrayGOtoGOsynX, spanArrayGOtoGOsynX + span + 1, 0);
+	std::fill(spanArrayGOtoGOsynY, spanArrayGOtoGOsynY + span + 1, 0);
+	std::fill(xCoorsGOGOsyn, xCoorsGOGOsyn + numP, 0);
+	std::fill(yCoorsGOGOsyn, yCoorsGOGOsyn + numP, 0);
+	std::fill(Pcon, Pcon + numP, 0);
 
 	float A = 0.35;
 	float sig = 1000;
