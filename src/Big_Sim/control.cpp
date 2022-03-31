@@ -139,8 +139,8 @@ void Control::runTrials(SetSim &simulation, int trialTime, int preTrialNumber,
 					for (int i = 0; i < numGO; i++)
 					{
 							goSpkCounter[i] += goSpks[i];
-							gGRGO_sum += grgoG[i];
-							gMFGO_sum += mfgoG[i];
+							gGRGO_sum 		+= grgoG[i];
+							gMFGO_sum 		+= mfgoG[i];
 					}
 				}
 				// why is this case separate from the above	
@@ -180,10 +180,7 @@ void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
 	float goSpkSum = 0;
 
 	//TODO: change for loop into std::transform
-	for (int i = 0; i < numGO; i++)
-	{
-			goSpkSum += goSpkCounter[i];
-	}
+	for (int i = 0; i < numGO; i++) goSpkSum += goSpkCounter[i];
 	
 	std::cout << "Mean GO Rate: " << goSpkSum / (float)numGO << std::endl;
 	medTrials += m / 2.0;
@@ -218,10 +215,8 @@ void Control::fillRasterArrays(SetSim &simulation, int rasterCounter)
 		{
 			allSCRaster[i][rasterCounter] = scSpks[i];
 		}	
-
 	}	
 }	
-
 
 // TODO: 1) find better place to put this 2) generalize
 void Control::write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
@@ -246,7 +241,6 @@ void Control::write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
 
 	outStream.close();
 }
-
 
 int* Control::getGRIndicies(SetSim &simulation, float CStonicMFfrac) 
 {
