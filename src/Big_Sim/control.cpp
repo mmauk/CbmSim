@@ -182,14 +182,11 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 						PSTHCounter++;
 						rasterCounter++;
 					}
-
 				}
-
 		 	}
 		}	
 		// re-initialize spike counter vector	
 		std::fill(goSpkCounter, goSpkCounter + numGO, 0);	
-		//goSpkCounter.assign(numGO, 0);	
 		timer = clock() - timer;
 		std::cout << "Trial time seconds: " << (float)timer / CLOCKS_PER_SEC << std::endl;
 	}
