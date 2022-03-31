@@ -201,6 +201,7 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	// Save Data 
 
 	std::string allGOPSTHFileName = "allGOPSTH_noGOGO_grgoConv" + std::to_string(conv[goRecipParam]) +
+		"_" + std::to_string(simNum) + ".bin";	
 	write2DCharArray(allGOPSTHFileName, allGOPSTH, numGO, (csSize + msPreCS + msPostCS));
 	delete2DArray<ct_uint8_t>(allGOPSTH);
 
@@ -213,12 +214,6 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 			(numTotalTrials - preTrialNumber) * (csSize + msPreCS + msPostCS));
 	std::cout << "Filling BC files" << std::endl;
 	
-	std::string allBCRasterFileName = "allBCRaster_paramSet" + std::to_string(inputStrength) +
-		"_" + std::to_string(simNum) + ".bin";
-	write2DCharArray(allBCRasterFileName, allBCRaster, numBC,
-		(numTotalTrials - preTrialNumber) * (csSize + msPreCS + msPostCS));
-	delete2DArray<ct_uint8_t>(allBCRaster);
-
 
 	std::cout << "Filling SC files" << std::endl;
 
