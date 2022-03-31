@@ -21,8 +21,8 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 
 	std::cout << "Done filling MF arrays" << std::endl;	
 
-	int numTotalTrials = numTuningTrials + numGrDetectionTrials + numTrainingTrials;  
 	int preTrialNumber = numTuningTrials + numGrDetectionTrials;
+	int numTotalTrials = preTrialNumber + numTrainingTrials;  
 	int collectionTrials = numTotalTrials;
 
 	int conv[8] = {5000, 4000, 3000, 2000, 1000, 500, 250, 125};
@@ -56,7 +56,7 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	int rasterCounter = 0;
 	int *goSpkCounter = new int[numGO];
 
-	//to do: break into smaller functions	
+	// are we even doing anything for trials not equal to preTrialNumber?
 	for (int trial = 0; trial < numTotalTrials; trial++)
 	{
 		timer = clock();
@@ -70,77 +70,75 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 			std::cout << "Post-tuning trial number: " << trial << std::endl;
 		
 		// Homeostatic plasticity trials
-		if (trial >= numTuningTrials)
-		{
-			// Run active granule cell detection 	
+		// Run active granule cell detection 	
+		for (tts = 0; tts < trialTime; tts++)
+		{			
 			if (trial == preTrialNumber)
-			{			
-				for (tts = 0; tts < trialTime; tts++)
-				{	
-					// TODO: get the model for these periods, update accordingly
-					if (tts == csStart + csSize)
-					{
-						// Deliver US 
-						joesim->updateErrDrive(0, 0.0);
-					}
+			{	
+				// TODO: get the model for these periods, update accordingly
+				if (tts == csStart + csSize)
+				{
+					// Deliver US 
+					joesim->updateErrDrive(0, 0.0);
+				}
+				
+				if (tts < csStart || tts >= csStart + csSize)
+				{
+					// Background MF activity in the Pre and Post CS period
+					mfAP = joeMFs->calcPoissActivity(joeMFFreq->getMFBG(), joesim->getMZoneList());	
+				}
+				else if (tts >= csStart && tts < csStart + csPhasicSize) 
+				{
+					// Phasic MF activity during the CS for a duration set in control.h 
+					mfAP = joeMFs->calcPoissActivity(joeMFFreq->getMFFreqInCSPhasic(), joesim->getMZoneList());
+				}
+				else
+				{
+					// Tonic MF activity during the CS period
+					// this never gets reached...
+					mfAP = joeMFs->calcPoissActivity(joeMFFreq->getMFInCSTonicA(), joesim->getMZoneList());
+				}
+
+				bool *isTrueMF = joeMFs->calcTrueMFs(joeMFFreq->getMFBG());
+				joesim->updateTrueMFs(isTrueMF);
+				joesim->updateMFInput(mfAP);
+				joesim->calcActivity(goMin, simNum, GOGR, GRGO, MFGO, gogoW, spillFrac);	
+				
+				if (tts >= csStart && tts < csStart + csSize)
+				{
+
+					mfgoG = joesim->getInputNet()->exportgSum_MFGO();
+					grgoG = joesim->getInputNet()->exportgSum_GRGO();
+					goSpks = joesim->getInputNet()->exportAPGO();
 					
-					if (tts < csStart || tts >= csStart + csSize)
+					//TODO: change for loop into std::transform
+					for (int i = 0; i < numGO; i++)
 					{
-						// Background MF activity in the Pre and Post CS period
-						mfAP = joeMFs->calcPoissActivity(joeMFFreq->getMFBG(), joesim->getMZoneList());	
-					}
-					else if (tts >= csStart && tts < csStart + csPhasicSize) 
-					{
-						// Phasic MF activity during the CS for a duration set in control.h 
-						mfAP = joeMFs->calcPoissActivity(joeMFFreq->getMFFreqInCSPhasic(), joesim->getMZoneList());
-					}
-					else
-					{
-						// Tonic MF activity during the CS period
-						// this never gets reached...
-						mfAP = joeMFs->calcPoissActivity(joeMFFreq->getMFInCSTonicA(), joesim->getMZoneList());
-					}
-
-					bool *isTrueMF = joeMFs->calcTrueMFs(joeMFFreq->getMFBG());
-					joesim->updateTrueMFs(isTrueMF);
-					joesim->updateMFInput(mfAP);
-					joesim->calcActivity(goMin, simNum, GOGR, GRGO, MFGO, gogoW, spillFrac);	
-					
-					if (tts >= csStart && tts < csStart + csSize)
-					{
-
-						mfgoG = joesim->getInputNet()->exportgSum_MFGO();
-						grgoG = joesim->getInputNet()->exportgSum_GRGO();
-						goSpks = joesim->getInputNet()->exportAPGO();
-						
-						//TODO: change for loop into std::transform
-						for (int i = 0; i < numGO; i++)
-						{
-								goSpkCounter[i] += goSpks[i];
-								gGRGO_sum += grgoG[i];
-								gMFGO_sum += mfgoG[i];
-						}
-					}
-					// why is this case separate from the above	
-					if (tts == csStart + csSize)
-					{
-						countGOSpikes(goSpkCounter, medTrials);	
-
-						std::cout << "mean gGRGO   = " << gGRGO_sum / (numGO * csSize) << std::endl;
-						std::cout << "mean gMFGO   = " << gMFGO_sum / (numGO * csSize) << std::endl;
-						std::cout << "GR:MF ratio  = " << gGRGO_sum / gMFGO_sum << std::endl;
-					}
-					
-					if (trial >= preTrialNumber && tts >= csStart-msPreCS && tts < csStart + csSize + msPostCS)
-					{
-						fillRasterArrays(rasterCounter);
-
-						PSTHCounter++;
-						rasterCounter++;
+							goSpkCounter[i] += goSpks[i];
+							gGRGO_sum += grgoG[i];
+							gMFGO_sum += mfgoG[i];
 					}
 				}
-		 	}
-		}	
+				// why is this case separate from the above	
+				if (tts == csStart + csSize)
+				{
+					countGOSpikes(goSpkCounter, medTrials);	
+
+					std::cout << "mean gGRGO   = " << gGRGO_sum / (numGO * csSize) << std::endl;
+					std::cout << "mean gMFGO   = " << gMFGO_sum / (numGO * csSize) << std::endl;
+					std::cout << "GR:MF ratio  = " << gGRGO_sum / gMFGO_sum << std::endl;
+				}
+			}
+
+			if (trial >= preTrialNumber && tts >= csStart-msPreCS && tts < csStart + csSize + msPostCS)
+			{
+				fillRasterArrays(rasterCounter);
+
+				PSTHCounter++;
+				rasterCounter++;
+			}
+		}
+
 		// re-initialize spike counter vector	
 		std::fill(goSpkCounter, goSpkCounter + numGO, 0);	
 		timer = clock() - timer;
@@ -161,16 +159,13 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	write2DCharArray(allGOPSTHFileName, allGOPSTH, numGO, (csSize + msPreCS + msPostCS));
 	delete2DArray<ct_uint8_t>(allGOPSTH);
 
-	
 	std::cout << "Filling BC files" << std::endl;
 	
 	std::string allBCRasterFileName = "allBCRaster_paramSet" + std::to_string(inputStrength) +
 		"_" + std::to_string(simNum) + ".bin";
 	write2DCharArray(allBCRasterFileName, allBCRaster, numBC,
 			(numTotalTrials - preTrialNumber) * (csSize + msPreCS + msPostCS));
-	std::cout << "Filling BC files" << std::endl;
 	
-
 	std::cout << "Filling SC files" << std::endl;
 
 	std::string allSCRasterFileName = "allSCRaster_paramSet" + std::to_string(inputStrength) +
