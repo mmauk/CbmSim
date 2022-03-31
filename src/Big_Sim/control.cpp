@@ -11,20 +11,16 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 		float goMin, float GOGR, float GRGO, float MFGO, float csMinRate, float csMaxRate,
 		float gogoW, int inputStrength, int inputWeight_two, float spillFrac)
 {
-	std::cout << "fileNum: " << fileNum << std::endl;
+	// set all relevant variables to the sim
+	simulation = SetSim(fileNum, goRecipParam, simNum);
 	
-	SetSim simulation(fileNum, goRecipParam, simNum);
-	joestate = simulation.getstate();
-	joesim = simulation.getsim();
-	joeMFFreq = simulation.getMFFreq(csMinRate, csMaxRate);
-	joeMFs = simulation.getMFs();	
-
-	std::cout << "Done filling MF arrays" << std::endl;	
-
-	int preTrialNumber = numTuningTrials + numGrDetectionTrials;
-	int numTotalTrials = preTrialNumber + numTrainingTrials;  
+	int trialTime 	     = 5000 // in milliseconds, i think
+	int preTrialNumber   = numTuningTrials + numGrDetectionTrials;
+	int numTotalTrials   = preTrialNumber + numTrainingTrials;  
 	int collectionTrials = numTotalTrials;
-
+	
+	// array of possible convergences to test.
+	// TODO: put these into an input file instead of here: weird_champ:
 	int conv[8] = {5000, 4000, 3000, 2000, 1000, 500, 250, 125};
 
 	// Allocate and Initialize PSTH and Raster arrays
@@ -44,19 +40,44 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	std::fill(allBCRaster[0], allBCRaster[0] +
 			numBC * (csSize + msPreCS + msPostCS) * (collectionTrials), 0);
 	
-	std::cout << "PC arrays" << std::endl;	
-
 	allGOPSTH = allocate2DArray<ct_uint8_t>(numGO, (csSize+msPreCS+msPostCS));	
 	std::fill(allGOPSTH[0], allGOPSTH[0] + numGO * (csSize + msPreCS + msPostCS), 0);
 
+	// run all trials of sim
+	runTrials(simulation, trialTime, preTrialNumber, numTotalTrials, collectionTrials);	
+	
+	// Save Data 
+	// TODO: once get matrix class, rewrite
+	std::string allGOPSTHFileName = "allGOPSTH_noGOGO_grgoConv" + std::to_string(conv[goRecipParam]) +
+		"_" + std::to_string(simNum) + ".bin";	
+	write2DCharArray(allGOPSTHFileName, allGOPSTH, numGO, (csSize + msPreCS + msPostCS));
+	delete2DArray<ct_uint8_t>(allGOPSTH);
+
+	std::cout << "Filling BC files" << std::endl;
+	
+	std::string allBCRasterFileName = "allBCRaster_paramSet" + std::to_string(inputStrength) +
+		"_" + std::to_string(simNum) + ".bin";
+	write2DCharArray(allBCRasterFileName, allBCRaster, numBC,
+			(numTotalTrials - preTrialNumber) * (csSize + msPreCS + msPostCS));
+	
+	std::cout << "Filling SC files" << std::endl;
+
+	std::string allSCRasterFileName = "allSCRaster_paramSet" + std::to_string(inputStrength) +
+		"_" + std::to_string(simNum) + ".bin";
+	write2DCharArray(allSCRasterFileName, allSCRaster, numSC,
+			(numTotalTrials - preTrialNumber) * (csSize + msPreCS + msPostCS));
+	delete2DArray<ct_uint8_t>(allSCRaster);
+}
+
+void Control:: runTrials(SetSim &simulation, int trialTime, int preTrialNumber,
+	  int numTotalTrials, int collectionTrials)
+{
 	float medTrials;
 	clock_t timer;
 	
-	int trialTime     = 5000; // in milliseconds, i think
 	int rasterCounter = 0;
 	int *goSpkCounter = new int[numGO];
 
-	// are we even doing anything for trials not equal to preTrialNumber?
 	for (int trial = 0; trial < numTotalTrials; trial++)
 	{
 		timer = clock();
@@ -79,44 +100,47 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 				if (tts == csStart + csSize)
 				{
 					// Deliver US 
-					joesim->updateErrDrive(0, 0.0);
+					simulation.getsim()->updateErrDrive(0, 0.0);
 				}
 				
 				if (tts < csStart || tts >= csStart + csSize)
 				{
 					// Background MF activity in the Pre and Post CS period
-					mfAP = joeMFs->calcPoissActivity(joeMFFreq->getMFBG(), joesim->getMZoneList());	
+					mfAP = simulation.getMFs()->calcPoissActivity(simulation.getMFFreq(csminRate, csMaxRate)->getMFBG(),
+						  simulation.getsim()->getMZoneList());	
 				}
 				else if (tts >= csStart && tts < csStart + csPhasicSize) 
 				{
 					// Phasic MF activity during the CS for a duration set in control.h 
-					mfAP = joeMFs->calcPoissActivity(joeMFFreq->getMFFreqInCSPhasic(), joesim->getMZoneList());
+					mfAP = simulation.getMFs()->calcPoissActivity(simulation.getMFFreq(csminRate, csMaxRate)->getMFFreqInCSPhasic(),
+						  simulation.getsim()->getMZoneList());
 				}
 				else
 				{
 					// Tonic MF activity during the CS period
 					// this never gets reached...
-					mfAP = joeMFs->calcPoissActivity(joeMFFreq->getMFInCSTonicA(), joesim->getMZoneList());
+					mfAP = simulation.getMFs()->calcPoissActivity(simulation.getMFFreq(csminRate, csMaxRate)->getMFInCSTonicA(),
+						  simulation.getsim()->getMZoneList());
 				}
 
-				bool *isTrueMF = joeMFs->calcTrueMFs(joeMFFreq->getMFBG());
-				joesim->updateTrueMFs(isTrueMF);
-				joesim->updateMFInput(mfAP);
-				joesim->calcActivity(goMin, simNum, GOGR, GRGO, MFGO, gogoW, spillFrac);	
+				bool *isTrueMF = simulation.getMFs()->calcTrueMFs(simulation.getMFFreq(csminRate, csMaxRate)->getMFBG());
+				simulation.getsim()->updateTrueMFs(isTrueMF);
+				simulation.getsim()->updateMFInput(mfAP);
+				simulation.getsim()->calcActivity(goMin, simNum, GOGR, GRGO, MFGO, gogoW, spillFrac);	
 				
 				if (tts >= csStart && tts < csStart + csSize)
 				{
 
-					mfgoG = joesim->getInputNet()->exportgSum_MFGO();
-					grgoG = joesim->getInputNet()->exportgSum_GRGO();
-					goSpks = joesim->getInputNet()->exportAPGO();
+					mfgoG  = simulation.getsim()->getInputNet()->exportgSum_MFGO();
+					grgoG  = simulation.getsim()->getInputNet()->exportgSum_GRGO();
+					goSpks = simulation.getsim()->getInputNet()->exportAPGO();
 					
 					//TODO: change for loop into std::transform
 					for (int i = 0; i < numGO; i++)
 					{
 							goSpkCounter[i] += goSpks[i];
-							gGRGO_sum += grgoG[i];
-							gMFGO_sum += mfgoG[i];
+							gGRGO_sum 		+= grgoG[i];
+							gMFGO_sum 		+= mfgoG[i];
 					}
 				}
 				// why is this case separate from the above	
@@ -145,34 +169,7 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 		std::cout << "Trial time seconds: " << (float)timer / CLOCKS_PER_SEC << std::endl;
 	}
 	
-	delete joestate;
-	delete joesim;
-	delete joeMFFreq;
-	delete joeMFs;
-	
 	delete[] goSpkCounter;
-	
-	// Save Data 
-	// TODO: once get matrix class, rewrite
-	std::string allGOPSTHFileName = "allGOPSTH_noGOGO_grgoConv" + std::to_string(conv[goRecipParam]) +
-		"_" + std::to_string(simNum) + ".bin";	
-	write2DCharArray(allGOPSTHFileName, allGOPSTH, numGO, (csSize + msPreCS + msPostCS));
-	delete2DArray<ct_uint8_t>(allGOPSTH);
-
-	std::cout << "Filling BC files" << std::endl;
-	
-	std::string allBCRasterFileName = "allBCRaster_paramSet" + std::to_string(inputStrength) +
-		"_" + std::to_string(simNum) + ".bin";
-	write2DCharArray(allBCRasterFileName, allBCRaster, numBC,
-			(numTotalTrials - preTrialNumber) * (csSize + msPreCS + msPostCS));
-	
-	std::cout << "Filling SC files" << std::endl;
-
-	std::string allSCRasterFileName = "allSCRaster_paramSet" + std::to_string(inputStrength) +
-		"_" + std::to_string(simNum) + ".bin";
-	write2DCharArray(allSCRasterFileName, allSCRaster, numSC,
-			(numTotalTrials - preTrialNumber) * (csSize + msPreCS + msPostCS));
-	delete2DArray<ct_uint8_t>(allSCRaster);
 }
 
 void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
@@ -183,22 +180,19 @@ void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
 	float goSpkSum = 0;
 
 	//TODO: change for loop into std::transform
-	for (int i = 0; i < numGO; i++)
-	{
-			goSpkSum += goSpkCounter[i];
-	}
+	for (int i = 0; i < numGO; i++) goSpkSum += goSpkCounter[i];
 	
 	std::cout << "Mean GO Rate: " << goSpkSum / (float)numGO << std::endl;
 	medTrials += m / 2.0;
 	std::cout << "Median GO Rate: " << m / 2.0 << std::endl;
 }
 
-void Control::fillRasterArrays(int rasterCounter)
+void Control::fillRasterArrays(SetSim &simulation, int rasterCounter)
 {
-	const ct_uint8_t* pcSpks = joesim->getMZoneList()[0]->exportAPPC();
-	const ct_uint8_t* ncSpks = joesim->getMZoneList()[0]->exportAPNC();
-	const ct_uint8_t* bcSpks = joesim->getMZoneList()[0]->exportAPBC();
-	const ct_uint8_t* scSpks = joesim->getInputNet()->exportAPSC();
+	const ct_uint8_t* pcSpks = simulation.getsim()->getMZoneList()[0]->exportAPPC();
+	const ct_uint8_t* ncSpks = simulation.getsim()->getMZoneList()[0]->exportAPNC();
+	const ct_uint8_t* bcSpks = simulation.getsim()->getMZoneList()[0]->exportAPBC();
+	const ct_uint8_t* scSpks = simulation.getsim()->getInputNet()->exportAPSC();
 	
 	// TODO: yet another reason why an array that knows its size would be helpful!
 	int maxCount = std::max({numPC, numNC, numBC, numSC});						
@@ -221,10 +215,8 @@ void Control::fillRasterArrays(int rasterCounter)
 		{
 			allSCRaster[i][rasterCounter] = scSpks[i];
 		}	
-
 	}	
 }	
-
 
 // TODO: 1) find better place to put this 2) generalize
 void Control::write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
@@ -250,15 +242,14 @@ void Control::write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
 	outStream.close();
 }
 
-
-int* Control::getGRIndicies(float CStonicMFfrac) 
+int* Control::getGRIndicies(SetSim &simulation, float CStonicMFfrac) 
 {
 
 	int numMF = 4096;
 	int numGR = 1048576;
 
-	bool* tonicMFsA = joeMFFreq->getTonicMFInd();
-	bool* tonicMFsB = joeMFFreq->getTonicMFIndOverlap();
+	bool* tonicMFsA = simulation.getMFFreq(csminRate, csMaxRate)->getTonicMFInd();
+	bool* tonicMFsB = simulation.getMFFreq(csminRate, csMaxRate)->getTonicMFIndOverlap();
 	
 	int numTonic = numMF*CStonicMFfrac; 
 	int numActiveMFs = numTonic;
@@ -295,7 +286,7 @@ int* Control::getGRIndicies(float CStonicMFfrac)
 	int *pActiveGRsBool = new int[numGR]();
 	for (int i = 0; i < numActiveMFs; i++)
 	{
-		MFtoGRs = joestate->getInnetConStateInternal()->getpMFfromMFtoGRCon(activeMFIndA[i]);
+		MFtoGRs = simulation.getState()->getInnetConStateInternal()->getpMFfromMFtoGRCon(activeMFIndA[i]);
 		numPostSynGRs = MFtoGRs.size();
 		
 		for (int j = 0; j < numPostSynGRs; j++)
@@ -327,21 +318,21 @@ int* Control::getGRIndicies(float CStonicMFfrac)
 }
 
 // NOTE: this function is basically the same as the above.
-int Control::getNumGRIndicies(float CStonicMFfrac) 
+int Control::getNumGRIndicies(SetSim &simulation, float CStonicMFfrac) 
 {
 	int numMF = 4096;
 	int numGR = 1048576;
 
 	float CSphasicMFfrac = 0.0;
-	float contextMFfrac = 0.0;
+	float contextMFfrac  = 0.0;
 	
-	bool* contextMFs = joeMFFreq->getContextMFInd();
-	bool* phasicMFs = joeMFFreq->getPhasicMFInd();
-	bool* tonicMFs = joeMFFreq->getTonicMFInd();
+	bool* contextMFs = simulation.getMFFreq(csminRate, csMaxRate)->getContextMFInd();
+	bool* phasicMFs  = simulation.getMFFreq(csminRate, csMaxRate)->getPhasicMFInd();
+	bool* tonicMFs   = simulation.getMFFreq(csminRate, csMaxRate)->getTonicMFInd();
 	
-	int numContext = numMF*contextMFfrac; 
-	int numPhasic = numMF*CSphasicMFfrac; 
-	int numTonic = numMF*CStonicMFfrac; 
+	int numContext   = numMF*contextMFfrac; 
+	int numPhasic    = numMF*CSphasicMFfrac; 
+	int numTonic     = numMF*CStonicMFfrac; 
 	int numActiveMFs = numContext+numPhasic+numTonic;
 	
 	int *activeMFInd;
@@ -363,7 +354,7 @@ int Control::getNumGRIndicies(float CStonicMFfrac)
 
 	for (int i = 0; i < numActiveMFs; i++)
 	{
-		MFtoGRs = joestate->getInnetConStateInternal()->getpMFfromMFtoGRCon(activeMFInd[i]);
+		MFtoGRs = simulation.getState()->getInnetConStateInternal()->getpMFfromMFtoGRCon(activeMFInd[i]);
 		numPostSynGRs = MFtoGRs.size();
 		
 		for (int j = 0; j < numPostSynGRs; j++)
