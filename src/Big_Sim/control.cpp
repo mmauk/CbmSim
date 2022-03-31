@@ -152,8 +152,8 @@ void Control::runTrials(SetSim &simulation, int trialTime, int numTuningTrials, 
 				// why is this case separate from the above	
 				if (tts == csStart + csSize)
 				{
+					// FIXME: mean and median go rate are muuch too large
 					countGOSpikes(goSpkCounter, medTrials);	
-
 					std::cout << "mean gGRGO   = " << gGRGO_sum / (numGO * csSize) << std::endl;
 					std::cout << "mean gMFGO   = " << gMFGO_sum / (numGO * csSize) << std::endl;
 					std::cout << "GR:MF ratio  = " << gGRGO_sum / gMFGO_sum << std::endl;
