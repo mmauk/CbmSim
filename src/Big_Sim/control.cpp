@@ -13,7 +13,7 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 {
 	// set all relevant variables to the sim	
 	SetSim simulation(fileNum, goRecipParam, simNum);
-
+	// TODO: find better way to organize these instead of duplicate code
 	int trialTime        = 5000; // in milliseconds, i think
 	int preTrialNumber   = numTuningTrials + numGrDetectionTrials;
 	int numTotalTrials   = preTrialNumber + numTrainingTrials;  
@@ -44,7 +44,7 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	std::fill(allGOPSTH[0], allGOPSTH[0] + numGO * (csSize + msPreCS + msPostCS), 0);
 
 	// run all trials of sim
-	runTrials(SetSim &simulation, numTuningTrials, numGrDetectionTrials, numTrainingTrials,
+	runTrials(SetSim &simulation, trialTime, numTuningTrials, numGrDetectionTrials, numTrainingTrials,
 		simNum, csSize, goMin, GOGR, GRGO, MFGO, csMinRate, csMaxRate, gogoW, spillFrac)
 	
 	// Save Data 
@@ -70,10 +70,14 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	delete2DArray<ct_uint8_t>(allSCRaster);
 }
 
-void Control::runTrials(SetSim &simulation, int numTuningTrials, int numGrDetectionTrials,
+void Control::runTrials(SetSim &simulation, int trialTime, int numTuningTrials, int numGrDetectionTrials,
 		int numTrainingTrials, int simNum, int csSize, float goMin, float GOGR, float GRGO,
 		float MFGO, float csMinRate, float csMaxRate, float gogoW, float spillFrac)
 {
+	int preTrialNumber   = numTuningTrials + numGrDetectionTrials;
+	int numTotalTrials   = preTrialNumber + numTrainingTrials;  
+	int collectionTrials = numTotalTrials;
+
 	float medTrials;
 	clock_t timer;
 

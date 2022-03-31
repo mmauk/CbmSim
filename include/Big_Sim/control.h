@@ -154,7 +154,7 @@ class Control
 		void train(int selectState, int filename, int ISIs, int numTrials, int numCon,
 			int tunedConNumber);
 
-		void runTrials(SetSim &simulation, int numTuningTrials, int numGrDetectionTrials,
+		void runTrials(SetSim &simulation, int trialTime, int numTuningTrials, int numGrDetectionTrials,
 			int numTrainingTrials, int simNum, int csSize, float goMin, float GOGR, float GRGO,
 			float MFGO, float csMinRate, float csMaxRate, float gogoW, float spillFrac);
 		void countGOSpikes(int *goSpkCounter, float &medTrials);
