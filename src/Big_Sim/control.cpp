@@ -160,24 +160,28 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 						const ct_uint8_t* bcSpks = joesim->getMZoneList()[0]->exportAPBC();
 						const ct_uint8_t* scSpks = joesim->getInputNet()->exportAPSC();
 
-						for (int i = 0; i < numPC; i++)
-						{
-							allPCRaster[i][rasterCounter] = pcSpks[i];
-						}
-						
-						for (int i = 0; i < numNC; i++)
-						{
-							allNCRaster[i][rasterCounter] = ncSpks[i];
-						}
-						
-						for (int i = 0; i < numBC; i++){
-							allBCRaster[i][rasterCounter] = bcSpks[i];
-						}
+						int maxCount = std::max({numPC, numNC, numBC, numSC});						
 
-						for (int i=0; i < numSC; i++)
+						for (size_t i = 0; i < maxCount; i++)
 						{
-							allSCRaster[i][rasterCounter] = scSpks[i];
-						}
+							if (i < numPC)
+							{
+								allPCRaster[i][rasterCounter] = pcSpks[i];
+							}
+							if (i < numNC)
+							{
+								allNCRaster[i][rasterCounter] = ncSpks[i];
+							}	
+							if (i < numBC)
+							{
+								allBCRaster[i][rasterCounter] = bcSpks[i];
+							}	
+							if (i < numSC)
+							{
+								allSCRaster[i][rasterCounter] = scSpks[i];
+							}	
+
+						}	
 
 						PSTHCounter++;
 						rasterCounter++;
