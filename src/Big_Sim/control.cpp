@@ -132,6 +132,7 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 					// why is this case separate from the above	
 					if (tts == csStart + csSize)
 					{
+						//countGOSpikes(goSpkCounter, &metTrials);	
 						std::sort(goSpkCounter, goSpkCounter + 4096);
 						
 						int m = (goSpkCounter[2047] + goSpkCounter[2048]) / 2;
@@ -155,33 +156,8 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 					
 					if (trial >= preTrialNumber && tts >= csStart-msPreCS && tts < csStart + csSize + msPostCS)
 					{
-						const ct_uint8_t* pcSpks = joesim->getMZoneList()[0]->exportAPPC();
-						const ct_uint8_t* ncSpks = joesim->getMZoneList()[0]->exportAPNC();
-						const ct_uint8_t* bcSpks = joesim->getMZoneList()[0]->exportAPBC();
-						const ct_uint8_t* scSpks = joesim->getInputNet()->exportAPSC();
-
-						int maxCount = std::max({numPC, numNC, numBC, numSC});						
-
-						for (size_t i = 0; i < maxCount; i++)
-						{
-							if (i < numPC)
-							{
-								allPCRaster[i][rasterCounter] = pcSpks[i];
-							}
-							if (i < numNC)
-							{
-								allNCRaster[i][rasterCounter] = ncSpks[i];
-							}	
-							if (i < numBC)
-							{
-								allBCRaster[i][rasterCounter] = bcSpks[i];
-							}	
-							if (i < numSC)
-							{
-								allSCRaster[i][rasterCounter] = scSpks[i];
-							}	
-
-						}	
+						fillRasterArrays(numPC, numNC, numBC, numSC,
+								allPCRaster, allNCRaster, allBCRaster, allSCRaster);	
 
 						PSTHCounter++;
 						rasterCounter++;
@@ -203,7 +179,7 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	delete[] goSpkCounter;
 	
 	// Save Data 
-
+	// TODO: once get matrix class, rewrite
 	std::string allGOPSTHFileName = "allGOPSTH_noGOGO_grgoConv" + std::to_string(conv[goRecipParam]) +
 		"_" + std::to_string(simNum) + ".bin";	
 	write2DCharArray(allGOPSTHFileName, allGOPSTH, numGO, (csSize + msPreCS + msPostCS));
@@ -227,6 +203,41 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 			(numTotalTrials - preTrialNumber) * (csSize + msPreCS + msPostCS));
 	delete2DArray<ct_uint8_t>(allSCRaster);
 }
+
+void Control::fillRasterArrays(int numPC, int numNC, int numBC, int numSC, int rasterCounter,
+		ct_uint8_t** allPCRaster, ct_uint8_t** allNCRaster, ct_uint8_t** allBCRaster,
+		ct_uint8_t** allSCRaster)
+{
+	const ct_uint8_t* pcSpks = joesim->getMZoneList()[0]->exportAPPC();
+	const ct_uint8_t* ncSpks = joesim->getMZoneList()[0]->exportAPNC();
+	const ct_uint8_t* bcSpks = joesim->getMZoneList()[0]->exportAPBC();
+	const ct_uint8_t* scSpks = joesim->getInputNet()->exportAPSC();
+	
+	// TODO: yet another reason why an array that knows its size would be helpful!
+	int maxCount = std::max({numPC, numNC, numBC, numSC});						
+
+	for (size_t i = 0; i < maxCount; i++)
+	{
+		if (i < numPC)
+		{
+			allPCRaster[i][rasterCounter] = pcSpks[i];
+		}
+		if (i < numNC)
+		{
+			allNCRaster[i][rasterCounter] = ncSpks[i];
+		}	
+		if (i < numBC)
+		{
+			allBCRaster[i][rasterCounter] = bcSpks[i];
+		}	
+		if (i < numSC)
+		{
+			allSCRaster[i][rasterCounter] = scSpks[i];
+		}	
+
+	}	
+}	
+
 
 // TODO: 1) find better place to put this 2) generalize
 void Control::write2DCharArray(std::string outFileName, ct_uint8_t** inArr,

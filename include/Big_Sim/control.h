@@ -159,6 +159,10 @@ class Control
 		void train(int selectState, int filename, int ISIs, int numTrials, int numCon,
 				int tunedConNumber);
 
+		void fillRasterArrays(int numPC, int numNC, int numBC, int numSC, int rasterCounter,
+				ct_uint8_t** allPCRaster, ct_uint8_t** allNCRaster, ct_uint8_t** allBCRaster,
+				ct_uint8_t** allSCRaster);
+
 		void write2DCharArray(std::string outFileName, ct_uint8_t** inArr,
 				unsigned int numRow, unsigned int numCol);
 
