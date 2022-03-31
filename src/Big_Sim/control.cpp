@@ -50,18 +50,11 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	std::fill(allGOPSTH[0], allGOPSTH[0] + numGO * (csSize + msPreCS + msPostCS), 0);
 
 	float medTrials;
-	//float *mTall    = new float[numTotalTrials];
-	//float *grgoGall = new float[numTotalTrials];
-	//float *mfgoGall = new float[numTotalTrials];
-	
 	clock_t timer;
 	
 	int trialTime     = 5000; // in milliseconds, i think
 	int rasterCounter = 0;
-	
-	// so why is this a vector???
 	int *goSpkCounter = new int[numGO];
-
 
 	//to do: break into smaller functions	
 	for (int trial = 0; trial < numTotalTrials; trial++)
@@ -126,6 +119,8 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 						mfgoG = joesim->getInputNet()->exportgSum_MFGO();
 						grgoG = joesim->getInputNet()->exportgSum_GRGO();
 						goSpks = joesim->getInputNet()->exportAPGO();
+						
+						//TODO: change for loop into std::transform
 						for (int i = 0; i < numGO; i++)
 						{
 								goSpkCounter[i] += goSpks[i];
@@ -141,7 +136,8 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 						
 						int m = (goSpkCounter[2047] + goSpkCounter[2048]) / 2;
 						float goSpkSum = 0;
-						
+					
+						//TODO: change for loop into std::transform
 						for (int i = 0; i < numGO; i++)
 						{
 								goSpkSum += goSpkCounter[i];
@@ -150,42 +146,34 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 						std::cout << "Mean GO Rate: " << goSpkSum / (float)numGO << std::endl;
 
 						medTrials += m / 2.0;
-						std::cout << "Median GO Rate: " << m / 2.0 << std::endl;
 
-						//mTall[trial] = m / 2.0;
+						std::cout << "Median GO Rate: " << m / 2.0 << std::endl;
 						std::cout << "mean gGRGO   = " << gGRGO_sum / (numGO * csSize) << std::endl;
 						std::cout << "mean gMFGO   = " << gMFGO_sum / (numGO * csSize) << std::endl;
 						std::cout << "GR:MF ratio  = " << gGRGO_sum / gMFGO_sum << std::endl;
-
-						//grgoGall[trial] = gGRGO_sum / (numGO * csSize);
-						//mfgoGall[trial] = gMFGO_sum / (numGO * csSize);
-
 					}
 					
 					if (trial >= preTrialNumber && tts >= csStart-msPreCS && tts < csStart + csSize + msPostCS)
 					{
-						//PKJ
 						const ct_uint8_t* pcSpks = joesim->getMZoneList()[0]->exportAPPC();
+						const ct_uint8_t* ncSpks = joesim->getMZoneList()[0]->exportAPNC();
+						const ct_uint8_t* bcSpks = joesim->getMZoneList()[0]->exportAPBC();
+						const ct_uint8_t* scSpks = joesim->getInputNet()->exportAPSC();
+
 						for (int i = 0; i < numPC; i++)
 						{
 							allPCRaster[i][rasterCounter] = pcSpks[i];
 						}
 						
-						//NC
-						const ct_uint8_t* ncSpks = joesim->getMZoneList()[0]->exportAPNC();
 						for (int i = 0; i < numNC; i++)
 						{
 							allNCRaster[i][rasterCounter] = ncSpks[i];
 						}
 						
-						//BC
-						const ct_uint8_t* bcSpks=joesim->getMZoneList()[0]->exportAPBC();
 						for (int i = 0; i < numBC; i++){
 							allBCRaster[i][rasterCounter] = bcSpks[i];
 						}
 
-						//SC
-						const ct_uint8_t* scSpks=joesim->getInputNet()->exportAPSC();
 						for (int i=0; i < numSC; i++)
 						{
 							allSCRaster[i][rasterCounter] = scSpks[i];
@@ -216,8 +204,8 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	// Save Data 
 
 	std::string allGOPSTHFileName = "allGOPSTH_noGOGO_grgoConv" + std::to_string(conv[goRecipParam]) +
-			"_" + std::to_string(simNum) + ".bin";
-	write2DArray(allGOPSTHFileName, allGOPSTH, numGO, (csSize + msPreCS + msPostCS));
+		"_" + std::to_string(simNum) + ".bin";
+	write2DCharArray(allGOPSTHFileName, allGOPSTH, numGO, (csSize + msPreCS + msPostCS));
 	delete2DArray<ct_uint8_t>(allGOPSTH);
 
 	
@@ -225,21 +213,22 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	
 	std::string allBCRasterFileName = "allBCRaster_paramSet" + std::to_string(inputStrength) +
 		"_" + std::to_string(simNum) + ".bin";
-	write2DArray(allBCRasterFileName, allBCRaster, numBC,
-			(numTotalTrials - preTrialNumber) * (csSize + msPreCS + msPostCS));
+	write2DCharArray(allBCRasterFileName, allBCRaster, numBC,
+		(numTotalTrials - preTrialNumber) * (csSize + msPreCS + msPostCS));
 	delete2DArray<ct_uint8_t>(allBCRaster);
 
 
 	std::cout << "Filling SC files" << std::endl;
 
 	std::string allSCRasterFileName = "allSCRaster_paramSet" + std::to_string(inputStrength) +
-		"_" + std::to_string(sinNum) + ".bin";
-	write2DArray(allSCRasterFileName, allSCRaster, numSC,
-			(numTotalTrials - preTrialNumber) * (csSize + msPreCS + msPostCS));
+		"_" + std::to_string(simNum) + ".bin";
+	write2DCharArray(allSCRasterFileName, allSCRaster, numSC,
+		(numTotalTrials - preTrialNumber) * (csSize + msPreCS + msPostCS));
 	delete2DArray<ct_uint8_t>(allSCRaster);
 }
 
-void Control::write2DCharArray(std::string outFileName, ct_uint8_t** &inArr,
+// TODO: 1) find better place to put this 2) generalize
+void Control::write2DCharArray(std::string outFileName, ct_uint8_t** inArr,
 		unsigned int numRow, unsigned int numCol)
 {
 	std::ofstream outStream(outFileName.c_str(), std::ios::out | std::ios::binary);
@@ -255,7 +244,7 @@ void Control::write2DCharArray(std::string outFileName, ct_uint8_t** &inArr,
 	{
 		for (size_t j = 0; j < numCol; j++)
 		{
-			outStream.write(inArr[i][j], sizeof(ct_uint8_t));
+			outStream.write((char*) &inArr[i][j], sizeof(ct_uint8_t));
 		}
 	}
 
