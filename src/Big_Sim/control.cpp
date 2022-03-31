@@ -65,7 +65,7 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 		float gGRGO_sum = 0;
 		float gMFGO_sum = 0;
 
-		if (trial <= numTuningTrials) ?
+		trial <= numTuningTrials ?
 			std::cout << "Pre-tuning trial number: " << trial << std::endl :
 			std::cout << "Post-tuning trial number: " << trial << std::endl;
 		
@@ -180,7 +180,7 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	delete2DArray<ct_uint8_t>(allSCRaster);
 }
 
-void Control::countGOSpikes(int goSpkCounter, float &medTrials)
+void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
 {
 	std::sort(goSpkCounter, goSpkCounter + 4096);
 	
