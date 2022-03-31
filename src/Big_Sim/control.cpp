@@ -217,29 +217,29 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 
 	std::string allGOPSTHFileName = "allGOPSTH_noGOGO_grgoConv" + std::to_string(conv[goRecipParam]) +
 			"_" + std::to_string(simNum) + ".bin";
-	write2DArray(allGOPSTHFileName, allGOPSTH, numGO, (csSize + msPreCS + msPostCS));
+	write2DCharArray(allGOPSTHFileName, allGOPSTH, numGO, (csSize + msPreCS + msPostCS));
 	delete2DArray<ct_uint8_t>(allGOPSTH);
 
 	
-	std::cout << "Filling BC files" << std::endl;
-	
-	std::string allBCRasterFileName = "allBCRaster_paramSet" + std::to_string(inputStrength) +
-		"_" + std::to_string(simNum) + ".bin";
-	write2DArray(allBCRasterFileName, allBCRaster, numBC,
-			(numTotalTrials - preTrialNumber) * (csSize + msPreCS + msPostCS));
+	//std::cout << "Filling BC files" << std::endl;
+	//
+	//std::string allBCRasterFileName = "allBCRaster_paramSet" + std::to_string(inputStrength) +
+	//	"_" + std::to_string(simNum) + ".bin";
+	//write2DCharArray(allBCRasterFileName, allBCRaster, numBC,
+	//		(numTotalTrials - preTrialNumber) * (csSize + msPreCS + msPostCS));
 	delete2DArray<ct_uint8_t>(allBCRaster);
 
 
-	std::cout << "Filling SC files" << std::endl;
+	//std::cout << "Filling SC files" << std::endl;
 
-	std::string allSCRasterFileName = "allSCRaster_paramSet" + std::to_string(inputStrength) +
-		"_" + std::to_string(sinNum) + ".bin";
-	write2DArray(allSCRasterFileName, allSCRaster, numSC,
-			(numTotalTrials - preTrialNumber) * (csSize + msPreCS + msPostCS));
+	//std::string allSCRasterFileName = "allSCRaster_paramSet" + std::to_string(inputStrength) +
+	//	"_" + std::to_string(simNum) + ".bin";
+	//write2DCharArray(allSCRasterFileName, allSCRaster, numSC,
+	//		(numTotalTrials - preTrialNumber) * (csSize + msPreCS + msPostCS));
 	delete2DArray<ct_uint8_t>(allSCRaster);
 }
 
-void Control::write2DCharArray(std::string outFileName, ct_uint8_t** &inArr,
+void Control::write2DCharArray(std::string outFileName, ct_uint8_t** inArr,
 		unsigned int numRow, unsigned int numCol)
 {
 	std::ofstream outStream(outFileName.c_str(), std::ios::out | std::ios::binary);
@@ -255,7 +255,7 @@ void Control::write2DCharArray(std::string outFileName, ct_uint8_t** &inArr,
 	{
 		for (size_t j = 0; j < numCol; j++)
 		{
-			outStream.write(inArr[i][j], sizeof(ct_uint8_t));
+			outStream.write((char*) &inArr[i][j], sizeof(ct_uint8_t));
 		}
 	}
 

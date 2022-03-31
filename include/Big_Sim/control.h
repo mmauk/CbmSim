@@ -157,8 +157,8 @@ class Control
 		void train(int selectState, int filename, int ISIs, int numTrials, int numCon,
 				int tunedConNumber);
 
-		void Control::write2DCharArray(std::string outFileName, ct_uint8_t** &inArr,
-				unsigned int numRow, unsigned int numCol)
+		void write2DCharArray(std::string outFileName, ct_uint8_t** inArr,
+				unsigned int numRow, unsigned int numCol);
 
 		int* getGRIndicies(float CStonicMFfrac);
 		int getNumGRIndicies(float CStonicMFfrac);
