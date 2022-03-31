@@ -140,26 +140,27 @@ class Control
 		ct_uint8_t *goSpkCount_Trial;
 
 		const ct_uint8_t* goSpks; 
+
 		void runTuningSimulation(int tuningTrials, int numTrials, int simNum, int csSize,
-				float csFracMFs, float goMin);
+			float csFracMFs, float goMin);
 		void runSimulation(int tuningTrials, int numTrials, int simNum, int csSize, float csFracMFs,
-				float goMin);
+			float goMin);
 		void runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuningTrials,
-				int numGrDetectionTrials, int numTrainingTrials, int simNum, int csSize, float csFracMFs,
-				float goMin, float GOGR, float GRGO, float MFGO, float csMinRate, float csMaxRate,
-				float gogoW, int inputStrength, int inputWeight_two, float spillFrac);
+			int numGrDetectionTrials, int numTrainingTrials, int simNum, int csSize, float csFracMFs,
+			float goMin, float GOGR, float GRGO, float MFGO, float csMinRate, float csMaxRate,
+			float gogoW, int inputStrength, float spillFrac);
 
 		float **activeGRgISum;
 		void train(int selectState, int filename, int ISIs, int numTrials, int numCon,
-				int tunedConNumber);
+			int tunedConNumber);
 
-		void runTrials(SetSim &simulation, int trialTime, int preTrialNumber,
-			   int numTotalTrials, int collectionTrials);
-
+		void runTrials(SetSim &simulation, int numTuningTrials, int numGrDetectionTrials,
+			int numTrainingTrials, int simNum, int csSize, float goMin, float GOGR, float GRGO,
+			float MFGO, float csMinRate, float csMaxRate, float gogoW, float spillFrac);
 		void countGOSpikes(int *goSpkCounter, float &medTrials);
 		void fillRasterArrays(SetSim &simulation, int rasterCounter);
 		void write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
-				unsigned int numRow, unsigned int numCol);
+			unsigned int numRow, unsigned int numCol);
 
 		int* getGRIndicies(SetSim &simulation, float CStonicMFfrac);
 		int  getNumGRIndicies(SetSim &simulation, float CStonicMFfrac);

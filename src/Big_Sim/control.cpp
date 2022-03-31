@@ -9,7 +9,7 @@ Control::~Control(){};
 void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuningTrials,
 		int numGrDetectionTrials, int numTrainingTrials, int simNum, int csSize, float csFracMFs,
 		float goMin, float GOGR, float GRGO, float MFGO, float csMinRate, float csMaxRate,
-		float gogoW, int inputStrength, int inputWeight_two, float spillFrac)
+		float gogoW, int inputStrength, float spillFrac)
 {
 	// set all relevant variables to the sim	
 	SetSim simulation(fileNum, goRecipParam, simNum);
@@ -44,7 +44,8 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	std::fill(allGOPSTH[0], allGOPSTH[0] + numGO * (csSize + msPreCS + msPostCS), 0);
 
 	// run all trials of sim
-	runTrials(simulation, trialTime, preTrialNumber, numTotalTrials, collectionTrials);
+	runTrials(SetSim &simulation, numTuningTrials, numGrDetectionTrials, numTrainingTrials,
+		simNum, csSize, goMin, GOGR, GRGO, MFGO, csMinRate, csMaxRate, gogoW, spillFrac)
 	
 	// Save Data 
 	// TODO: once get matrix class, rewrite
@@ -69,8 +70,9 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	delete2DArray<ct_uint8_t>(allSCRaster);
 }
 
-void Control::runTrials(SetSim &simulation, int trialTime, int preTrialNumber,
-	   int numTotalTrials, int collectionTrials)
+void Control::runTrials(SetSim &simulation, int numTuningTrials, int numGrDetectionTrials,
+		int numTrainingTrials, int simNum, int csSize, float goMin, float GOGR, float GRGO,
+		float MFGO, float csMinRate, float csMaxRate, float gogoW, float spillFrac)
 {
 	float medTrials;
 	clock_t timer;
