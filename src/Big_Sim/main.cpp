@@ -70,7 +70,7 @@ int main()
 					joeSimulation.runSimulationWithGRdata(fileNum, goRecipParamNum, homeoTuningTrials,
 							granuleActivityDetectionTrials, numTrainingTrials, simNum, CSlength[fileNum],
 							csTonicF, goMin, GOGR, GRGO, MFGO, csRateMin, csRateMax, gogoW, inputWeightNum,
-							fileNum, spillFrac);
+							spillFrac);
 				}
 			}
 		}
