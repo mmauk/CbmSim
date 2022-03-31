@@ -31,13 +31,10 @@ class Control
 		~Control();
 
 		// Objects
-		CBMState *joestate;
-		CBMSimCore *joesim;
-		ECMFPopulation *joeMFFreq;
-		PoissonRegenCells *joeMFs;
+		SetSim simulation;	
+		
 		EyelidIntegrator* joeeyelidInt;
 		ECTrialsData* joeData;
-
 
 		float *mfBackRate;
 		ct_uint8_t **mfRaster_chunk;
