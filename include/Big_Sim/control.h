@@ -156,15 +156,15 @@ class Control
 				int tunedConNumber);
 
 		void runTrials(SetSim &simulation, int trialTime, int preTrialNumber,
-			   int numTotalTrials, int collectionTrials)
+			   int numTotalTrials, int collectionTrials);
 
 		void countGOSpikes(int *goSpkCounter, float &medTrials);
-		void fillRasterArrays(SetSim &simulation, int rasterCounter)
+		void fillRasterArrays(SetSim &simulation, int rasterCounter);
 		void write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
 				unsigned int numRow, unsigned int numCol);
 
-		int* getGRIndicies(SetSim &simulation, float CStonicMFfrac) 
-		int  getNumGRIndicies(SetSim &simulation, float CStonicMFfrac) 
+		int* getGRIndicies(SetSim &simulation, float CStonicMFfrac);
+		int  getNumGRIndicies(SetSim &simulation, float CStonicMFfrac);
 };
 
 #endif /*_CONTROL_H*/
