@@ -12,7 +12,7 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 		float gogoW, int inputStrength, int inputWeight_two, float spillFrac)
 {
 	// set all relevant variables to the sim	
-	simulation = SetSim(fileNum, goRecipParam, simNum);
+	SetSim simulation(fileNum, goRecipParam, simNum);
 
 	int trialTime        = 5000; // in milliseconds, i think
 	int preTrialNumber   = numTuningTrials + numGrDetectionTrials;

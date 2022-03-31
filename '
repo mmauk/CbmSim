@@ -31,6 +31,8 @@ class Control
 		~Control();
 
 		// Objects
+		SetSim* simulation;
+		
 		EyelidIntegrator* joeeyelidInt;
 		ECTrialsData* joeData;
 
