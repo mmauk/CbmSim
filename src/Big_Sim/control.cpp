@@ -156,8 +156,8 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 					
 					if (trial >= preTrialNumber && tts >= csStart-msPreCS && tts < csStart + csSize + msPostCS)
 					{
-						fillRasterArrays(numPC, numNC, numBC, numSC,
-								allPCRaster, allNCRaster, allBCRaster, allSCRaster);	
+						fillRasterArrays(this->numPC, this->numNC, this->numBC, this->numSC,
+								this->allPCRaster, this->allNCRaster, this->allBCRaster, this->allSCRaster);	
 
 						PSTHCounter++;
 						rasterCounter++;
