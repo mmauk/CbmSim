@@ -32,7 +32,7 @@ class Control
 
 		// Objects
 		SetSim simulation;
-
+		
 		EyelidIntegrator* joeeyelidInt;
 		ECTrialsData* joeData;
 
@@ -157,6 +157,7 @@ class Control
 
 		void runTrials(SetSim &simulation, int trialTime, int preTrialNumber,
 			   int numTotalTrials, int collectionTrials)
+
 		void countGOSpikes(int *goSpkCounter, float &medTrials);
 		void fillRasterArrays(SetSim &simulation, int rasterCounter)
 		void write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
@@ -167,3 +168,4 @@ class Control
 };
 
 #endif /*_CONTROL_H*/
+
