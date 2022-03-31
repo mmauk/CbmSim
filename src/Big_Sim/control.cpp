@@ -162,7 +162,7 @@ void Control::runTrials(SetSim &simulation, int trialTime, int numTuningTrials, 
 
 			if (trial >= preTrialNumber && tts >= csStart-msPreCS && tts < csStart + csSize + msPostCS)
 			{
-				fillRasterArrays(rasterCounter);
+				fillRasterArrays(simulation, rasterCounter);
 
 				PSTHCounter++;
 				rasterCounter++;
