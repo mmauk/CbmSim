@@ -44,8 +44,8 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	std::fill(allGOPSTH[0], allGOPSTH[0] + numGO * (csSize + msPreCS + msPostCS), 0);
 
 	// run all trials of sim
-	runTrials(SetSim simulation, trialTime, numTuningTrials, numGrDetectionTrials, numTrainingTrials,
-		simNum, csSize, goMin, GOGR, GRGO, MFGO, csMinRate, csMaxRate, gogoW, spillFrac)
+	runTrials(simulation, trialTime, numTuningTrials, numGrDetectionTrials, numTrainingTrials,
+		simNum, csSize, goMin, GOGR, GRGO, MFGO, csMinRate, csMaxRate, gogoW, spillFrac);
 	
 	// Save Data 
 	// TODO: once get matrix class, rewrite
