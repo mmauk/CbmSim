@@ -31,13 +31,10 @@ class Control
 		~Control();
 
 		// Objects
-		CBMState *joestate;
-		CBMSimCore *joesim;
-		ECMFPopulation *joeMFFreq;
-		PoissonRegenCells *joeMFs;
+		SetSim simulation;
+
 		EyelidIntegrator* joeeyelidInt;
 		ECTrialsData* joeData;
-
 
 		float *mfBackRate;
 		ct_uint8_t **mfRaster_chunk;
@@ -107,7 +104,6 @@ class Control
 		ct_uint8_t **allGRPSTH;
 		ct_uint8_t **activeGRPSTH;
 
-
 		ct_uint8_t **allPCRaster;
 		ct_uint8_t **allPCRaster1;
 		ct_uint8_t **allPCRaster2;
@@ -159,14 +155,15 @@ class Control
 		void train(int selectState, int filename, int ISIs, int numTrials, int numCon,
 				int tunedConNumber);
 
+		void runTrials(SetSim &simulation, int trialTime, int preTrialNumber,
+			   int numTotalTrials, int collectionTrials)
 		void countGOSpikes(int *goSpkCounter, float &medTrials);
-		void fillRasterArrays(int rasterCounter);
+		void fillRasterArrays(SetSim &simulation, int rasterCounter)
 		void write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
 				unsigned int numRow, unsigned int numCol);
 
-		int* getGRIndicies(float CStonicMFfrac);
-		int getNumGRIndicies(float CStonicMFfrac);
-
+		int* getGRIndicies(SetSim &simulation, float CStonicMFfrac) 
+		int  getNumGRIndicies(SetSim &simulation, float CStonicMFfrac) 
 };
 
 #endif /*_CONTROL_H*/
