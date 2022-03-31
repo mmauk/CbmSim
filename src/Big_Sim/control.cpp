@@ -126,9 +126,6 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 					{
 						countGOSpikes(goSpkCounter, medTrials);	
 
-						medTrials += m / 2.0;
-
-						std::cout << "Median GO Rate: " << m / 2.0 << std::endl;
 						std::cout << "mean gGRGO   = " << gGRGO_sum / (numGO * csSize) << std::endl;
 						std::cout << "mean gMFGO   = " << gMFGO_sum / (numGO * csSize) << std::endl;
 						std::cout << "GR:MF ratio  = " << gGRGO_sum / gMFGO_sum << std::endl;
@@ -197,6 +194,8 @@ void Control::countGOSpikes(int goSpkCounter, float &medTrials)
 	}
 	
 	std::cout << "Mean GO Rate: " << goSpkSum / (float)numGO << std::endl;
+	medTrials += m / 2.0;
+	std::cout << "Median GO Rate: " << m / 2.0 << std::endl;
 }
 
 void Control::fillRasterArrays(int rasterCounter)
