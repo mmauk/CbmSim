@@ -19,11 +19,11 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	joeMFFreq = simulation.getMFFreq(csMinRate, csMaxRate);
 	joeMFs = simulation.getMFs();	
 
+	std::cout << "Done filling MF arrays" << std::endl;	
+
 	int numTotalTrials = numTuningTrials + numGrDetectionTrials + numTrainingTrials;  
 	int preTrialNumber = numTuningTrials + numGrDetectionTrials;
 	int collectionTrials = numTotalTrials;
-	
-	std::cout << "Done filling MF arrays" << std::endl;	
 
 	int conv[8] = {5000, 4000, 3000, 2000, 1000, 500, 250, 125};
 
@@ -61,22 +61,15 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	{
 		timer = clock();
 
+		int PSTHCounter = 0;	
 		float gGRGO_sum = 0;
 		float gMFGO_sum = 0;
 
-		if (trial <= numTuningTrials)
-	   	{
-			std::cout << "Pre-tuning trial number: " << trial << std::endl;
-		}
-		else 
-		{
+		if (trial <= numTuningTrials) ?
+			std::cout << "Pre-tuning trial number: " << trial << std::endl :
 			std::cout << "Post-tuning trial number: " << trial << std::endl;
-		}
 		
-		int PSTHCounter = 0;	
-
 		// Homeostatic plasticity trials
-
 		if (trial >= numTuningTrials)
 		{
 			// Run active granule cell detection 	
@@ -128,23 +121,10 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 								gMFGO_sum += mfgoG[i];
 						}
 					}
-					
 					// why is this case separate from the above	
 					if (tts == csStart + csSize)
 					{
-						//countGOSpikes(goSpkCounter, &metTrials);	
-						std::sort(goSpkCounter, goSpkCounter + 4096);
-						
-						int m = (goSpkCounter[2047] + goSpkCounter[2048]) / 2;
-						float goSpkSum = 0;
-					
-						//TODO: change for loop into std::transform
-						for (int i = 0; i < numGO; i++)
-						{
-								goSpkSum += goSpkCounter[i];
-						}
-						
-						std::cout << "Mean GO Rate: " << goSpkSum / (float)numGO << std::endl;
+						countGOSpikes(goSpkCounter, medTrials);	
 
 						medTrials += m / 2.0;
 
@@ -201,6 +181,22 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	write2DCharArray(allSCRasterFileName, allSCRaster, numSC,
 			(numTotalTrials - preTrialNumber) * (csSize + msPreCS + msPostCS));
 	delete2DArray<ct_uint8_t>(allSCRaster);
+}
+
+void Control::countGOSpikes(int goSpkCounter, float &medTrials)
+{
+	std::sort(goSpkCounter, goSpkCounter + 4096);
+	
+	int m = (goSpkCounter[2047] + goSpkCounter[2048]) / 2;
+	float goSpkSum = 0;
+
+	//TODO: change for loop into std::transform
+	for (int i = 0; i < numGO; i++)
+	{
+			goSpkSum += goSpkCounter[i];
+	}
+	
+	std::cout << "Mean GO Rate: " << goSpkSum / (float)numGO << std::endl;
 }
 
 void Control::fillRasterArrays(int rasterCounter)
