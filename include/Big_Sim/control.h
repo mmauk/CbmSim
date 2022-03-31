@@ -159,8 +159,8 @@ class Control
 		void train(int selectState, int filename, int ISIs, int numTrials, int numCon,
 				int tunedConNumber);
 
+		void countGOSpikes(int goSpkCounter, float &medTrials);
 		void fillRasterArrays(int rasterCounter);
-
 		void write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
 				unsigned int numRow, unsigned int numCol);
 
