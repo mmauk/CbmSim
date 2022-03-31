@@ -205,8 +205,8 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 }
 
 void Control::fillRasterArrays(int numPC, int numNC, int numBC, int numSC, int rasterCounter,
-		ct_uint8_t** allPCRaster, ct_uint8_t** allNCRaster, ct_uint8_t** allBCRaster,
-		ct_uint8_t** allSCRaster)
+		ct_uint8_t **allPCRaster, ct_uint8_t **allNCRaster, ct_uint8_t **allBCRaster,
+		ct_uint8_t **allSCRaster)
 {
 	const ct_uint8_t* pcSpks = joesim->getMZoneList()[0]->exportAPPC();
 	const ct_uint8_t* ncSpks = joesim->getMZoneList()[0]->exportAPNC();
@@ -240,7 +240,7 @@ void Control::fillRasterArrays(int numPC, int numNC, int numBC, int numSC, int r
 
 
 // TODO: 1) find better place to put this 2) generalize
-void Control::write2DCharArray(std::string outFileName, ct_uint8_t** inArr,
+void Control::write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
 		unsigned int numRow, unsigned int numCol)
 {
 	std::ofstream outStream(outFileName.c_str(), std::ios::out | std::ios::binary);
