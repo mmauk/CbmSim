@@ -156,8 +156,8 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 					
 					if (trial >= preTrialNumber && tts >= csStart-msPreCS && tts < csStart + csSize + msPostCS)
 					{
-						fillRasterArrays(this->numPC, this->numNC, this->numBC, this->numSC,
-								this->allPCRaster, this->allNCRaster, this->allBCRaster, this->allSCRaster);	
+						fillRasterArrays(numPC, numNC, numBC, numSC,
+								allPCRaster, allNCRaster, allBCRaster, allSCRaster);	
 
 						PSTHCounter++;
 						rasterCounter++;
@@ -204,9 +204,7 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	delete2DArray<ct_uint8_t>(allSCRaster);
 }
 
-void Control::fillRasterArrays(int numPC, int numNC, int numBC, int numSC, int rasterCounter,
-		ct_uint8_t **allPCRaster, ct_uint8_t **allNCRaster, ct_uint8_t **allBCRaster,
-		ct_uint8_t **allSCRaster)
+void Control::fillRasterArrays(int rasterCounter)
 {
 	const ct_uint8_t* pcSpks = joesim->getMZoneList()[0]->exportAPPC();
 	const ct_uint8_t* ncSpks = joesim->getMZoneList()[0]->exportAPNC();
