@@ -162,8 +162,8 @@ class Control
 		void write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
 			unsigned int numRow, unsigned int numCol);
 
-		int* getGRIndicies(SetSim &simulation, float CStonicMFfrac);
-		int  getNumGRIndicies(SetSim &simulation, float CStonicMFfrac);
+		int* getGRIndicies(SetSim &simulation, float csMinRate, float csMaxRate, float CStonicMFfrac) 
+		int  getNumGRIndicies(SetSim &simulation, float csMinRate, float csMaxRate, float CStonicMFfrac) 
 };
 
 #endif /*_CONTROL_H*/

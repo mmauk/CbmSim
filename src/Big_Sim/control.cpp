@@ -248,7 +248,7 @@ void Control::write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
 	outStream.close();
 }
 
-int* Control::getGRIndicies(SetSim &simulation, float CStonicMFfrac) 
+int* Control::getGRIndicies(SetSim &simulation, float csMinRate, float csMaxRate, float CStonicMFfrac) 
 {
 
 	int numMF = 4096;
@@ -324,7 +324,7 @@ int* Control::getGRIndicies(SetSim &simulation, float CStonicMFfrac)
 }
 
 // NOTE: this function is basically the same as the above.
-int Control::getNumGRIndicies(SetSim &simulation, float CStonicMFfrac) 
+int Control::getNumGRIndicies(SetSim &simulation, float csMinRate, float csMaxRate, float CStonicMFfrac) 
 {
 	int numMF = 4096;
 	int numGR = 1048576;
