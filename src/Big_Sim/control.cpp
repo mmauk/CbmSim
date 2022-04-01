@@ -91,64 +91,61 @@ void Control::runTrials(SetSim &simulation, int numTuningTrials, int numGrDetect
 		// Run active granule cell detection 	
 		for (tts = 0; tts < trialTime; tts++)
 		{			
-			if (trial == preTrialNumber)
-			{	
-				// TODO: get the model for these periods, update accordingly
-				if (tts == csStart + csSize)
-				{
-					// Deliver US 
-					simulation.getsim()->updateErrDrive(0, 0.0);
-				}
-				
-				if (tts < csStart || tts >= csStart + csSize)
-				{
-					// Background MF activity in the Pre and Post CS period
-					mfAP = simulation.getMFs()->calcPoissActivity(simulation.getMFFreq(csMinRate, csMaxRate)->getMFBG(),
-							simulation.getsim()->getMZoneList());	
-				}
-				else if (tts >= csStart && tts < csStart + csPhasicSize) 
-				{
-					// Phasic MF activity during the CS for a duration set in control.h 
-					mfAP = simulation.getMFs()->calcPoissActivity(simulation.getMFFreq(csMinRate, csMaxRate)->getMFFreqInCSPhasic(),
-							simulation.getsim()->getMZoneList());
-				}
-				else
-				{
-					// Tonic MF activity during the CS period
-					// this never gets reached...
-					mfAP = simulation.getMFs()->calcPoissActivity(simulation.getMFFreq(csMinRate, csMaxRate)->getMFInCSTonicA(),
-							simulation.getsim()->getMZoneList());
-				}
+			// TODO: get the model for these periods, update accordingly
+			if (tts == csStart + csSize)
+			{
+				// Deliver US 
+				simulation.getsim()->updateErrDrive(0, 0.0);
+			}
+			
+			if (tts < csStart || tts >= csStart + csSize)
+			{
+				// Background MF activity in the Pre and Post CS period
+				mfAP = simulation.getMFs()->calcPoissActivity(simulation.getMFFreq(csMinRate, csMaxRate)->getMFBG(),
+						simulation.getsim()->getMZoneList());	
+			}
+			else if (tts >= csStart && tts < csStart + csPhasicSize) 
+			{
+				// Phasic MF activity during the CS for a duration set in control.h 
+				mfAP = simulation.getMFs()->calcPoissActivity(simulation.getMFFreq(csMinRate, csMaxRate)->getMFFreqInCSPhasic(),
+						simulation.getsim()->getMZoneList());
+			}
+			else
+			{
+				// Tonic MF activity during the CS period
+				// this never gets reached...
+				mfAP = simulation.getMFs()->calcPoissActivity(simulation.getMFFreq(csMinRate, csMaxRate)->getMFInCSTonicA(),
+						simulation.getsim()->getMZoneList());
+			}
 
-				bool *isTrueMF = simulation.getMFs()->calcTrueMFs(simulation.getMFFreq(csMinRate, csMaxRate)->getMFBG());
-				simulation.getsim()->updateTrueMFs(isTrueMF);
-				simulation.getsim()->updateMFInput(mfAP);
-				simulation.getsim()->calcActivity(goMin, simNum, GOGR, GRGO, MFGO, gogoW, spillFrac);	
-				
-				if (tts >= csStart && tts < csStart + csSize)
-				{
+			bool *isTrueMF = simulation.getMFs()->calcTrueMFs(simulation.getMFFreq(csMinRate, csMaxRate)->getMFBG());
+			simulation.getsim()->updateTrueMFs(isTrueMF);
+			simulation.getsim()->updateMFInput(mfAP);
+			simulation.getsim()->calcActivity(goMin, simNum, GOGR, GRGO, MFGO, gogoW, spillFrac);	
+			
+			if (tts >= csStart && tts < csStart + csSize)
+			{
 
-					mfgoG  = simulation.getsim()->getInputNet()->exportgSum_MFGO();
-					grgoG  = simulation.getsim()->getInputNet()->exportgSum_GRGO();
-					goSpks = simulation.getsim()->getInputNet()->exportAPGO();
-					
-					//TODO: change for loop into std::transform
-					for (int i = 0; i < numGO; i++)
-					{
-							goSpkCounter[i] += goSpks[i];
-							gGRGO_sum 		+= grgoG[i];
-							gMFGO_sum 		+= mfgoG[i];
-					}
-				}
-				// why is this case separate from the above	
-				if (tts == csStart + csSize)
+				mfgoG  = simulation.getsim()->getInputNet()->exportgSum_MFGO();
+				grgoG  = simulation.getsim()->getInputNet()->exportgSum_GRGO();
+				goSpks = simulation.getsim()->getInputNet()->exportAPGO();
+				
+				//TODO: change for loop into std::transform
+				for (int i = 0; i < numGO; i++)
 				{
-					// FIXME: mean and median go rate are muuch too large
-					countGOSpikes(goSpkCounter, medTrials);	
-					std::cout << "mean gGRGO   = " << gGRGO_sum / (numGO * csSize) << std::endl;
-					std::cout << "mean gMFGO   = " << gMFGO_sum / (numGO * csSize) << std::endl;
-					std::cout << "GR:MF ratio  = " << gGRGO_sum / gMFGO_sum << std::endl;
+						goSpkCounter[i] += goSpks[i];
+						gGRGO_sum 		+= grgoG[i];
+						gMFGO_sum 		+= mfgoG[i];
 				}
+			}
+			// why is this case separate from the above	
+			if (tts == csStart + csSize)
+			{
+				// FIXME: mean and median go rate are muuch too large
+				countGOSpikes(goSpkCounter, medTrials);	
+				std::cout << "mean gGRGO   = " << gGRGO_sum / (numGO * csSize) << std::endl;
+				std::cout << "mean gMFGO   = " << gMFGO_sum / (numGO * csSize) << std::endl;
+				std::cout << "GR:MF ratio  = " << gGRGO_sum / gMFGO_sum << std::endl;
 			}
 
 			if (trial >= preTrialNumber && tts >= csStart-msPreCS && tts < csStart + csSize + msPostCS)
