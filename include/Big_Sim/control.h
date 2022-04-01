@@ -130,7 +130,7 @@ class Control
 			float gogoW, int inputStrength, float spillFrac);
 
 		void initializeOutputArrays(int numPC, int numNC, int numSC, int numBC, int numGO,
-			int csSize, int numTuningTrials, int numGrDetectionTrials, int numTrainingTrials);
+			int csSize, int numTrainingTrials)
 		void train(int selectState, int filename, int ISIs, int numTrials, int numCon,
 			int tunedConNumber);
 		void runTrials(SetSim &simulation, int numTuningTrials, int numGrDetectionTrials,

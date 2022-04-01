@@ -15,8 +15,7 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	SetSim simulation(fileNum, goRecipParam, simNum);
 	
 	// allocate and fill all of the output arrays	
-	initializeOutputArrays(numPC, numNC, numSC, numBC, numGO, csSize, numTuningTrials,
-			numGrDetectionTrials, numTrainingTrials);
+	initializeOutputArrays(numPC, numNC, numSC, numBC, numGO, csSize, numTrainingTrials);
 
 	// run all trials of sim
 	runTrials(simulation, numTuningTrials, numGrDetectionTrials, numTrainingTrials,
@@ -31,11 +30,10 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 }
 
 void Control::initializeOutputArrays(int numPC, int numNC, int numSC, int numBC, int numGO,
-	int csSize, int numTuningTrials, int numGrDetectionTrials, int numTrainingTrials)
+	int csSize, int numTrainingTrials)
 {
 	int allGOPSTHColSize = csSize + msPreCS + msPostCS;
-	int rasterColumnSize = allGOPSTHColSize *
-		(numTuningTrials + numGrDetectionTrials + numTrainingTrials);	
+	int rasterColumnSize = allGOPSTHColSize * numTrainingTrials;	
 
 	// Allocate and Initialize PSTH and Raster arrays
 	allPCRaster = allocate2DArray<ct_uint8_t>(numPC, rasterColumnSize);	
