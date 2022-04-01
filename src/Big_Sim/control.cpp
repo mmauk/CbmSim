@@ -13,70 +13,61 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 {
 	// set all relevant variables to the sim	
 	SetSim simulation(fileNum, goRecipParam, simNum);
-	// TODO: find better way to organize these instead of duplicate code
+	
 	int trialTime        = 5000; // in milliseconds, i think
-	int preTrialNumber   = numTuningTrials + numGrDetectionTrials;
-	int numTotalTrials   = preTrialNumber + numTrainingTrials;  
-	int collectionTrials = numTotalTrials;
+	int collectionTrials = numTuningTrials + numGrDetectionTrials + numTrainingTrials;
 
-	// array of possible convergences to test. 
-	// TODO: put these into an input file instead of here :weird_champ:
-	int conv[8] = {5000, 4000, 3000, 2000, 1000, 500, 250, 125};
-
-	// Allocate and Initialize PSTH and Raster arrays
-	allPCRaster = allocate2DArray<ct_uint8_t>(numPC, (csSize+msPreCS+msPostCS)*(collectionTrials));	
-	std::fill(allPCRaster[0], allPCRaster[0] +
-			numPC * (csSize + msPreCS + msPostCS) * (collectionTrials), 0);
-	
-	allNCRaster = allocate2DArray<ct_uint8_t>(numNC, (csSize+msPreCS+msPostCS)*(collectionTrials));	
-	std::fill(allNCRaster[0], allNCRaster[0] +
-			numNC * (csSize + msPreCS + msPostCS) * (collectionTrials), 0);
-
-	allSCRaster = allocate2DArray<ct_uint8_t>(numSC, (csSize+msPreCS+msPostCS)*(collectionTrials));	
-	std::fill(allSCRaster[0], allSCRaster[0] +
-			numSC * (csSize + msPreCS + msPostCS) * (collectionTrials), 0);
-
-	allBCRaster = allocate2DArray<ct_uint8_t>(numBC, (csSize+msPreCS+msPostCS)*(collectionTrials));	
-	std::fill(allBCRaster[0], allBCRaster[0] +
-			numBC * (csSize + msPreCS + msPostCS) * (collectionTrials), 0);
-	
-	allGOPSTH = allocate2DArray<ct_uint8_t>(numGO, (csSize+msPreCS+msPostCS));	
-	std::fill(allGOPSTH[0], allGOPSTH[0] + numGO * (csSize + msPreCS + msPostCS), 0);
+	// allocate and fill all of the output arrays	
+	initializeOutputArrays(numPC, numNC, numSC, numBC, numGO, csSize, collectionTrials);
 
 	// run all trials of sim
 	runTrials(simulation, trialTime, numTuningTrials, numGrDetectionTrials, numTrainingTrials,
 		simNum, csSize, goMin, GOGR, GRGO, MFGO, csMinRate, csMaxRate, gogoW, spillFrac);
-	
+
 	// Save Data 
-	// TODO: once get matrix class, rewrite
-	std::string allGOPSTHFileName = "allGOPSTH_noGOGO_grgoConv" + std::to_string(conv[goRecipParam]) +
-		"_" + std::to_string(simNum) + ".bin";	
-	write2DCharArray(allGOPSTHFileName, allGOPSTH, numGO, (csSize + msPreCS + msPostCS));
+	saveOutputArraysToFile(numGO, numBC, numSC, numTrainingTrials, csSize, goRecipParam,
+		simNum, inputStrength);
+
+	// deallocate output arrays
 	delete2DArray<ct_uint8_t>(allGOPSTH);
-
-	std::cout << "Filling BC files" << std::endl;
-	
-	std::string allBCRasterFileName = "allBCRaster_paramSet" + std::to_string(inputStrength) +
-		"_" + std::to_string(simNum) + ".bin";
-	write2DCharArray(allBCRasterFileName, allBCRaster, numBC,
-			(numTotalTrials - preTrialNumber) * (csSize + msPreCS + msPostCS));
-	
-	std::cout << "Filling SC files" << std::endl;
-
-	std::string allSCRasterFileName = "allSCRaster_paramSet" + std::to_string(inputStrength) +
-		"_" + std::to_string(simNum) + ".bin";
-	write2DCharArray(allSCRasterFileName, allSCRaster, numSC,
-			(numTotalTrials - preTrialNumber) * (csSize + msPreCS + msPostCS));
+	delete2DArray<ct_uint8_t>(allBCRaster);
 	delete2DArray<ct_uint8_t>(allSCRaster);
 }
 
+void Control::initializeOutputArrays(int numPC, int numNC, int numSC, int numBC, int numGO,
+	int csSize, int collectionTrials)
+{
+	int allGOPSTHColSize = csSize + msPreCS + msPostCS;
+	int rasterColumnSize = allGOPSTHColSize * collectionTrials;	
+
+	// Allocate and Initialize PSTH and Raster arrays
+	allPCRaster = allocate2DArray<ct_uint8_t>(numPC, rasterColumnSize);	
+	std::fill(allPCRaster[0], allPCRaster[0] +
+			numPC * rasterColumnSize, 0);
+	
+	allNCRaster = allocate2DArray<ct_uint8_t>(numNC, rasterColumnSize);	
+	std::fill(allNCRaster[0], allNCRaster[0] +
+			numNC * rasterColumnSize, 0);
+
+	allSCRaster = allocate2DArray<ct_uint8_t>(numSC, rasterColumnSize);	
+	std::fill(allSCRaster[0], allSCRaster[0] +
+			numSC * rasterColumnSize, 0);
+
+	allBCRaster = allocate2DArray<ct_uint8_t>(numBC, rasterColumnSize);	
+	std::fill(allBCRaster[0], allBCRaster[0] +
+			numBC * rasterColumnSize, 0);
+	
+	allGOPSTH = allocate2DArray<ct_uint8_t>(numGO, allGOPSTHColSize);	
+	std::fill(allGOPSTH[0], allGOPSTH[0] + numGO * allGOPSTHColSize, 0);
+}
+
+
 void Control::runTrials(SetSim &simulation, int trialTime, int numTuningTrials, int numGrDetectionTrials,
-		int numTrainingTrials, int simNum, int csSize, float goMin, float GOGR, float GRGO,
-		float MFGO, float csMinRate, float csMaxRate, float gogoW, float spillFrac)
+	int numTrainingTrials, int simNum, int csSize, float goMin, float GOGR, float GRGO,
+	float MFGO, float csMinRate, float csMaxRate, float gogoW, float spillFrac)
 {
 	int preTrialNumber   = numTuningTrials + numGrDetectionTrials;
 	int numTotalTrials   = preTrialNumber + numTrainingTrials;  
-	int collectionTrials = numTotalTrials;
 
 	float medTrials;
 	clock_t timer;
@@ -178,6 +169,36 @@ void Control::runTrials(SetSim &simulation, int trialTime, int numTuningTrials, 
 	delete[] goSpkCounter;
 }
 
+void Control::saveOutputArraysToFile(int numGO, int numBC, int numSC, int numTrainingTrials, int csSize,
+	int goRecipParam, int simNum, int inputStrength)
+{
+	int allGOPOSTHColSize = csSize + msPreCS + msPostCS; 
+	
+	// array of possible convergences to test. 
+	// TODO: put these into an input file instead of here :weird_champ:
+	int conv[8] = {5000, 4000, 3000, 2000, 1000, 500, 250, 125};
+	
+	// TODO: once get matrix class, rewrite
+	std::string allGOPSTHFileName = "allGOPSTH_noGOGO_grgoConv" + std::to_string(conv[goRecipParam]) +
+		"_" + std::to_string(simNum) + ".bin";	
+	write2DCharArray(allGOPSTHFileName, allGOPSTH, numGO, allGOPOSTHColSize);
+
+	std::cout << "Filling BC files" << std::endl;
+	
+	std::string allBCRasterFileName = "allBCRaster_paramSet" + std::to_string(inputStrength) +
+		"_" + std::to_string(simNum) + ".bin";
+	write2DCharArray(allBCRasterFileName, allBCRaster, numBC,
+			numTrainingTrials * allGOPOSTHColSize);
+	
+	std::cout << "Filling SC files" << std::endl;
+
+	std::string allSCRasterFileName = "allSCRaster_paramSet" + std::to_string(inputStrength) +
+		"_" + std::to_string(simNum) + ".bin";
+	write2DCharArray(allSCRasterFileName, allSCRaster, numSC,
+			numTrainingTrials * allGOPOSTHColSize);
+}
+
+
 void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
 {
 	std::sort(goSpkCounter, goSpkCounter + 4096);
@@ -226,7 +247,7 @@ void Control::fillRasterArrays(SetSim &simulation, int rasterCounter)
 
 // TODO: 1) find better place to put this 2) generalize
 void Control::write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
-		unsigned int numRow, unsigned int numCol)
+	unsigned int numRow, unsigned int numCol)
 {
 	std::ofstream outStream(outFileName.c_str(), std::ios::out | std::ios::binary);
 

@@ -121,6 +121,7 @@ class Control
 		ct_uint8_t **allSCRaster;
 		ct_uint8_t **allIORaster;
 		float **eyelidPos;
+		float **activeGRgISum;
 
 		float **allGOInhInput;
 		float **allGOExInput;
@@ -150,13 +151,15 @@ class Control
 			float goMin, float GOGR, float GRGO, float MFGO, float csMinRate, float csMaxRate,
 			float gogoW, int inputStrength, float spillFrac);
 
-		float **activeGRgISum;
+		void initializeOutputArrays(int numPC, int numNC, int numSC, int numBC, int numGO,
+			int csSize, int collectionTrials);
 		void train(int selectState, int filename, int ISIs, int numTrials, int numCon,
 			int tunedConNumber);
-
 		void runTrials(SetSim &simulation, int trialTime, int numTuningTrials, int numGrDetectionTrials,
 			int numTrainingTrials, int simNum, int csSize, float goMin, float GOGR, float GRGO,
 			float MFGO, float csMinRate, float csMaxRate, float gogoW, float spillFrac);
+		void saveOutputArraysToFile(int numGO, int numBC, int numSC, int numTrainingTrials, int csSize,
+			int goRecipParam, int simNum, int inputStrength);
 		void countGOSpikes(int *goSpkCounter, float &medTrials);
 		void fillRasterArrays(SetSim &simulation, int rasterCounter);
 		void write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
