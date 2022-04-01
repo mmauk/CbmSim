@@ -31,6 +31,10 @@ class Control
 		~Control();
 
 		// Objects
+		CBMState *joestate;
+		CBMSimCore *joesim;
+		ECMFPopulation *joeMFFreq;
+		PoissonRegenCells *joeMFs;
 		EyelidIntegrator* joeeyelidInt;
 		ECTrialsData* joeData;
 
@@ -133,19 +137,23 @@ class Control
 			int csSize, int numTrainingTrials);
 		void train(int selectState, int filename, int ISIs, int numTrials, int numCon,
 			int tunedConNumber);
-		void runTrials(SetSim &simulation, int numTuningTrials, int numGrDetectionTrials,
-			int numTrainingTrials, int simNum, int csSize, float goMin, float GOGR, float GRGO,
-			float MFGO, float csMinRate, float csMaxRate, float gogoW, float spillFrac);
+
+		void runTrials(CBMSimCore &joesim, PoissonRegenCells &joeMFs, ECMFPopulation &joeMFFreq,
+			int numTuningTrials, int numGrDetectionTrials, int numTrainingTrials, int simNum,
+			int csSize, float goMin, float GOGR, float GRGO, float MFGO,
+			float csMinRate, float csMaxRate, float gogoW, float spillFrac);
+
 		void saveOutputArraysToFile(int numGO, int numBC, int numSC, int numTrainingTrials, int csSize,
 			int goRecipParam, int simNum, int inputStrength);
 		void countGOSpikes(int *goSpkCounter, float &medTrials);
-		void fillRasterArrays(SetSim &simulation, int rasterCounter);
+
+		void fillRasterArrays(CBMSimCore &joesim, int rasterCounter);
 		void write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
 			unsigned int numRow, unsigned int numCol);
 		void deleteOutputArrays();
 
-		int* getGRIndicies(SetSim &simulation, float csMinRate, float csMaxRate, float CStonicMFfrac);
-		int  getNumGRIndicies(SetSim &simulation, float csMinRate, float csMaxRate, float CStonicMFfrac); 
+		int* getGRIndicies(CBMState &joestate, ECMFPopulation &joeMFFreq, float csMinRate, float csMaxRate, float CStonicMFfrac);
+		int  getNumGRIndicies(CBMState &joestate, ECMFPopulation &joeMFFreq, float csMinRate, float csMaxRate, float CStonicMFfrac);
 };
 
 #endif /*_CONTROL_H*/

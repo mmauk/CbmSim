@@ -13,12 +13,17 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 {
 	// set all relevant variables to the sim	
 	SetSim simulation(fileNum, goRecipParam, simNum);
-	
+	joestate  = simulation.getstate();
+	joesim    = simulation.getsim();
+	joeMFFreq = simulation.getMFFreq(csMinRate, csMaxRate);
+	joeMFs    = simulation.getMFs();
+
+
 	// allocate and fill all of the output arrays	
 	initializeOutputArrays(numPC, numNC, numSC, numBC, numGO, csSize, numTrainingTrials);
 
 	// run all trials of sim
-	runTrials(simulation, numTuningTrials, numGrDetectionTrials, numTrainingTrials,
+	runTrials(joesim, joeMFs, joeMFFreq, numTuningTrials, numGrDetectionTrials, numTrainingTrials,
 		simNum, csSize, goMin, GOGR, GRGO, MFGO, csMinRate, csMaxRate, gogoW, spillFrac);
 
 	// Save Data 
@@ -56,12 +61,13 @@ void Control::initializeOutputArrays(int numPC, int numNC, int numSC, int numBC,
 	std::fill(allGOPSTH[0], allGOPSTH[0] + numGO * allGOPSTHColSize, 0);
 }
 
-void Control::runTrials(SetSim &simulation, int numTuningTrials, int numGrDetectionTrials,
-	int numTrainingTrials, int simNum, int csSize, float goMin, float GOGR, float GRGO,
-	float MFGO, float csMinRate, float csMaxRate, float gogoW, float spillFrac)
+void Control::runTrials(CBMSimCore &joesim, PoissonRegenCells &joeMFs, ECMFPopulation &joeMFFreq,
+	int numTuningTrials, int numGrDetectionTrials, int numTrainingTrials, int simNum,
+	int csSize, float goMin, float GOGR, float GRGO, float MFGO,
+	float csMinRate, float csMaxRate, float gogoW, float spillFrac)
 {
 	int preTrialNumber   = numTuningTrials + numGrDetectionTrials;
-	// numTotalTrials should be numTrainingTrainings	
+	// numTotalTrials should be numTrainingTrials	
 	int numTotalTrials   = preTrialNumber + numTrainingTrials;  
 
 	float medTrials;
@@ -96,40 +102,40 @@ void Control::runTrials(SetSim &simulation, int numTuningTrials, int numGrDetect
 				if (tts == csStart + csSize)
 				{
 					// Deliver US 
-					simulation.getsim()->updateErrDrive(0, 0.0);
+					joesim->updateErrDrive(0, 0.0);
 				}
 				
 				if (tts < csStart || tts >= csStart + csSize)
 				{
 					// Background MF activity in the Pre and Post CS period
-					mfAP = simulation.getMFs()->calcPoissActivity(simulation.getMFFreq(csMinRate, csMaxRate)->getMFBG(),
-							simulation.getsim()->getMZoneList());	
+					mfAP = joeMFs->calcPoissActivity(joeMFFreq->getMFBG(),
+							joesim->getMZoneList());	
 				}
 				else if (tts >= csStart && tts < csStart + csPhasicSize) 
 				{
 					// Phasic MF activity during the CS for a duration set in control.h 
-					mfAP = simulation.getMFs()->calcPoissActivity(simulation.getMFFreq(csMinRate, csMaxRate)->getMFFreqInCSPhasic(),
-							simulation.getsim()->getMZoneList());
+					mfAP = joeMFs->calcPoissActivity(joeMFFreq->getMFFreqInCSPhasic(),
+							joesim->getMZoneList());
 				}
 				else
 				{
 					// Tonic MF activity during the CS period
 					// this never gets reached...
-					mfAP = simulation.getMFs()->calcPoissActivity(simulation.getMFFreq(csMinRate, csMaxRate)->getMFInCSTonicA(),
-							simulation.getsim()->getMZoneList());
+					mfAP = joeMFs->calcPoissActivity(joeMFFreq->getMFInCSTonicA(),
+							joesim->getMZoneList());
 				}
 
-				bool *isTrueMF = simulation.getMFs()->calcTrueMFs(simulation.getMFFreq(csMinRate, csMaxRate)->getMFBG());
-				simulation.getsim()->updateTrueMFs(isTrueMF);
-				simulation.getsim()->updateMFInput(mfAP);
-				simulation.getsim()->calcActivity(goMin, simNum, GOGR, GRGO, MFGO, gogoW, spillFrac);	
+				bool *isTrueMF = joeMFs->calcTrueMFs(joeMFFreq->getMFBG());
+				joesim->updateTrueMFs(isTrueMF);
+				joesim->updateMFInput(mfAP);
+				joesim->calcActivity(goMin, simNum, GOGR, GRGO, MFGO, gogoW, spillFrac);	
 				
 				if (tts >= csStart && tts < csStart + csSize)
 				{
 
-					mfgoG  = simulation.getsim()->getInputNet()->exportgSum_MFGO();
-					grgoG  = simulation.getsim()->getInputNet()->exportgSum_GRGO();
-					goSpks = simulation.getsim()->getInputNet()->exportAPGO();
+					mfgoG  = joesim->getInputNet()->exportgSum_MFGO();
+					grgoG  = joesim->getInputNet()->exportgSum_GRGO();
+					goSpks = joesim->getInputNet()->exportAPGO();
 					
 					//TODO: change for loop into std::transform
 					for (int i = 0; i < numGO; i++)
@@ -149,9 +155,10 @@ void Control::runTrials(SetSim &simulation, int numTuningTrials, int numGrDetect
 					std::cout << "GR:MF ratio  = " << gGRGO_sum / gMFGO_sum << std::endl;
 				}
 
-				if (trial >= preTrialNumber && tts >= csStart-msPreCS && tts < csStart + csSize + msPostCS)
+				if (trial >= preTrialNumber && tts >= csStart-msPreCS &&
+						tts < csStart + csSize + msPostCS)
 				{
-					fillRasterArrays(simulation, rasterCounter);
+					fillRasterArrays(joesim, rasterCounter);
 
 					PSTHCounter++;
 					rasterCounter++;
@@ -205,16 +212,17 @@ void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
 	for (int i = 0; i < numGO; i++) goSpkSum += goSpkCounter[i];
 	
 	std::cout << "Mean GO Rate: " << goSpkSum / (float)numGO << std::endl;
+
 	medTrials += m / 2.0;
 	std::cout << "Median GO Rate: " << m / 2.0 << std::endl;
 }
 
-void Control::fillRasterArrays(SetSim &simulation, int rasterCounter)
+void Control::fillRasterArrays(CBMSimCore &joesim, int rasterCounter)
 {
-	const ct_uint8_t* pcSpks = simulation.getsim()->getMZoneList()[0]->exportAPPC();
-	const ct_uint8_t* ncSpks = simulation.getsim()->getMZoneList()[0]->exportAPNC();
-	const ct_uint8_t* bcSpks = simulation.getsim()->getMZoneList()[0]->exportAPBC();
-	const ct_uint8_t* scSpks = simulation.getsim()->getInputNet()->exportAPSC();
+	const ct_uint8_t* pcSpks = joesim->getMZoneList()[0]->exportAPPC();
+	const ct_uint8_t* ncSpks = joesim->getMZoneList()[0]->exportAPNC();
+	const ct_uint8_t* bcSpks = joesim->getMZoneList()[0]->exportAPBC();
+	const ct_uint8_t* scSpks = joesim->getInputNet()->exportAPSC();
 	
 	// TODO: yet another reason why an array that knows its size would be helpful!
 	int maxCount = std::max({numPC, numNC, numBC, numSC});						
@@ -271,14 +279,14 @@ void Control::deleteOutputArrays()
 	delete2DArray<ct_uint8_t>(allSCRaster);
 }
 
-int* Control::getGRIndicies(SetSim &simulation, float csMinRate, float csMaxRate, float CStonicMFfrac) 
+int* Control::getGRIndicies(CBMState &joestate, ECMFPopulation &joeMFFreq, float csMinRate, float csMaxRate, float CStonicMFfrac) 
 {
 
 	int numMF = 4096;
 	int numGR = 1048576;
 
-	bool* tonicMFsA = simulation.getMFFreq(csMinRate, csMaxRate)->getTonicMFInd();
-	bool* tonicMFsB = simulation.getMFFreq(csMinRate, csMaxRate)->getTonicMFIndOverlap();
+	bool* tonicMFsA = joeMFFreq->getTonicMFInd();
+	bool* tonicMFsB = joeMFFreq->getTonicMFIndOverlap();
 	
 	int numTonic = numMF*CStonicMFfrac; 
 	int numActiveMFs = numTonic;
@@ -315,7 +323,7 @@ int* Control::getGRIndicies(SetSim &simulation, float csMinRate, float csMaxRate
 	int *pActiveGRsBool = new int[numGR]();
 	for (int i = 0; i < numActiveMFs; i++)
 	{
-		MFtoGRs = simulation.getstate()->getInnetConStateInternal()->getpMFfromMFtoGRCon(activeMFIndA[i]);
+		MFtoGRs = joestate->getInnetConStateInternal()->getpMFfromMFtoGRCon(activeMFIndA[i]);
 		numPostSynGRs = MFtoGRs.size();
 		
 		for (int j = 0; j < numPostSynGRs; j++)
@@ -347,7 +355,7 @@ int* Control::getGRIndicies(SetSim &simulation, float csMinRate, float csMaxRate
 }
 
 // NOTE: this function is basically the same as the above.
-int Control::getNumGRIndicies(SetSim &simulation, float csMinRate, float csMaxRate, float CStonicMFfrac) 
+int Control::getNumGRIndicies(CBMState &joestate, ECMFPopulation &joeMFFreq, float csMinRate, float csMaxRate, float CStonicMFfrac) 
 {
 	int numMF = 4096;
 	int numGR = 1048576;
@@ -355,9 +363,9 @@ int Control::getNumGRIndicies(SetSim &simulation, float csMinRate, float csMaxRa
 	float CSphasicMFfrac = 0.0;
 	float contextMFfrac  = 0.0;
 	
-	bool* contextMFs = simulation.getMFFreq(csMinRate, csMaxRate)->getContextMFInd();
-	bool* phasicMFs  = simulation.getMFFreq(csMinRate, csMaxRate)->getPhasicMFInd();
-	bool* tonicMFs   = simulation.getMFFreq(csMinRate, csMaxRate)->getTonicMFInd();
+	bool* contextMFs = joeMFFreq->getContextMFInd();
+	bool* phasicMFs  = joeMFFreq->getPhasicMFInd();
+	bool* tonicMFs   = joeMFFreq->getTonicMFInd();
 	
 	int numContext 	 = numMF*contextMFfrac; 
 	int numPhasic  	 = numMF*CSphasicMFfrac; 
@@ -383,7 +391,7 @@ int Control::getNumGRIndicies(SetSim &simulation, float csMinRate, float csMaxRa
 
 	for (int i = 0; i < numActiveMFs; i++)
 	{
-		MFtoGRs 	  = simulation.getstate()->getInnetConStateInternal()->getpMFfromMFtoGRCon(activeMFInd[i]);
+		MFtoGRs 	  = joestate->getInnetConStateInternal()->getpMFfromMFtoGRCon(activeMFInd[i]);
 		numPostSynGRs = MFtoGRs.size();
 		
 		for (int j = 0; j < numPostSynGRs; j++)
