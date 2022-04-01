@@ -74,10 +74,14 @@ void Control::runTrials(SetSim &simulation, int numTuningTrials, int numGrDetect
 	for (int trial = 0; trial < numTotalTrials; trial++)
 	{
 		timer = clock();
+		
+		// re-initialize spike counter vector	
+		std::fill(goSpkCounter, goSpkCounter + numGO, 0);	
 
 		int PSTHCounter = 0;	
 		float gGRGO_sum = 0;
 		float gMFGO_sum = 0;
+
 
 		trial <= numTuningTrials ?
 			std::cout << "Pre-tuning trial number: " << trial << std::endl :
@@ -156,8 +160,6 @@ void Control::runTrials(SetSim &simulation, int numTuningTrials, int numGrDetect
 			}
 		}
 
-		// re-initialize spike counter vector	
-		std::fill(goSpkCounter, goSpkCounter + numGO, 0);	
 		timer = clock() - timer;
 		std::cout << "Trial time seconds: " << (float)timer / CLOCKS_PER_SEC << std::endl;
 	}
@@ -198,7 +200,7 @@ void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
 {
 	std::sort(goSpkCounter, goSpkCounter + 4096);
 	
-	int m = (goSpkCounter[2047] + goSpkCounter[2048]) / 2;
+	float m = (goSpkCounter[2047] + goSpkCounter[2048]) / 2.0;
 	float goSpkSum = 0;
 
 	//TODO: change for loop into std::transform
