@@ -14,14 +14,12 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 	// set all relevant variables to the sim	
 	SetSim simulation(fileNum, goRecipParam, simNum);
 	
-	int trialTime        = 5000; // in milliseconds, i think
-	int collectionTrials = numTuningTrials + numGrDetectionTrials + numTrainingTrials;
-
 	// allocate and fill all of the output arrays	
-	initializeOutputArrays(numPC, numNC, numSC, numBC, numGO, csSize, collectionTrials);
+	initializeOutputArrays(numPC, numNC, numSC, numBC, numGO, csSize, numTuningTrials,
+			numGrDetectionTrials, numTrainingTrials);
 
 	// run all trials of sim
-	runTrials(simulation, trialTime, numTuningTrials, numGrDetectionTrials, numTrainingTrials,
+	runTrials(simulation, numTuningTrials, numGrDetectionTrials, numTrainingTrials,
 		simNum, csSize, goMin, GOGR, GRGO, MFGO, csMinRate, csMaxRate, gogoW, spillFrac);
 
 	// Save Data 
@@ -29,16 +27,15 @@ void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuni
 		simNum, inputStrength);
 
 	// deallocate output arrays
-	delete2DArray<ct_uint8_t>(allGOPSTH);
-	delete2DArray<ct_uint8_t>(allBCRaster);
-	delete2DArray<ct_uint8_t>(allSCRaster);
+	deleteOutputArrays();
 }
 
 void Control::initializeOutputArrays(int numPC, int numNC, int numSC, int numBC, int numGO,
-	int csSize, int collectionTrials)
+	int csSize, int numTuningTrials, int numGrDetectionTrials, int numTrainingTrials)
 {
 	int allGOPSTHColSize = csSize + msPreCS + msPostCS;
-	int rasterColumnSize = allGOPSTHColSize * collectionTrials;	
+	int rasterColumnSize = allGOPSTHColSize *
+		(numTuningTrials + numGrDetectionTrials + numTrainingTrials);	
 
 	// Allocate and Initialize PSTH and Raster arrays
 	allPCRaster = allocate2DArray<ct_uint8_t>(numPC, rasterColumnSize);	
@@ -61,8 +58,7 @@ void Control::initializeOutputArrays(int numPC, int numNC, int numSC, int numBC,
 	std::fill(allGOPSTH[0], allGOPSTH[0] + numGO * allGOPSTHColSize, 0);
 }
 
-
-void Control::runTrials(SetSim &simulation, int trialTime, int numTuningTrials, int numGrDetectionTrials,
+void Control::runTrials(SetSim &simulation, int numTuningTrials, int numGrDetectionTrials,
 	int numTrainingTrials, int simNum, int csSize, float goMin, float GOGR, float GRGO,
 	float MFGO, float csMinRate, float csMaxRate, float gogoW, float spillFrac)
 {
@@ -198,7 +194,6 @@ void Control::saveOutputArraysToFile(int numGO, int numBC, int numSC, int numTra
 			numTrainingTrials * allGOPOSTHColSize);
 }
 
-
 void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
 {
 	std::sort(goSpkCounter, goSpkCounter + 4096);
@@ -267,6 +262,13 @@ void Control::write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
 	}
 
 	outStream.close();
+}
+
+void Control::deleteOutputArrays()
+{
+	delete2DArray<ct_uint8_t>(allGOPSTH);
+	delete2DArray<ct_uint8_t>(allBCRaster);
+	delete2DArray<ct_uint8_t>(allSCRaster);
 }
 
 int* Control::getGRIndicies(SetSim &simulation, float csMinRate, float csMaxRate, float CStonicMFfrac) 

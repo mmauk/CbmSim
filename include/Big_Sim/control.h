@@ -57,7 +57,6 @@ class Control
 		int trial; 	
 		int numGO = 4096;
 		int numGR = 1048576;
-		//int numUBC = 1024;
 
 		ct_uint8_t *grPSTHPreCS;
 		ct_uint8_t *grPSTHCS;
@@ -65,13 +64,14 @@ class Control
 		int csStart = 2000;
 		int csPhasicSize = 50;
 
-		int trialTime = 10000;
+		int trialTime = 5000;
 			
 		int numPC = 32;
 		int numBC = 128;
 		int numSC = 512;
 		int numNC = 8;
 		int numIO = 4;
+
 		const ct_uint8_t* grSpks;
 		const float *mfGO;
 		const float *grGO;
@@ -85,41 +85,19 @@ class Control
 		float **mfGOgRaster;
 		float **grGOgPSTH; 
 
-		//ct_uint8_t **allUBCRaster;
-		ct_uint8_t **allGORaster;
-		ct_uint8_t **allGORaster1;
-		ct_uint8_t **allGORaster2;
-		ct_uint8_t **allGORaster3;
-		ct_uint8_t **allGORaster4;
-		ct_uint8_t **allGORaster5;
-		ct_uint8_t **allGORaster6;
-		ct_uint8_t **allGORaster7;
-		ct_uint8_t **allGORaster8;
-
 		ct_uint8_t **allMFPSTH;
 		ct_uint8_t **allGOPSTH;
-		//float **allGOPSTH;
 		ct_uint8_t **allGRPSTH;
 		ct_uint8_t **activeGRPSTH;
 
+		ct_uint8_t **allGORaster;
 		ct_uint8_t **allPCRaster;
-		ct_uint8_t **allPCRaster1;
-		ct_uint8_t **allPCRaster2;
-		ct_uint8_t **allPCRaster3;
-		ct_uint8_t **allPCRaster4;
-		ct_uint8_t **allPCRaster5;
-		ct_uint8_t **allPCRaster6;
-		ct_uint8_t **allPCRaster7;
-		ct_uint8_t **allPCRaster8;
-		ct_uint8_t **allPCRaster9;
-		ct_uint8_t **allPCRaster10;
-		ct_uint8_t **allPCRaster11;
-		ct_uint8_t **allPCRaster12;
-		float **allGORaster_gogoG; 
 		ct_uint8_t **allNCRaster;
 		ct_uint8_t **allBCRaster;
 		ct_uint8_t **allSCRaster;
 		ct_uint8_t **allIORaster;
+
+		float **allGORaster_gogoG; 
 		float **eyelidPos;
 		float **activeGRgISum;
 
@@ -152,10 +130,10 @@ class Control
 			float gogoW, int inputStrength, float spillFrac);
 
 		void initializeOutputArrays(int numPC, int numNC, int numSC, int numBC, int numGO,
-			int csSize, int collectionTrials);
+			int csSize, int numTuningTrials, int numGrDetectionTrials, int numTrainingTrials);
 		void train(int selectState, int filename, int ISIs, int numTrials, int numCon,
 			int tunedConNumber);
-		void runTrials(SetSim &simulation, int trialTime, int numTuningTrials, int numGrDetectionTrials,
+		void runTrials(SetSim &simulation, int numTuningTrials, int numGrDetectionTrials,
 			int numTrainingTrials, int simNum, int csSize, float goMin, float GOGR, float GRGO,
 			float MFGO, float csMinRate, float csMaxRate, float gogoW, float spillFrac);
 		void saveOutputArraysToFile(int numGO, int numBC, int numSC, int numTrainingTrials, int csSize,
@@ -164,6 +142,7 @@ class Control
 		void fillRasterArrays(SetSim &simulation, int rasterCounter);
 		void write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
 			unsigned int numRow, unsigned int numCol);
+		void deleteOutputArrays()
 
 		int* getGRIndicies(SetSim &simulation, float csMinRate, float csMaxRate, float CStonicMFfrac);
 		int  getNumGRIndicies(SetSim &simulation, float csMinRate, float csMaxRate, float CStonicMFfrac); 
