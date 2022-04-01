@@ -61,7 +61,7 @@ void Control::initializeOutputArrays(int numPC, int numNC, int numSC, int numBC,
 	std::fill(allGOPSTH[0], allGOPSTH[0] + numGO * allGOPSTHColSize, 0);
 }
 
-void Control::runTrials(CBMSimCore &joesim, PoissonRegenCells &joeMFs, ECMFPopulation &joeMFFreq,
+void Control::runTrials(CBMSimCore *joesim, PoissonRegenCells *joeMFs, ECMFPopulation *joeMFFreq,
 	int numTuningTrials, int numGrDetectionTrials, int numTrainingTrials, int simNum,
 	int csSize, float goMin, float GOGR, float GRGO, float MFGO,
 	float csMinRate, float csMaxRate, float gogoW, float spillFrac)
@@ -217,7 +217,7 @@ void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
 	std::cout << "Median GO Rate: " << m / 2.0 << std::endl;
 }
 
-void Control::fillRasterArrays(CBMSimCore &joesim, int rasterCounter)
+void Control::fillRasterArrays(CBMSimCore *joesim, int rasterCounter)
 {
 	const ct_uint8_t* pcSpks = joesim->getMZoneList()[0]->exportAPPC();
 	const ct_uint8_t* ncSpks = joesim->getMZoneList()[0]->exportAPNC();
@@ -279,7 +279,7 @@ void Control::deleteOutputArrays()
 	delete2DArray<ct_uint8_t>(allSCRaster);
 }
 
-int* Control::getGRIndicies(CBMState &joestate, ECMFPopulation &joeMFFreq, float csMinRate, float csMaxRate, float CStonicMFfrac) 
+int* Control::getGRIndicies(CBMState *joestate, ECMFPopulation *joeMFFreq, float csMinRate, float csMaxRate, float CStonicMFfrac) 
 {
 
 	int numMF = 4096;
@@ -355,7 +355,7 @@ int* Control::getGRIndicies(CBMState &joestate, ECMFPopulation &joeMFFreq, float
 }
 
 // NOTE: this function is basically the same as the above.
-int Control::getNumGRIndicies(CBMState &joestate, ECMFPopulation &joeMFFreq, float csMinRate, float csMaxRate, float CStonicMFfrac) 
+int Control::getNumGRIndicies(CBMState *joestate, ECMFPopulation *joeMFFreq, float csMinRate, float csMaxRate, float CStonicMFfrac) 
 {
 	int numMF = 4096;
 	int numGR = 1048576;
