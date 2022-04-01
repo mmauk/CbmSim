@@ -142,7 +142,7 @@ class Control
 		void fillRasterArrays(SetSim &simulation, int rasterCounter);
 		void write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
 			unsigned int numRow, unsigned int numCol);
-		void deleteOutputArrays()
+		void deleteOutputArrays();
 
 		int* getGRIndicies(SetSim &simulation, float csMinRate, float csMaxRate, float CStonicMFfrac);
 		int  getNumGRIndicies(SetSim &simulation, float csMinRate, float csMaxRate, float CStonicMFfrac); 
