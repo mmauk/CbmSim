@@ -20,8 +20,8 @@ CBMSimCore::CBMSimCore(CBMState *state, int gpuIndStart, int numGPUP2)
 	CRandomSFMT0 *randGen = new CRandomSFMT0(time(0));
 	int *mzoneRSeed 	  = new int[state->getNumZones()];
 
-	std::transform(randGen, randGen + state->getNumZones(),
-			randGen, randGen->IRandom(0, INT_MAX));
+	std::transform(mzoneRSeed, mzoneRSeed + state->getNumZones(),
+			mzoneRSeed, randGen->IRandom(0, INT_MAX));
 
 	//for (int i = 0; i < state->getNumZones(); i++)
 	//{
