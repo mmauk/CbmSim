@@ -234,7 +234,8 @@ $(BIG_SIM_OBJ_PATH)setsim.o: $(BIG_SIM_SRC_PATH)setsim.cpp $(BIG_SIM_INCLUDE_PAT
 
 ####### CBM Core Compiler Options
 
-CBM_CORE_INCLUDES = -I. -I/usr/local/cuda/include -I/opt/cuda/include -I$(CBM_CORE_INCLUDE_PATH) \
+CUDA_INCLUDE_PATH = /usr/local/cuda-11.0/include/
+CBM_CORE_INCLUDES = -I. -I$(CUDA_INCLUDE_PATH) -I$(CBM_CORE_INCLUDE_PATH) \
 					-I$(CBM_STATE_INCLUDE_PATH) -I$(CXX_TOOLS_INCLUDE_PATH) 
 
 ####### CBM Core Build Rules
@@ -248,9 +249,8 @@ compiler_cuda_make_all: $(CBM_CORE_OBJ_PATH)kernels_cuda.o
 
 $(CBM_CORE_OBJ_PATH)kernels_cuda.o: $(CBM_CORE_INCLUDE_PATH)cuda/kernels.h \
 		$(CBM_CORE_SRC_PATH)cuda/kernels.cu \
-		$(CBM_CORE_SRC_PATH)cuda/kernels.cu \
 		/usr/include/stdc-predef.h \
-		/usr/include/cuda_runtime.h \
+		$(CUDA_INCLUDE_PATH)cuda_runtime.h \
 		/usr/include/crt/host_config.h \
 		/usr/include/features.h \
 		/usr/include/x86_64-linux-gnu/sys/cdefs.h \
