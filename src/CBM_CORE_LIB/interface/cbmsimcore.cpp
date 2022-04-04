@@ -63,7 +63,7 @@ void CBMSimCore::writeToState()
 	}
 }
 
-void CBMSimCore::writeToState(fstream& outfile)
+void CBMSimCore::writeToState(std::fstream& outfile)
 {	
 	writeToState();
 
@@ -110,7 +110,7 @@ void CBMSimCore::initAuxVars()
 	curTime = 0;
 }
 
-void CBMSimCore::syncCUDA(string title)
+void CBMSimCore::syncCUDA(std::string title)
 {
 	cudaError_t error;
 	for (int i = 0; i < numGPUs; i++)
