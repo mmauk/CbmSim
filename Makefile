@@ -444,7 +444,7 @@ $(CBM_CORE_OBJ_PATH)kernels_cuda.o: $(CBM_CORE_INCLUDE_PATH)cuda/kernels.h \
 		/usr/include/c++/9/bits/predefined_ops.h \
 		/usr/include/c++/9/cstdint \
 		/usr/include/c++/9/bits/localefwd.h \
-		/usr/include/x86_94-linux-gnu/c++/9/bits/c++locale.h \
+		/usr/include/x86_64-linux-gnu/c++/9/bits/c++locale.h \
 		/usr/include/c++/9/clocale \
 		/usr/include/locale.h \
 		/usr/include/x86_64-linux-gnu/bits/locale.h \
