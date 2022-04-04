@@ -24,7 +24,7 @@ int **paramArray;
 int main() 
 {
 
-	int numTrainingTrials = 10;
+	int numTrainingTrials = 50;
 	int homeoTuningTrials = 0;
 	int granuleActivityDetectionTrials = 0;
 	
@@ -58,7 +58,7 @@ int main()
 		for (int inputWeightNum = 0; inputWeightNum < 1; inputWeightNum++)
 		{
 			
-			for (int goRecipParamNum = 0; goRecipParamNum < 1; goRecipParamNum++)
+			for (int goRecipParamNum = 0; goRecipParamNum < grWLength; goRecipParamNum++)
 			{
 				GRGO = grW[goRecipParamNum] * ws;
 				MFGO = mfW * ws;
