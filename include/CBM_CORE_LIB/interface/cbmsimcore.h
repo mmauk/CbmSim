@@ -37,7 +37,8 @@ public:
 
 	~CBMSimCore();
 
-	void calcActivity(float goMin, int simNum, float GOGR, float GRGO, float MFGO, float gogoW, float spillFrac);
+	void calcActivity(float goMin, int simNum, float GOGR, float GRGO, float MFGO,
+		float gogoW, float spillFrac);
 	
 	void updateMFInput(const ct_uint8_t *mfIn);
 	void updateTrueMFs(bool *isTrueMF);

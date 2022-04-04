@@ -1641,6 +1641,7 @@ void InNetConnectivityState::translateGOGL(CRandomSFMT *randGen)
 	std::cout << "GO->GR Per GR: " << (float)totalGOGR / (float)cp->numGR << std::endl;
 }
 
+// NOTE: considerable bottleneck here
 void InNetConnectivityState::connectGRGO(CRandomSFMT *randGen, int goRecipParam)
 {
 

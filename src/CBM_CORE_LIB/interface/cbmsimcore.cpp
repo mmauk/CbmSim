@@ -20,13 +20,10 @@ CBMSimCore::CBMSimCore(CBMState *state, int gpuIndStart, int numGPUP2)
 	CRandomSFMT0 *randGen = new CRandomSFMT0(time(0));
 	int *mzoneRSeed 	  = new int[state->getNumZones()];
 
-	std::transform(mzoneRSeed, mzoneRSeed + state->getNumZones(),
-			mzoneRSeed, randGen->IRandom(0, INT_MAX));
-
-	//for (int i = 0; i < state->getNumZones(); i++)
-	//{
-	//	mzoneRSeed[i] = randGen->IRandom(0, INT_MAX);
-	//}
+	for (int i = 0; i < state->getNumZones(); i++)
+	{
+		mzoneRSeed[i] = randGen->IRandom(0, INT_MAX);
+	}
 
 	construct(state, mzoneRSeed, gpuIndStart, numGPUP2);
 
@@ -39,6 +36,8 @@ CBMSimCore::~CBMSimCore()
 
 	for (int i = 0; i < numGPUs; i++)
 	{
+		// How could gpuIndStart ever not be 0,
+		// given we're looping from 0 to numGPUs?
 		cudaSetDevice(i + gpuIndStart);
 
 		for (int j = 0; j < 8; j++)
@@ -78,7 +77,7 @@ void CBMSimCore::initCUDA()
 	cudaError_t error;
 
 	int maxNumGPUs;
-
+	// TODO: use assert, try, and catch for these types of errors
 	error = cudaGetDeviceCount(&maxNumGPUs);
 
 	std::cerr << "CUDA max num devices: " << maxNumGPUs << ", "
@@ -123,6 +122,7 @@ void CBMSimCore::syncCUDA(std::string title)
 		std::cerr << "sync point " << title << ": switching to gpu #" << i <<
 				": " << cudaGetErrorString(error) << std::endl;
 #endif
+
 		error = cudaDeviceSynchronize();
 #ifdef DISP_CUDA_ERR
 		std::cerr << "sync point " << title << ": sync for gpu #" << i <<
@@ -185,9 +185,9 @@ void CBMSimCore::calcActivity(float goMin, int simNum, float GOGR, float GRGO, f
 		}
 
 	}
-			#ifdef NO_ASYNC
-				syncCUDA("1f");
-			#endif
+#ifdef NO_ASYNC
+	syncCUDA("1f");
+#endif
 	inputNet->cpyDepAmpMFHosttoGPUCUDA(streams, 5);
 
 #ifdef NO_ASYNC
