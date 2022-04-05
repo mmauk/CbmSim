@@ -2847,7 +2847,6 @@ void InNetConnectivityState::translateCommon(int **pPreGLConArr, int *numpPreGLC
 	}
 }
 
-// TODO: finish this function!
 //void InNetConnectivityState::connectNeuronClassToClass(int goRecipParam)
 //{
 //	// rename this var
