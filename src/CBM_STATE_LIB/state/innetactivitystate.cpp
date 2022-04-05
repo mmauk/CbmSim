@@ -3,7 +3,9 @@
  *
  *  Created on: Nov 16, 2012
  *      Author: consciousness
- */
+ *  Updated on: March, 2022
+ * 		Author: the gallogly
+ */ 
 
 #include "state/innetactivitystate.h"
 
