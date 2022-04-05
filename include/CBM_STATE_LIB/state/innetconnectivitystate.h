@@ -196,7 +196,6 @@ public:
 	int *yCoorsAAGO;
 
 
-
 	float *PconGOGL;
 	float *Pcon;
 	int *numpGOGABAInGOGO;
@@ -277,10 +276,8 @@ protected:
 	virtual std::vector<ct_uint32_t> getConCommon(int cellN, ct_int32_t *numpCellCon, ct_uint32_t **pCellCon);
 	virtual std::vector<std::vector<ct_uint32_t> > getPopConCommon(int numCells, ct_int32_t *numpCellCon, ct_uint32_t **pCellCon);
 
-
 	virtual std::vector<int> getConCommon(int cellN, int *numpCellCon, int **pCellCon);
 	virtual std::vector<std::vector<int> > getPopConCommon(int numCells, int *numpCellCon, int **pCellCon);
-
 
 	virtual void allocateMemory();
 
@@ -307,14 +304,6 @@ protected:
 	virtual void connectPFtoBC();
 	virtual void assignPFtoBCDelays(unsigned int msPerStep);
 
-/*	virtual void connectCommon(ct_uint32_t **srcConArr, int32_t *srcNumCon,
-			ct_uint32_t **destConArr, ct_int32_t *destNumCon,
-			ct_uint32_t srcMaxNumCon, ct_uint32_t numSrcCells,
-			ct_uint32_t destMaxNumCon, ct_uint32_t destNormNumCon,
-			ct_uint32_t srcGridX, ct_uint32_t srcGridY, ct_uint32_t destGridX, ct_uint32_t destGridY,
-			ct_uint32_t srcSpanOnDestGridX, ct_uint32_t srcSpanOnDestGridY,
-			ct_uint32_t normConAttempts, ct_uint32_t maxConAttempts, bool needUnique,
-			CRandomSFMT *randGen);*/
 	virtual void connectCommon(int **srcConArr, int32_t *srcNumCon,
 			int **destConArr, int *destNumCon,
 			int srcMaxNumCon, int numSrcCells,
@@ -323,17 +312,14 @@ protected:
 			int srcSpanOnDestGridX, int srcSpanOnDestGridY,
 			int normConAttempts, int maxConAttempts, bool needUnique,
 			CRandomSFMT *randGen);
-/*
-	virtual void translateCommon(ct_uint32_t **pPreGLConArr, ct_int32_t *numpPreGLCon,
-			ct_uint32_t **pGLPostGLConArr, ct_int32_t *numpGLPostGLCon,
-			ct_uint32_t **pPreConArr, ct_int32_t *numpPreCon,
-			ct_uint32_t **pPostConArr, ct_int32_t *numpPostCon,
-			ct_uint32_t numPre);*/
+
 	virtual void translateCommon(int **pPreGLConArr, int *numpPreGLCon,
 			int **pGLPostGLConArr, int *numpGLPostGLCon,
 			int **pPreConArr, int *numpPreCon,
 			int **pPostConArr, int *numpPostCon,
 			int numPre);
+
+	virtual void connectNeuronClassToClass(int goRecipParam);
 
 private:
 	InNetConnectivityState();

@@ -2847,91 +2847,83 @@ void InNetConnectivityState::translateCommon(int **pPreGLConArr, int *numpPreGLC
 	}
 }
 
-// TODO: finis this function!
-//void InNetConnectivityState::connectNeuronClassToClass(int goRecipParam)
-//{
-//	int pfConv[8] = {3750, 3000, 2250, 1500, 750, 375, 188, 93}; 
-//
-//	int spanX = cp->grX;
-//	int spanY = 150;
-//	int numPCons = (spanPFtoGOX + 1) * (spanPFtoGOY + 1);
-//	int maxConInput = pfConv[goRecipParam];
-//
-//	//PARALLEL FIBER TO GOLGI 
-//	for (int i = 0; i < spanX + 1; i++)
-//	{
-//		// TODO: define elsewhere	
-//		spanArrX[i] = i - (spanX / 2);
-//	}
-//
-//	for (int i = 0; i < spanY + 1; i++)
-//	{
-//		// TODO: define elsewhere	
-//		spanArrY[i] = i - (spanY / 2);
-//	}
-//		
-//	for (int i = 0; i < numPCons; i++)
-//	{
-//		xCoord[i] = spanArrX[i % (spanX + 1)];
-//		yCoord[i] = spanArrY[i / (spanY + 1)];	
-//	}
-//
-//	// Grid Scale: Complete
-//	// mimic this scaling operation in a vectorized way
-//	float gridXScaleSrctoDest = (float)cp->goX / (float)cp->grX; 
-//	float gridYScaleSrctoDest = (float)cp->goY / (float)cp->grY; 
-//
-//	//Make Random Span Array: Complete
-//	int rPFSpanInd[numPCons];
-//
-//	// below is a candidate fora lambda function
-//	std::fill(rPFSpanInd, rPFSpanInd + numPCons, 0);
-//
-//	for (int i = 0; i < numPCons; i++) rPFSpanInd[i] = i;
-//
-//	int srcPosX;
-//	int srcPosY;
-//	int preDestPosX;
-//	int preDestPosY;
-//	int tempDestPosX;
-//	int tempDestPosY;
-//	int destInd;
-//
-//	int grX = cp->grX;
-//	int grY = cp->grY;
-//
-//	for (int atmps = 0; atmps < 5; atmps++)
-//	{
-//		for (int i = 0; i < cp->numGO; i++)
-//		{	
-//			srcPosX = i % cp->goX;
-//			srcPosY = i / cp->goX;
-//			
-//			std::random_shuffle(rPFSpanInd, rPFSpanInd + numPCons);		
-//			
-//			for (int j = 0; j < maxConInput; j++)
-//			{	
-//				preDestPosX = xCoord[rPFSpanInd[j]]; 
-//				preDestPosY = yCoord[rPFSpanInd[j]];	
-//				
-//				tempDestPosX = (int)round(srcPosX / gridXScaleSrctoDest) + preDestPosX;
-//				tempDestPosY = (int)round(srcPosY / gridYScaleSrctoDest) + preDestPosY;
-//				
-//				tempDestPosX = (tempDestPosX % grX + grX) % grX;
-//				tempDestPosY = (tempDestPosY % grY + grY) % grY;
-//						
-//				destInd = tempDestPosY * cp->grX + tempDestPosX;
-//
-//				if (numpGOfromGRtoGO[i] < maxConInput)
-//				{	
-//					pGOfromGRtoGO[i][numpGOfromGRtoGO[i]] = destInd;
-//					numpGOfromGRtoGO[i]++;
-//
-//					pGRfromGRtoGO[destInd][numpGRfromGRtoGO[destInd]] = i;
-//					numpGRfromGRtoGO[destInd]++;	
-//				}
-//			}
-//		}
-//	}
-//
-//}
+// TODO: finish this function!
+void InNetConnectivityState::connectNeuronClassToClass(int goRecipParam)
+{
+	// rename this var
+	int pfConv[8] = {3750, 3000, 2250, 1500, 750, 375, 188, 93}; 
+
+	int spanX = cp->grX;
+	int spanY = 150;
+	int numPCons = (spanX + 1) * (spanY + 1);
+	int maxConInput = pfConv[goRecipParam];
+
+	// redefine these	
+	for (int i = 0; i < spanX + 1; i++) spanArrX[i] = i - (spanX / 2);
+	for (int i = 0; i < spanY + 1; i++) spanArrY[i] = i - (spanY / 2);
+		
+	for (int i = 0; i < numPCons; i++)
+	{
+		xCoord[i] = spanArrX[i % (spanX + 1)];
+		yCoord[i] = spanArrY[i / (spanY + 1)];	
+	}
+
+	// Grid Scale: Complete
+	// mimic this scaling operation in a vectorized way
+	float gridXScaleSrctoDest = (float)cp->goX / (float)cp->grX; 
+	float gridYScaleSrctoDest = (float)cp->goY / (float)cp->grY; 
+
+	//Make Random Span Array: Complete
+	int rPFSpanInd[numPCons];
+
+	// below is a candidate fora lambda function
+	std::fill(rPFSpanInd, rPFSpanInd + numPCons, 0);
+
+	for (int i = 0; i < numPCons; i++) rPFSpanInd[i] = i;
+
+	int srcPosX;
+	int srcPosY;
+	int preDestPosX;
+	int preDestPosY;
+	int tempDestPosX;
+	int tempDestPosY;
+	int destInd;
+
+	int grX = cp->grX;
+	int grY = cp->grY;
+
+	for (int atmps = 0; atmps < 5; atmps++)
+	{
+		for (int i = 0; i < cp->numGO; i++)
+		{	
+			srcPosX = i % cp->goX;
+			srcPosY = i / cp->goX;
+			
+			std::random_shuffle(rPFSpanInd, rPFSpanInd + numPCons);		
+			
+			for (int j = 0; j < maxConInput; j++)
+			{	
+				preDestPosX = xCoord[rPFSpanInd[j]]; 
+				preDestPosY = yCoord[rPFSpanInd[j]];	
+				
+				tempDestPosX = (int)round(srcPosX / gridXScaleSrctoDest) + preDestPosX;
+				tempDestPosY = (int)round(srcPosY / gridYScaleSrctoDest) + preDestPosY;
+				
+				tempDestPosX = (tempDestPosX % grX + grX) % grX;
+				tempDestPosY = (tempDestPosY % grY + grY) % grY;
+						
+				destInd = tempDestPosY * grX + tempDestPosX;
+
+				if (numpGOfromGRtoGO[i] < maxConInput)
+				{	
+					pGOfromGRtoGO[i][numpGOfromGRtoGO[i]] = destInd;
+					numpGOfromGRtoGO[i]++;
+
+					pGRfromGRtoGO[destInd][numpGRfromGRtoGO[destInd]] = i;
+					numpGRfromGRtoGO[destInd]++;	
+				}
+			}
+		}
+	}
+
+}
