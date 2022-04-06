@@ -319,8 +319,6 @@ protected:
 			int **pPostConArr, int *numpPostCon,
 			int numPre);
 
-	//virtual void connectNeuronClassToClass(int goRecipParam);
-
 private:
 	InNetConnectivityState();
 };
