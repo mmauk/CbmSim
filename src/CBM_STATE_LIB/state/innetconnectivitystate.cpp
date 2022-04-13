@@ -1879,7 +1879,6 @@ void InNetConnectivityState::connectGOGODecayP(CRandomSFMT *randGen, int goRecip
 		PconX   = (xCoorsGOGOsyn[i] * xCoorsGOGOsyn[i]) / (2 * (sig * sig));
 		PconY   = (yCoorsGOGOsyn[i] * yCoorsGOGOsyn[i]) / (2 * (sig * sig));
 		Pcon[i] = A * exp(-(PconX + PconY));
-	
 	}
 	
 	// Remove self connection 
@@ -2844,6 +2843,182 @@ void InNetConnectivityState::translateCommon(int **pPreGLConArr, int *numpPreGLC
 				numpPostCon[postInd]++;
 			}
 		}
+	}
+}
+
+void InNetConnectivityState::establishConnection(CRandomSFMT *randGen, int goRecipParam,
+		int *srcNumCon, int **srcConArr, int *destNumCon, int **destConArr, int srcMaxNumCon,
+		int numSrcCells, int destMaxNumCon, int destNormNumCon, int srcGridX, int srcGridY,
+		int normConAttempts, int maxConAttempts)
+{
+	int pfConv[8] = {3750, 3000, 2250, 1500, 750, 375, 188, 93}; 
+
+	int spanPFtoGOX = cp->grX;
+	int spanPFtoGOY = 150;
+	int numpPFtoGO = (spanPFtoGOX + 1) * (spanPFtoGOY + 1);
+	int maxPFtoGOInput = pfConv[goRecipParam];
+
+	//PARALLEL FIBER TO GOLGI 
+	populateSpanArrays(spanArrayPFtoGOX, spanArrayPFtoGOY,
+			spanPFtoGOX, spanPFtoGOY);
+
+	for (int i = 0; i < numpPFtoGO; i++)
+	{
+		xCoorsPFGO[i] = spanArrayPFtoGOX[i % (spanPFtoGOX + 1)];
+		yCoorsPFGO[i] = spanArrayPFtoGOY[i / (spanPFtoGOX + 1)];	
+	}
+
+	// Grid Scale: Complete
+	float gridXScaleSrctoDest = (float)cp->goX / (float)cp->grX; 
+	float gridYScaleSrctoDest = (float)cp->goY / (float)cp->grY; 
+
+	//Make Random Span Array: Complete
+	int rPFSpanInd[numpPFtoGO]; 
+	for (int ind = 0; ind < numpPFtoGO; ind++) rPFSpanInd[ind] = ind;
+
+	int srcPosX;
+	int srcPosY;
+	int preDestPosX;
+	int preDestPosY;
+	int tempDestPosX;
+	int tempDestPosY;
+	int destInd;
+
+	int grX = cp->grX; //srcX
+	int grY = cp->grY; //srcY
+
+	for (int atmps = 0; atmps < 5; atmps++)
+	{
+		for (int i = 0; i < cp->numGO; i++)
+		{	
+			srcPosX = i % cp->goX;
+			srcPosY = i / cp->goX;
+			
+			std::random_shuffle(rPFSpanInd, rPFSpanInd + numpPFtoGO);		
+			
+			for (int j = 0; j < maxPFtoGOInput; j++)
+			{	
+				preDestPosX = xCoorsPFGO[rPFSpanInd[j]]; 
+				preDestPosY = yCoorsPFGO[rPFSpanInd[j]];	
+				
+				tempDestPosX = (int)round(srcPosX / gridXScaleSrctoDest) + preDestPosX;
+				tempDestPosY = (int)round(srcPosY / gridYScaleSrctoDest) + preDestPosY;
+				
+				tempDestPosX = (tempDestPosX%grX + grX) % grX;
+				tempDestPosY = (tempDestPosY%grY + grY) % grY;
+						
+				destInd = tempDestPosY * cp->grX + tempDestPosX;
+
+				if (numpGOfromGRtoGO[i] < maxPFtoGOInput)
+				{	
+					pGOfromGRtoGO[i][numpGOfromGRtoGO[i]] = destInd;
+					numpGOfromGRtoGO[i]++;
+
+					pGRfromGRtoGO[destInd][numpGRfromGRtoGO[destInd]] = i;
+					numpGRfromGRtoGO[destInd]++;	
+				}
+			}
+		}
+	}
+
+	//ASCENDING AXON TO GOLGI 
+	int aaConv[8] = {1250, 1000, 750, 500, 250, 125, 62, 32}; 
+
+	int spanAAtoGOX = 150;
+	int spanAAtoGOY = 150;
+	int numpAAtoGO = (spanAAtoGOX+1)*(spanAAtoGOY+1);
+	int maxAAtoGOInput = aaConv[goRecipParam];
+
+	//Make Span Array: Complete	
+	for (int i = 0; i < spanAAtoGOX + 1;i++)
+	{
+		int ind = spanAAtoGOX - i;
+		spanArrayAAtoGOX[i] = (spanAAtoGOX / 2) - ind;
+	}
+
+	for (int i = 0; i < spanAAtoGOY + 1;i++)
+	{
+		int ind = spanAAtoGOY - i;
+		spanArrayAAtoGOY[i] = (spanAAtoGOY / 2) - ind;
+	}
+		
+	for (int i = 0; i < numpAAtoGO; i++)
+	{
+		xCoorsAAGO[i] = spanArrayAAtoGOX[i%(spanAAtoGOX+1)];
+		yCoorsAAGO[i] = spanArrayAAtoGOY[i/(spanAAtoGOX+1)];	
+	}
+	
+	//Make Random Span Array: Complete
+	std::vector<int> rAASpanInd;
+	rAASpanInd.assign(numpAAtoGO,0);
+
+	for (int ind = 0; ind < numpAAtoGO; ind++) rAASpanInd[ind] = ind;
+
+	for (int atmps = 0; atmps < 15; atmps++)
+	{
+		for (int i = 0; i < cp->numGO; i++)
+		{	
+			srcPosX = i % cp->goX;
+			srcPosY = i / cp->goX;
+
+			std::random_shuffle(rAASpanInd.begin(), rAASpanInd.end());		
+			
+			for (int j = 0; j < maxAAtoGOInput; j++)
+			{	
+				preDestPosX = xCoorsAAGO[rAASpanInd[j]]; 
+				preDestPosY = yCoorsAAGO[rAASpanInd[j]];	
+				
+				tempDestPosX = (int)round(srcPosX / gridXScaleSrctoDest) + preDestPosX;
+				tempDestPosY = (int)round(srcPosY / gridYScaleSrctoDest) + preDestPosY;
+
+				tempDestPosX = (tempDestPosX % grX + grX) % grX;
+				tempDestPosY = (tempDestPosY % grY + grY) % grY;
+						
+				destInd = tempDestPosY * cp->grX + tempDestPosX;
+				
+				if (numpGOfromGRtoGO[i] < maxAAtoGOInput + maxPFtoGOInput)
+				{	
+					pGOfromGRtoGO[i][numpGOfromGRtoGO[i]] = destInd;	
+					numpGOfromGRtoGO[i]++;
+
+					pGRfromGRtoGO[destInd][numpGRfromGRtoGO[destInd]] = i;
+					numpGRfromGRtoGO[destInd]++;	
+				}
+			}
+		}
+	}	
+
+	int sumGOGR_GO = 0;
+	
+	for (int i = 0; i < cp->numGO; i++)
+	{
+		sumGOGR_GO += numpGOfromGRtoGO[i];
+	}
+
+	std::cout << "GRtoGO_GO: " << sumGOGR_GO << std::endl;
+
+	int sumGOGR_GR = 0;
+
+	for (int i = 0; i < cp->numGR; i++)
+	{
+		sumGOGR_GR += numpGRfromGRtoGO[i];
+	}
+
+	std::cout << "GRtoGO_GR: " << sumGOGR_GR << std::endl;
+
+}
+
+void InNetConnectivityState::populateSpanArrays(int *spanArrX, int *spanArrY,
+	int spanX, int spanY)
+{
+	for (int i = 0; i < spanX; i++)
+	{
+		spanArrX[i] = i - (spanX / 2);
+	}
+
+	for (int i = 0; i < spanY; i++)
+	{
+		spanArrY[i] = i - (spanY / 2);
 	}
 }
 

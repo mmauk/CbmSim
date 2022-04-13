@@ -5,3 +5,4 @@ diff.awk
 params.md
 intersect.sh
 connectivityVars
+data/*
