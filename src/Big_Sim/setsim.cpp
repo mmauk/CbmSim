@@ -18,8 +18,8 @@ SetSim::SetSim(int fileNum, int goRecipParam, int simNum)
 {
 
     // Not sure how we want our act files to be named	
-	std::string inActFile = Sprintf("./resources/actParams_binChoice2_%d.txt", fileNum+1);	
-	std::string inConFile = Sprintf("./resources/conParams_binChoice2_%d.txt", fileNum+1);	
+	std::string inActFile = Sprintf("./data/actParams_binChoice2_%d.txt", fileNum+1);	
+	std::string inConFile = Sprintf("./data/conParams_binChoice2_%d.txt", fileNum+1);	
 
 	std::fstream actPF(inActFile.c_str());
 	std::fstream conPF(inConFile.c_str());
