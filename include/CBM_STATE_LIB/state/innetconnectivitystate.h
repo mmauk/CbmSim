@@ -323,7 +323,7 @@ private:
 	InNetConnectivityState();
 
 	// TODO: find required params for every function	
-	void InNetConnectivityState::establishConnection(CRandomSFMT *randGen, int goRecipParam,
+	void establishConnection(CRandomSFMT *randGen, int goRecipParam,
 			int *srcNumCon, int **srcConArr, int *destNumCon, int **destConArr, int srcMaxNumCon,
 			int numSrcCells, int destMaxNumCon, int destNormNumCon, int srcGridX, int srcGridY,
 			int normConAttempts, int maxConAttempts);
