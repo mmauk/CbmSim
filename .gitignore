@@ -1,9 +1,4 @@
 .git
-act_diff.txt
-con_diff.txt
-diff.awk
-params.md
-intersect.sh
-connectivityVars
-data/*
+scripts/venv/**
+data/**
 Big_Sim
