@@ -17,14 +17,10 @@
 
 #include "control.h"
 
-
-int **paramArrayPre;
-int **paramArray;
-
 int main() 
 {
 
-	int numTrainingTrials = 50;
+	int numTrainingTrials = 10;
 	int homeoTuningTrials = 0;
 	int granuleActivityDetectionTrials = 0;
 	
