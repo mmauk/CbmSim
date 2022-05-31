@@ -35,52 +35,10 @@ public:
 
 	virtual ~InNetConnectivityState();
 	
-
 	virtual void writeState(std::fstream &outfile);
 
 	virtual bool operator==(const InNetConnectivityState &compState);
 	virtual bool operator!=(const InNetConnectivityState &compState);
-
-	virtual std::vector<int> getpGOfromGOtoGLCon(int goN);
-	virtual std::vector<int> getpGOfromGLtoGOCon(int goN);
-	virtual std::vector<int> getpMFfromMFtoGLCon(int mfN);
-	virtual std::vector<int> getpGLfromGLtoGRCon(int glN);
-
-	virtual std::vector<int> getpGRfromMFtoGR(int grN);
-	virtual std::vector<std::vector<int> > getpGRPopfromMFtoGR();
-
-	virtual std::vector<int> getpGRfromGOtoGRCon(int grN);
-	virtual std::vector<std::vector<int> > getpGRPopfromGOtoGRCon();
-
-	virtual std::vector<int> getpGRfromGRtoGOCon(int grN);
-	virtual std::vector<std::vector<int> > getpGRPopfromGRtoGOCon();
-
-	virtual std::vector<int> getpGOfromGRtoGOCon(int goN);
-	virtual std::vector<std::vector<int> > getpGOPopfromGRtoGOCon();
-
-	virtual std::vector<int> getpGOfromGOtoGRCon(int goN);
-	virtual std::vector<std::vector<int> > getpGOPopfromGOtoGRCon();
-
-	virtual std::vector<int> getpMFfromMFtoGRCon(int mfN);
-
-	virtual std::vector<int> getpMFfromMFtoGOCon(int mfN);
-	virtual std::vector<int> getpGOfromMFtoGOCon(int goN);
-	virtual std::vector<std::vector<int> > getpGOPopfromMFtoGOCon();
-
-	virtual std::vector<int> getpGOOutGOGOCon(int goN);
-	virtual std::vector<std::vector<int> > getpGOPopOutGOGOCon();
-
-	virtual std::vector<int> getpGOInGOGOCon(int goN);
-	virtual std::vector<std::vector<int> > getpGOPopInGOGOCon();
-
-	virtual std::vector<int> getpGOCoupOutGOGOCon(int goN);
-	virtual std::vector<std::vector<int> > getpGOPopCoupOutGOGOCon();
-
-	virtual std::vector<int> getpGOCoupInGOGOCon(int goN);
-	virtual std::vector<std::vector<int> > getpGOPopCoupInGOGOCon();
-
-	virtual std::vector<ct_uint32_t> getGOIncompIndfromGRtoGO();
-	virtual std::vector<ct_uint32_t> getGRIncompIndfromGRtoGO();
 
 	virtual bool deleteGOGOConPair(int srcGON, int destGON);
 	virtual bool addGOGOConPair(int srcGON, int destGON);
@@ -99,7 +57,6 @@ public:
 	int *spanArrayGOtoGLY;
 	int *xCoorsGOGL;
 	int *yCoorsGOGL;
-
 
 	int *numpGLfromGLtoGR;
 	int **pGLfromGLtoGR;
@@ -273,11 +230,11 @@ public:
 protected:
 	ConnectivityParams *cp;
 
-	virtual std::vector<ct_uint32_t> getConCommon(int cellN, ct_int32_t *numpCellCon, ct_uint32_t **pCellCon);
-	virtual std::vector<std::vector<ct_uint32_t> > getPopConCommon(int numCells, ct_int32_t *numpCellCon, ct_uint32_t **pCellCon);
+	//virtual std::vector<ct_uint32_t> getConCommon(int cellN, ct_int32_t *numpCellCon, ct_uint32_t **pCellCon);
+	//virtual std::vector<std::vector<ct_uint32_t> > getPopConCommon(int numCells, ct_int32_t *numpCellCon, ct_uint32_t **pCellCon);
 
-	virtual std::vector<int> getConCommon(int cellN, int *numpCellCon, int **pCellCon);
-	virtual std::vector<std::vector<int> > getPopConCommon(int numCells, int *numpCellCon, int **pCellCon);
+	//virtual std::vector<int> getConCommon(int cellN, int *numpCellCon, int **pCellCon);
+	//virtual std::vector<std::vector<int> > getPopConCommon(int numCells, int *numpCellCon, int **pCellCon);
 
 	virtual void allocateMemory();
 
@@ -297,8 +254,8 @@ protected:
 	virtual void connectGOGO(CRandomSFMT *randGen);
 	virtual void connectGOGO_GJ(CRandomSFMT *randGen);
 	virtual void connectGOGOBias(CRandomSFMT *randGen);
-		virtual void connectGOGODecay(CRandomSFMT *randGen);
-		virtual void connectGOGODecayP(CRandomSFMT *randGen, int goRecipParam, int simNum);
+	virtual void connectGOGODecay(CRandomSFMT *randGen);
+	virtual void connectGOGODecayP(CRandomSFMT *randGen, int goRecipParam, int simNum);
 	virtual void connectUBCGL();
 	virtual void assignGRDelays(unsigned int msPerStep);
 	virtual void connectPFtoBC();
