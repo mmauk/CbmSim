@@ -64,7 +64,6 @@ CBM_CORE_OBJ_PATH     = $(ROOT)objs/CBM_CORE_LIB/
 CBM_CORE_SOURCES  = $(CBM_CORE_SRC_PATH)innetmodules/innet.cpp \
 			        $(CBM_CORE_SRC_PATH)innetmodules/innetallgrmfgo.cpp \
 			        $(CBM_CORE_SRC_PATH)interface/cbmsimcore.cpp \
-			        $(CBM_CORE_SRC_PATH)interface/cbmsimx2grgodecouple.cpp \
 			        $(CBM_CORE_SRC_PATH)interface/innetinterface.cpp \
 			        $(CBM_CORE_SRC_PATH)interface/mzoneinterface.cpp \
 			        $(CBM_CORE_SRC_PATH)mzonemodules/mzone.cpp
@@ -73,7 +72,6 @@ CBM_CORE_OBJECTS  = $(CBM_CORE_OBJ_PATH)kernels_cuda.o \
                     $(CBM_CORE_OBJ_PATH)innet.o \
                     $(CBM_CORE_OBJ_PATH)innetallgrmfgo.o \
                     $(CBM_CORE_OBJ_PATH)cbmsimcore.o \
-                    $(CBM_CORE_OBJ_PATH)cbmsimx2grgodecouple.o \
                     $(CBM_CORE_OBJ_PATH)innetinterface.o \
                     $(CBM_CORE_OBJ_PATH)mzoneinterface.o \
                     $(CBM_CORE_OBJ_PATH)mzone.o
@@ -113,7 +111,6 @@ CBM_STATE_OBJ_PATH     = $(ROOT)objs/CBM_STATE_LIB/
 ####### CBM State Files
 
 CBM_STATE_SOURCES  = $(CBM_STATE_SRC_PATH)interfaces/cbmstate.cpp \
-			         $(CBM_STATE_SRC_PATH)interfaces/cbmstatex2grgodecouple.cpp \
 			         $(CBM_STATE_SRC_PATH)interfaces/iactivityparams.cpp \
 			         $(CBM_STATE_SRC_PATH)interfaces/iconnectivityparams.cpp \
 			         $(CBM_STATE_SRC_PATH)interfaces/iinnetconstate.cpp \
@@ -127,7 +124,6 @@ CBM_STATE_SOURCES  = $(CBM_STATE_SRC_PATH)interfaces/cbmstate.cpp \
 			         $(CBM_STATE_SRC_PATH)state/mzoneconnectivitystate.cpp
 
 CBM_STATE_OBJECTS  = $(CBM_STATE_OBJ_PATH)cbmstate.o \
-                     $(CBM_STATE_OBJ_PATH)cbmstatex2grgodecouple.o \
                      $(CBM_STATE_OBJ_PATH)iactivityparams.o \
                      $(CBM_STATE_OBJ_PATH)iconnectivityparams.o \
                      $(CBM_STATE_OBJ_PATH)iinnetconstate.o \
@@ -945,14 +941,6 @@ $(CBM_CORE_OBJ_PATH)cbmsimcore.o: $(CBM_CORE_SRC_PATH)interface/cbmsimcore.cpp $
                                   $(CBM_CORE_INCLUDE_PATH)innetmodules/innetallgrmfgo.h
 	$(CXX) -c $(MODULE_CXX_FLAGS) $(CBM_CORE_INCLUDES) -o $(CBM_CORE_OBJ_PATH)cbmsimcore.o $(CBM_CORE_SRC_PATH)interface/cbmsimcore.cpp
   
-$(CBM_CORE_OBJ_PATH)cbmsimx2grgodecouple.o: $(CBM_CORE_SRC_PATH)interface/cbmsimx2grgodecouple.cpp $(CBM_CORE_INCLUDE_PATH)interface/cbmsimx2grgodecouple.h \
-                                            $(CBM_CORE_INCLUDE_PATH)interface/innetinterface.h \
-                                            $(CBM_CORE_INCLUDE_PATH)interface/mzoneinterface.h \
-                                            $(CBM_CORE_INCLUDE_PATH)mzonemodules/mzone.h \
-                                            $(CBM_CORE_INCLUDE_PATH)cuda/kernels.h \
-                                            $(CBM_CORE_INCLUDE_PATH)innetmodules/innet.h
-	$(CXX) -c $(MODULE_CXX_FLAGS) $(CBM_CORE_INCLUDES) -o $(CBM_CORE_OBJ_PATH)cbmsimx2grgodecouple.o $(CBM_CORE_SRC_PATH)interface/cbmsimx2grgodecouple.cpp
- 
 $(CBM_CORE_OBJ_PATH)innetinterface.o: $(CBM_CORE_SRC_PATH)interface/innetinterface.cpp $(CBM_CORE_INCLUDE_PATH)interface/innetinterface.h
 	$(CXX) -c $(MODULE_CXX_FLAGS) $(CBM_CORE_INCLUDES) -o $(CBM_CORE_OBJ_PATH)innetinterface.o $(CBM_CORE_SRC_PATH)interface/innetinterface.cpp
   
@@ -1029,19 +1017,6 @@ $(CBM_STATE_OBJ_PATH)cbmstate.o: $(CBM_STATE_SRC_PATH)interfaces/cbmstate.cpp $(
 		$(CBM_STATE_INCLUDE_PATH)state/mzoneactivitystate.h \
 		$(CBM_STATE_INCLUDE_PATH)interfaces/imzoneactstate.h
 	$(CXX) -c $(MODULE_CXX_FLAGS) $(CBM_STATE_INCLUDES) -o $(CBM_STATE_OBJ_PATH)cbmstate.o $(CBM_STATE_SRC_PATH)interfaces/cbmstate.cpp
-
-$(CBM_STATE_OBJ_PATH)cbmstatex2grgodecouple.o: $(CBM_STATE_SRC_PATH)interfaces/cbmstatex2grgodecouple.cpp $(CBM_STATE_INCLUDE_PATH)interfaces/cbmstatex2grgodecouple.h \
-		$(CBM_STATE_INCLUDE_PATH)params/activityparams.h \
-		$(CBM_STATE_INCLUDE_PATH)interfaces/iactivityparams.h \
-		$(CBM_STATE_INCLUDE_PATH)params/connectivityparams.h \
-		$(CBM_STATE_INCLUDE_PATH)interfaces/iconnectivityparams.h \
-		$(CBM_STATE_INCLUDE_PATH)state/innetconnectivitystate.h \
-		$(CBM_STATE_INCLUDE_PATH)interfaces/iinnetconstate.h \
-		$(CBM_STATE_INCLUDE_PATH)state/mzoneconnectivitystate.h \
-		$(CBM_STATE_INCLUDE_PATH)state/innetactivitystate.h \
-		$(CBM_STATE_INCLUDE_PATH)state/mzoneactivitystate.h \
-		$(CBM_STATE_INCLUDE_PATH)interfaces/imzoneactstate.h
-	$(CXX) -c $(MODULE_CXX_FLAGS) $(CBM_STATE_INCLUDES) -o $(CBM_STATE_OBJ_PATH)cbmstatex2grgodecouple.o $(CBM_STATE_SRC_PATH)interfaces/cbmstatex2grgodecouple.cpp
 
 $(CBM_STATE_OBJ_PATH)iactivityparams.o: $(CBM_STATE_SRC_PATH)interfaces/iactivityparams.cpp $(CBM_STATE_INCLUDE_PATH)interfaces/iactivityparams.h
 	$(CXX) -c $(MODULE_CXX_FLAGS) $(CBM_STATE_INCLUDES) -o $(CBM_STATE_OBJ_PATH)iactivityparams.o $(CBM_STATE_SRC_PATH)interfaces/iactivityparams.cpp

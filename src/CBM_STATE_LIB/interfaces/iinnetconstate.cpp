@@ -5,9 +5,9 @@
  *      Author: consciousness
  */
 
-#include "interfaces/iinnetconstate.h"
-
-IInNetConState::~IInNetConState()
-{
-
-}
+//#include "interfaces/iinnetconstate.h"
+//
+//IInNetConState::~IInNetConState()
+//{
+//
+//}

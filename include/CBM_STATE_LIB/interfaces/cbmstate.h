@@ -23,7 +23,6 @@
 
 #include "iconnectivityparams.h"
 #include "iactivityparams.h"
-#include "iinnetconstate.h"
 #include "imzoneactstate.h"
 
 class CBMState
@@ -46,7 +45,6 @@ class CBMState
 		IConnectivityParams* getConnectivityParams();
 		IActivityParams* getActivityParams();
 
-		IInNetConState* getInnetConState();
 		IMZoneActState* getMZoneActState(unsigned int zoneN);
 
 		ActivityParams* getActParamsInternal();

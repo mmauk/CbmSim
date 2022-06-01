@@ -136,11 +136,6 @@ IActivityParams* CBMState::getActivityParams()
 	return (IActivityParams *)actParams;
 }
 
-IInNetConState* CBMState::getInnetConState()
-{
-	return (IInNetConState *)innetConState;
-}
-
 IMZoneActState* CBMState::getMZoneActState(unsigned int zoneN)
 {
 	return (IMZoneActState *)mzoneActStates[zoneN];

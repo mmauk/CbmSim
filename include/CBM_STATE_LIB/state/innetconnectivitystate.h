@@ -24,24 +24,23 @@
 #include <randGenerators/sfmt.h>
 
 #include "params/connectivityparams.h"
-#include "interfaces/iinnetconstate.h"
 
-class InNetConnectivityState : public virtual IInNetConState
+class InNetConnectivityState
 {
 public:
 	InNetConnectivityState(ConnectivityParams *parameters, unsigned int msPerStep, int randSeed, int goRecipParam, int simNum);
 	InNetConnectivityState(ConnectivityParams *parameters, std::fstream &infile);
 	InNetConnectivityState(const InNetConnectivityState &state);
 
-	virtual ~InNetConnectivityState();
+	~InNetConnectivityState();
 	
-	virtual void writeState(std::fstream &outfile);
+	void writeState(std::fstream &outfile);
 
-	virtual bool operator==(const InNetConnectivityState &compState);
-	virtual bool operator!=(const InNetConnectivityState &compState);
+	bool operator==(const InNetConnectivityState &compState);
+	bool operator!=(const InNetConnectivityState &compState);
 
-	virtual bool deleteGOGOConPair(int srcGON, int destGON);
-	virtual bool addGOGOConPair(int srcGON, int destGON);
+	bool deleteGOGOConPair(int srcGON, int destGON);
+	bool addGOGOConPair(int srcGON, int destGON);
 
 	//glomerulus
 
@@ -236,32 +235,32 @@ protected:
 	//virtual std::vector<int> getConCommon(int cellN, int *numpCellCon, int **pCellCon);
 	//virtual std::vector<std::vector<int> > getPopConCommon(int numCells, int *numpCellCon, int **pCellCon);
 
-	virtual void allocateMemory();
+	void allocateMemory();
 
-	virtual void stateRW(bool read, std::fstream &file);
+	void stateRW(bool read, std::fstream &file);
 
-	virtual void initializeVals();
+	void initializeVals();
 
-	virtual void connectGLUBC();
-	virtual void connectGRGL(CRandomSFMT *randGen);
-	virtual void connectGOGL(CRandomSFMT *randGen);
-	virtual void connectMFGL_noUBC(CRandomSFMT *randGen);
-	virtual void connectMFGL_withUBC(CRandomSFMT *randGen);
-	virtual void translateUBCGL();
-	virtual void translateMFGL();
-	virtual void translateGOGL(CRandomSFMT *randGen);
-	virtual void connectGRGO(CRandomSFMT *randGen, int goRecipParam);
-	virtual void connectGOGO(CRandomSFMT *randGen);
-	virtual void connectGOGO_GJ(CRandomSFMT *randGen);
-	virtual void connectGOGOBias(CRandomSFMT *randGen);
-	virtual void connectGOGODecay(CRandomSFMT *randGen);
-	virtual void connectGOGODecayP(CRandomSFMT *randGen, int goRecipParam, int simNum);
-	virtual void connectUBCGL();
-	virtual void assignGRDelays(unsigned int msPerStep);
-	virtual void connectPFtoBC();
-	virtual void assignPFtoBCDelays(unsigned int msPerStep);
+	void connectGLUBC();
+	void connectGRGL(CRandomSFMT *randGen);
+	void connectGOGL(CRandomSFMT *randGen);
+	void connectMFGL_noUBC(CRandomSFMT *randGen);
+	void connectMFGL_withUBC(CRandomSFMT *randGen);
+	void translateUBCGL();
+	void translateMFGL();
+	void translateGOGL(CRandomSFMT *randGen);
+	void connectGRGO(CRandomSFMT *randGen, int goRecipParam);
+	void connectGOGO(CRandomSFMT *randGen);
+	void connectGOGO_GJ(CRandomSFMT *randGen);
+	void connectGOGOBias(CRandomSFMT *randGen);
+	void connectGOGODecay(CRandomSFMT *randGen);
+	void connectGOGODecayP(CRandomSFMT *randGen, int goRecipParam, int simNum);
+	void connectUBCGL();
+	void assignGRDelays(unsigned int msPerStep);
+	void connectPFtoBC();
+	void assignPFtoBCDelays(unsigned int msPerStep);
 
-	virtual void connectCommon(int **srcConArr, int32_t *srcNumCon,
+	void connectCommon(int **srcConArr, int32_t *srcNumCon,
 			int **destConArr, int *destNumCon,
 			int srcMaxNumCon, int numSrcCells,
 			int destMaxNumCon, int destNormNumCon,
@@ -270,7 +269,7 @@ protected:
 			int normConAttempts, int maxConAttempts, bool needUnique,
 			CRandomSFMT *randGen);
 
-	virtual void translateCommon(int **pPreGLConArr, int *numpPreGLCon,
+	void translateCommon(int **pPreGLConArr, int *numpPreGLCon,
 			int **pGLPostGLConArr, int *numpGLPostGLCon,
 			int **pPreConArr, int *numpPreCon,
 			int **pPostConArr, int *numpPostCon,

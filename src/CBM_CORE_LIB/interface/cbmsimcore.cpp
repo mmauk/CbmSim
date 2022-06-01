@@ -458,9 +458,8 @@ MZoneInterface** CBMSimCore::getMZoneList()
 void CBMSimCore::construct(CBMState *state, int *mzoneRSeed, int gpuIndStart, int numGPUP2)
 {
 	int maxNumGPUs;
-	simState = state; // assignment operator deep or shallow copy?
 
-	numZones = simState->getNumZones();
+	numZones = state->getNumZones();
 
 	cudaGetDeviceCount(&maxNumGPUs);
 
@@ -495,16 +494,16 @@ void CBMSimCore::construct(CBMState *state, int *mzoneRSeed, int gpuIndStart, in
 	initCUDA();
 	std::cout << "passed cuda" << std::endl;
 
-	inputNet = new InNet(simState->getConParamsInternal(), simState->getActParamsInternal(),
-		simState->getInnetConStateInternal(), simState->getInnetActStateInternal(),
+	inputNet = new InNet(state->getConParamsInternal(), state->getActParamsInternal(),
+		state->getInnetConStateInternal(), state->getInnetActStateInternal(),
 		this->gpuIndStart, numGPUs);
 
 	zones = new MZone*[numZones];
 
 	for (int i = 0; i < numZones; i++)
 	{
-		zones[i] = new MZone(simState->getConParamsInternal(), simState->getActParamsInternal(),
-			simState->getMZoneConStateInternal(i), simState->getMZoneActStateInternal(i),
+		zones[i] = new MZone(state->getConParamsInternal(), state->getActParamsInternal(),
+			state->getMZoneConStateInternal(i), state->getMZoneActStateInternal(i),
 			mzoneRSeed[i], inputNet->getApBufGRGPUPointer(),
 			inputNet->getDelayBCPCSCMaskGPUPointer(), inputNet->getHistGRGPUPointer(),
 			this->gpuIndStart, numGPUs);
@@ -513,5 +512,7 @@ void CBMSimCore::construct(CBMState *state, int *mzoneRSeed, int gpuIndStart, in
 	
 	initAuxVars();
 	std::cout << "AuxVars good" << std::endl;
+
+	simState = state; // assignment operator deep or shallow copy?
 }
 
