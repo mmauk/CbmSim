@@ -6,8 +6,8 @@
  */
 
 #include "params/activityparams.h"
-
-ActivityParams::ActivityParams(std::fstream &infile)
+// TODO: CHANGE THIS ALGORITHM IN THE FUTURE TO ONE IN CONPARAM.cpp
+ActivityParams::ActivityParams(std::string actParamFile)
 {
 	//Assumes that file is in the following format:
 	//key\tvalue\n
@@ -16,27 +16,30 @@ ActivityParams::ActivityParams(std::fstream &infile)
 //	//loop through file and add key/value pair to map
 //	//** this is done to remove the necessity of order in the original file
 
+	std::cout << "[INFO]: opening activity parameter file..."
+	std::fstream paramFileBuffer(actParamFile.c_str());
+
 	std::string key;
 	float val;
 	char temp;
 
 	while(true)
 	{
-		temp = infile.peek();
+		temp = paramFileBuffer.peek();
 		while (temp == ' ')
 		{
-			temp = infile.get();
-			temp = infile.peek();
+			temp = paramFileBuffer.get();
+			temp = paramFileBuffer.peek();
 		}		
 		if (temp == '#')
 		{
 			while (temp != '\n')
 			{
-				temp = infile.get();
+				temp = paramFileBuffer.get();
 			}
 		}
 
-		infile >> key >> val;
+		paramFileBuffer >> key >> val;
 
 		if (key.compare("activityParamEnd") == 0)
 		{
@@ -45,7 +48,7 @@ ActivityParams::ActivityParams(std::fstream &infile)
 
 		paramMap[key] = val;
 	}
-
+	std::cout << "[INFO]: activity parameter file opened, params loaded in param map..." << std::endl;
 	updateParams();
 }
 

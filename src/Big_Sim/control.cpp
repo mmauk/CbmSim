@@ -1,18 +1,23 @@
-#include <string>
 #include <time.h>
 #include "control.h"
 
-Control::Control(){};
+Control::Control(std::string actParamFile)
+{
+	actParams = new ActivityParams(actParamFile);
+}
 
-Control::~Control(){};
+Control::~Control()
+{
+	delete actParams;
+}
 
-void Control::runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuningTrials,
-		int numGrDetectionTrials, int numTrainingTrials, int simNum, int csSize, float csFracMFs,
-		float goMin, float GOGR, float GRGO, float MFGO, float csMinRate, float csMaxRate,
-		float gogoW, int inputStrength, float spillFrac)
+void Control::runSimulationWithGRdata(int goRecipParam, int numTuningTrials, int numGrDetectionTrials,
+		int numTrainingTrials, int simNum, int csSize, float csFracMFs, float goMin, float GOGR,
+		float GRGO, float MFGO, float csMinRate, float csMaxRate, float gogoW, int inputStrength, 
+		float spillFrac)
 {
 	// set all relevant variables to the sim	
-	SetSim simulation(fileNum, goRecipParam, simNum);
+	SetSim simulation(conParams, actParams, goRecipParam, simNum);
 	joestate  = simulation.getstate();
 	joesim    = simulation.getsim();
 	joeMFFreq = simulation.getMFFreq(csMinRate, csMaxRate);

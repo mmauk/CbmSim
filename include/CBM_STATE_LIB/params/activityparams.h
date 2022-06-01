@@ -23,7 +23,7 @@
 class ActivityParams : public virtual IActivityParams
 {
 public:
-	ActivityParams(std::fstream &infile);
+	ActivityParams(std::string actParamFile);
 
 	void writeParams(std::fstream &outfile);
 

@@ -29,8 +29,8 @@ CBMState::CBMState(std::fstream &infile)
 	}
 }
 
-CBMState::CBMState(std::fstream &actPFile, std::fstream &conPFile, unsigned int nZones,
-		int goRecipParam, int simNum)
+CBMState::CBMState(ConnectivityParams &conParams, ActivityParams *actParams,
+	unsigned int nZones, int goRecipParam, int simNum)
 {
 	int innetCRSeed;
 	int *mzoneCRSeed = new int[nZones];
@@ -45,7 +45,7 @@ CBMState::CBMState(std::fstream &actPFile, std::fstream &conPFile, unsigned int 
 		mzoneARSeed[i] = randGen.IRandom(0, INT_MAX);
 	}
 
-	newState(actPFile, conPFile, nZones, innetCRSeed, mzoneCRSeed, mzoneARSeed, goRecipParam, simNum);
+	newState(conParams, actParams, nZones, innetCRSeed, mzoneCRSeed, mzoneARSeed, goRecipParam, simNum);
 
 	delete[] mzoneCRSeed;
 	delete[] mzoneARSeed;
@@ -69,14 +69,11 @@ CBMState::~CBMState()
 	delete[] mzoneActStates;
 }
 
-void CBMState::newState(std::fstream &actPFile, std::fstream &conPFile, unsigned int nZones,
-			int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed, int goRecipParam, int simNum)
+void CBMState::newState(ConnectivityParams &conParams, ActivityParams *actParams, unsigned int nZones,
+	int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed, int goRecipParam, int simNum)
 {
 	numZones = nZones;
-	
-	conParams = new ConnectivityParams(conPFile);
-	actParams = new ActivityParams(actPFile);
-
+	// TODO: start here, continue to fix conParams (replace vars w constants, reference directly w . op)
 	innetConState  = new InNetConnectivityState(conParams, actParams->msPerTimeStep,
 			innetCRSeed, goRecipParam, simNum);
 	mzoneConStates = new MZoneConnectivityState*[numZones];

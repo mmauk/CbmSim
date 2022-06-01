@@ -3,21 +3,20 @@
 
 #include <iostream> 
 #include <fstream>
-
+#include <string>
+#include "connectivityparams.h"
 #include <interfaces/cbmstate.h>
 #include <interfaces/iactivityparams.h>
-
 #include <interface/cbmsimcore.h>
-
 #include <ecmfpopulation.h>
 #include <poissonregencells.h>
-
 #include <eyelidintegrator.h>
 
 class SetSim {
 
 public:
-	SetSim(int fileNum, int goRecipParam, int simNum);
+	// yikes. for now, pass actParams as a pointer by value while we fix conParams (06/01/2022)
+	SetSim(ConnectivityParams &conParams, ActivityParams *actParams, int goRecipParam, int simNum);
 	~SetSim();
 
 	// State	

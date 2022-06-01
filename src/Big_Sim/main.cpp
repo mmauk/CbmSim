@@ -1,5 +1,3 @@
-
-
 #include <time.h>
 #include <iostream>
 #include <fstream>
@@ -16,9 +14,14 @@
 
 #include "control.h"
 
+
+const std::string INPUT_DATA_PATH = "../data/inputs/";
+const std::string OUTPUT_DATA_PATH = "../data/outputs/";
+const std::string ACT_PARAM_FILE = INPUT_DATA_PATH + "actParams.txt";
+
+
 int main() 
 {
-
 	int numTrainingTrials = 10;
 	int homeoTuningTrials = 0;
 	int granuleActivityDetectionTrials = 0;
@@ -61,8 +64,8 @@ int main()
 
 				for (int simNum = 0; simNum < 10; simNum++)
 				{
-					Control joeSimulation;
-					joeSimulation.runSimulationWithGRdata(fileNum, goRecipParamNum, homeoTuningTrials,
+					Control joeSimulation(ACT_PARAM_FILE);
+					joeSimulation.runSimulationWithGRdata(goRecipParamNum, homeoTuningTrials,
 							granuleActivityDetectionTrials, numTrainingTrials, simNum, CSlength[fileNum],
 							csTonicF, goMin, GOGR, GRGO, MFGO, csRateMin, csRateMax, gogoW, inputWeightNum,
 							spillFrac);

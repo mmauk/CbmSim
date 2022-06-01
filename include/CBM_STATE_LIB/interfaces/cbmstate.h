@@ -21,18 +21,25 @@
 #include "state/innetactivitystate.h"
 #include "state/mzoneactivitystate.h"
 
+#include "params/connectivityparams.h" // <-- added in 06/01/2022
 #include "iactivityparams.h"
 #include "imzoneactstate.h"
 
 class CBMState
 {
 	public:
-		virtual ~CBMState();	
+		CBMState();
 		CBMState(std::fstream &infile);
+
+		// VVVV the one we actually use...
+		CBMState(ConnectivityParams &conParams, ActivityParams *actParams,
+			unsigned int nZones, int goRecipParam, int simNum);
+
 		CBMState(std::fstream &actPFile, std::fstream &conPFile, unsigned int nZones,
-				int goRecipParam, int simNum);
-		CBMState(std::fstream &actPFile, std::fstream &conPFile, unsigned int nZones,
-				int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed);
+			int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed);
+
+		// y virtual where is the inheritance
+		virtual ~CBMState();	
 
 		void writeState(std::fstream &outfile);
 
@@ -55,18 +62,15 @@ class CBMState
 		MZoneConnectivityState* getMZoneConStateInternal(unsigned int zoneN);
 
 	private:
-		CBMState();
 		
-		void newState(std::fstream &actPFile, std::fstream &conPFile, unsigned int nZones,
+		void newState(ConnectivityParams &conParams, ActivityParams *actParams, unsigned int nZones,
 				int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed, int goRecipParam, int simNum);
-		
-		void newStateParam(std::fstream &actPFile, std::fstream &conPFile, unsigned int nZones,
-				int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed, int spanP, int numConP);
+	
+		// don't know wtf this is from	
+		//void newStateParam(std::fstream &actPFile, std::fstream &conPFile, unsigned int nZones,
+		//		int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed, int spanP, int numConP);
 
 		ct_uint32_t numZones;
-
-		ActivityParams *actParams;
-		ConnectivityParams *conParams;
 
 		InNetConnectivityState *innetConState;
 		MZoneConnectivityState **mzoneConStates;

@@ -1,33 +1,10 @@
 #include <string>
 #include "setsim.h"
 
-// simple template function which acts as a string interpolator
-// courtesy of wcochran: https://stackoverflow.com/questions/63121776/
-// simplest-syntax-for-string-interpolation-in-c
-template<typename... Args>
-std::string Sprintf(const char *fmt, Args... args)
+SetSim::SetSim(ConnectivityParams &conParams, ActivityParams *actParams, int goRecipParam, int simNum)
 {
-    
-	const size_t n = snprintf(nullptr, 0, fmt, args...);
-	std::vector<char> buf(n+1);
-	snprintf(buf.data(), n+1, fmt, args...);
-	return std::string(buf.data());
-}
-
-SetSim::SetSim(int fileNum, int goRecipParam, int simNum)
-{
-
-    // Not sure how we want our act files to be named	
-	// UPDATE (06/01/2022): these directory paths are *relative* paths
-	std::string inActFile = Sprintf("../data/inputs/actParams_binChoice2_%d.txt", fileNum+1);	
-	std::string inConFile = Sprintf("../data/inputs/conParams_binChoice2_%d.txt", fileNum+1);	
-
-	std::fstream actPF(inActFile.c_str());
-	std::fstream conPF(inConFile.c_str());
-    
     // printing should be handled in main, or we send to temp buffer,
 	// which we run through stdout in main
-	std::cout << "Opening file...(and initializing state)" << std::endl;
 	
 	state = new CBMState(actPF, conPF, 1, goRecipParam, simNum);
 	

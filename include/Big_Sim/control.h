@@ -3,33 +3,33 @@
 
 #include <iostream>
 #include <fstream>
+#include <string>
 #include <algorithm>
 #include <iterator>
 #include "setsim.h"
 
 #include "stdDefinitions/pstdint.h"
-
 #include "interfaces/cbmstate.h"
+#include "params/connectivityparams.h"
 #include "interfaces/iactivityparams.h"
 #include "state/innetconnectivitystate.h"
-
 #include "interface/cbmsimcore.h"
-
 #include "ecmfpopulation.h"
 #include "poissonregencells.h"
 #include "interfaces/ectrialsdata.h"
 #include "eyelidintegrator.h"
-
 #include "state/innetactivitystate.h"
 
 class Control 
 {
 
 	public:
-		Control();
+		Control(std::string actParamFile);
 		~Control();
 
 		// Objects
+		ConnectivityParams conParams; // <-- conParams a struct now
+		ActivityParams *actParams;	
 		CBMState *joestate;
 		CBMSimCore *joesim;
 		ECMFPopulation *joeMFFreq;
@@ -127,10 +127,10 @@ class Control
 			float csFracMFs, float goMin);
 		void runSimulation(int tuningTrials, int numTrials, int simNum, int csSize, float csFracMFs,
 			float goMin);
-		void runSimulationWithGRdata(int fileNum, int goRecipParam, int numTuningTrials,
-			int numGrDetectionTrials, int numTrainingTrials, int simNum, int csSize, float csFracMFs,
-			float goMin, float GOGR, float GRGO, float MFGO, float csMinRate, float csMaxRate,
-			float gogoW, int inputStrength, float spillFrac);
+		void runSimulationWithGRdata(int goRecipParam, int numTuningTrials, int numGrDetectionTrials, 
+			int numTrainingTrials, int simNum, int csSize, float csFracMFs, float goMin, float GOGR,
+			float GRGO, float MFGO, float csMinRate, float csMaxRate, float gogoW, int inputStrength,
+			float spillFrac);
 
 		void initializeOutputArrays(int numPC, int numNC, int numSC, int numBC, int numGO,
 			int csSize, int numTrainingTrials);
