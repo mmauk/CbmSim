@@ -112,7 +112,6 @@ CBM_STATE_OBJ_PATH     = $(BUILD_PATH)CBM_STATE_LIB/
 
 CBM_STATE_SOURCES  = $(CBM_STATE_SRC_PATH)interfaces/cbmstate.cpp \
 			         $(CBM_STATE_SRC_PATH)interfaces/iactivityparams.cpp \
-			         $(CBM_STATE_SRC_PATH)interfaces/iconnectivityparams.cpp \
 			         $(CBM_STATE_SRC_PATH)interfaces/imzoneactstate.cpp \
 			         $(CBM_STATE_SRC_PATH)params/activityparams.cpp \
 			         $(CBM_STATE_SRC_PATH)params/connectivityparams.cpp \
@@ -124,7 +123,6 @@ CBM_STATE_SOURCES  = $(CBM_STATE_SRC_PATH)interfaces/cbmstate.cpp \
 
 CBM_STATE_OBJECTS  = $(CBM_STATE_OBJ_PATH)cbmstate.o \
                      $(CBM_STATE_OBJ_PATH)iactivityparams.o \
-                     $(CBM_STATE_OBJ_PATH)iconnectivityparams.o \
                      $(CBM_STATE_OBJ_PATH)imzoneactstate.o \
                      $(CBM_STATE_OBJ_PATH)activityparams.o \
                      $(CBM_STATE_OBJ_PATH)connectivityparams.o \
@@ -1006,7 +1004,6 @@ $(CBM_STATE_OBJ_PATH)cbmstate.o: $(CBM_STATE_SRC_PATH)interfaces/cbmstate.cpp $(
 		$(CBM_STATE_INCLUDE_PATH)params/activityparams.h \
 		$(CBM_STATE_INCLUDE_PATH)interfaces/iactivityparams.h \
 		$(CBM_STATE_INCLUDE_PATH)params/connectivityparams.h \
-		$(CBM_STATE_INCLUDE_PATH)interfaces/iconnectivityparams.h \
 		$(CBM_STATE_INCLUDE_PATH)state/innetconnectivitystate.h \
 		$(CBM_STATE_INCLUDE_PATH)state/innetconstateggialtcon.h \
 		$(CBM_STATE_INCLUDE_PATH)state/mzoneconnectivitystate.h \
@@ -1018,9 +1015,6 @@ $(CBM_STATE_OBJ_PATH)cbmstate.o: $(CBM_STATE_SRC_PATH)interfaces/cbmstate.cpp $(
 $(CBM_STATE_OBJ_PATH)iactivityparams.o: $(CBM_STATE_SRC_PATH)interfaces/iactivityparams.cpp $(CBM_STATE_INCLUDE_PATH)interfaces/iactivityparams.h
 	$(CXX) -c $(MODULE_CXX_FLAGS) $(CBM_STATE_INCLUDES) -o $(CBM_STATE_OBJ_PATH)iactivityparams.o $(CBM_STATE_SRC_PATH)interfaces/iactivityparams.cpp
 
-$(CBM_STATE_OBJ_PATH)iconnectivityparams.o: $(CBM_STATE_SRC_PATH)interfaces/iconnectivityparams.cpp $(CBM_STATE_INCLUDE_PATH)interfaces/iconnectivityparams.h
-	$(CXX) -c $(MODULE_CXX_FLAGS) $(CBM_STATE_INCLUDES) -o $(CBM_STATE_OBJ_PATH)iconnectivityparams.o $(CBM_STATE_SRC_PATH)interfaces/iconnectivityparams.cpp
-
 $(CBM_STATE_OBJ_PATH)imzoneactstate.o: $(CBM_STATE_SRC_PATH)interfaces/imzoneactstate.cpp $(CBM_STATE_INCLUDE_PATH)interfaces/imzoneactstate.h
 	$(CXX) -c $(MODULE_CXX_FLAGS) $(CBM_STATE_INCLUDES) -o $(CBM_STATE_OBJ_PATH)imzoneactstate.o $(CBM_STATE_SRC_PATH)interfaces/imzoneactstate.cpp
 
@@ -1028,40 +1022,34 @@ $(CBM_STATE_OBJ_PATH)activityparams.o: $(CBM_STATE_SRC_PATH)params/activityparam
 		                               $(CBM_STATE_INCLUDE_PATH)interfaces/iactivityparams.h
 	$(CXX) -c $(MODULE_CXX_FLAGS) $(CBM_STATE_INCLUDES) -o $(CBM_STATE_OBJ_PATH)activityparams.o $(CBM_STATE_SRC_PATH)params/activityparams.cpp
 
-$(CBM_STATE_OBJ_PATH)connectivityparams.o: $(CBM_STATE_SRC_PATH)params/connectivityparams.cpp $(CBM_STATE_INCLUDE_PATH)params/connectivityparams.h \
-		                                   $(CBM_STATE_INCLUDE_PATH)interfaces/iconnectivityparams.h
+$(CBM_STATE_OBJ_PATH)connectivityparams.o: $(CBM_STATE_SRC_PATH)params/connectivityparams.cpp $(CBM_STATE_INCLUDE_PATH)params/connectivityparams.h
 	$(CXX) -c $(MODULE_CXX_FLAGS) $(CBM_STATE_INCLUDES) -o $(CBM_STATE_OBJ_PATH)connectivityparams.o $(CBM_STATE_SRC_PATH)params/connectivityparams.cpp
 
 $(CBM_STATE_OBJ_PATH)innetactivitystate.o: $(CBM_STATE_SRC_PATH)state/innetactivitystate.cpp $(CBM_STATE_INCLUDE_PATH)state/innetactivitystate.h \
 		                                   $(CBM_STATE_INCLUDE_PATH)params/connectivityparams.h \
-		                                   $(CBM_STATE_INCLUDE_PATH)interfaces/iconnectivityparams.h \
 		                                   $(CBM_STATE_INCLUDE_PATH)params/activityparams.h \
 		                                   $(CBM_STATE_INCLUDE_PATH)interfaces/iactivityparams.h \
 		                                   $(CBM_STATE_INCLUDE_PATH)state/innetconnectivitystate.h
 	$(CXX) -c $(MODULE_CXX_FLAGS) $(CBM_STATE_INCLUDES) -o $(CBM_STATE_OBJ_PATH)innetactivitystate.o $(CBM_STATE_SRC_PATH)state/innetactivitystate.cpp
 
 $(CBM_STATE_OBJ_PATH)innetconnectivitystate.o: $(CBM_STATE_SRC_PATH)state/innetconnectivitystate.cpp $(CBM_STATE_INCLUDE_PATH)state/innetconnectivitystate.h \
-		                                       $(CBM_STATE_INCLUDE_PATH)params/connectivityparams.h \
-		                                       $(CBM_STATE_INCLUDE_PATH)interfaces/iconnectivityparams.h
+		                                       $(CBM_STATE_INCLUDE_PATH)params/connectivityparams.h
 	$(CXX) -c $(MODULE_CXX_FLAGS) $(CBM_STATE_INCLUDES) -o $(CBM_STATE_OBJ_PATH)innetconnectivitystate.o $(CBM_STATE_SRC_PATH)state/innetconnectivitystate.cpp
 
 $(CBM_STATE_OBJ_PATH)innetconstateggialtcon.o: $(CBM_STATE_SRC_PATH)state/innetconstateggialtcon.cpp $(CBM_STATE_INCLUDE_PATH)state/innetconstateggialtcon.h \
 		                                       $(CBM_STATE_INCLUDE_PATH)state/innetconnectivitystate.h \
-		                                       $(CBM_STATE_INCLUDE_PATH)params/connectivityparams.h \
-		                                       $(CBM_STATE_INCLUDE_PATH)interfaces/iconnectivityparams.h
+		                                       $(CBM_STATE_INCLUDE_PATH)params/connectivityparams.h
 	$(CXX) -c $(MODULE_CXX_FLAGS) $(CBM_STATE_INCLUDES) -o $(CBM_STATE_OBJ_PATH)innetconstateggialtcon.o $(CBM_STATE_SRC_PATH)state/innetconstateggialtcon.cpp
 
 $(CBM_STATE_OBJ_PATH)mzoneactivitystate.o: $(CBM_STATE_SRC_PATH)state/mzoneactivitystate.cpp $(CBM_STATE_INCLUDE_PATH)state/mzoneactivitystate.h \
 		                                   $(CBM_STATE_INCLUDE_PATH)params/connectivityparams.h \
-		                                   $(CBM_STATE_INCLUDE_PATH)interfaces/iconnectivityparams.h \
 		                                   $(CBM_STATE_INCLUDE_PATH)params/activityparams.h \
 		                                   $(CBM_STATE_INCLUDE_PATH)interfaces/iactivityparams.h \
 		                                   $(CBM_STATE_INCLUDE_PATH)interfaces/imzoneactstate.h
 	$(CXX) -c $(MODULE_CXX_FLAGS) $(CBM_STATE_INCLUDES) -o $(CBM_STATE_OBJ_PATH)mzoneactivitystate.o $(CBM_STATE_SRC_PATH)state/mzoneactivitystate.cpp
 
 $(CBM_STATE_OBJ_PATH)mzoneconnectivitystate.o: $(CBM_STATE_SRC_PATH)state/mzoneconnectivitystate.cpp $(CBM_STATE_INCLUDE_PATH)state/mzoneconnectivitystate.h \
-		                                       $(CBM_STATE_INCLUDE_PATH)params/connectivityparams.h \
-		                                       $(CBM_STATE_INCLUDE_PATH)interfaces/iconnectivityparams.h
+		                                       $(CBM_STATE_INCLUDE_PATH)params/connectivityparams.h
 	$(CXX) -c $(MODULE_CXX_FLAGS) $(CBM_STATE_INCLUDES) -o $(CBM_STATE_OBJ_PATH)mzoneconnectivitystate.o $(CBM_STATE_SRC_PATH)state/mzoneconnectivitystate.cpp
 
 

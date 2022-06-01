@@ -21,7 +21,6 @@
 #include "state/innetactivitystate.h"
 #include "state/mzoneactivitystate.h"
 
-#include "iconnectivityparams.h"
 #include "iactivityparams.h"
 #include "imzoneactstate.h"
 
@@ -42,7 +41,6 @@ class CBMState
 
 		ct_uint32_t getNumZones();
 
-		IConnectivityParams* getConnectivityParams();
 		IActivityParams* getActivityParams();
 
 		IMZoneActState* getMZoneActState(unsigned int zoneN);

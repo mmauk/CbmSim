@@ -57,7 +57,7 @@ CBMSimCore *SetSim::getsim()
 
 ECMFPopulation* SetSim::getMFFreq(float csMinRate, float csMaxRate)
 {
-	unsigned int numMF   = state->getConnectivityParams()->getNumMF(); 		
+	unsigned int numMF   = state->getConParamsInternal()->getNumMF(); 		
 	bool collaterals_off = false;
 	float fracImport     = 0.0;
 	bool secondCS        = true;
@@ -75,8 +75,8 @@ ECMFPopulation* SetSim::getMFFreq(float csMinRate, float csMaxRate)
 
 PoissonRegenCells* SetSim::getMFs()
 {
-	unsigned int numMF  = state->getConnectivityParams()->getNumMF(); 		
-	unsigned int numNC  = state->getConnectivityParams()->getNumNC();
+	unsigned int numMF  = state->getConParamsInternal()->getNumMF(); 		
+	unsigned int numNC  = state->getConParamsInternal()->getNumNC();
 	float msPerTimeStep = state->getActivityParams()->getMSPerTimeStep() * 1.0;
 
 	MFs = new PoissonRegenCells(						 

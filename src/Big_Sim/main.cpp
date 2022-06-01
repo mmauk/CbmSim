@@ -7,7 +7,6 @@
 #include <stdDefinitions/pstdint.h>
 
 #include <interfaces/cbmstate.h>
-#include <interfaces/iconnectivityparams.h>
 #include <interfaces/iactivityparams.h>
 
 #include <interface/cbmsimcore.h>

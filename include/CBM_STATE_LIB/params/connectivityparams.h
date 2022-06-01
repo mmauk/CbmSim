@@ -18,14 +18,14 @@
 #include <stdDefinitions/pstdint.h>
 #include <memoryMgmt/dynamic2darray.h>
 
-#include "interfaces/iconnectivityparams.h"
 
-class ConnectivityParams : public virtual IConnectivityParams
+class ConnectivityParams
 {
 public:
+	ConnectivityParams();
 	ConnectivityParams(std::fstream &infile);
 
-	virtual ~ConnectivityParams();
+	~ConnectivityParams();
 
 	void writeParams(std::fstream &outfile);
 
@@ -203,7 +203,6 @@ public:
 
 
 private:
-	ConnectivityParams();
 
 	std::map<std::string, ct_uint32_t> paramMap;
 };

@@ -126,11 +126,6 @@ ct_uint32_t CBMState::getNumZones()
 	return numZones;
 }
 
-IConnectivityParams* CBMState::getConnectivityParams()
-{
-	return (IConnectivityParams *)conParams;
-}
-
 IActivityParams* CBMState::getActivityParams()
 {
 	return (IActivityParams *)actParams;
