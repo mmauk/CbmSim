@@ -152,8 +152,8 @@ class Control
 			unsigned int numRow, unsigned int numCol);
 		void deleteOutputArrays();
 
-		int* getGRIndicies(CBMState *joestate, ECMFPopulation *joeMFFreq, float csMinRate, float csMaxRate, float CStonicMFfrac);
-		int  getNumGRIndicies(CBMState *joestate, ECMFPopulation *joeMFFreq, float csMinRate, float csMaxRate, float CStonicMFfrac);
+		//int* getGRIndicies(CBMState *joestate, ECMFPopulation *joeMFFreq, float csMinRate, float csMaxRate, float CStonicMFfrac);
+		//int  getNumGRIndicies(CBMState *joestate, ECMFPopulation *joeMFFreq, float csMinRate, float csMaxRate, float CStonicMFfrac);
 };
 
 #endif /*_CONTROL_H*/

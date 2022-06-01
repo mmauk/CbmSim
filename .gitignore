@@ -1,4 +1,4 @@
 .git
 scripts/venv/**
+build/**
 data/**
-Big_Sim

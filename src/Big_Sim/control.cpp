@@ -278,136 +278,136 @@ void Control::deleteOutputArrays()
 	delete2DArray<ct_uint8_t>(allSCRaster);
 }
 
-int* Control::getGRIndicies(CBMState *joestate, ECMFPopulation *joeMFFreq, float csMinRate, float csMaxRate, float CStonicMFfrac) 
-{
-
-	int numMF = 4096;
-	int numGR = 1048576;
-
-	bool* tonicMFsA = joeMFFreq->getTonicMFInd();
-	bool* tonicMFsB = joeMFFreq->getTonicMFIndOverlap();
-	
-	int numTonic = numMF*CStonicMFfrac; 
-	int numActiveMFs = numTonic;
-
-	std::cout << "Number of CS MossyFibers:	" << numActiveMFs << std::endl;
-	
-	int *activeMFIndA = new int[numActiveMFs];
-	int *activeMFIndB = new int[numActiveMFs];
-	
-	int counterMFA=0;
-	int counterMFB=0;
-	
-	for (int i = 0; i < numMF; i++)
-	{	
-		if (tonicMFsA[i])
-		{
-			activeMFIndA[counterMFA] = i;
-			counterMFA++;
-		}
-		
-		if (tonicMFsB[i])
-		{
-			activeMFIndB[counterMFB] = i;
-			counterMFB++;
-		}
-	}
-
-	std::cout << "NumMFs in A: " << counterMFA << std::endl;
-	std::cout << "NumMFs in B: " << counterMFB << std::endl;
-	
-	std::vector<int> MFtoGRs;	
-	int numPostSynGRs;
-	// why is this labelled a bool when its an int array?
-	int *pActiveGRsBool = new int[numGR]();
-	for (int i = 0; i < numActiveMFs; i++)
-	{
-		MFtoGRs = joestate->getInnetConStateInternal()->getpMFfromMFtoGRCon(activeMFIndA[i]);
-		numPostSynGRs = MFtoGRs.size();
-		
-		for (int j = 0; j < numPostSynGRs; j++)
-		{
-			pActiveGRsBool[MFtoGRs[j]]++;
-		}
-	}
-	
-	int counterGR = 0;
-	
-	for (int i = 0; i < numGR; i++)
-	{
-		if (pActiveGRsBool[i] >= 1) counterGR++;
-	}
-
-	int *pActiveGRs = new int[counterGR](); 
-	int counterAGR = 0;
-	
-	for (int i = 0; i < numGR; i++)
-	{
-		if (pActiveGRsBool[i] >= 1)
-		{		
-			pActiveGRs[counterAGR] = i;
-			counterAGR++;
-		}
-	}	
-
-	return pActiveGRs;
-}
+//int* Control::getGRIndicies(CBMState *joestate, ECMFPopulation *joeMFFreq, float csMinRate, float csMaxRate, float CStonicMFfrac) 
+//{
+//
+//	int numMF = 4096;
+//	int numGR = 1048576;
+//
+//	bool* tonicMFsA = joeMFFreq->getTonicMFInd();
+//	bool* tonicMFsB = joeMFFreq->getTonicMFIndOverlap();
+//	
+//	int numTonic = numMF*CStonicMFfrac; 
+//	int numActiveMFs = numTonic;
+//
+//	std::cout << "Number of CS MossyFibers:	" << numActiveMFs << std::endl;
+//	
+//	int *activeMFIndA = new int[numActiveMFs];
+//	int *activeMFIndB = new int[numActiveMFs];
+//	
+//	int counterMFA=0;
+//	int counterMFB=0;
+//	
+//	for (int i = 0; i < numMF; i++)
+//	{	
+//		if (tonicMFsA[i])
+//		{
+//			activeMFIndA[counterMFA] = i;
+//			counterMFA++;
+//		}
+//		
+//		if (tonicMFsB[i])
+//		{
+//			activeMFIndB[counterMFB] = i;
+//			counterMFB++;
+//		}
+//	}
+//
+//	std::cout << "NumMFs in A: " << counterMFA << std::endl;
+//	std::cout << "NumMFs in B: " << counterMFB << std::endl;
+//	
+//	std::vector<int> MFtoGRs;	
+//	int numPostSynGRs;
+//	// why is this labelled a bool when its an int array?
+//	int *pActiveGRsBool = new int[numGR]();
+//	for (int i = 0; i < numActiveMFs; i++)
+//	{
+//		MFtoGRs = joestate->getInnetConStateInternal()->getpMFfromMFtoGRCon(activeMFIndA[i]);
+//		numPostSynGRs = MFtoGRs.size();
+//		
+//		for (int j = 0; j < numPostSynGRs; j++)
+//		{
+//			pActiveGRsBool[MFtoGRs[j]]++;
+//		}
+//	}
+//	
+//	int counterGR = 0;
+//	
+//	for (int i = 0; i < numGR; i++)
+//	{
+//		if (pActiveGRsBool[i] >= 1) counterGR++;
+//	}
+//
+//	int *pActiveGRs = new int[counterGR](); 
+//	int counterAGR = 0;
+//	
+//	for (int i = 0; i < numGR; i++)
+//	{
+//		if (pActiveGRsBool[i] >= 1)
+//		{		
+//			pActiveGRs[counterAGR] = i;
+//			counterAGR++;
+//		}
+//	}	
+//
+//	return pActiveGRs;
+//}
 
 // NOTE: this function is basically the same as the above.
-int Control::getNumGRIndicies(CBMState *joestate, ECMFPopulation *joeMFFreq, float csMinRate, float csMaxRate, float CStonicMFfrac) 
-{
-	int numMF = 4096;
-	int numGR = 1048576;
-
-	float CSphasicMFfrac = 0.0;
-	float contextMFfrac  = 0.0;
-	
-	bool* contextMFs = joeMFFreq->getContextMFInd();
-	bool* phasicMFs  = joeMFFreq->getPhasicMFInd();
-	bool* tonicMFs   = joeMFFreq->getTonicMFInd();
-	
-	int numContext 	 = numMF*contextMFfrac; 
-	int numPhasic  	 = numMF*CSphasicMFfrac; 
-	int numTonic   	 = numMF*CStonicMFfrac; 
-	int numActiveMFs = numContext+numPhasic+numTonic;
-	
-	int *activeMFInd;
-	activeMFInd = new int[numActiveMFs];
-	
-	int counterMF = 0;
-	for (int i = 0; i < numMF; i++)
-	{	
-		if (contextMFs[i] || tonicMFs[i] || phasicMFs[i])
-		{
-			activeMFInd[counterMF] = i;
-			counterMF++;
-		}
-	}
-
-	std::vector<int> MFtoGRs;	
-	int numPostSynGRs;
-	int pActiveGRsBool[numGR] = {};
-
-	for (int i = 0; i < numActiveMFs; i++)
-	{
-		MFtoGRs 	  = joestate->getInnetConStateInternal()->getpMFfromMFtoGRCon(activeMFInd[i]);
-		numPostSynGRs = MFtoGRs.size();
-		
-		for (int j = 0; j < numPostSynGRs; j++)
-		{
-			pActiveGRsBool[MFtoGRs[j]]++;
-		}
-	}
-	
-	int counterGR = 0;
-	for (int i = 0; i < numGR; i++)
-	{
-		if (pActiveGRsBool[i] >= 1)
-		{		
-			counterGR++;
-		}
-	}
-	
-	return counterGR;
-}
+//int Control::getNumGRIndicies(CBMState *joestate, ECMFPopulation *joeMFFreq, float csMinRate, float csMaxRate, float CStonicMFfrac) 
+//{
+//	int numMF = 4096;
+//	int numGR = 1048576;
+//
+//	float CSphasicMFfrac = 0.0;
+//	float contextMFfrac  = 0.0;
+//	
+//	bool* contextMFs = joeMFFreq->getContextMFInd();
+//	bool* phasicMFs  = joeMFFreq->getPhasicMFInd();
+//	bool* tonicMFs   = joeMFFreq->getTonicMFInd();
+//	
+//	int numContext 	 = numMF*contextMFfrac; 
+//	int numPhasic  	 = numMF*CSphasicMFfrac; 
+//	int numTonic   	 = numMF*CStonicMFfrac; 
+//	int numActiveMFs = numContext+numPhasic+numTonic;
+//	
+//	int *activeMFInd;
+//	activeMFInd = new int[numActiveMFs];
+//	
+//	int counterMF = 0;
+//	for (int i = 0; i < numMF; i++)
+//	{	
+//		if (contextMFs[i] || tonicMFs[i] || phasicMFs[i])
+//		{
+//			activeMFInd[counterMF] = i;
+//			counterMF++;
+//		}
+//	}
+//
+//	std::vector<int> MFtoGRs;	
+//	int numPostSynGRs;
+//	int pActiveGRsBool[numGR] = {};
+//
+//	for (int i = 0; i < numActiveMFs; i++)
+//	{
+//		MFtoGRs 	  = joestate->getInnetConStateInternal()->getpMFfromMFtoGRCon(activeMFInd[i]);
+//		numPostSynGRs = MFtoGRs.size();
+//		
+//		for (int j = 0; j < numPostSynGRs; j++)
+//		{
+//			pActiveGRsBool[MFtoGRs[j]]++;
+//		}
+//	}
+//	
+//	int counterGR = 0;
+//	for (int i = 0; i < numGR; i++)
+//	{
+//		if (pActiveGRsBool[i] >= 1)
+//		{		
+//			counterGR++;
+//		}
+//	}
+//	
+//	return counterGR;
+//}
 
