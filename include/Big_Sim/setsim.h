@@ -39,6 +39,7 @@ public:
 	float threshDecayTau = 4.0;	
 	int randseed         = 3;
 
+	// collateral fractions added
 	float nucCollfrac = 0.02;
 
 	// Basic Mossy Fibers

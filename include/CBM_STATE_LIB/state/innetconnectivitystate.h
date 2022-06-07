@@ -18,7 +18,6 @@
 #include <algorithm>
 
 #include <memoryMgmt/dynamic2darray.h>
-#include <memoryMgmt/arraycopy.h>
 #include <fileIO/rawbytesrw.h>
 #include <stdDefinitions/pstdint.h>
 #include <randGenerators/sfmt.h>
@@ -28,9 +27,10 @@
 class InNetConnectivityState
 {
 public:
-	InNetConnectivityState(ConnectivityParams *parameters, unsigned int msPerStep, int randSeed, int goRecipParam, int simNum);
-	InNetConnectivityState(ConnectivityParams *parameters, std::fstream &infile);
-	InNetConnectivityState(const InNetConnectivityState &state);
+	InNetConnectivityState();
+	InNetConnectivityState(ConnectivityParams &cp, unsigned int msPerStep, int randSeed);
+	//InNetConnectivityState(ConnectivityParams *parameters, std::fstream &infile);
+	//InNetConnectivityState(const InNetConnectivityState &state);
 
 	~InNetConnectivityState();
 	
@@ -39,195 +39,153 @@ public:
 	bool operator==(const InNetConnectivityState &compState);
 	bool operator!=(const InNetConnectivityState &compState);
 
-	bool deleteGOGOConPair(int srcGON, int destGON);
-	bool addGOGOConPair(int srcGON, int destGON);
+	//bool deleteGOGOConPair(int srcGON, int destGON);
+	//bool addGOGOConPair(int srcGON, int destGON);
 
 	//glomerulus
 
-	int *numpGLfromGLtoGO;
-	int **pGLfromGLtoGO;
+	int numpGLfromGLtoGO[cp.NUM_GL]();
+	int pGLfromGLtoGO[cp.NUM_GL][cp.MAX_NUM_P_GL_FROM_GL_TO_GO]();
 
-	int totalGOGL;
-	int totalGOGR;
-	int *numpGLfromGOtoGL;
-	int *haspGLfromGOtoGL;
-	int **pGLfromGOtoGL;
-	int *spanArrayGOtoGLX;
-	int *spanArrayGOtoGLY;
-	int *xCoorsGOGL;
-	int *yCoorsGOGL;
+	int haspGLfromGOtoGL[cp.NUM_GL]();
+	int numpGLfromGOtoGL[cp.NUM_GL]();
+	int pGLfromGOtoGL[cp.NUM_GL, cp.MAX_NUM_P_GL_FROM_GO_TO_GL]();
 
-	int *numpGLfromGLtoGR;
-	int **pGLfromGLtoGR;
-	
+	int numpGLfromGLtoGR[cp.NUM_GL]();
+	int pGLfromGLtoGR[cp.NUM_GL][cp.MAX_NUM_P_GL_FROM_GL_TO_GR]();
+
+	int haspGLfromMFtoGL[cp.NUM_GL]();
+	int pGLfromMFtoGL[cp.NUM_GL]();
+	int numpMFfromMFtoGL[cp.NUM_MF]();
+	int pMFfromMFtoGL[cp.NUM_MF][cp.MAX_NUM_P_MF_FROM_MF_TO_GL]();
+
+	int numpMFfromMFtoGR[cp.NUM_MF]();
+	int pMFfromMFtoGR[cp.NUM_MF][cp.MAX_NUM_P_MF_FROM_MF_TO_GR]();
+	int numpMFfromMFtoGO[cp.NUM_MF]();
+	int pMFfromMFtoGO[cp.NUM_MF][cp.MAX_NUM_P_MF_FROM_MF_TO_GO]();
+
+	// NOTE: not needed for now, using old connectCommon for gl -> gr (06/02/2022)
+	//int *spanArrayGRtoGLX;
+	//int *spanArrayGRtoGLY;
+	//int *xCoorsGRGL;
+	//int *yCoorsGRGL;
+
 	//ubc
-	int *numpGLfromUBCtoGL;
-	int **pGLfromUBCtoGL;
-	int *numpUBCfromUBCtoGL;
-	int **pUBCfromUBCtoGL;//[numMF][numGLOutPerMF];
-	int *xCoorsUBCGL;
-	int *yCoorsUBCGL;
-	int *spanArrayUBCtoGLX;
-	int *spanArrayUBCtoGLY;
-	int spanUBCtoGLX;
-	int spanUBCtoGLY;
-	int numpUBCtoGL;
-	int ubcX;
-	int ubcY;
-	int numUBC;
-	int numUBCfromUBCtoGL;
+	//int *numpGLfromUBCtoGL;
+	//int **pGLfromUBCtoGL;
+	//int *numpUBCfromUBCtoGL;
+	//int **pUBCfromUBCtoGL;//[numMF][numGLOutPerMF];
+	//int *xCoorsUBCGL;
+	//int *yCoorsUBCGL;
+	//int *spanArrayUBCtoGLX;
+	//int *spanArrayUBCtoGLY;
+	//int spanUBCtoGLX;
+	//int spanUBCtoGLY;
+	//int numpUBCtoGL;
+	//int ubcX;
+	//int ubcY;
+	//int numUBC;
+	//int numUBCfromUBCtoGL;
 
-	int *pUBCfromGLtoUBC;
-	int *numpUBCfromGLtoUBC;
-	int *pGLfromGLtoUBC;
-	int *numpGLfromGLtoUBC;
-	int *spanArrayGLtoUBCX;
-	int *spanArrayGLtoUBCY;
-	int *xCoorsGLUBC;
-	int *yCoorsGLUBC;
+	//int *pUBCfromGLtoUBC;
+	//int *numpUBCfromGLtoUBC;
+	//int *pGLfromGLtoUBC;
+	//int *numpGLfromGLtoUBC;
+	//int *spanArrayGLtoUBCX;
+	//int *spanArrayGLtoUBCY;
+	//int *xCoorsGLUBC;
+	//int *yCoorsGLUBC;
 
-	int *numpUBCfromUBCtoGR;
-	int **pUBCfromUBCtoGR;//[numMF][maxNumGROutPerMF];
-	int *numpGRfromUBCtoGR;
-	int **pGRfromUBCtoGR;//[numMF][maxNumGROutPerMF];
-	
-	int *numpUBCfromUBCtoGO;
-	int **pUBCfromUBCtoGO;//[numMF][maxNumGROutPerMF];
-	int *numpGOfromUBCtoGO;
-	int **pGOfromUBCtoGO;//[numMF][maxNumGROutPerMF];
-	
-	int ubcIndex;
-	int *numpUBCfromUBCOutUBC;
-	int **pUBCfromUBCOutUBC;//[numMF][maxNumGROutPerMF];
-	int *numpUBCfromUBCInUBC;
-	int **pUBCfromUBCInUBC;//[numMF][maxNumGROutPerMF];
+	//int *numpUBCfromUBCtoGR;
+	//int **pUBCfromUBCtoGR;//[numMF][maxNumGROutPerMF];
+	//int *numpGRfromUBCtoGR;
+	//int **pGRfromUBCtoGR;//[numMF][maxNumGROutPerMF];
+	//
+	//int *numpUBCfromUBCtoGO;
+	//int **pUBCfromUBCtoGO;//[numMF][maxNumGROutPerMF];
+	//int *numpGOfromUBCtoGO;
+	//int **pGOfromUBCtoGO;//[numMF][maxNumGROutPerMF];
+	//
+	//int ubcIndex;
+	//int *numpUBCfromUBCOutUBC;
+	//int **pUBCfromUBCOutUBC;//[numMF][maxNumGROutPerMF];
+	//int *numpUBCfromUBCInUBC;
+	//int **pUBCfromUBCInUBC;//[numMF][maxNumGROutPerMF];
 
-	//mossy fiber
-	int *haspGLfromMFtoGL;
-	int *pGLfromMFtoGL;
-	int *numpMFfromMFtoGL;
-	int **pMFfromMFtoGL;//[numMF][numGLOutPerMF];
-	int *xCoorsMFGL;
-	int *yCoorsMFGL;
-	int *spanArrayMFtoGLX;
-	int *spanArrayMFtoGLY;
+	////mossy fiber
 
-	int *numpMFfromMFtoGR;
-	int **pMFfromMFtoGR;//[numMF][maxNumGROutPerMF];
-	int *numpMFfromMFtoGO;
-	int **pMFfromMFtoGO;//[numMF][maxNumGOOutPerMF];
-
-	int **pMFfromMFtoUBC;
-	int *numpMFfromMFtoUBC;
-	int *pUBCfromMFtoUBC;
-	int *numpUBCfromMFtoUBC;
+	//int **pMFfromMFtoUBC;
+	//int *numpMFfromMFtoUBC;
+	//int *pUBCfromMFtoUBC;
+	//int *numpUBCfromMFtoUBC;
 
 	//golgi
-	int *numpGOfromGLtoGO;
-	int **pGOfromGLtoGO;//[numGO][maxNumGLInPerGO];
+	int numpGOfromGLtoGO[cp.NUM_GO]();
+	int pGOfromGLtoGO[cp.NUM_GO][cp.MAX_NUM_P_GO_FROM_GL_TO_GO]();
 
-	int *numpGOfromGOtoGL;
-	int **pGOfromGOtoGL;//[numGO][maxNumGLOutPerGO];
+	int numpGOfromGOtoGL[cp.NUM_GO]();
+	int pGOfromGOtoGL[cp.NUM_GO][cp.MAX_NUM_P_GO_FROM_GO_TO_GL]();
 
-	int *numpGOfromMFtoGO;
-	int **pGOfromMFtoGO;//[numGO][maxNumMFInPerGO];
+	int numpGOfromMFtoGO[cp.NUM_GO]();
+	int pGOfromMFtoGO[cp.NUM_GO][cp.MAX_NUM_P_GO_FROM_MF_TO_GO]();
 
-	int *numpGOfromGOtoGR;//[numGO];
-	int **pGOfromGOtoGR;//[numGO][maxNumGROutPerGO];
+	int numpGOfromGOtoGR[cp.NUM_GO]();
+	int pGOfromGOtoGR[cp.NUM_GO][cp.MAX_NUM_P_GO_FROM_GO_TO_GR]();
 	
-	int *numpGOfromGOtoUBC;//[numGO];
-	int **pGOfromGOtoUBC;//[numGO][maxNumGROutPerGO];
-	int *numpUBCfromGOtoUBC;//[numGO];
-	int **pUBCfromGOtoUBC;//[numGO][maxNumGROutPerGO];
+	int numpGOfromGRtoGO[cp.NUM_GO]();
+	int pGOfromGRtoGO[cp.NUM_GO][cp.MAX_NUM_P_GO_FROM_GR_TO_GO]();
 
-	int *numpGOfromGRtoGO;
-	int **pGOfromGRtoGO;
-	int *spanArrayPFtoGOX;
-	int *spanArrayPFtoGOY;
-	int *xCoorsPFGO;
-	int *yCoorsPFGO;
-	int *spanArrayAAtoGOX;
-	int *spanArrayAAtoGOY;
-	int *xCoorsAAGO;
-	int *yCoorsAAGO;
+	// coincidentally, numcongotogo == maxnumpgogabaingogo
+	int numpGOGABAInGOGO[cp.NUM_GO]();
+	int pGOGABAInGOGO[cp.NUM_GO][cp.NUM_CON_GO_TO_GO]();
+	int numpGOGABAOutGOGO[cp.NUM_GO][cp.NUM_CON_GO_TO_GO]();			
+	int pGOGABAOutGOGO[cp.NUM_GO][cp.NUM_CON_GO_TO_GO]();			
+
+	//int *numpGOfromGOtoUBC;//[numGO];
+	//int **pGOfromGOtoUBC;//[numGO][maxNumGROutPerGO];
+	//int *numpUBCfromGOtoUBC;//[numGO];
+	//int **pUBCfromGOtoUBC;//[numGO][maxNumGROutPerGO];
 
 
-	float *PconGOGL;
-	float *Pcon;
-	int *numpGOGABAInGOGO;
-	int **pGOGABAInGOGO;
-	int *numpGOGABAOutGOGO;			// GOGO
-	int **pGOGABAOutGOGO;			// GOGO
-	int *spanArrayGOtoGOsynX;
-	int *spanArrayGOtoGOsynY;
-	int *xCoorsGOGOsyn;
-	int *yCoorsGOGOsyn;
-	bool **conGOGOBoolOut;
+	// go <-> go gap junctions
+	int numpGOCoupInGOGO[cp.NUM_GO]();
+	int pGOCoupInGOGO[cp.NUM_GO][cp.NUM_P_GO_TO_GO_GJ]();
+	int numpGOCoupOutGOGO[cp.NUM_GO]();
+	int pGOCoupOutGOGO[cp.NUM_GO][cp.NUM_P_GO_TO_GO_GJ]();
+	float pGOCoupOutGOGOCCoeff[cp.NUM_GO][cp.NUM_P_GO_TO_GO_GJ]();
+	float pGOCoupInGOGOCCoeff[cp.NUM_GO][cp.NUM_P_GO_TO_GO_GJ]();
 
-	int *numpGOCoupInGOGO;
-	int **pGOCoupInGOGO;
-	int *numpGOCoupOutGOGO;
-	int **pGOCoupOutGOGO;
-	float **pGOCoupOutGOGOCCoeff;
-	float **pGOCoupInGOGOCCoeff;
-	bool **gjConBool;
-
-	int *spanArrayGOtoGOgjX;
-	int *spanArrayGOtoGOgjY;
-	int *xCoorsGOGOgj;
-	int *yCoorsGOGOgj;
-	float *gjPcon;
-	float *gjCC;
-	float gjPconX;	
-	float gjPconY;
-	float gjCCX;
-	float gjCCY;
-
-
-	//[numGO][maxNumGOOutPerGO];//TODO: special
-	//ct_int32_t goConGOOutLocal;//[2][maxNumGOOutPerGO];//TODO: how to define gogo local connectivity in the parameters?
-
-	//bool *pGOGABAUniOutGOGO;
 
 	//granule
-	ct_uint32_t *pGRDelayMaskfromGRtoBSP;//[numGR]; //TODO: add in parameters delay stuff
+	ct_uint32_t pGRDelayMaskfromGRtoBSP[cp.NUM_GR]();
 
-	int *numpGRfromGLtoGR;
-	int **pGRfromGLtoGR;//[numGR][maxNumInPerGR];
-	int *xCoorsGRGL;
-	int *yCoorsGRGL;
-	int *spanArrayGRtoGLX;
-	int *spanArrayGRtoGLY;
+	int numpGRfromGLtoGR[cp.NUM_GR]();
+	int pGRfromGLtoGR[cp.NUM_GR][cp.MAX_NUM_P_GR_FROM_GL_TO_GR]();
 
+	int numpGRfromGRtoGO[cp.NUM_GR]();
+	int pGRfromGRtoGO[cp.NUM_GR][cp.MAX_NUM_P_GR_FROM_GR_TO_GO]();
+	int pGRDelayMaskfromGRtoGO[cp.NUM_GR][cp.MAX_NUM_P_GR_FROM_GR_TO_GO]();
 
-	int *numpGRfromGRtoGO;
-	int **pGRfromGRtoGO;//[maxNumGOOutPerGR][numGR];
-	int **pGRDelayMaskfromGRtoGO;//[maxNumGOOutPerGR][numGR];
+	int numpGRfromGOtoGR[cp.NUM_GR]();
+	int pGRfromGOtoGR[cp.NUM_GR][cp.MAX_NUM_P_GR_FROM_GO_TO_GR]();
 
-	int *numpGRfromGOtoGR;
-	int **pGRfromGOtoGR;//[maxNumInPerGR][numGR];
+	int numpGRfromMFtoGR[cp.NUM_GR]();
+	int pGRfromMFtoGR[cp.NUM_GR][cp.MAX_NUM_P_GR_FROM_MF_TO_GR]();
 
-	int *numpGRfromMFtoGR;//[numGR];
-	int **pGRfromMFtoGR;//[maxNumInPerGR][numGR];
-	int postSynGRIndex;
-	int glIndex;
-	int mfIndex;
-	int goIndex;
-
-	int *spanArrayPFtoBCX;
-	int *spanArrayPFtoBCY;
-	int *xCoorsPFBC;
-	int *yCoorsPFBC;
-	
-	int **pBCfromPFtoBC;
-	int *numpBCfromPFtoBC;
-	int **pGRfromPFtoBC;
-	int *numpGRfromPFtoBC;
-	
-	int **pGRDelayMaskfromGRtoBC;	
+	//int postSynGRIndex;
+	//int *spanArrayPFtoBCX;
+	//int *spanArrayPFtoBCY;
+	//int *xCoorsPFBC;
+	//int *yCoorsPFBC;
+	//
+	//int **pBCfromPFtoBC;
+	//int *numpBCfromPFtoBC;
+	//int **pGRfromPFtoBC;
+	//int *numpGRfromPFtoBC;
+	//
+	//int **pGRDelayMaskfromGRtoBC;	
 
 protected:
-	ConnectivityParams *cp;
 
 	//virtual std::vector<ct_uint32_t> getConCommon(int cellN, ct_int32_t *numpCellCon, ct_uint32_t **pCellCon);
 	//virtual std::vector<std::vector<ct_uint32_t> > getPopConCommon(int numCells, ct_int32_t *numpCellCon, ct_uint32_t **pCellCon);
@@ -235,57 +193,45 @@ protected:
 	//virtual std::vector<int> getConCommon(int cellN, int *numpCellCon, int **pCellCon);
 	//virtual std::vector<std::vector<int> > getPopConCommon(int numCells, int *numpCellCon, int **pCellCon);
 
-	void allocateMemory();
+	void initializeVals(ConnectivityParams &cp);
 
 	void stateRW(bool read, std::fstream &file);
 
-	void initializeVals();
-
-	void connectGLUBC();
-	void connectGRGL(CRandomSFMT *randGen);
-	void connectGOGL(CRandomSFMT *randGen);
-	void connectMFGL_noUBC(CRandomSFMT *randGen);
-	void connectMFGL_withUBC(CRandomSFMT *randGen);
-	void translateUBCGL();
-	void translateMFGL();
-	void translateGOGL(CRandomSFMT *randGen);
-	void connectGRGO(CRandomSFMT *randGen, int goRecipParam);
-	void connectGOGO(CRandomSFMT *randGen);
-	void connectGOGO_GJ(CRandomSFMT *randGen);
-	void connectGOGOBias(CRandomSFMT *randGen);
-	void connectGOGODecay(CRandomSFMT *randGen);
-	void connectGOGODecayP(CRandomSFMT *randGen, int goRecipParam, int simNum);
-	void connectUBCGL();
+	void connectMFGL_noUBC(ConnectivityParams &cp, CRandomSFMT &randGen);
+	void connectGLGR(ConnectivityParams &cp, CRandomSFMT &randGen);
+	void connectGRGO(ConnectivityParams &cp, CRandomSFMT &randGen);
+	void connectGOGL(ConnectivityParams &cp, CRandomSFMT &randGen);
+	void connectGOGODecayP(ConnectivityParams &cp, CRandomSFMT &randGen);
+	void connectGOGO_GJ(ConnectivityParams &cp, CRandomSFMT &randGen);
+	void translateMFGL(ConnectivityParams &cp);
+	void translateGOGL(ConnectivityParams &cp);
 	void assignGRDelays(unsigned int msPerStep);
-	void connectPFtoBC();
-	void assignPFtoBCDelays(unsigned int msPerStep);
+	//void connectGLUBC();
+	//void connectMFGL_withUBC(CRandomSFMT *randGen);
+	//void translateUBCGL();
+	//void connectGOGO(CRandomSFMT *randGen);
+	//void connectGOGOBias(CRandomSFMT *randGen);
+	//void connectGOGODecay(CRandomSFMT *randGen);
+	//void connectUBCGL();
+	//void connectPFtoBC();
+	//void assignPFtoBCDelays(unsigned int msPerStep);
 
-	void connectCommon(int **srcConArr, int32_t *srcNumCon,
-			int **destConArr, int *destNumCon,
+
+private:
+	void connectCommon(int srcConArr[][], int32_t srcNumCon[],
+			int destConArr[][], int destNumCon[],
 			int srcMaxNumCon, int numSrcCells,
 			int destMaxNumCon, int destNormNumCon,
 			int srcGridX, int srcGridY, int destGridX, int destGridY,
 			int srcSpanOnDestGridX, int srcSpanOnDestGridY,
-			int normConAttempts, int maxConAttempts, bool needUnique,
-			CRandomSFMT *randGen);
+			int normConAttempts, int maxConAttempts, bool needUnique)
 
-	void translateCommon(int **pPreGLConArr, int *numpPreGLCon,
-			int **pGLPostGLConArr, int *numpGLPostGLCon,
-			int **pPreConArr, int *numpPreCon,
-			int **pPostConArr, int *numpPostCon,
-			int numPre);
-
-private:
-	InNetConnectivityState();
-
-	// TODO: find required params for every function	
-	void establishConnection(CRandomSFMT *randGen, int goRecipParam,
-			int *srcNumCon, int **srcConArr, int *destNumCon, int **destConArr, int srcMaxNumCon,
-			int numSrcCells, int destMaxNumCon, int destNormNumCon, int srcGridX, int srcGridY,
-			int normConAttempts, int maxConAttempts);
-
-	void populateSpanArrays(int *spanArrX, int *spanArrY,
-		int spanX, int spanY);
+	
+	//void translateCommon(int **pPreGLConArr, int *numpPreGLCon,
+	//		int **pGLPostGLConArr, int *numpGLPostGLCon,
+	//		int **pPreConArr, int *numpPreCon,
+	//		int **pPostConArr, int *numpPostCon,
+	//		int numPre);
 };
 
 

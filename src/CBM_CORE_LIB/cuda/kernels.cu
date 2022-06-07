@@ -115,8 +115,9 @@ __global__ void calcActivityGRGPU(float *vm, float *gKCa,
 	tempThresh=tempThresh+(threshBase-tempThresh)*threshDecay;
 	tempAP=tempV>tempThresh;
 	thresh[i]=tempAP*threshMax+(!tempAP)*tempThresh;
-	
-	tempGKCa=tempGKCa*0.9999f;
+
+	// was a cheat, commenting out for now	
+	// tempGKCa=tempGKCa*0.9999f;
 	gKCa[i]=tempAP*(tempGKCa+0.000f)+(!tempAP)*tempGKCa;
 
 	apBuf[i]=(apBuf[i]<<1)|(tempAP);

@@ -7,30 +7,30 @@
 
 #include "interfaces/cbmstate.h"
 
-CBMState::CBMState(std::fstream &infile)
-{
-	infile >> numZones;
-
-	conParams = new ConnectivityParams(infile);
-	actParams = new ActivityParams(infile);
-
-	infile.seekg(1, std::ios::cur);
-
-	innetConState = new InNetConnectivityState(conParams, infile);
-	mzoneConStates = new MZoneConnectivityState*[numZones];
-
-	innetActState = new InNetActivityState(conParams, infile);
-	mzoneActStates = new MZoneActivityState*[numZones];
-
-	for (int i = 0; i < numZones; i++)
-	{
-		mzoneConStates[i] = new MZoneConnectivityState(conParams, infile);
-		mzoneActStates[i] = new MZoneActivityState(conParams, actParams, infile);
-	}
-}
+//CBMState::CBMState(std::fstream &infile)
+//{
+//	infile >> numZones;
+//
+//	conParams = new ConnectivityParams(infile);
+//	actParams = new ActivityParams(infile);
+//
+//	infile.seekg(1, std::ios::cur);
+//
+//	innetConState = new InNetConnectivityState(conParams, infile);
+//	mzoneConStates = new MZoneConnectivityState*[numZones];
+//
+//	innetActState = new InNetActivityState(conParams, infile);
+//	mzoneActStates = new MZoneActivityState*[numZones];
+//
+//	for (int i = 0; i < numZones; i++)
+//	{
+//		mzoneConStates[i] = new MZoneConnectivityState(conParams, infile);
+//		mzoneActStates[i] = new MZoneActivityState(conParams, actParams, infile);
+//	}
+//}
 
 CBMState::CBMState(ConnectivityParams &conParams, ActivityParams *actParams,
-	unsigned int nZones, int goRecipParam, int simNum)
+	unsigned int nZones)
 {
 	int innetCRSeed;
 	int *mzoneCRSeed = new int[nZones];
@@ -45,7 +45,7 @@ CBMState::CBMState(ConnectivityParams &conParams, ActivityParams *actParams,
 		mzoneARSeed[i] = randGen.IRandom(0, INT_MAX);
 	}
 
-	newState(conParams, actParams, nZones, innetCRSeed, mzoneCRSeed, mzoneARSeed, goRecipParam, simNum);
+	newState(conParams, actParams, nZones, innetCRSeed, mzoneCRSeed, mzoneARSeed);
 
 	delete[] mzoneCRSeed;
 	delete[] mzoneARSeed;
@@ -69,13 +69,12 @@ CBMState::~CBMState()
 	delete[] mzoneActStates;
 }
 
-void CBMState::newState(ConnectivityParams &conParams, ActivityParams *actParams, unsigned int nZones,
-	int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed, int goRecipParam, int simNum)
+void CBMState::newState(ConnectivityParams &conParams, ActivityParams *actParams,
+	unsigned int nZones, int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed)
 {
 	numZones = nZones;
 	// TODO: start here, continue to fix conParams (replace vars w constants, reference directly w . op)
-	innetConState  = new InNetConnectivityState(conParams, actParams->msPerTimeStep,
-			innetCRSeed, goRecipParam, simNum);
+	innetConState  = new InNetConnectivityState(conParams, actParams->msPerTimeStep, innetCRSeed);
 	mzoneConStates = new MZoneConnectivityState*[numZones];
 	innetActState  = new InNetActivityState(conParams, actParams);
 	mzoneActStates = new MZoneActivityState*[numZones];

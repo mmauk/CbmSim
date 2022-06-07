@@ -29,14 +29,13 @@ class CBMState
 {
 	public:
 		CBMState();
-		CBMState(std::fstream &infile);
+		//CBMState(std::fstream &infile);
 
 		// VVVV the one we actually use...
-		CBMState(ConnectivityParams &conParams, ActivityParams *actParams,
-			unsigned int nZones, int goRecipParam, int simNum);
+		CBMState(ConnectivityParams &conParams, ActivityParams *actParams, unsigned int nZones);
 
-		CBMState(std::fstream &actPFile, std::fstream &conPFile, unsigned int nZones,
-			int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed);
+		//CBMState(std::fstream &actPFile, std::fstream &conPFile, unsigned int nZones,
+		//	int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed);
 
 		// y virtual where is the inheritance
 		virtual ~CBMState();	
@@ -63,8 +62,8 @@ class CBMState
 
 	private:
 		
-		void newState(ConnectivityParams &conParams, ActivityParams *actParams, unsigned int nZones,
-				int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed, int goRecipParam, int simNum);
+		void newState(ConnectivityParams &conParams, ActivityParams *actParams,
+			unsigned int nZones, int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed);
 	
 		// don't know wtf this is from	
 		//void newStateParam(std::fstream &actPFile, std::fstream &conPFile, unsigned int nZones,
