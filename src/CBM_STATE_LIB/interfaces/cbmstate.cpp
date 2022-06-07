@@ -72,7 +72,6 @@ CBMState::~CBMState()
 void CBMState::newState(ConnectivityParams &conParams, ActivityParams *actParams,
 	unsigned int nZones, int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed)
 {
-	numZones = nZones;
 	// TODO: start here, continue to fix conParams (replace vars w constants, reference directly w . op)
 	innetConState  = new InNetConnectivityState(conParams, actParams->msPerTimeStep, innetCRSeed);
 	mzoneConStates = new MZoneConnectivityState*[numZones];

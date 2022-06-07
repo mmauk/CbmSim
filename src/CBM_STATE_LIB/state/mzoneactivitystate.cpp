@@ -7,23 +7,21 @@
 
 #include "state/mzoneactivitystate.h"
 
-MZoneActivityState::MZoneActivityState(ConnectivityParams *conParams, ActivityParams *actParams, int randSeed)
+MZoneActivityState::MZoneActivityState(ConnectivityParams &cp, ActivityParams *actParams, int randSeed)
 {
-	cp = conParams;
 	ap = actParams;
 
 	allocateMemory();
-	initializeVals(randSeed);
+	initializeVals(cp, randSeed);
 }
 
-MZoneActivityState::MZoneActivityState(ConnectivityParams *conParams, ActivityParams *actParams,
+MZoneActivityState::MZoneActivityState(ConnectivityParams &cp, ActivityParams *actParams,
 		std::fstream &infile)
 {
-	cp = conParams;
 	ap = actParams;
 
 	allocateMemory();
-	stateRW(true, infile);
+	stateRW(cp, true, infile);
 }
 
 MZoneActivityState::MZoneActivityState(const MZoneActivityState &state)
@@ -180,9 +178,9 @@ MZoneActivityState::~MZoneActivityState()
 	delete[] synIOPReleaseNC;
 }
 
-void MZoneActivityState::writeState(std::fstream &outfile)
+void MZoneActivityState::writeState(ConnectivityParams &cp, std::fstream &outfile)
 {
-	stateRW(false, (std::fstream &)outfile);
+	stateRW(cp, false, outfile);
 }
 
 bool MZoneActivityState::operator==(const MZoneActivityState &compState)
@@ -287,63 +285,77 @@ void MZoneActivityState::allocateMemory()
 	synIOPReleaseNC	 = new float[cp->numNC];
 }
 
-void MZoneActivityState::stateRW(bool read, std::fstream &file)
+void MZoneActivityState::stateRW(ConnectivityParams &cp, bool read, std::fstream &file)
 {
-	rawBytesRW((char *)apBC, cp->numBC*sizeof(ct_uint8_t), read, file);
-	rawBytesRW((char *)apBufBC, cp->numBC*sizeof(ct_uint32_t), read, file);
-	rawBytesRW((char *)inputPCBC, cp->numBC*sizeof(ct_uint32_t), read, file);
-	rawBytesRW((char *)gPFBC, cp->numBC*sizeof(float), read, file);
-	rawBytesRW((char *)gPCBC, cp->numBC*sizeof(float), read, file);
-	rawBytesRW((char *)threshBC, cp->numBC*sizeof(float), read, file);
-	rawBytesRW((char *)vBC, cp->numBC*sizeof(float), read, file);
-	rawBytesRW((char *)apPC, cp->numPC*sizeof(ct_uint8_t), read, file);
-	rawBytesRW((char *)apBufPC, cp->numPC*sizeof(ct_uint32_t), read, file);
-	rawBytesRW((char *)inputBCPC, cp->numPC*sizeof(ct_uint32_t), read, file);
-	rawBytesRW((char *)inputSCPC[0], cp->numPC*cp->numpPCfromSCtoPC*sizeof(ct_uint8_t), read, file);
-	rawBytesRW((char *)pfSynWeightPC[0], cp->numPC*cp->numpPCfromGRtoPC*sizeof(float), read, file);
-	rawBytesRW((char *)inputSumPFPC, cp->numPC*sizeof(float), read, file);
-	rawBytesRW((char *)gPFPC, cp->numPC*sizeof(float), read, file);
-	rawBytesRW((char *)gBCPC, cp->numPC*sizeof(float), read, file);
-	rawBytesRW((char *)gSCPC[0], cp->numPC*cp->numpPCfromSCtoPC*sizeof(float), read, file);
-	rawBytesRW((char *)vPC, cp->numPC*sizeof(float), read, file);
-	rawBytesRW((char *)threshPC, cp->numPC*sizeof(float), read, file);
-	rawBytesRW((char *)histPCPopAct, ap->numPopHistBinsPC*sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)apBC, cp.NUM_BC * sizeof(ct_uint8_t), read, file);
+	rawBytesRW((char *)apBufBC, cp.NUM_BC * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)inputPCBC, cp.NUM_BC * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)gPFBC, cp.NUM_BC * sizeof(float), read, file);
+	rawBytesRW((char *)gPCBC, cp.NUM_BC * sizeof(float), read, file);
+	rawBytesRW((char *)threshBC, cp.NUM_BC * sizeof(float), read, file);
+	rawBytesRW((char *)vBC, cp.NUM_BC * sizeof(float), read, file);
+	rawBytesRW((char *)apPC, cp.NUM_PC * sizeof(ct_uint8_t), read, file);
+	rawBytesRW((char *)apBufPC, cp.NUM_PC * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)inputBCPC, cp.NUM_PC * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)inputSCPC[0],
+		cp.NUM_PC * cp.NUM_P_PC_FROM_SC_TO_PC * sizeof(ct_uint8_t), read, file);
+	rawBytesRW((char *)pfSynWeightPC[0],
+		cp.NUM_PC * cp.NUM_P_PC_FROM_GR_TO_PC * sizeof(float), read, file);
+	rawBytesRW((char *)inputSumPFPC, cp.NUM_PC * sizeof(float), read, file);
+	rawBytesRW((char *)gPFPC, cp.NUM_PC * sizeof(float), read, file);
+	rawBytesRW((char *)gBCPC, cp.NUM_PC * sizeof(float), read, file);
+	rawBytesRW((char *)gSCPC[0],
+		cp.NUM_PC * cp.NUM_P_PC_FROM_SC_TO_PC * sizeof(float), read, file);
+	rawBytesRW((char *)vPC, cp.NUM_PC * sizeof(float), read, file);
+	rawBytesRW((char *)threshPC, cp.NUM_PC * sizeof(float), read, file);
+	rawBytesRW((char *)histPCPopAct, ap->numPopHistBinsPC * sizeof(ct_uint32_t), read, file);
 	rawBytesRW((char *)&histPCPopActSum, sizeof(ct_uint32_t), read, file);
 	rawBytesRW((char *)&histPCPopActCurBinN, sizeof(ct_uint32_t), read, file);
 	rawBytesRW((char *)&pcPopAct, sizeof(ct_uint32_t), read, file);
-	rawBytesRW((char *)apIO, cp->numIO*sizeof(ct_uint8_t), read, file);
-	rawBytesRW((char *)apBufIO, cp->numIO*sizeof(ct_uint32_t), read, file);
-	rawBytesRW((char *)inputNCIO[0], cp->numIO*cp->numpIOfromNCtoIO*sizeof(ct_uint8_t), read, file);
+	rawBytesRW((char *)apIO, cp.NUM_IO * sizeof(ct_uint8_t), read, file);
+	rawBytesRW((char *)apBufIO, cp.NUM_IO * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)inputNCIO[0],
+		cp.NUM_IO * cp.NUM_P_IO_FROM_NC_TO_IO * sizeof(ct_uint8_t), read, file);
 	rawBytesRW((char *)&errDrive, sizeof(float), read, file);
-	rawBytesRW((char *)gNCIO[0], cp->numIO*cp->numpIOfromNCtoIO*sizeof(float), read, file);
-	rawBytesRW((char *)threshIO, cp->numIO*sizeof(float), read, file);
-	rawBytesRW((char *)vIO, cp->numIO*sizeof(float), read, file);
-	rawBytesRW((char *)vCoupleIO, cp->numIO*sizeof(float), read, file);
-	rawBytesRW((char *)pfPCPlastTimerIO, cp->numIO*sizeof(ct_int32_t), read, file);
+	rawBytesRW((char *)gNCIO[0],
+		cp.NUM_IO * cp.NUM_P_IO_FROM_NC_TO_IO * sizeof(float), read, file);
+	rawBytesRW((char *)threshIO, cp.NUM_IO * sizeof(float), read, file);
+	rawBytesRW((char *)vIO, cp.NUM_IO * sizeof(float), read, file);
+	rawBytesRW((char *)vCoupleIO, cp.NUM_IO * sizeof(float), read, file);
+	rawBytesRW((char *)pfPCPlastTimerIO, cp.NUM_IO * sizeof(ct_int32_t), read, file);
 	rawBytesRW((char *)&noLTPMFNC, sizeof(ct_uint8_t), read, file);
 	rawBytesRW((char *)&noLTDMFNC, sizeof(ct_uint8_t), read, file);
-	rawBytesRW((char *)apNC, cp->numNC*sizeof(ct_uint8_t), read, file);
-	rawBytesRW((char *)apBufNC, cp->numNC*sizeof(ct_uint32_t), read, file);
-	rawBytesRW((char *)inputPCNC[0], cp->numNC*cp->numpNCfromPCtoNC*sizeof(ct_uint8_t), read, file);
-	rawBytesRW((char *)inputMFNC[0], cp->numNC*cp->numpNCfromMFtoNC*sizeof(ct_uint8_t), read, file);
-	rawBytesRW((char *)gPCNC[0], cp->numNC*cp->numpNCfromPCtoNC*sizeof(float), read, file);
-	rawBytesRW((char *)gPCScaleNC[0], cp->numNC*cp->numpNCfromPCtoNC*sizeof(float), read, file);
-	rawBytesRW((char *)mfSynWeightNC[0], cp->numNC*cp->numpNCfromMFtoNC*sizeof(float), read, file);
-	rawBytesRW((char *)gmaxNMDAofMFtoNC[0], cp->numNC*cp->numpNCfromMFtoNC*sizeof(float), read, file);
-	rawBytesRW((char *)gmaxAMPAofMFtoNC[0], cp->numNC*cp->numpNCfromMFtoNC*sizeof(float), read, file);
-	rawBytesRW((char *)gMFNMDANC[0], cp->numNC*cp->numpNCfromMFtoNC*sizeof(float), read, file);
-	rawBytesRW((char *)gMFAMPANC[0], cp->numNC*cp->numpNCfromMFtoNC*sizeof(float), read, file);
-	rawBytesRW((char *)threshNC, cp->numNC*sizeof(float), read, file);
-	rawBytesRW((char *)vNC, cp->numNC*sizeof(float), read, file);
-	rawBytesRW((char *)synIOPReleaseNC, cp->numNC*sizeof(float), read, file);
+	rawBytesRW((char *)apNC, cp.NUM_NC * sizeof(ct_uint8_t), read, file);
+	rawBytesRW((char *)apBufNC, cp.NUM_NC * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)inputPCNC[0],
+		cp.NUM_NC * cp.NUM_P_NC_FROM_PC_TO_NC * sizeof(ct_uint8_t), read, file);
+	rawBytesRW((char *)inputMFNC[0],
+		cp.NUM_NC * cp.NUM_P_NC_FROM_MF_TO_NC * sizeof(ct_uint8_t), read, file);
+	rawBytesRW((char *)gPCNC[0],
+		cp.NUM_NC * cp.NUM_P_NC_FROM_PC_TO_NC * sizeof(float), read, file);
+	rawBytesRW((char *)gPCScaleNC[0],
+		cp.NUM_NC * cp.NUM_P_NC_FROM_PC_TO_NC * sizeof(float), read, file);
+	rawBytesRW((char *)mfSynWeightNC[0],
+		cp.NUM_NC * cp.NUM_P_NC_FROM_MF_TO_NC * sizeof(float), read, file);
+	rawBytesRW((char *)gmaxNMDAofMFtoNC[0],
+		cp.NUM_NC * cp.NUM_P_NC_FROM_MF_TO_NC * sizeof(float), read, file);
+	rawBytesRW((char *)gmaxAMPAofMFtoNC[0],
+		cp.NUM_NC * cp.NUM_P_NC_FROM_MF_TO_NC * sizeof(float), read, file);
+	rawBytesRW((char *)gMFNMDANC[0],
+		cp.NUM_NC * cp.NUM_P_NC_FROM_MF_TO_NC * sizeof(float), read, file);
+	rawBytesRW((char *)gMFAMPANC[0],
+		cp.NUM_NC * cp.NUM_P_NC_FROM_MF_TO_NC * sizeof(float), read, file);
+	rawBytesRW((char *)threshNC, cp.NUM_NC * sizeof(float), read, file);
+	rawBytesRW((char *)vNC, cp.NUM_NC * sizeof(float), read, file);
+	rawBytesRW((char *)synIOPReleaseNC, cp.NUM_NC * sizeof(float), read, file);
 }
 
-void MZoneActivityState::initializeVals(int randSeed)
+void MZoneActivityState::initializeVals(ConnectivityParams &cp, int randSeed)
 {
 	//uncomment for actual runs 	
 	//CRandomSFMT0 randGen(randSeed);
 
-	for (int i = 0; i < cp->numBC; i++)
+	for (int i = 0; i < cp.NUM_BC; i++)
 	{
 		apBC[i]	    = 0;
 		apBufBC[i]  = 0;
@@ -354,7 +366,7 @@ void MZoneActivityState::initializeVals(int randSeed)
 		vBC[i]		= ap->eLeakBC;
 	}
 
-	for (int i = 0; i < cp->numPC; i++)
+	for (int i = 0; i < cp.NUM_PC; i++)
 	{
 		apPC[i]        = 0;
 		apBufPC[i]     = 0;
@@ -365,13 +377,13 @@ void MZoneActivityState::initializeVals(int randSeed)
 		vPC[i]		   = ap->eLeakPC;
 		threshPC[i]	   = ap->threshRestPC;
 
-		for (int j = 0; j < cp->numpPCfromSCtoPC; j++)
+		for (int j = 0; j < cp.NUM_P_PC_FROM_SC_TO_PC; j++)
 		{
 			inputSCPC[i][j] = 0;
 			gSCPC[i][j]		= 0;
 		}
 
-		for (int j = 0; j < cp->numpPCfromGRtoPC; j++)
+		for (int j = 0; j < cp.NUM_P_PC_FROM_GR_TO_PC; j++)
 		{
 			pfSynWeightPC[i][j] = ap->initSynWofGRtoPC;
 		}
@@ -383,7 +395,7 @@ void MZoneActivityState::initializeVals(int randSeed)
 	histPCPopActCurBinN = 0;
 	pcPopAct			= 0;
 
-	for (int i = 0; i < cp->numIO; i++)
+	for (int i = 0; i < cp.NUM_IO; i++)
 	{
 		apIO[i]	    	    = 0;
 		apBufIO[i]  	    = 0;
@@ -392,7 +404,7 @@ void MZoneActivityState::initializeVals(int randSeed)
 		vCoupleIO[i]	    = 0;
 		pfPCPlastTimerIO[i] = 0;
 
-		for (int j = 0; j < cp->numpIOfromNCtoIO; j++)
+		for (int j = 0; j < cp.NUM_P_IO_FROM_NC_TO_IO; j++)
 		{
 			inputNCIO[i][j] = 0;
 			gNCIO[i][j]     = 0;
@@ -401,7 +413,7 @@ void MZoneActivityState::initializeVals(int randSeed)
 
 	errDrive = 0;
 
-	for (int i = 0; i < cp->numNC; i++)
+	for (int i = 0; i < cp.NUM_NC; i++)
 	{
 		apNC[i]    		   = 0;
 		apBufNC[i] 		   = 0;
@@ -409,14 +421,14 @@ void MZoneActivityState::initializeVals(int randSeed)
 		vNC[i]			   = ap->eLeakNC;
 		synIOPReleaseNC[i] = 0;
 
-		for (int j = 0; j < cp->numpNCfromPCtoNC; j++)
+		for (int j = 0; j < cp.NUM_P_NC_FROM_PC_TO_NC; j++)
 		{
 			inputPCNC[i][j]  = 0;
 			gPCNC[i][j]		 = 0;
 			gPCScaleNC[i][j] = ap->gIncAvgPCtoNC;
 		}
 
-		for (int j = 0; j < cp->numpNCfromMFtoNC; j++)
+		for (int j = 0; j < cp.NUM_P_NC_FROM_MF_TO_NC; j++)
 		{
 			inputMFNC[i][j]		   = 0;
 			mfSynWeightNC[i][j]    = ap->initSynWofMFtoNC;
@@ -426,7 +438,7 @@ void MZoneActivityState::initializeVals(int randSeed)
 			gMFAMPANC[i][j]		   = 0;
 		}
 	}
-
 	noLTPMFNC = 0;
 	noLTDMFNC = 0;
 }
+

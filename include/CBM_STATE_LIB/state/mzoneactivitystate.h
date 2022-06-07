@@ -26,13 +26,13 @@
 class MZoneActivityState : public virtual IMZoneActState
 {
 public:
-	MZoneActivityState(ConnectivityParams *conParams, ActivityParams *actParams, int randSeed);
-	MZoneActivityState(ConnectivityParams *conParams, ActivityParams *actParams, std::fstream &infile);
+	MZoneActivityState(ConnectivityParams &cp, ActivityParams *actParams, int randSeed);
+	MZoneActivityState(ConnectivityParams &cp, ActivityParams *actParams, std::fstream &infile);
 	MZoneActivityState(const MZoneActivityState &state);
 
 	virtual ~MZoneActivityState();
 
-	void writeState(std::fstream &outfile);
+	void writeState(ConnectivityParams &cp, std::fstream &outfile);
 
 	bool operator==(const MZoneActivityState &compState);
 	bool operator!=(const MZoneActivityState &compState);
@@ -40,9 +40,9 @@ public:
 	std::vector<float> getGRPCSynWeightLinear();
 	void resetGRPCSynWeight();
 
-	ConnectivityParams *cp;
 	ActivityParams *ap;
 
+	// START HERE FOR UPDATING TO STATIC ARRAYS (FOR 06/08/2022)
 	//basket cells
 	ct_uint8_t *apBC;
 	ct_uint32_t *apBufBC;
@@ -102,8 +102,8 @@ private:
 	MZoneActivityState();
 
 	void allocateMemory();
-	void stateRW(bool read, std::fstream &file);
-	void initializeVals(int randSeed);
+	void stateRW(ConnectivityParams &cp, bool read, std::fstream &file);
+	void initializeVals(ConnectivityParams &cp, int randSeed);
 };
 
 

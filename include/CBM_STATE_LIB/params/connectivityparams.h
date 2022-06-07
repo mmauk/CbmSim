@@ -48,6 +48,13 @@ struct ConnectivityParams
 	const int UBC_Y = 16;
 	const int NUM_UBC = 1024;
 
+	// mzone cell numbers
+	const int NUM_BC = 128;
+	const int NUM_SC = 512;
+	const int NUM_PC = 32;
+	const int NUM_NC = 8;
+	const int NUM_IO = 4;
+
 	// mf -> gl (uses Joe's Con alg (06/01/2022))
 	const int SPAN_MF_TO_GL_X = 512; 
 	const int SPAN_MF_TO_GL_Y = 128;
@@ -160,112 +167,40 @@ struct ConnectivityParams
 	const ct_uint32_t GR_PF_VEL_IN_GR_X_PER_T_STEP = 147;
 	const ct_uint32_t GR_AF_DELAY_IN_T_STEP = 1;
 	
+	// MZONE VARS
+	// TODO: find their values.
+	// bc -> pc
+	const int NUM_P_BC_FROM_BC_TO_PC;
+	const int NUM_P_PC_FROM_BC_TO_PC;
 
-	//int ubcX;
-	//int ubcY;
-	//int numUBC;
+	// pc -> bc
+	const int NUM_P_PC_FROM_PC_TO_BC;
+	const int NUM_P_BC_FROM_PC_TO_BC;
 
-	//int spanGLtoUBCX;
-	//int spanGLtoUBCY;
-	//int numpGLtoUBC;
-	//
-	//int spanUBCtoGLX;
-	//int spanUBCtoGLY;
-	//int numpUBCtoGL;
+	// sc -> pc
+	const int NUM_P_SC_FROM_SC_TO_PC;
+	const int NUM_P_PC_FROM_SC_TO_PC;
 
-	////glomeruli
-	//int maxnumpGLfromGLtoGR;
-	//int lownumpGLfromGLtoGR;
-	//ct_uint32_t maxnumpGLfromGLtoGO;
-	//ct_uint32_t maxnumpGLfromGOtoGL;
-	////end glomeruli
+	// pc -> nc
+	const int NUM_P_PC_FROM_PC_TO_NC;
+	const int NUM_P_NC_FROM_PC_TO_NC;
 
-	////mossy fiber
-	//int numMF; //read in as power of 2
-	//int mfX;
-	//int mfY;
-	//
-	//int spanMFtoGLX;
-	//int spanMFtoGLY;
-	//int numpMFtoGL;
+	// mf -> nc
+	const int NUM_P_NC_FROM_MF_TO_NC;
 
-	//ct_uint32_t maxnumpMFfromMFtoGO; //derived = numGLOutPerMF*maxNumGODenPerGL
-	//int maxnumpMFfromMFtoGR; //derived = numGLOutPerMF*maxNumGRDenPerGL
+	// nc -> io
+	const int NUM_P_NC_FROM_NC_TO_IO;
+	const int NUM_P_IO_FROM_NC_TO_IO;
 
-	//ct_uint32_t numpMFfromMFtoNC;
+	// io -> pc
+	const int NUM_P_IO_FROM_IO_TO_PC;
+	//const int NUM_P_PC_FROM_IO_TO_PC;
 
-	////end mossy fibers
-
-	////golgi cells
-	//int goX; //read in as power of 2
-	//int goY; //read in as power of 2
-
-	//int numGO; //derived = goX*goY
-	//int numConGOGO;
+	// io <-> io
+	const int NUM_P_IO_IN_IO_TO_IO;
+	const int NUM_P_IO_OUT_IO_TO_IO;
 
 
-	//int spanGOGOsynX;
-	//int spanGOGOsynY;
-	//int numpGOGOsyn; 
-	//float sigmaGOGOsynML;
-	//float sigmaGOGOsynS;
-	//float peakPconGOGOsyn;
-	//float pRecipGOGOsyn;
-	//int maxGOGOsyn;
-
-	//int spanGOGLX;
-	//int spanGOGLY;
-	//int numpGOGL;
-
-	//int maxnumpGOfromGRtoGO;
-
-	//int maxnumpGOfromGLtoGO;
-	//int maxnumpGOfromMFtoGO; //derived = maxNumGLInPerGO
-	//ct_uint32_t maxnumpGOfromGOtoGL;
-	//ct_uint32_t maxnumpGOfromGOtoGR; //derived = maxNumGLOutPerGO*maxNumGRDenPerGL
-
-	//ct_uint32_t spanGODecDenOnGLX;
-	//ct_uint32_t spanGODecDenOnGLY;
-
-	//ct_uint32_t spanGOAscDenOnGRX;
-	//ct_uint32_t spanGOAscDenOnGRY;
-
-	//int spanGOtoGLX;
-	//int spanGOtoGLY;
-	//int numpGOtoGL;
-
-	//ct_uint32_t spanGOAxonOnGLX;
-	//ct_uint32_t spanGOAxonOnGLY;
-
-	////go-go inhibition
-	//int maxnumpGOGABAInGOGO;
-	//int maxnumpGOGABAOutGOGO;
-	//float **gogoGABALocalCon;
-
-	////go-go coupling
-	//int maxnumpGOCoupInGOGO;
-	//int maxnumpGOCoupOutGOGO;
-	//float **gogoCoupLocalCon;
-
-	////end golgi cells
-
-	////granule cells
-	//int grX; //read in as power of 2
-	//int grY; //read in as power of 2
-
-	//int numGR; //derived = grX*grY
-	//int numGRP2;
-
-	//ct_uint32_t grPFVelInGRXPerTStep;
-	//ct_uint32_t grAFDelayInTStep;
-	//ct_uint32_t maxnumpGRfromGRtoGO;
-	//int maxnumpGRfromGLtoGR;
-	//ct_uint32_t maxnumpGRfromGOtoGR;
-	//int maxnumpGRfromMFtoGR;
-
-	//int spanGRDenOnGLX;
-	//int spanGRDenOnGLY;
-	////end granule cells
 
 	////stellate cells
 	//ct_uint32_t numSC; //read in as power of 2

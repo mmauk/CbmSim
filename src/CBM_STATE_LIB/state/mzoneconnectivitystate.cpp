@@ -6,164 +6,107 @@
  */
 
 #include "state/mzoneconnectivitystate.h"
-#include <vector>
-#include <algorithm>
 
-MZoneConnectivityState::MZoneConnectivityState(ConnectivityParams *parameters, int randSeed)
+MZoneConnectivityState::MZoneConnectivityState(ConnectivityParams &cp, int randSeed)
 {
-	cp = parameters;
+	initializeVars(cp);
 
-	allocateMemory();
-	initalizeVars();
-
-	connectBCtoPC();
-	connectPCtoBC();
-	connectSCtoPC();
-	connectPCtoNC(randSeed);
-	connectNCtoIO();
-	connectMFtoNC();
-	connectIOtoPC();
-	connectIOtoIO();
+	connectBCtoPC(cp);
+	connectPCtoBC(cp);
+	connectSCtoPC(cp);
+	connectPCtoNC(cp, randSeed);
+	connectNCtoIO(cp);
+	connectMFtoNC(cp);
+	connectIOtoPC(cp);
+	connectIOtoIO(cp);
 }
 
-MZoneConnectivityState::MZoneConnectivityState(ConnectivityParams *parameters, std::fstream &infile)
+MZoneConnectivityState::MZoneConnectivityState(ConnectivityParams &cp, std::fstream &infile)
 {
-	cp = parameters;
-
-	allocateMemory();
-
-	stateRW(true, infile);
+	stateRW(cp, true, infile);
 }
 
-MZoneConnectivityState::MZoneConnectivityState(const MZoneConnectivityState &state)
+//MZoneConnectivityState::MZoneConnectivityState(const MZoneConnectivityState &state)
+//{
+//	arrayCopy<ct_uint32_t>(pBCfromBCtoPC[0], state.pBCfromBCtoPC[0],
+//			cp->numBC * cp->numpBCfromBCtoPC);
+//	arrayCopy<ct_uint32_t>(pBCfromPCtoBC[0], state.pBCfromPCtoBC[0],
+//			cp->numBC * cp->numpBCfromPCtoBC);
+//	arrayCopy<ct_uint32_t>(pSCfromSCtoPC[0], state.pSCfromSCtoPC[0],
+//			cp->numSC * cp->numpSCfromSCtoPC);
+//	arrayCopy<ct_uint32_t>(pPCfromBCtoPC[0], state.pPCfromBCtoPC[0],
+//			cp->numPC * cp->numpPCfromBCtoPC);
+//	arrayCopy<ct_uint32_t>(pPCfromPCtoBC[0], state.pPCfromPCtoBC[0],
+//			cp->numPC * cp->numpPCfromPCtoBC);
+//	arrayCopy<ct_uint32_t>(pPCfromSCtoPC[0], state.pPCfromSCtoPC[0],
+//			cp->numPC * cp->numpPCfromSCtoPC);
+//	arrayCopy<ct_uint32_t>(pPCfromPCtoNC[0], state.pPCfromPCtoNC[0],
+//			cp->numPC * cp->numpPCfromPCtoNC);
+//	arrayCopy<ct_uint32_t>(pPCfromIOtoPC, state.pPCfromIOtoPC, cp->numPC);
+//
+//	arrayCopy<ct_uint32_t>(pNCfromPCtoNC[0], state.pNCfromPCtoNC[0],
+//			cp->numNC * cp->numpNCfromPCtoNC);
+//	arrayCopy<ct_uint32_t>(pNCfromNCtoIO[0], state.pNCfromNCtoIO[0],
+//			cp->numNC * cp->numpNCfromNCtoIO);
+//	arrayCopy<ct_uint32_t>(pNCfromMFtoNC[0], state.pNCfromMFtoNC[0],
+//			cp->numNC * cp->numpNCfromMFtoNC);
+//
+//	arrayCopy<ct_uint32_t>(pIOfromIOtoPC[0], state.pIOfromIOtoPC[0],
+//			cp->numIO * cp->numpIOfromIOtoPC);
+//	arrayCopy<ct_uint32_t>(pIOfromNCtoIO[0], state.pIOfromNCtoIO[0],
+//			cp->numIO * cp->numpIOfromNCtoIO);
+//	arrayCopy<ct_uint32_t>(pIOInIOIO[0], state.pIOInIOIO[0],
+//			cp->numIO * cp->numpIOInIOIO);
+//	arrayCopy<ct_uint32_t>(pIOOutIOIO[0], state.pIOOutIOIO[0],
+//			cp->numIO * cp->numpIOOutIOIO);
+//}
+
+MZoneConnectivityState::~MZoneConnectivityState() {}
+
+void MZoneConnectivityState::writeState(ConnectivityParams &cp, std::fstream &outfile)
 {
-	cp = state.cp;
-
-	allocateMemory();
-
-	arrayCopy<ct_uint32_t>(pBCfromBCtoPC[0], state.pBCfromBCtoPC[0],
-			cp->numBC * cp->numpBCfromBCtoPC);
-	arrayCopy<ct_uint32_t>(pBCfromPCtoBC[0], state.pBCfromPCtoBC[0],
-			cp->numBC * cp->numpBCfromPCtoBC);
-	arrayCopy<ct_uint32_t>(pSCfromSCtoPC[0], state.pSCfromSCtoPC[0],
-			cp->numSC * cp->numpSCfromSCtoPC);
-	arrayCopy<ct_uint32_t>(pPCfromBCtoPC[0], state.pPCfromBCtoPC[0],
-			cp->numPC * cp->numpPCfromBCtoPC);
-	arrayCopy<ct_uint32_t>(pPCfromPCtoBC[0], state.pPCfromPCtoBC[0],
-			cp->numPC * cp->numpPCfromPCtoBC);
-	arrayCopy<ct_uint32_t>(pPCfromSCtoPC[0], state.pPCfromSCtoPC[0],
-			cp->numPC * cp->numpPCfromSCtoPC);
-	arrayCopy<ct_uint32_t>(pPCfromPCtoNC[0], state.pPCfromPCtoNC[0],
-			cp->numPC * cp->numpPCfromPCtoNC);
-	arrayCopy<ct_uint32_t>(pPCfromIOtoPC, state.pPCfromIOtoPC, cp->numPC);
-
-	arrayCopy<ct_uint32_t>(pNCfromPCtoNC[0], state.pNCfromPCtoNC[0],
-			cp->numNC * cp->numpNCfromPCtoNC);
-	arrayCopy<ct_uint32_t>(pNCfromNCtoIO[0], state.pNCfromNCtoIO[0],
-			cp->numNC * cp->numpNCfromNCtoIO);
-	arrayCopy<ct_uint32_t>(pNCfromMFtoNC[0], state.pNCfromMFtoNC[0],
-			cp->numNC * cp->numpNCfromMFtoNC);
-
-	arrayCopy<ct_uint32_t>(pIOfromIOtoPC[0], state.pIOfromIOtoPC[0],
-			cp->numIO * cp->numpIOfromIOtoPC);
-	arrayCopy<ct_uint32_t>(pIOfromNCtoIO[0], state.pIOfromNCtoIO[0],
-			cp->numIO * cp->numpIOfromNCtoIO);
-	arrayCopy<ct_uint32_t>(pIOInIOIO[0], state.pIOInIOIO[0],
-			cp->numIO * cp->numpIOInIOIO);
-	arrayCopy<ct_uint32_t>(pIOOutIOIO[0], state.pIOOutIOIO[0],
-			cp->numIO * cp->numpIOOutIOIO);
+	stateRW(cp, false, outfile);
 }
 
-MZoneConnectivityState::~MZoneConnectivityState()
+void MZoneConnectivityState::stateRW(ConnectivityParams &cp, bool read, std::fstream &file)
 {
-	delete2DArray<ct_uint32_t>(pBCfromBCtoPC);
-	delete2DArray<ct_uint32_t>(pBCfromPCtoBC);
+	rawBytesRW((char *)pBCfromBCtoPC[0], cp.NUM_BC * cp.NUM_P_BC_FROM_BC_TO_PC * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)pBCfromPCtoBC[0], cp.NUM_BC * cp.NUM_P_BC_FROM_PC_TO_BC * sizeof(ct_uint32_t), read, file);
 
-	delete2DArray<ct_uint32_t>(pSCfromSCtoPC);
+	rawBytesRW((char *)pSCfromSCtoPC[0], cp.NUM_SC * cp.NUM_P_SC_FROM_SC_TO_PC * sizeof(ct_uint32_t), read, file);
 
-	delete2DArray<ct_uint32_t>(pPCfromBCtoPC);
-	delete2DArray<ct_uint32_t>(pPCfromPCtoBC);
-	delete2DArray<ct_uint32_t>(pPCfromSCtoPC);
-	delete2DArray<ct_uint32_t>(pPCfromPCtoNC);
-	delete[] pPCfromIOtoPC;
+	rawBytesRW((char *)pPCfromBCtoPC[0], cp.NUM_PC * cp.NUM_P_PC_FROM_BC_TO_PC * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)pPCfromPCtoBC[0], cp.NUM_PC * cp.NUM_P_PC_FROM_PC_TO_BC * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)pPCfromSCtoPC[0], cp.NUM_PC * cp.NUM_P_PC_FROM_SC_TO_PC * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)pPCfromPCtoNC[0], cp.NUM_PC * cp.NUM_P_PC_FROM_PC_TO_NC * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)pPCfromIOtoPC, cp.NUM_PC * sizeof(ct_uint32_t), read, file);
 
-	delete2DArray<ct_uint32_t>(pNCfromPCtoNC);
-	delete2DArray<ct_uint32_t>(pNCfromNCtoIO);
-	delete2DArray<ct_uint32_t>(pNCfromMFtoNC);
+	rawBytesRW((char *)pNCfromPCtoNC[0], cp.NUM_NC * cp.NUM_P_NC_FROM_PC_TO_NC * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)pNCfromNCtoIO[0], cp.NUM_NC * cp.NUM_P_NC_FROM_NC_TO_IO * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)pNCfromMFtoNC[0], cp.NUM_NC * cp.NUM_P_NC_FROM_MF_TO_NC * sizeof(ct_uint32_t), read, file);
 
-	delete2DArray<ct_uint32_t>(pIOfromIOtoPC);
-	delete2DArray<ct_uint32_t>(pIOfromNCtoIO);
-	delete2DArray<ct_uint32_t>(pIOInIOIO);
-	delete2DArray<ct_uint32_t>(pIOOutIOIO);
+	rawBytesRW((char *)pIOfromIOtoPC[0], cp.NUM_IO * cp.NUM_P_IO_FROM_IO_TO_PC * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)pIOfromNCtoIO[0], cp.NUM_IO * cp.NUM_P_IO_FROM_NC_TO_IO * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)pIOInIOIO[0], cp.NUM_IO * cp.NUM_P_IO_IN_IO_TO_IO * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)pIOOutIOIO[0], cp.NUM_IO * cp.NUMP_IO_OUT_IO_TO_IO * sizeof(ct_uint32_t), read, file);
 }
 
-void MZoneConnectivityState::writeState(std::fstream &outfile)
-{
-	stateRW(false, (std::fstream &)outfile);
-}
-
-void MZoneConnectivityState::allocateMemory()
-{
-		
-	pBCfromBCtoPC = allocate2DArray<ct_uint32_t>(cp->numBC, cp->numpBCfromBCtoPC);
-	pBCfromPCtoBC = allocate2DArray<ct_uint32_t>(cp->numBC, cp->numpBCfromPCtoBC);
-
-	pSCfromSCtoPC = allocate2DArray<ct_uint32_t>(cp->numSC, cp->numpSCfromSCtoPC);
-
-	pPCfromBCtoPC = allocate2DArray<ct_uint32_t>(cp->numPC, cp->numpPCfromBCtoPC);
-	pPCfromPCtoBC = allocate2DArray<ct_uint32_t>(cp->numPC, cp->numpPCfromPCtoBC);
-	pPCfromSCtoPC = allocate2DArray<ct_uint32_t>(cp->numPC, cp->numpPCfromSCtoPC);
-	pPCfromPCtoNC = allocate2DArray<ct_uint32_t>(cp->numPC, cp->numpPCfromPCtoNC);
-	pPCfromIOtoPC = new ct_uint32_t[cp->numPC];
-
-	pNCfromPCtoNC = allocate2DArray<ct_uint32_t>(cp->numNC, cp->numpNCfromPCtoNC);
-	pNCfromNCtoIO = allocate2DArray<ct_uint32_t>(cp->numNC, cp->numpNCfromNCtoIO);
-	pNCfromMFtoNC = allocate2DArray<ct_uint32_t>(cp->numNC, cp->numpNCfromMFtoNC);
-
-	pIOfromIOtoPC = allocate2DArray<ct_uint32_t>(cp->numIO, cp->numpIOfromIOtoPC);
-	pIOfromNCtoIO = allocate2DArray<ct_uint32_t>(cp->numIO, cp->numpIOfromNCtoIO);
-	pIOInIOIO 	  = allocate2DArray<ct_uint32_t>(cp->numIO, cp->numpIOInIOIO);
-	pIOOutIOIO	  = allocate2DArray<ct_uint32_t>(cp->numIO, cp->numpIOOutIOIO);
-}
-
-void MZoneConnectivityState::stateRW(bool read, std::fstream &file)
-{
-	rawBytesRW((char *)pBCfromBCtoPC[0], cp->numBC * cp->numpBCfromBCtoPC * sizeof(ct_uint32_t), read, file);
-	rawBytesRW((char *)pBCfromPCtoBC[0], cp->numBC * cp->numpBCfromPCtoBC * sizeof(ct_uint32_t), read, file);
-
-	rawBytesRW((char *)pSCfromSCtoPC[0], cp->numSC * cp->numpSCfromSCtoPC * sizeof(ct_uint32_t), read, file);
-
-	rawBytesRW((char *)pPCfromBCtoPC[0], cp->numPC * cp->numpPCfromBCtoPC * sizeof(ct_uint32_t), read, file);
-	rawBytesRW((char *)pPCfromPCtoBC[0], cp->numPC * cp->numpPCfromPCtoBC * sizeof(ct_uint32_t), read, file);
-	rawBytesRW((char *)pPCfromSCtoPC[0], cp->numPC * cp->numpPCfromSCtoPC * sizeof(ct_uint32_t), read, file);
-	rawBytesRW((char *)pPCfromPCtoNC[0], cp->numPC * cp->numpPCfromPCtoNC * sizeof(ct_uint32_t), read, file);
-	rawBytesRW((char *)pPCfromIOtoPC, cp->numPC * sizeof(ct_uint32_t), read, file);
-
-	rawBytesRW((char *)pNCfromPCtoNC[0], cp->numNC * cp->numpNCfromPCtoNC * sizeof(ct_uint32_t), read, file);
-	rawBytesRW((char *)pNCfromNCtoIO[0], cp->numNC * cp->numpNCfromNCtoIO * sizeof(ct_uint32_t), read, file);
-	rawBytesRW((char *)pNCfromMFtoNC[0], cp->numNC * cp->numpNCfromMFtoNC * sizeof(ct_uint32_t), read, file);
-
-	rawBytesRW((char *)pIOfromIOtoPC[0], cp->numIO * cp->numpIOfromIOtoPC * sizeof(ct_uint32_t), read, file);
-	rawBytesRW((char *)pIOfromNCtoIO[0], cp->numIO * cp->numpIOfromNCtoIO * sizeof(ct_uint32_t), read, file);
-	rawBytesRW((char *)pIOInIOIO[0], cp->numIO * cp->numpIOInIOIO * sizeof(ct_uint32_t), read, file);
-	rawBytesRW((char *)pIOOutIOIO[0], cp->numIO * cp->numpIOOutIOIO * sizeof(ct_uint32_t), read, file);
-}
-
-bool MZoneConnectivityState::operator==(const MZoneConnectivityState &compState)
+bool MZoneConnectivityState::state_equal(const ConnectivityParams &cp,
+	const MZoneConnectivityState &compState)
 {
 	bool eq = true;
 
-	for (int i = 0; i < cp->numBC; i++)
+	for (int i = 0; i < cp.NUM_BC; i++)
 	{
-		for (int j = 0; j < cp->numpBCfromPCtoBC; j++)
+		for (int j = 0; j < cp.NUM_P_BC_FROM_PC_TO_BC; j++)
 		{
 			eq = eq && (pBCfromPCtoBC[i][j] == compState.pBCfromPCtoBC[i][j]);
 		}
 	}
 
-	for (int i = 0; i < cp->numIO; i++)
+	for (int i = 0; i < cp.NUM_IO; i++)
 	{
-		for (int j = 0; j < cp->numpIOInIOIO; j++)
+		for (int j = 0; j < cp.NUM_P_IO_IN_IO_TO_IO; j++)
 		{
 			eq = eq && (pIOInIOIO[i][j] == compState.pIOInIOIO[i][j]);
 		}
@@ -171,124 +114,120 @@ bool MZoneConnectivityState::operator==(const MZoneConnectivityState &compState)
 	return eq;
 }
 
-bool MZoneConnectivityState::operator!=(const MZoneConnectivityState &compState)
+bool MZoneConnectivityState::state_unequal(const ConnectivityParams &cp,
+	const MZoneConnectivityState &compState)
 {
-	return !(*this == compState);
+	return !state_equal(cp, compState);
 }
 
-void MZoneConnectivityState::initalizeVars()
+void MZoneConnectivityState::initializeVars(ConnectivityParams &cp)
 {
-	std::fill(pBCfromBCtoPC[0], pBCfromBCtoPC[0] + cp->numBC*cp->numpBCfromBCtoPC, UINT_MAX);
-	std::fill(pBCfromPCtoBC[0], pBCfromPCtoBC[0] + cp->numBC*cp->numpBCfromPCtoBC, UINT_MAX);
+	std::fill(pBCfromBCtoPC[0], pBCfromBCtoPC[0] + cp.NUM_BC * cp.NUM_P_BC_FROM_BC_TO_PC, UINT_MAX);
+	std::fill(pBCfromPCtoBC[0], pBCfromPCtoBC[0] + cp.NUM_BC * cp.NUM_P_BC_FROM_PC_TO_BC, UINT_MAX);
 
-	std::fill(pSCfromSCtoPC[0], pSCfromSCtoPC[0] + cp->numSC*cp->numpSCfromSCtoPC, UINT_MAX);
+	std::fill(pSCfromSCtoPC[0], pSCfromSCtoPC[0] + cp.NUM_SC * cp.NUM_P_SC_FROM_SC_TO_PC, UINT_MAX);
 
-	std::fill(pPCfromBCtoPC[0], pPCfromBCtoPC[0] + cp->numPC*cp->numpPCfromBCtoPC, UINT_MAX);
-	std::fill(pPCfromPCtoBC[0], pPCfromPCtoBC[0] + cp->numPC*cp->numpPCfromPCtoBC, UINT_MAX);
-	std::fill(pPCfromSCtoPC[0], pPCfromSCtoPC[0] + cp->numPC*cp->numpPCfromSCtoPC, UINT_MAX);
-	std::fill(pPCfromPCtoNC[0], pPCfromPCtoNC[0] + cp->numPC*cp->numpPCfromPCtoNC, UINT_MAX);
-	std::fill(pPCfromIOtoPC, pPCfromIOtoPC + cp->numPC, UINT_MAX);
+	std::fill(pPCfromBCtoPC[0], pPCfromBCtoPC[0] + cp.NUM_PC * cp.NUM_P_PC_FROM_BC_TO_PC, UINT_MAX);
+	std::fill(pPCfromPCtoBC[0], pPCfromPCtoBC[0] + cp.NUM_PC * cp.NUM_P_PC_FROM_PC_TO_BC, UINT_MAX);
+	std::fill(pPCfromSCtoPC[0], pPCfromSCtoPC[0] + cp.NUM_PC * cp.NUM_P_PC_FROM_SC_TO_PC, UINT_MAX);
+	std::fill(pPCfromPCtoNC[0], pPCfromPCtoNC[0] + cp.NUM_PC * cp.NUM_P_PC_FROM_PC_TO_NC, UINT_MAX);
+	std::fill(pPCfromIOtoPC, pPCfromIOtoPC + cp.NUM_PC, UINT_MAX);
 
-	std::fill(pNCfromPCtoNC[0], pNCfromPCtoNC[0] + cp->numNC*cp->numpNCfromPCtoNC, UINT_MAX);
-	std::fill(pNCfromNCtoIO[0], pNCfromNCtoIO[0] + cp->numNC*cp->numpNCfromNCtoIO, UINT_MAX);
-	std::fill(pNCfromMFtoNC[0], pNCfromMFtoNC[0] + cp->numNC*cp->numpNCfromMFtoNC, UINT_MAX);
+	std::fill(pNCfromPCtoNC[0], pNCfromPCtoNC[0] + cp.num_NC * cp.NUM_P_NC_FROM_PC_TO_NC, UINT_MAX);
+	std::fill(pNCfromNCtoIO[0], pNCfromNCtoIO[0] + cp.num_NC * cp.NUM_P_NC_FROM_NC_TO_IO, UINT_MAX);
+	std::fill(pNCfromMFtoNC[0], pNCfromMFtoNC[0] + cp.num_NC * cp.NUM_P_NC_FROM_MF_TO_NC, UINT_MAX);
 
-	std::fill(pIOfromIOtoPC[0], pIOfromIOtoPC[0] + cp->numIO*cp->numpIOfromIOtoPC, UINT_MAX);
-	std::fill(pIOfromNCtoIO[0], pIOfromNCtoIO[0] + cp->numIO*cp->numpIOfromNCtoIO, UINT_MAX);
-	std::fill(pIOInIOIO[0], pIOInIOIO[0] + cp->numIO*cp->numpIOInIOIO, UINT_MAX);
-	std::fill(pIOOutIOIO[0], pIOOutIOIO[0] + cp->numIO*cp->numpIOOutIOIO, UINT_MAX);
+	std::fill(pIOfromIOtoPC[0], pIOfromIOtoPC[0] + cp.NUM_IO * cp.NUM_P_IO_FROM_IO_TO_PC, UINT_MAX);
+	std::fill(pIOfromNCtoIO[0], pIOfromNCtoIO[0] + cp.NUM_IO * cp.NUM_P_IO_FROM_NC_TO_IO, UINT_MAX);
+	std::fill(pIOInIOIO[0], pIOInIOIO[0] + cp.NUM_IO * cp.NUM_P_IO_IN_IO_TO_IO, UINT_MAX);
+	std::fill(pIOOutIOIO[0], pIOOutIOIO[0] + cp.NUM_IO * cp.NUMP_IO_OUT_IO_TO_IO, UINT_MAX);
 }
 
-void MZoneConnectivityState::connectBCtoPC()
+void MZoneConnectivityState::connectBCtoPC(ConnectivityParams &cp)
 {
-	int bcToPCRatio = cp->numBC / cp->numPC;
+	int bcToPCRatio = cp.NUM_BC / cp.NUM_PC;
 
-	for (int i = 0; i < cp->numPC; i++)
+	for (int i = 0; i < cp.NUM_PC; i++)
 	{
-		pBCfromBCtoPC[i * bcToPCRatio][0] = ((i + 1) % cp->numPC + cp->numPC) % cp->numPC;
-		pBCfromBCtoPC[i * bcToPCRatio][1] = ((i - 1) % cp->numPC + cp->numPC) % cp->numPC;
-		pBCfromBCtoPC[i * bcToPCRatio][2] = ((i + 2) % cp->numPC + cp->numPC) % cp->numPC;
-		pBCfromBCtoPC[i * bcToPCRatio][3] = ((i - 2) % cp->numPC + cp->numPC) % cp->numPC;
+		pBCfromBCtoPC[i * bcToPCRatio][0] = ((i + 1) % cp.NUM_PC + cp.NUM_PC) % cp.NUM_PC;
+		pBCfromBCtoPC[i * bcToPCRatio][1] = ((i - 1) % cp.NUM_PC + cp.NUM_PC) % cp.NUM_PC;
+		pBCfromBCtoPC[i * bcToPCRatio][2] = ((i + 2) % cp.NUM_PC + cp.NUM_PC) % cp.NUM_PC;
+		pBCfromBCtoPC[i * bcToPCRatio][3] = ((i - 2) % cp.NUM_PC + cp.NUM_PC) % cp.NUM_PC;
 
-		pBCfromBCtoPC[i * bcToPCRatio+1][0] = ((i + 1) % cp->numPC + cp->numPC) % cp->numPC;
-		pBCfromBCtoPC[i * bcToPCRatio+1][1] = ((i - 1) % cp->numPC + cp->numPC) % cp->numPC;
-		pBCfromBCtoPC[i * bcToPCRatio+1][2] = ((i + 3) % cp->numPC + cp->numPC) % cp->numPC;
-		pBCfromBCtoPC[i * bcToPCRatio+1][3] = ((i - 3) % cp->numPC + cp->numPC) % cp->numPC;
+		pBCfromBCtoPC[i * bcToPCRatio+1][0] = ((i + 1) % cp.NUM_PC + cp.NUM_PC) % cp.NUM_PC;
+		pBCfromBCtoPC[i * bcToPCRatio+1][1] = ((i - 1) % cp.NUM_PC + cp.NUM_PC) % cp.NUM_PC;
+		pBCfromBCtoPC[i * bcToPCRatio+1][2] = ((i + 3) % cp.NUM_PC + cp.NUM_PC) % cp.NUM_PC;
+		pBCfromBCtoPC[i * bcToPCRatio+1][3] = ((i - 3) % cp.NUM_PC + cp.NUM_PC) % cp.NUM_PC;
 
-		pBCfromBCtoPC[i * bcToPCRatio+2][0] = ((i + 3) % cp->numPC + cp->numPC) % cp->numPC;
-		pBCfromBCtoPC[i * bcToPCRatio+2][1] = ((i - 3) % cp->numPC + cp->numPC) % cp->numPC;
-		pBCfromBCtoPC[i * bcToPCRatio+2][2] = ((i + 6) % cp->numPC + cp->numPC) % cp->numPC;
-		pBCfromBCtoPC[i * bcToPCRatio+2][3] = ((i - 6) % cp->numPC + cp->numPC) % cp->numPC;
+		pBCfromBCtoPC[i * bcToPCRatio+2][0] = ((i + 3) % cp.NUM_PC + cp.NUM_PC) % cp.NUM_PC;
+		pBCfromBCtoPC[i * bcToPCRatio+2][1] = ((i - 3) % cp.NUM_PC + cp.NUM_PC) % cp.NUM_PC;
+		pBCfromBCtoPC[i * bcToPCRatio+2][2] = ((i + 6) % cp.NUM_PC + cp.NUM_PC) % cp.NUM_PC;
+		pBCfromBCtoPC[i * bcToPCRatio+2][3] = ((i - 6) % cp.NUM_PC + cp.NUM_PC) % cp.NUM_PC;
 
-		pBCfromBCtoPC[i * bcToPCRatio+3][0] = ((i + 4) % cp->numPC + cp->numPC) % cp->numPC;
-		pBCfromBCtoPC[i * bcToPCRatio+3][1] = ((i - 4) % cp->numPC + cp->numPC) % cp->numPC;
-		pBCfromBCtoPC[i * bcToPCRatio+3][2] = ((i + 9) % cp->numPC + cp->numPC) % cp->numPC;
-		pBCfromBCtoPC[i * bcToPCRatio+3][3] = ((i - 9) % cp->numPC + cp->numPC) % cp->numPC;
+		pBCfromBCtoPC[i * bcToPCRatio+3][0] = ((i + 4) % cp.NUM_PC + cp.NUM_PC) % cp.NUM_PC;
+		pBCfromBCtoPC[i * bcToPCRatio+3][1] = ((i - 4) % cp.NUM_PC + cp.NUM_PC) % cp.NUM_PC;
+		pBCfromBCtoPC[i * bcToPCRatio+3][2] = ((i + 9) % cp.NUM_PC + cp.NUM_PC) % cp.NUM_PC;
+		pBCfromBCtoPC[i * bcToPCRatio+3][3] = ((i - 9) % cp.NUM_PC + cp.NUM_PC) % cp.NUM_PC;
 	}
 }
 
-void MZoneConnectivityState::connectPCtoBC()
+void MZoneConnectivityState::connectPCtoBC(ConnectivityParams &cp)
 {
-	int bcToPCRatio = cp->numBC / cp->numPC;
+	int bcToPCRatio = cp.NUM_BC / cp.NUM_PC;
 
-	for (int i = 0; i < cp->numPC; i++)
+	for (int i = 0; i < cp.NUM_PC; i++)
 	{
-		for (int j = 0; j < cp->numpPCfromPCtoBC; j++)
+		for (int j = 0; j < cp.NUM_P_PC_FROM_PC_TO_BC; j++)
 		{
 			int bcInd = i * bcToPCRatio - 6 + j;
-			pPCfromPCtoBC[i][j] = (bcInd % cp->numBC + cp->numBC) % cp->numBC;
+			pPCfromPCtoBC[i][j] = (bcInd % cp.NUM_BC + cp.NUM_BC) % cp.NUM_BC;
 		}
 	}
 }
 
-void MZoneConnectivityState::connectSCtoPC()
+void MZoneConnectivityState::connectSCtoPC(ConnectivityParams &cp)
 {
-	for (int i = 0; i < cp->numSC; i++)
+	for (int i = 0; i < cp.NUM_SC; i++)
 	{
-		for (int j = 0; j < cp->numpSCfromSCtoPC; j++)
+		for (int j = 0; j < cp.NUM_P_SC_FROM_SC_TO_PC; j++)
 		{
-			int pcInd = i / cp->numpPCfromSCtoPC;
+			int pcInd = i / cp.NUM_P_PC_FROM_SC_TO_PC;
 			pSCfromSCtoPC[i][j] = pcInd;
-			pPCfromSCtoPC[pcInd][i % cp->numpPCfromSCtoPC] = i;
+			pPCfromSCtoPC[pcInd][i % cp.NUM_P_PC_FROM_SC_TO_PC] = i;
 		}
 	}
 }
 
-void MZoneConnectivityState::connectPCtoNC(int randSeed)
+void MZoneConnectivityState::connectPCtoNC(ConnectivityParams &cp, int randSeed)
 {
-	// NOTE: this was heap-allocated before. why???
-	int pcNumConnected[cp->numPC];
-
-	std::fill(pcNumConnected, pcNumConnected + cp->numPC, 1);
+	int pcNumConnected[cp.NUM_PC]();
+	std::fill(pcNumConnected, pcNumConnected + cp.NUM_PC, 1);
 
 	CRandomSFMT0 randGen(randSeed);
-
-	int countPCNC;
-	int pcInd;	
 	
-	for (int i = 0; i < cp->numNC; i++)
+	for (int i = 0; i < cp.NUM_NC; i++)
 	{
-		for (int j = 0; j < cp->numPC / cp->numNC; j++)
+		for (int j = 0; j < cp.NUM_PC / cp.NUM_NC; j++)
 		{
-			pcInd = i * (cp->numPC / cp->numNC) + j;
+			int pcInd = i * (cp.NUM_PC / cp.NUM_NC) + j;
 			pNCfromPCtoNC[i][j] = pcInd;
 			pPCfromPCtoNC[pcInd][0] = i;
 		}
 	}
 
-	for (int i = 0; i < cp->numNC - 1; i++)
+	for (int i = 0; i < cp.NUM_NC - 1; i++)
 	{
-		for (int j = cp->numpNCfromPCtoNC / 3; j<cp->numpNCfromPCtoNC; j++)
+		for (int j = cp.NUM_P_NC_FROM_PC_TO_NC / 3; j < cp.NUM_P_NC_FROM_PC_TO_NC; j++)
 		{
-			countPCNC = 0;
+			int countPCNC = 0;
 			
 			while(true)
 			{
 				bool connect = true;
 
-				pcInd = randGen.IRandomX(0, cp->numPC - 1);
+				int pcInd = randGen.IRandomX(0, cp.NUM_PC - 1);
 
-				if (pcNumConnected[pcInd] >= cp->numpPCfromPCtoNC) continue;
+				if (pcNumConnected[pcInd] >= cp.NUM_P_PC_FROM_PC_TO_NC) continue;
 				for (int k = 0; k < pcNumConnected[pcInd]; k++)
 				{
 					if (pPCfromPCtoNC[pcInd][k] == i)
@@ -309,16 +248,16 @@ void MZoneConnectivityState::connectPCtoNC(int randSeed)
 	}
 
 	// static cast?	
-	unsigned int numSyn = cp->numPC / cp->numNC;
+	unsigned int numSyn = cp.NUM_PC / cp.NUM_NC;
 
-	for (int h = 1; h < cp->numpPCfromPCtoNC; h++)
+	for (int h = 1; h < cp.NUM_P_PC_FROM_PC_TO_NC; h++)
 	{
-		for(int i = 0; i < cp->numPC; i++)
+		for(int i = 0; i < cp.NUM_PC; i++)
 		{
-			if (pcNumConnected[i] < cp->numpPCfromPCtoNC)
+			if (pcNumConnected[i] < cp.NUM_P_PC_FROM_PC_TO_NC)
 			{
-				pNCfromPCtoNC[cp->numNC - 1][numSyn] = i;
-				pPCfromPCtoNC[i][pcNumConnected[i]] = cp->numNC - 1;
+				pNCfromPCtoNC[cp.NUM_NC - 1][numSyn] = i;
+				pPCfromPCtoNC[i][pcNumConnected[i]] = cp.NUM_NC - 1;
 
 				pcNumConnected[i]++;
 				numSyn++;
@@ -327,11 +266,11 @@ void MZoneConnectivityState::connectPCtoNC(int randSeed)
 	}
 }
 
-void MZoneConnectivityState::connectNCtoIO()
+void MZoneConnectivityState::connectNCtoIO(ConnectivityParams &cp)
 {
-	for (int i = 0; i < cp->numIO; i++)
+	for (int i = 0; i < cp.NUM_IO; i++)
 	{
-		for (int j = 0; j < cp->numpIOfromNCtoIO; j++)
+		for (int j = 0; j < cp.NUM_P_IO_FROM_NC_TO_IO; j++)
 		{
 			pIOfromNCtoIO[i][j] = j;
 			pNCfromNCtoIO[j][i] = i;
@@ -339,24 +278,24 @@ void MZoneConnectivityState::connectNCtoIO()
 	}
 }
 
-void MZoneConnectivityState::connectMFtoNC()
+void MZoneConnectivityState::connectMFtoNC(ConnectivityParams &cp)
 {
-	for (int i = 0; i<cp->numMF; i++)
+	for (int i = 0; i < cp.NUM_MF; i++)
 	{
-		for (int j = 0; j < cp->numpMFfromMFtoNC; j++)
+		for (int j = 0; j < cp.NUM_P_MF_FROM_MF_TO_NC; j++)
 		{
-			pNCfromMFtoNC[i / cp->numpNCfromMFtoNC][i % cp->numpNCfromMFtoNC] = i;
+			pNCfromMFtoNC[i / cp.NUM_P_NC_FROM_MF_TO_NC][i % cp.NUM_P_NC_FROM_MF_TO_NC] = i;
 		}
 	}
 }
 
-void MZoneConnectivityState::connectIOtoPC()
+void MZoneConnectivityState::connectIOtoPC(ConnectivityParams &cp)
 {
-	for (int i = 0; i < cp->numIO; i++)
+	for (int i = 0; i < cp.NUM_IO; i++)
 	{
-		for (int j = 0; j < cp->numpIOfromIOtoPC; j++)
+		for (int j = 0; j < cp.NUM_P_IO_FROM_IO_TO_PC; j++)
 		{
-			int pcInd = i * cp->numpIOfromIOtoPC + j;
+			int pcInd = i * cp.NUM_P_IO_FROM_IO_TO_PC + j;
 
 			pIOfromIOtoPC[i][j]  = pcInd;
 			pPCfromIOtoPC[pcInd] = i;
@@ -364,12 +303,12 @@ void MZoneConnectivityState::connectIOtoPC()
 	}
 }
 
-void MZoneConnectivityState::connectIOtoIO()
+void MZoneConnectivityState::connectIOtoIO(ConnectivityParams &cp)
 {
-	for (int i = 0; i < cp->numIO; i++)
+	for (int i = 0; i < cp.NUM_IO; i++)
 	{
 		int inInd = 0;
-		for (int j = 0; j < cp->numpIOInIOIO; j++)
+		for (int j = 0; j < cp.NUM_P_IO_IN_IO_TO_IO; j++)
 		{
 			if (inInd == i) inInd++;
 			pIOInIOIO[i][j] = inInd;
