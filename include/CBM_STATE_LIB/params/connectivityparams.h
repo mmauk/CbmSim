@@ -173,6 +173,10 @@ struct ConnectivityParams
 	const int NUM_P_BC_FROM_BC_TO_PC;
 	const int NUM_P_PC_FROM_BC_TO_PC;
 
+	// gr -> bc
+	const int NUM_P_BC_FROM_GR_TO_BC; /* note, should this be in power of 2? */
+	const int NUM_P_BC_FROM_GR_TO_BC_P2; 
+
 	// pc -> bc
 	const int NUM_P_PC_FROM_PC_TO_BC;
 	const int NUM_P_BC_FROM_PC_TO_BC;
@@ -181,9 +185,16 @@ struct ConnectivityParams
 	const int NUM_P_SC_FROM_SC_TO_PC;
 	const int NUM_P_PC_FROM_SC_TO_PC;
 
+	// gr -> sc
+	const int NUM_P_SC_FROM_GR_TO_SC; /* note, should this be in power of 2? */
+	const int NUM_P_SC_FROM_GR_TO_SC_P2; 
+
 	// pc -> nc
 	const int NUM_P_PC_FROM_PC_TO_NC;
 	const int NUM_P_NC_FROM_PC_TO_NC;
+
+	// gr -> pc
+	const int NUM_P_PC_FROM_GR_TO_PC_P2;
 
 	// mf -> nc
 	const int NUM_P_NC_FROM_MF_TO_NC;

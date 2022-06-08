@@ -10,12 +10,14 @@
 //#define NO_ASYNC
 //#define DISP_CUDA_ERR
 
-CBMSimCore::CBMSimCore(CBMState *state, int *mzoneRSeed, int gpuIndStart, int numGPUP2)
+CBMSimCore::CBMSimCore(ConnectivityParams &cp, ActivityParams *ap, CBMState *state,
+	int *mzoneRSeed, int gpuIndStart, int numGPUP2)
 {
-	construct(state, mzoneRSeed, gpuIndStart, numGPUP2);
+	construct(cp, ap, state, mzoneRSeed, gpuIndStart, numGPUP2);
 }
 
-CBMSimCore::CBMSimCore(CBMState *state, int gpuIndStart, int numGPUP2)
+CBMSimCore::CBMSimCore(ConnectivityParams &cp, ActivityParams *ap, CBMState *state,
+	int gpuIndStart, int numGPUP2)
 {
 	CRandomSFMT0 *randGen = new CRandomSFMT0(time(0));
 	int *mzoneRSeed 	  = new int[state->getNumZones()];
@@ -25,7 +27,7 @@ CBMSimCore::CBMSimCore(CBMState *state, int gpuIndStart, int numGPUP2)
 		mzoneRSeed[i] = randGen->IRandom(0, INT_MAX);
 	}
 
-	construct(state, mzoneRSeed, gpuIndStart, numGPUP2);
+	construct(cp, ap, state, mzoneRSeed, gpuIndStart, numGPUP2);
 
 	delete[] mzoneRSeed;
 }
@@ -455,7 +457,8 @@ MZoneInterface** CBMSimCore::getMZoneList()
 	return (MZoneInterface **)zones;
 }
 
-void CBMSimCore::construct(CBMState *state, int *mzoneRSeed, int gpuIndStart, int numGPUP2)
+void CBMSimCore::construct(ConnectivityParams &cp, ActivityParams *ap, CBMState *state,
+	int *mzoneRSeed, int gpuIndStart, int numGPUP2)
 {
 	int maxNumGPUs;
 
@@ -494,9 +497,8 @@ void CBMSimCore::construct(CBMState *state, int *mzoneRSeed, int gpuIndStart, in
 	initCUDA();
 	std::cout << "passed cuda" << std::endl;
 
-	inputNet = new InNet(state->getConParamsInternal(), state->getActParamsInternal(),
-		state->getInnetConStateInternal(), state->getInnetActStateInternal(),
-		this->gpuIndStart, numGPUs);
+	inputNet = new InNet(cp, ap, state->getInnetConStateInternal(),
+		state->getInnetActStateInternal(), this->gpuIndStart, numGPUs);
 
 	zones = new MZone*[numZones];
 
