@@ -7,195 +7,140 @@
 
 #include "state/mzoneactivitystate.h"
 
-MZoneActivityState::MZoneActivityState(ConnectivityParams &cp, ActivityParams *actParams, int randSeed)
+MZoneActivityState::MZoneActivityState(ConnectivityParams &cp, ActivityParams *ap, int randSeed)
 {
-	ap = actParams;
-
-	allocateMemory();
-	initializeVals(cp, randSeed);
+	allocateMemory(ap);
+	initializeVals(cp, ap, randSeed);
 }
 
-MZoneActivityState::MZoneActivityState(ConnectivityParams &cp, ActivityParams *actParams,
+MZoneActivityState::MZoneActivityState(ConnectivityParams &cp, ActivityParams *ap,
 		std::fstream &infile)
 {
-	ap = actParams;
-
-	allocateMemory();
-	stateRW(cp, true, infile);
+	allocateMemory(ap);
+	stateRW(cp, ap, true, infile);
 }
 
-MZoneActivityState::MZoneActivityState(const MZoneActivityState &state)
-{
-	// TODO: for all states, overload assignment op for deep copying.
-	// or overload the constructor and use in assignment
-	cp = state.cp;
-	ap = state.ap;
-
-	allocateMemory();
-
-	for (int i = 0; i < cp->numBC; i++)
-	{
-		apBC[i]		 = state.apBC[i];
-		apBufBC[i]	 = state.apBufBC[i];
-		inputPCBC[i] = state.inputPCBC[i];
-		gPFBC[i]	 = state.gPCBC[i];
-		gPCBC[i]	 = state.gPCBC[i];
-		threshBC[i]	 = state.threshBC[i];
-		vBC[i]		 = state.vBC[i];
-	}
-
-	for (int i = 0; i < cp->numPC; i++)
-	{
-		apPC[i]			= state.apPC[i];
-		apBufPC[i]		= state.apBufPC[i];
-		inputBCPC[i]	= state.inputBCPC[i];
-		inputSumPFPC[i]	= state.inputSumPFPC[i];
-		gPFPC[i]		= state.gPFPC[i];
-		gBCPC[i]		= state.gBCPC[i];
-		vPC[i]			= state.vPC[i];
-		threshPC[i]		= state.threshPC[i];
-
-		for (int j = 0; j < cp->numpPCfromSCtoPC; j++)
-		{
-			inputSCPC[i][j] = state.inputSCPC[i][j];
-			gSCPC[i][j]		=state.gSCPC[i][j];
-		}
-
-		for (int j = 0; j < cp->numpPCfromGRtoPC; j++)
-		{
-			pfSynWeightPC[i][j] = state.pfSynWeightPC[i][j];
-		}
-	}
-
-	for (int i = 0; i < ap->numPopHistBinsPC; i++) histPCPopAct[i] = state.histPCPopAct[i];
-
-	histPCPopActSum		= state.histPCPopActSum;
-	histPCPopActCurBinN = state.histPCPopActCurBinN;
-	pcPopAct			= state.pcPopAct;
-
-	for (int i = 0; i < cp->numIO; i++)
-	{
-		apIO[i]				= state.apIO[i];
-		apBufIO[i]			= state.apBufIO[i];
-		threshIO[i] 		= state.threshIO[i];
-		vIO[i]				= state.vIO[i];
-		vCoupleIO[i]		= state.vCoupleIO[i];
-		pfPCPlastTimerIO[i] = state.pfPCPlastTimerIO[i];
-
-		for (int j = 0; j < cp->numpIOfromNCtoIO; j++)
-		{
-			inputNCIO[i][j] = state.inputNCIO[i][j];
-			gNCIO[i][j]		= state.gNCIO[i][j];
-		}
-	}
-
-	errDrive = state.errDrive;
-
-	for (int i = 0; i < cp->numNC; i++)
-	{
-		apNC[i]	   		   = state.apNC[i];
-		apBufNC[i] 		   = state.apBufNC[i];
-		threshNC[i]		   = state.threshNC[i];
-		vNC[i]     		   = state.vNC[i];
-		synIOPReleaseNC[i] = state.synIOPReleaseNC[i];
-
-		for (int j = 0; j < cp->numpNCfromPCtoNC; j++)
-		{
-			inputPCNC[i][j]  = state.inputPCNC[i][j];
-			gPCNC[i][j]		 = state.gPCNC[i][j];
-			gPCScaleNC[i][j] = state.gPCScaleNC[i][j];
-		}
-
-		for (int j = 0; j < cp->numpNCfromMFtoNC; j++)
-		{
-			inputMFNC[i][j]	   	   = state.inputMFNC[i][j];
-			mfSynWeightNC[i][j]	   = state.mfSynWeightNC[i][j];
-			gmaxNMDAofMFtoNC[i][j] = state.gmaxNMDAofMFtoNC[i][j];
-			gmaxAMPAofMFtoNC[i][j] = state.gmaxAMPAofMFtoNC[i][j];
-			gMFNMDANC[i][j]		   = state.gMFNMDANC[i][j];
-			gMFAMPANC[i][j]		   = state.gMFAMPANC[i][j];
-		}
-	}
-
-	noLTPMFNC =state.noLTPMFNC;
-	noLTDMFNC =state.noLTDMFNC;
-}
+//MZoneActivityState::MZoneActivityState(const MZoneActivityState &state)
+//{
+//	// TODO: for all states, overload assignment op for deep copying.
+//	// or overload the constructor and use in assignment
+//	cp = state.cp;
+//	ap = state.ap;
+//
+//	allocateMemory();
+//
+//	for (int i = 0; i < cp->numBC; i++)
+//	{
+//		apBC[i]		 = state.apBC[i];
+//		apBufBC[i]	 = state.apBufBC[i];
+//		inputPCBC[i] = state.inputPCBC[i];
+//		gPFBC[i]	 = state.gPCBC[i];
+//		gPCBC[i]	 = state.gPCBC[i];
+//		threshBC[i]	 = state.threshBC[i];
+//		vBC[i]		 = state.vBC[i];
+//	}
+//
+//	for (int i = 0; i < cp->numPC; i++)
+//	{
+//		apPC[i]			= state.apPC[i];
+//		apBufPC[i]		= state.apBufPC[i];
+//		inputBCPC[i]	= state.inputBCPC[i];
+//		inputSumPFPC[i]	= state.inputSumPFPC[i];
+//		gPFPC[i]		= state.gPFPC[i];
+//		gBCPC[i]		= state.gBCPC[i];
+//		vPC[i]			= state.vPC[i];
+//		threshPC[i]		= state.threshPC[i];
+//
+//		for (int j = 0; j < cp->numpPCfromSCtoPC; j++)
+//		{
+//			inputSCPC[i][j] = state.inputSCPC[i][j];
+//			gSCPC[i][j]		=state.gSCPC[i][j];
+//		}
+//
+//		for (int j = 0; j < cp->numpPCfromGRtoPC; j++)
+//		{
+//			pfSynWeightPC[i][j] = state.pfSynWeightPC[i][j];
+//		}
+//	}
+//
+//	for (int i = 0; i < ap->numPopHistBinsPC; i++) histPCPopAct[i] = state.histPCPopAct[i];
+//
+//	histPCPopActSum		= state.histPCPopActSum;
+//	histPCPopActCurBinN = state.histPCPopActCurBinN;
+//	pcPopAct			= state.pcPopAct;
+//
+//	for (int i = 0; i < cp->numIO; i++)
+//	{
+//		apIO[i]				= state.apIO[i];
+//		apBufIO[i]			= state.apBufIO[i];
+//		threshIO[i] 		= state.threshIO[i];
+//		vIO[i]				= state.vIO[i];
+//		vCoupleIO[i]		= state.vCoupleIO[i];
+//		pfPCPlastTimerIO[i] = state.pfPCPlastTimerIO[i];
+//
+//		for (int j = 0; j < cp->numpIOfromNCtoIO; j++)
+//		{
+//			inputNCIO[i][j] = state.inputNCIO[i][j];
+//			gNCIO[i][j]		= state.gNCIO[i][j];
+//		}
+//	}
+//
+//	errDrive = state.errDrive;
+//
+//	for (int i = 0; i < cp->numNC; i++)
+//	{
+//		apNC[i]	   		   = state.apNC[i];
+//		apBufNC[i] 		   = state.apBufNC[i];
+//		threshNC[i]		   = state.threshNC[i];
+//		vNC[i]     		   = state.vNC[i];
+//		synIOPReleaseNC[i] = state.synIOPReleaseNC[i];
+//
+//		for (int j = 0; j < cp->numpNCfromPCtoNC; j++)
+//		{
+//			inputPCNC[i][j]  = state.inputPCNC[i][j];
+//			gPCNC[i][j]		 = state.gPCNC[i][j];
+//			gPCScaleNC[i][j] = state.gPCScaleNC[i][j];
+//		}
+//
+//		for (int j = 0; j < cp->numpNCfromMFtoNC; j++)
+//		{
+//			inputMFNC[i][j]	   	   = state.inputMFNC[i][j];
+//			mfSynWeightNC[i][j]	   = state.mfSynWeightNC[i][j];
+//			gmaxNMDAofMFtoNC[i][j] = state.gmaxNMDAofMFtoNC[i][j];
+//			gmaxAMPAofMFtoNC[i][j] = state.gmaxAMPAofMFtoNC[i][j];
+//			gMFNMDANC[i][j]		   = state.gMFNMDANC[i][j];
+//			gMFAMPANC[i][j]		   = state.gMFAMPANC[i][j];
+//		}
+//	}
+//
+//	noLTPMFNC =state.noLTPMFNC;
+//	noLTDMFNC =state.noLTDMFNC;
+//}
 
 MZoneActivityState::~MZoneActivityState()
 {
-	delete[] apBC;
-	delete[] apBufBC;
-	delete[] inputPCBC;
-	delete[] gPFBC;
-	delete[] gPCBC;
-	delete[] threshBC;
-	delete[] vBC;
-
-	delete[] apPC;
-	delete[] apBufPC;
-	delete[] inputBCPC;
-
-	delete2DArray<ct_uint8_t>(inputSCPC);
-	delete2DArray<float>(pfSynWeightPC);
-
-	delete[] inputSumPFPC;
-	delete[] gPFPC;
-	delete[] gBCPC;
-
-	delete2DArray<float>(gSCPC);
-
-	delete[] vPC;
-	delete[] threshPC;
 	delete[] histPCPopAct;
 
-	delete[] apIO;
-	delete[] apBufIO;
-
-	delete2DArray<ct_uint8_t>(inputNCIO);
-	delete2DArray<float>(gNCIO);
-
-	delete[] threshIO;
-	delete[] vIO;
-	delete[] vCoupleIO;
-	delete[] pfPCPlastTimerIO;
-
-	delete[] apNC;
-	delete[] apBufNC;
-
-	delete2DArray<ct_uint8_t>(inputPCNC);
-	delete2DArray<ct_uint8_t>(inputMFNC);
-
-	delete2DArray<float>(gPCNC);
-	delete2DArray<float>(gPCScaleNC);
-	delete2DArray<float>(mfSynWeightNC);
-	delete2DArray<float>(gmaxNMDAofMFtoNC);
-	delete2DArray<float>(gmaxAMPAofMFtoNC);
-	delete2DArray<float>(gMFNMDANC);
-	delete2DArray<float>(gMFAMPANC);
-
-	delete[] threshNC;
-	delete[] vNC;
-	delete[] synIOPReleaseNC;
 }
 
-void MZoneActivityState::writeState(ConnectivityParams &cp, std::fstream &outfile)
+void MZoneActivityState::writeState(ConnectivityParams &cp, ActivityParams *ap, std::fstream &outfile)
 {
-	stateRW(cp, false, outfile);
+	stateRW(cp, ap, false, outfile);
 }
 
-bool MZoneActivityState::operator==(const MZoneActivityState &compState)
+bool MZoneActivityState::state_equal(ConnectivityParams &cp, const MZoneActivityState &compState)
 {
 	bool eq = true;
 
-	for (int i = 0; i < cp->numBC; i++)
+	for (int i = 0; i < cp.NUM_BC; i++)
 	{
 		eq = eq && (threshBC[i] == compState.threshBC[i]) && (vBC[i] == compState.vBC[i]);
 	}
-	for (int i = 0; i < cp->numPC; i++)
+	for (int i = 0; i < cp.NUM_PC; i++)
 	{
 		eq = eq && (threshPC[i] == compState.threshPC[i]) && (vPC[i] == compState.vPC[i]);
 	}
-	for (int i = 0; i < cp->numNC; i++)
+	for (int i = 0; i < cp.NUM_NC; i++)
 	{
 		eq = eq && (vNC[i] == compState.vNC[i]) && (synIOPReleaseNC[i]==compState.synIOPReleaseNC[i]);
 	}
@@ -203,89 +148,82 @@ bool MZoneActivityState::operator==(const MZoneActivityState &compState)
 	return eq;
 }
 
-bool MZoneActivityState::operator!=(const MZoneActivityState &compState) 
+bool MZoneActivityState::state_unequal(ConnectivityParams &cp, const MZoneActivityState &compState) 
 {
-	return !(*this == compState);
+	return !state_equal(cp, compState);
 }
 
-std::vector<float> MZoneActivityState::getGRPCSynWeightLinear()
+std::vector<float> MZoneActivityState::getGRPCSynWeightLinear(ConnectivityParams &cp)
 {
-	// are we really going to return an entire-ass vector?
-	std::vector<float> retVec;
-
-	retVec.resize(cp->numGR);
-
-	for (int i = 0; i < cp->numPC; i++)
+	std::vector<float> retVec(cp.NUM_GR, 0.0);
+	for (int i = 0; i < cp.NUM_PC; i++)
 	{
-		for (int j = 0; j < cp->numpPCfromGRtoPC; j++)
+		for (int j = 0; j < cp.NUM_P_PC_FROM_GR_TO_PC; j++)
 		{
-			retVec[i * cp->numpPCfromGRtoPC + j] = pfSynWeightPC[i][j];
+			retVec[i * cp.NUM_P_PC_FROM_GR_TO_PC + j] = pfSynWeightPC[i][j];
 		}
 	}
-
 	return retVec;
 }
 
-void MZoneActivityState::resetGRPCSynWeight()
+void MZoneActivityState::resetGRPCSynWeight(ConnectivityParams &cp, ActivityParams *ap)
 {
-	for (int i = 0; i < cp->numPC; i++)
+	for (int i = 0; i < cp.NUM_PC; i++)
 	{
-		for (int j = 0; j < cp->numpPCfromGRtoPC; j++)
+		for (int j = 0; j < cp.NUM_P_PC_FROM_GR_TO_PC; j++)
 		{
 			pfSynWeightPC[i][j] = ap->initSynWofGRtoPC;
 		}
 	}
 }
 
-void MZoneActivityState::allocateMemory()
+void MZoneActivityState::allocateMemory(ActivityParams *ap)
 {
-	apBC   	  = new ct_uint8_t[cp->numBC];
-	apBufBC	  = new ct_uint32_t[cp->numBC];
-	inputPCBC = new ct_uint32_t[cp->numBC];
-	gPFBC	  = new float[cp->numBC];
-	gPCBC	  = new float[cp->numBC];
-	threshBC  = new float[cp->numBC];
-	vBC		  = new float[cp->numBC];
-
-	apPC          = new ct_uint8_t[cp->numPC];
-	apBufPC       = new ct_uint32_t[cp->numPC];
-	inputBCPC     = new ct_uint32_t[cp->numPC];
-	inputSCPC     = allocate2DArray<ct_uint8_t>(cp->numPC, cp->numpPCfromSCtoPC);
-	pfSynWeightPC = allocate2DArray<float>(cp->numPC, cp->numpPCfromGRtoPC);
-	inputSumPFPC  = new float[cp->numPC];
-	gPFPC		  = new float[cp->numPC];
-	gBCPC		  = new float[cp->numPC];
-	gSCPC		  = allocate2DArray<float>(cp->numPC, cp->numpPCfromSCtoPC);
-	vPC     	  = new float[cp->numPC];
-	threshPC	  = new float[cp->numPC];
 	histPCPopAct  = new ct_uint32_t[ap->numPopHistBinsPC];
-
-	apIO     		 = new ct_uint8_t[cp->numIO];
-	apBufIO  		 = new ct_uint32_t[cp->numIO];
-	inputNCIO		 = allocate2DArray<ct_uint8_t>(cp->numIO, cp->numpIOfromNCtoIO);
-	gNCIO			 = allocate2DArray<float>(cp->numIO, cp->numpIOfromNCtoIO);
-	threshIO		 = new float[cp->numIO];
-	vIO				 = new float[cp->numIO];
-	vCoupleIO		 = new float[cp->numIO];
-	pfPCPlastTimerIO = new ct_int32_t[cp->numIO];
-
-	apNC	     	 = new ct_uint8_t[cp->numNC];
-	apBufNC      	 = new ct_uint32_t[cp->numNC];
-	inputPCNC    	 = allocate2DArray<ct_uint8_t>(cp->numNC, cp->numpNCfromPCtoNC);
-	inputMFNC    	 = allocate2DArray<ct_uint8_t>(cp->numNC, cp->numpNCfromMFtoNC);
-	gPCNC	     	 = allocate2DArray<float>(cp->numNC, cp->numpNCfromPCtoNC);
-	gPCScaleNC   	 = allocate2DArray<float>(cp->numNC, cp->numpNCfromPCtoNC);
-	mfSynWeightNC	 = allocate2DArray<float>(cp->numNC, cp->numpNCfromMFtoNC);
-	gmaxNMDAofMFtoNC = allocate2DArray<float>(cp->numNC, cp->numpNCfromMFtoNC);
-	gmaxAMPAofMFtoNC = allocate2DArray<float>(cp->numNC, cp->numpNCfromMFtoNC);
-	gMFNMDANC		 = allocate2DArray<float>(cp->numNC, cp->numpNCfromMFtoNC);
-	gMFAMPANC		 = allocate2DArray<float>(cp->numNC, cp->numpNCfromMFtoNC);
-	threshNC		 = new float[cp->numNC];
-	vNC				 = new float[cp->numNC];
-	synIOPReleaseNC	 = new float[cp->numNC];
 }
 
-void MZoneActivityState::stateRW(ConnectivityParams &cp, bool read, std::fstream &file)
+void MZoneActivityState::initializeVals(ConnectivityParams &cp, ActivityParams *ap, int randSeed)
+{
+	//uncomment for actual runs 	
+	//CRandomSFMT0 randGen(randSeed);
+
+	// bc
+	std::fill(threshBC, threshBC + cp.NUM_BC, ap->threshRestBC);
+	std::fill(vBC, vBC + cp.NUM_BC, ap->eLeakBC);
+
+	// pc
+	std::fill(vPC, vPC + cp.NUM_PC, ap->eLeakPC);
+	std::fill(threshPC, threshPC + cp.NUM_PC, ap->threshRestPC);	
+
+	std::fill(pfSynWeightPC[0], pfSynWeightPC[0]
+		+ cp.NUM_PC * cp.NUM_P_PC_FROM_GR_TO_PC, ap->initSynWofGRtoPC)
+
+	std::fill(histPCPopAct, histPCPopAct + ap->numPopHistBinsPC, 0);	
+
+	histPCPopActSum		= 0;
+	histPCPopActCurBinN = 0;
+	pcPopAct			= 0;
+
+	// IO
+	std::fill(threshIO, threshIO + cp.NUM_IO, ap->threshRestIO);
+	std::fill(vIO, vIO + cp.NUM_IO, ap->eLeakIO);
+
+	errDrive = 0;
+	
+	// NC
+	noLTPMFNC = 0;
+	noLTDMFNC = 0;
+
+	std::fill(threshNC, threshNC + cp.NUM_NC, ap->threshRestNC);
+	std::fill(vNC, vNC + cp.NUM_NC, ap->eLeakNC);
+	std::fill(gPCScaleNC[0], gPCScaleNC[0]
+		+ cp.NUM_NC * cp.NUM_P_NC_FROM_PC_TO_NC, ap->gIncAvgPCtoNC);
+
+	std::fill(mfSynWeightNC[0], mfSynWeightNC[0]
+		+ cp.NUM_NC * cp.NUM_P_NC_FROM_MF_TO_NC, ap->initSynWofMFtoNC);
+}
+
+void MZoneActivityState::stateRW(ConnectivityParams &cp, ActivityParams *ap, bool read, std::fstream &file)
 {
 	rawBytesRW((char *)apBC, cp.NUM_BC * sizeof(ct_uint8_t), read, file);
 	rawBytesRW((char *)apBufBC, cp.NUM_BC * sizeof(ct_uint32_t), read, file);
@@ -308,6 +246,7 @@ void MZoneActivityState::stateRW(ConnectivityParams &cp, bool read, std::fstream
 		cp.NUM_PC * cp.NUM_P_PC_FROM_SC_TO_PC * sizeof(float), read, file);
 	rawBytesRW((char *)vPC, cp.NUM_PC * sizeof(float), read, file);
 	rawBytesRW((char *)threshPC, cp.NUM_PC * sizeof(float), read, file);
+	// ONE ARRAY WHYYYY
 	rawBytesRW((char *)histPCPopAct, ap->numPopHistBinsPC * sizeof(ct_uint32_t), read, file);
 	rawBytesRW((char *)&histPCPopActSum, sizeof(ct_uint32_t), read, file);
 	rawBytesRW((char *)&histPCPopActCurBinN, sizeof(ct_uint32_t), read, file);
@@ -348,97 +287,5 @@ void MZoneActivityState::stateRW(ConnectivityParams &cp, bool read, std::fstream
 	rawBytesRW((char *)threshNC, cp.NUM_NC * sizeof(float), read, file);
 	rawBytesRW((char *)vNC, cp.NUM_NC * sizeof(float), read, file);
 	rawBytesRW((char *)synIOPReleaseNC, cp.NUM_NC * sizeof(float), read, file);
-}
-
-void MZoneActivityState::initializeVals(ConnectivityParams &cp, int randSeed)
-{
-	//uncomment for actual runs 	
-	//CRandomSFMT0 randGen(randSeed);
-
-	for (int i = 0; i < cp.NUM_BC; i++)
-	{
-		apBC[i]	    = 0;
-		apBufBC[i]  = 0;
-		inputPCBC[i]= 0;
-		gPFBC[i]	= 0;
-		gPCBC[i]	= 0;
-		threshBC[i] = ap->threshRestBC;
-		vBC[i]		= ap->eLeakBC;
-	}
-
-	for (int i = 0; i < cp.NUM_PC; i++)
-	{
-		apPC[i]        = 0;
-		apBufPC[i]     = 0;
-		inputBCPC[i]   = 0;
-		inputSumPFPC[i]= 0;
-		gPFPC[i]	   = 0;
-		gBCPC[i]	   = 0;
-		vPC[i]		   = ap->eLeakPC;
-		threshPC[i]	   = ap->threshRestPC;
-
-		for (int j = 0; j < cp.NUM_P_PC_FROM_SC_TO_PC; j++)
-		{
-			inputSCPC[i][j] = 0;
-			gSCPC[i][j]		= 0;
-		}
-
-		for (int j = 0; j < cp.NUM_P_PC_FROM_GR_TO_PC; j++)
-		{
-			pfSynWeightPC[i][j] = ap->initSynWofGRtoPC;
-		}
-	}
-
-	for (int i = 0; i < ap->numPopHistBinsPC; i++) histPCPopAct[i] = 0;
-
-	histPCPopActSum		= 0;
-	histPCPopActCurBinN = 0;
-	pcPopAct			= 0;
-
-	for (int i = 0; i < cp.NUM_IO; i++)
-	{
-		apIO[i]	    	    = 0;
-		apBufIO[i]  	    = 0;
-		threshIO[i] 	    = ap->threshRestIO;
-		vIO[i]	    	    = ap->eLeakIO;
-		vCoupleIO[i]	    = 0;
-		pfPCPlastTimerIO[i] = 0;
-
-		for (int j = 0; j < cp.NUM_P_IO_FROM_NC_TO_IO; j++)
-		{
-			inputNCIO[i][j] = 0;
-			gNCIO[i][j]     = 0;
-		}
-	}
-
-	errDrive = 0;
-
-	for (int i = 0; i < cp.NUM_NC; i++)
-	{
-		apNC[i]    		   = 0;
-		apBufNC[i] 		   = 0;
-		threshNC[i]		   = ap->threshRestNC;
-		vNC[i]			   = ap->eLeakNC;
-		synIOPReleaseNC[i] = 0;
-
-		for (int j = 0; j < cp.NUM_P_NC_FROM_PC_TO_NC; j++)
-		{
-			inputPCNC[i][j]  = 0;
-			gPCNC[i][j]		 = 0;
-			gPCScaleNC[i][j] = ap->gIncAvgPCtoNC;
-		}
-
-		for (int j = 0; j < cp.NUM_P_NC_FROM_MF_TO_NC; j++)
-		{
-			inputMFNC[i][j]		   = 0;
-			mfSynWeightNC[i][j]    = ap->initSynWofMFtoNC;
-			gmaxNMDAofMFtoNC[i][j] = 0;
-			gmaxAMPAofMFtoNC[i][j] = 0;
-			gMFNMDANC[i][j]		   = 0;
-			gMFAMPANC[i][j]		   = 0;
-		}
-	}
-	noLTPMFNC = 0;
-	noLTDMFNC = 0;
 }
 

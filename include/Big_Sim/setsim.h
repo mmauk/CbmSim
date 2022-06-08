@@ -16,14 +16,14 @@ class SetSim {
 
 public:
 	// yikes. for now, pass actParams as a pointer by value while we fix conParams (06/01/2022)
-	SetSim(ConnectivityParams &conParams, ActivityParams *actParams, int goRecipParam, int simNum);
+	SetSim(ConnectivityParams &cp, ActivityParams *ap);
 	~SetSim();
 
 	// State	
 	int numMZs      = 1;	
 	int innetCRSeed = 1;
-	int *mzoneCRSeed;
-	int *mzoneARSeed;
+	//int *mzoneCRSeed;
+	//int *mzoneARSeed;
 	
 	CBMState* state;
 	CBMState* getstate();
@@ -62,10 +62,10 @@ public:
 	
 	
 	ECMFPopulation* MFFreq;
-	ECMFPopulation* getMFFreq(float csMineRate, float csMaxRate);
+	ECMFPopulation* getMFFreq(ConnectivityParams &cp, float csMineRate, float csMaxRate);
 
 	PoissonRegenCells* MFs;
-	PoissonRegenCells* getMFs();
+	PoissonRegenCells* getMFs(ConnectivityParams &cp, ActivityParams *ap);
 
 	// Eyelid integrator 
 	float gDecayTau = 11;

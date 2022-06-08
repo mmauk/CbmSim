@@ -32,6 +32,7 @@
 class CBMSimCore
 {
 public:
+	CBMSimCore();
 	CBMSimCore(CBMState *state, int gpuIndStart = -1, int numGPUP2 = -1);
 	CBMSimCore(CBMState *state, int *mzoneRSeed, int gpuIndStart = -1, int numGPUP2 = -1);
 
@@ -69,7 +70,6 @@ protected:
 	int numGPUs;
 
 private:
-	CBMSimCore();
 	void construct(CBMState *state, int *mzoneRSeed, int gpuIndStart, int numGPUP2);
 
 	bool isGRStim  	 =  false;

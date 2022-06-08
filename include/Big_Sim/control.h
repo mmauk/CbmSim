@@ -28,8 +28,8 @@ class Control
 		~Control();
 
 		// Objects
-		ConnectivityParams conParams; // <-- conParams a struct now
-		ActivityParams *actParams;	
+		ConnectivityParams cp; // <-- conParams a struct now
+		ActivityParams *ap;	
 		CBMState *joestate;
 		CBMSimCore *joesim;
 		ECMFPopulation *joeMFFreq;
@@ -58,8 +58,8 @@ class Control
 		const ct_uint8_t *mfAP;
 		int tts;
 		int trial; 	
-		int numGO = 4096;
-		int numGR = 1048576;
+		int numGO = 4096; // ??
+		int numGR = 1048576; // ??
 
 		ct_uint8_t *grPSTHPreCS;
 		ct_uint8_t *grPSTHCS;
@@ -69,11 +69,11 @@ class Control
 
 		int trialTime = 5000;
 			
-		int numPC = 32;
-		int numBC = 128;
-		int numSC = 512;
-		int numNC = 8;
-		int numIO = 4;
+		int numPC = 32; // ??
+		int numBC = 128; // ??
+		int numSC = 512; // ??
+		int numNC = 8; // ??
+		int numIO = 4; // ??
 
 		const ct_uint8_t* grSpks;
 		const float *mfGO;
@@ -132,8 +132,7 @@ class Control
 			float GRGO, float MFGO, float csMinRate, float csMaxRate, float gogoW, int inputStrength,
 			float spillFrac);
 
-		void initializeOutputArrays(int numPC, int numNC, int numSC, int numBC, int numGO,
-			int csSize, int numTrainingTrials);
+		void initializeOutputArrays(int csSize, int numTrainingTrials);
 		void train(int selectState, int filename, int ISIs, int numTrials, int numCon,
 			int tunedConNumber);
 
@@ -142,8 +141,9 @@ class Control
 			int csSize, float goMin, float GOGR, float GRGO, float MFGO,
 			float csMinRate, float csMaxRate, float gogoW, float spillFrac);
 
-		void saveOutputArraysToFile(int numGO, int numBC, int numSC, int numTrainingTrials, int csSize,
-			int goRecipParam, int simNum, int inputStrength);
+		void saveOutputArraysToFile(int numTrainingTrials, int csSize, int goRecipParam,
+			int simNum, int inputStrength);
+
 		void countGOSpikes(int *goSpkCounter, float &medTrials);
 
 		void fillRasterArrays(CBMSimCore *joesim, int rasterCounter);

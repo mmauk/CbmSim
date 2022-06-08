@@ -23,167 +23,152 @@
 class InNetActivityState
 {
 public:
-	InNetActivityState(ConnectivityParams *conParams, ActivityParams *actParams);
-	InNetActivityState(ConnectivityParams *conParams, std::fstream &infile);
-	InNetActivityState(const InNetActivityState &state);
+	InNetActivityState();
+	InNetActivityState(ConnectivityParams &cp, ActivityParams *ap);
+	InNetActivityState(ConnectivityParams &cp, std::fstream &infile);
+	//InNetActivityState(const InNetActivityState &state);
 
 	virtual ~InNetActivityState();
 
-	void writeState(std::fstream &outfile);
+	void writeState(ConnectivityParams &cp, std::fstream &outfile);
 
-	bool operator==(const InNetActivityState &compState);
-	bool operator!=(const InNetActivityState &compState);
+	bool state_equal(ConnectivityParams &cp, const InNetActivityState &compState);
+	bool state_unequal(ConnectivityParams &cp, const InNetActivityState &compState);
 
-	bool validateState();
+	//bool validateState();
 
-	void resetState(ActivityParams *ap);
-
-	ConnectivityParams *cp;
-	
+	void resetState(ConnectivityParams &cp, ActivityParams *ap);
 
 	//mossy fiber
-	ct_uint8_t *histMF;
-	ct_uint32_t *apBufMF;
-	float *depAmpMFUBC;
+	ct_uint8_t histMF[cp.NUM_MF]();
+	ct_uint32_t apBufMF[cp.NUM_MF]();
+	float depAmpMFUBC[cp.NUM_MF]();
 
 	//golgi cells
 	int goTimeStep;
-	float *synWscalerGRtoGO;
-	float *synWscalerGOtoGO;
-	int *goSpkSumHP;
-	float *goFR_HP;
-	ct_uint8_t *apGO;
-	int *spkGO;
-	ct_uint32_t *apBufGO;
-	float *vGO;
-	float *exGOInput;
-	float *inhGOInput;
-	float *vCoupleGO;
-	float *threshCurGO;
-	ct_uint32_t *inputMFGO;
-	ct_uint32_t *inputUBCGO;
-	float *depAmpMFGO;
-	float *gi_MFtoGO;
-	float *gSum_MFGO;
+	float synWscalerGRtoGO[cp.NUM_GO]();
+	float synWscalerGOtoGO[cp.NUM_GO]();
+	int goSpkSumHP[cp.NUM_GO]();
+	float goFR_HP[cp.NUM_GO]();
+	ct_uint8_t apGO[cp.NUM_GO]();
+	ct_uint32_t apBufGO[cp.NUM_GO]();
+	int spkGO[cp.NUM_GO]();
+	float vGO[cp.NUM_GO]();
+	float exGOInput[cp.NUM_GO]();
+	float inhGOInput[cp.NUM_GO]();
+	float vCoupleGO[cp.NUM_GO]();
+	float threshCurGO[cp.NUM_GO]();
+	ct_uint32_t inputMFGO[cp.NUM_GO]();
+	ct_uint32_t inputUBCGO[cp.NUM_GO]();
+	float depAmpMFGO[cp.NUM_MF]();
+	float gi_MFtoGO[cp.NUM_MF]();
+	float gSum_MFGO[cp.NUM_GO]();
+	ct_uint32_t inputGOGO[cp.NUM_GO]();
 	
-	float *gi_GOtoGO;
-	float *depAmpGOGO;
-	float *gSum_GOGO;
+	float gi_GOtoGO[cp.NUM_GO]();
+	float depAmpGOGO[cp.NUM_GO]();
+	float gSum_GOGO[cp.NUM_GO]();
+	float depAmpGOGR[cp.NUM_GO]();
+	float dynamicAmpGOGR[cp.NUM_GO]();
 
-	float *vSum_GOGO;
-	float *vSum_GRGO;
-	float *vSum_MFGO;
+	float gSum_UBCtoGO[cp.NUM_GO]();
 
+	float vSum_GOGO[cp.NUM_GO]();
+	float vSum_GRGO[cp.NUM_GO]();
+	float vSum_MFGO[cp.NUM_GO]();
 
-
-
-	float *depAmpGOGR;
-	float *dynamicAmpGOGR;
-
-	float *gSum_UBCtoGO;
-
-	ct_uint32_t *inputGOGO;
 
 	//todo: synaptic depression test
-	float *inputGOGABASynDepGO;
-	float *goGABAOutSynScaleGOGO;
+	float inputGOGABASynDepGO[cp.NUM_GO]();
+	float goGABAOutSynScaleGOGO[cp.NUM_GO]();
 
-	float *gMFGO;
-	float *gNMDAMFGO;
-	float *gNMDAUBCGO;
-	float *gNMDAIncMFGO;
-	float *gGRGO;
-	float *gGRGO_NMDA;
-	float *gGOGO;
-	float *gMGluRGO;
-	float *gMGluRIncGO;
-	float *mGluRGO;
-	float *gluGO;
+	float gMFGO[cp.NUM_GO]();
+	float gNMDAMFGO[cp.NUM_GO]();
+	float gNMDAUBCGO[cp.NUM_GO]();
+	float gNMDAIncMFGO[cp.NUM_GO]();
+	float gGRGO[cp.NUM_GO]();
+	float gGRGO_NMDA[cp.NUM_GO]();
+	float gGOGO[cp.NUM_GO]();
+	float gMGluRGO[cp.NUM_GO]();
+	float gMGluRIncGO[cp.NUM_GO]();
+	float mGluRGO[cp.NUM_GO]();
+	float gluGO[cp.NUM_GO]();
 
 	//granule cells
-	ct_uint8_t *apGR;
-	ct_uint32_t *apBufGR;
-
+	float depAmpMFGR[cp.NUM_MF]();
+	float gi_MFtoGR[cp.NUM_MF]();
+	float gSum_MFGR[cp.NUM_GR]();
 	
-	float *depAmpMFGR;
-	float *gi_MFtoGR;
-	float *gSum_MFGR;
-	
-	
-	float **gMFGR;
-	float **gUBCGR;
-	float *gMFSumGR;
-	float *gMFDirectGR;
-	float *gMFSpilloverGR;
-	float *gGODirectGR;
-	float *gGOSpilloverGR;
-	int *apMFtoGR;
-	int *apUBCtoGR;
-	float *gUBCSumGR;
-	float *gUBCDirectGR;
-	float *gUBCSpilloverGR;
-	float *gNMDAGR;
-	float *gNMDAIncGR;
-	float *gLeakGR;
-	float *depAmpMFtoGR;
-	float *depAmpUBCtoGR;
-	float *depAmpGOtoGR; 
-	float *dynamicAmpGOtoGR;
+	ct_uint8_t apGR[cp.NUM_GR]();
+	ct_uint32_t apBufGR[cp.NUM_GR]();
+	float gMFGR[cp.NUM_GR][cp.MAX_NUM_P_GR_FROM_MF_TO_GR]();
+	float gUBCGR[cp.NUM_GR][cp.MAX_NUM_P_GR_FROM_MF_TO_GR]();
+	float gMFSumGR[cp.NUM_GR]();
+	float gMFDirectGR[cp.NUM_GR]();
+	float gMFSpilloverGR[cp.NUM_GR]();
+	float gGODirectGR[cp.NUM_GR]();
+	float gGOSpilloverGR[cp.NUM_GR]();
+	int apMFtoGR[cp.NUM_GR]();
+	int apUBCtoGR[cp.NUM_GR]();
+	float gUBCSumGR[cp.NUM_GR]();
+	float gUBCDirectGR[cp.NUM_GR]();
+	float gUBCSpilloverGR[cp.NUM_GR]();
+	float gNMDAGR[cp.NUM_GR]();
+	float gNMDAIncGR[cp.NUM_GR]();
+	float gLeakGR[cp.NUM_GR]();
+	float depAmpMFtoGR[cp.NUM_GR]();
+	float depAmpUBCtoGR[cp.NUM_GR]();
+	float depAmpGOtoGR[cp.NUM_GR](); 
+	float dynamicAmpGOtoGR[cp.NUM_GR]();
 
-	float **gGOGR;
-	float *gGOSumGR;
-
-	float *threshGR;
-	float *vGR;
-	float *gKCaGR;
-	ct_uint64_t *historyGR;
+	float gGOGR[cp.NUM_GR][cp.MAX_NUM_P_GR_FROM_GO_TO_GR]();
+	float gGOSumGR[cp.NUM_GR]();
+	float threshGR[cp.NUM_GR]();
+	float vGR[cp.NUM_GR]();
+	float gKCaGR[cp.NUM_GR]();
+	ct_uint64_t historyGR[cp.NUM_GR]();
 
 	//stellate cells
-	ct_uint8_t *apSC;
-	ct_uint32_t *apBufSC;
+	ct_uint8_t apSC[cp.NUM_SC]();
+	ct_uint32_t apBufSC[cp.NUM_SC]();
 
-	float *gPFSC;
-	float *threshSC;
-	float *vSC;
-
-	ct_uint32_t *inputSumPFSC;
+	float gPFSC[cp.NUM_SC]();
+	float threshSC[cp.NUM_SC]();
+	float vSC[cp.NUM_SC]();
+	ct_uint32_t inputSumPFSC[cp.NUM_SC]();
 
 	//UBCs
+	float gRise_MFtoUBC[cp.NUM_UBC]();
+	float gDecay_MFtoUBC[cp.NUM_UBC]();
+	float gSum_MFtoUBC[cp.NUM_UBC]();
+	float depAmpUBCtoUBC[cp.NUM_UBC]();
+	float gRise_UBCNMDA[cp.NUM_UBC]();
+	float gDecay_UBCNMDA[cp.NUM_UBC]();
+	float gSum_UBCNMDA[cp.NUM_UBC]();
+	float gK_UBC[cp.NUM_UBC]();
 	
-	float *gRise_MFtoUBC;
-	float *gDecay_MFtoUBC;
-	float *gSum_MFtoUBC;
-	float *depAmpUBCtoUBC;
+	float gRise_UBCtoUBC[cp.NUM_UBC]();
+	float gDecay_UBCtoUBC[cp.NUM_UBC]();
+	float gSumOutUBCtoUBC[cp.NUM_UBC]();
+	float gSumInUBCtoUBC[cp.NUM_UBC]();
+	
+	int inputMFUBC[cp.NUM_UBC]();
+	int inputGOUBC[cp.NUM_UBC]();
+	float gSum_GOtoUBC[cp.NUM_UBC]();
+	ct_uint8_t apUBC[cp.NUM_UBC]();
+	float vUBC[cp.NUM_UBC]();
+	float threshUBC[cp.NUM_UBC]();
+	int inputUBCtoUBC[cp.NUM_UBC]();
 
-	float *gRise_UBCNMDA;
-	float *gDecay_UBCNMDA;
-	float *gSum_UBCNMDA;
-	float *gK_UBC;
-	
-	float *gRise_UBCtoUBC;
-	float *gDecay_UBCtoUBC;
-	float *gSumOutUBCtoUBC;
-	float *gSumInUBCtoUBC;
-	
-	ct_uint8_t *apUBC;
-	int *inputMFUBC;
-	int *inputGOUBC;
-	float *gSum_GOtoUBC;
-	float *vUBC;
-	float *threshUBC;
-	int *inputUBCtoUBC;
+	float gi_UBCtoGO[cp.NUM_UBC]();
+	float depAmpUBCGO[cp.NUM_UBC]();
+	float depAmpUBCGR[cp.NUM_UBC]();
 
-	float *gi_UBCtoGO;
-	float *depAmpUBCGO;
-	float *depAmpUBCGR;
 private:
-	InNetActivityState();
 
 	void allocateMemory();
-
-	void stateRW(bool read, std::fstream &file);
-
-	void initializeVals(ActivityParams *ap);
+	void stateRW(ConnectivityParams &cp, bool read, std::fstream &file);
+	void initializeVals(ConnectivityParams &cp, ActivityParams *ap);
 };
 
 

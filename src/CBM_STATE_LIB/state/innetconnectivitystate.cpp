@@ -141,14 +141,14 @@ InNetConnectivityState::InNetConnectivityState(ConnectivityParams &cp,
 
 InNetConnectivityState::~InNetConnectivityState() {}
 
-void InNetConnectivityState::writeState(std::fstream &outfile)
+void InNetConnectivityState::writeState(ConnectivityParams &cp, std::fstream &outfile)
 {
 	std::cout << "Writing input network connectivity state to disk..." << std::endl;
-	stateRW(false, (std::fstream &)outfile);
+	stateRW(cp, false, outfile);
 	std::cout << "finished writing input network connectivity to disk." << std::endl;
 }
 
-bool InNetConnectivityState::operator==(const InNetConnectivityState &compState)
+bool InNetConnectivityState::state_equal(ConnectivityParams &cp, const InNetConnectivityState &compState)
 {
 	bool eq = true;
 	for (int i = 0; i < cp.NUM_GL; i++)
@@ -169,9 +169,9 @@ bool InNetConnectivityState::operator==(const InNetConnectivityState &compState)
 	return eq;
 }
 
-bool InNetConnectivityState::operator!=(const InNetConnectivityState &compState)
+bool InNetConnectivityState::state_unequal(ConnectivityParams &cp, const InNetConnectivityState &compState)
 {
-	return !(*this == compState);
+	return !state_equal(cp, compState);
 }
 
 //bool InNetConnectivityState::deleteGOGOConPair(int srcGON, int destGON)
@@ -234,7 +234,7 @@ bool InNetConnectivityState::operator!=(const InNetConnectivityState &compState)
 //	return true;
 //}
 
-void InNetConnectivityState::stateRW(bool read, std::fstream &file)
+void InNetConnectivityState::stateRW(ConnectivityParams &cp, bool read, std::fstream &file)
 {
 	std::cout << "glomerulus" << std::endl;
 	//glomerulus

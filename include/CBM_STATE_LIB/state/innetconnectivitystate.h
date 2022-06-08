@@ -34,10 +34,10 @@ public:
 
 	~InNetConnectivityState();
 	
-	void writeState(std::fstream &outfile);
+	void writeState(ConnectivityParams &cp, std::fstream &outfile);
 
-	bool operator==(const InNetConnectivityState &compState);
-	bool operator!=(const InNetConnectivityState &compState);
+	bool state_equal(ConnectivityParams &cp, const InNetConnectivityState &compState);
+	bool state_unequal(ConnectivityParams &cp, const InNetConnectivityState &compState);
 
 	//bool deleteGOGOConPair(int srcGON, int destGON);
 	//bool addGOGOConPair(int srcGON, int destGON);
@@ -195,7 +195,7 @@ protected:
 
 	void initializeVals(ConnectivityParams &cp);
 
-	void stateRW(bool read, std::fstream &file);
+	void stateRW(ConnectivityParams &cp, bool read, std::fstream &file);
 
 	void connectMFGL_noUBC(ConnectivityParams &cp, CRandomSFMT &randGen);
 	void connectGLGR(ConnectivityParams &cp, CRandomSFMT &randGen);

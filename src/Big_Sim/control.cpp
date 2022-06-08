@@ -3,12 +3,12 @@
 
 Control::Control(std::string actParamFile)
 {
-	actParams = new ActivityParams(actParamFile);
+	ap = new ActivityParams(actParamFile);
 }
 
 Control::~Control()
 {
-	delete actParams;
+	delete ap;
 }
 
 void Control::runSimulationWithGRdata(int goRecipParam, int numTuningTrials, int numGrDetectionTrials,
@@ -17,53 +17,53 @@ void Control::runSimulationWithGRdata(int goRecipParam, int numTuningTrials, int
 		float spillFrac)
 {
 	// set all relevant variables to the sim	
-	SetSim simulation(conParams, actParams, goRecipParam, simNum);
+	// TODO: move these initialization steps to the constructor. wth are we doing initializing these
+	// things here? what is the point of the setsim object versus the control object?
+	SetSim simulation(cp, ap);
 	joestate  = simulation.getstate();
 	joesim    = simulation.getsim();
-	joeMFFreq = simulation.getMFFreq(csMinRate, csMaxRate);
-	joeMFs    = simulation.getMFs();
+	joeMFFreq = simulation.getMFFreq(cp, csMinRate, csMaxRate);
+	joeMFs    = simulation.getMFs(cp, ap);
 
 
 	// allocate and fill all of the output arrays	
-	initializeOutputArrays(numPC, numNC, numSC, numBC, numGO, csSize, numTrainingTrials);
+	initializeOutputArrays(csSize, numTrainingTrials);
 
 	// run all trials of sim
 	runTrials(joesim, joeMFs, joeMFFreq, numTuningTrials, numGrDetectionTrials, numTrainingTrials,
 		simNum, csSize, goMin, GOGR, GRGO, MFGO, csMinRate, csMaxRate, gogoW, spillFrac);
 
 	// Save Data 
-	saveOutputArraysToFile(numGO, numBC, numSC, numTrainingTrials, csSize, goRecipParam,
-		simNum, inputStrength);
+	saveOutputArraysToFile(numTrainingTrials, csSize, goRecipParam, simNum, inputStrength);
 
 	// deallocate output arrays
 	deleteOutputArrays();
 }
 
-void Control::initializeOutputArrays(int numPC, int numNC, int numSC, int numBC, int numGO,
-	int csSize, int numTrainingTrials)
+void Control::initializeOutputArrays(int csSize, int numTrainingTrials)
 {
 	int allGOPSTHColSize = csSize + msPreCS + msPostCS;
 	int rasterColumnSize = allGOPSTHColSize * numTrainingTrials;	
 
 	// Allocate and Initialize PSTH and Raster arrays
-	allPCRaster = allocate2DArray<ct_uint8_t>(numPC, rasterColumnSize);	
+	allPCRaster = allocate2DArray<ct_uint8_t>(cp.NUM_PC, rasterColumnSize);	
 	std::fill(allPCRaster[0], allPCRaster[0] +
-			numPC * rasterColumnSize, 0);
+			NUM_PC * rasterColumnSize, 0);
 	
-	allNCRaster = allocate2DArray<ct_uint8_t>(numNC, rasterColumnSize);	
+	allNCRaster = allocate2DArray<ct_uint8_t>(cp.NUM_NC, rasterColumnSize);	
 	std::fill(allNCRaster[0], allNCRaster[0] +
-			numNC * rasterColumnSize, 0);
+			cp.NUM_NC * rasterColumnSize, 0);
 
-	allSCRaster = allocate2DArray<ct_uint8_t>(numSC, rasterColumnSize);	
+	allSCRaster = allocate2DArray<ct_uint8_t>(cp.NUM_SC, rasterColumnSize);	
 	std::fill(allSCRaster[0], allSCRaster[0] +
-			numSC * rasterColumnSize, 0);
+			cp.NUM_SC * rasterColumnSize, 0);
 
-	allBCRaster = allocate2DArray<ct_uint8_t>(numBC, rasterColumnSize);	
+	allBCRaster = allocate2DArray<ct_uint8_t>(cp.NUM_BC, rasterColumnSize);	
 	std::fill(allBCRaster[0], allBCRaster[0] +
-			numBC * rasterColumnSize, 0);
+			cp.NUM_BC * rasterColumnSize, 0);
 	
-	allGOPSTH = allocate2DArray<ct_uint8_t>(numGO, allGOPSTHColSize);	
-	std::fill(allGOPSTH[0], allGOPSTH[0] + numGO * allGOPSTHColSize, 0);
+	allGOPSTH = allocate2DArray<ct_uint8_t>(cp.NUM_GO, allGOPSTHColSize);	
+	std::fill(allGOPSTH[0], allGOPSTH[0] + cp.NUM_GO * allGOPSTHColSize, 0);
 }
 
 void Control::runTrials(CBMSimCore *joesim, PoissonRegenCells *joeMFs, ECMFPopulation *joeMFFreq,
@@ -176,8 +176,8 @@ void Control::runTrials(CBMSimCore *joesim, PoissonRegenCells *joeMFs, ECMFPopul
 	delete[] goSpkCounter;
 }
 
-void Control::saveOutputArraysToFile(int numGO, int numBC, int numSC, int numTrainingTrials, int csSize,
-	int goRecipParam, int simNum, int inputStrength)
+void Control::saveOutputArraysToFile(int numTrainingTrials, int csSize, int goRecipParam,
+	int simNum, int inputStrength)
 {
 	int allGOPOSTHColSize = csSize + msPreCS + msPostCS; 
 	
@@ -188,20 +188,20 @@ void Control::saveOutputArraysToFile(int numGO, int numBC, int numSC, int numTra
 	// TODO: once get matrix class, rewrite
 	std::string allGOPSTHFileName = "allGOPSTH_noGOGO_grgoConv" + std::to_string(conv[goRecipParam]) +
 		"_" + std::to_string(simNum) + ".bin";	
-	write2DCharArray(allGOPSTHFileName, allGOPSTH, numGO, allGOPOSTHColSize);
+	write2DCharArray(allGOPSTHFileName, allGOPSTH, cp.NUM_GO, allGOPOSTHColSize);
 
 	std::cout << "Filling BC files" << std::endl;
 	
 	std::string allBCRasterFileName = "allBCRaster_paramSet" + std::to_string(inputStrength) +
 		"_" + std::to_string(simNum) + ".bin";
-	write2DCharArray(allBCRasterFileName, allBCRaster, numBC,
+	write2DCharArray(allBCRasterFileName, allBCRaster, cp.NUM_BC,
 			numTrainingTrials * allGOPOSTHColSize);
 	
 	std::cout << "Filling SC files" << std::endl;
 
 	std::string allSCRasterFileName = "allSCRaster_paramSet" + std::to_string(inputStrength) +
 		"_" + std::to_string(simNum) + ".bin";
-	write2DCharArray(allSCRasterFileName, allSCRaster, numSC,
+	write2DCharArray(allSCRasterFileName, allSCRaster, cp.NUM_SC,
 			numTrainingTrials * allGOPOSTHColSize);
 }
 
