@@ -13,12 +13,12 @@
 #include "params/connectivityparams.h"
 #include "interfaces/iactivityparams.h"
 #include "state/innetconnectivitystate.h"
+#include "state/innetactivitystate.h"
 #include "interface/cbmsimcore.h"
 #include "ecmfpopulation.h"
 #include "poissonregencells.h"
 #include "interfaces/ectrialsdata.h"
 #include "eyelidintegrator.h"
-#include "state/innetactivitystate.h"
 
 class Control 
 {
@@ -28,8 +28,9 @@ class Control
 		~Control();
 
 		// Objects
-		ConnectivityParams cp; // <-- conParams a struct now
+		// static const ConnectivityParams *cp; // <-- conParams a struct now (06/09/2022)
 		ActivityParams *ap;	
+
 		CBMState *joestate;
 		CBMSimCore *joesim;
 		ECMFPopulation *joeMFFreq;
@@ -69,11 +70,11 @@ class Control
 
 		int trialTime = 5000;
 			
-		int numPC = 32; // ??
-		int numBC = 128; // ??
-		int numSC = 512; // ??
-		int numNC = 8; // ??
-		int numIO = 4; // ??
+		//int numPC = 32; // ??
+		//int numBC = 128; // ??
+		//int numSC = 512; // ??
+		//int numNC = 8; // ??
+		//int numIO = 4; // ??
 
 		const ct_uint8_t* grSpks;
 		const float *mfGO;

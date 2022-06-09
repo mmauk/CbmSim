@@ -16,7 +16,7 @@ ActivityParams::ActivityParams(std::string actParamFile)
 //	//loop through file and add key/value pair to map
 //	//** this is done to remove the necessity of order in the original file
 
-	std::cout << "[INFO]: opening activity parameter file..."
+	std::cout << "[INFO]: opening activity parameter file..." << std::endl;
 	std::fstream paramFileBuffer(actParamFile.c_str());
 
 	std::string key;

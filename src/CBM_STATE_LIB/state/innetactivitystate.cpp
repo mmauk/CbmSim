@@ -9,14 +9,14 @@
 
 #include "state/innetactivitystate.h"
 
-InNetActivityState::InNetActivityState(ConnectivityParams &cp, ActivityParams *ap)
+InNetActivityState::InNetActivityState(ActivityParams *ap)
 {
-	initializeVals(cp, ap);
+	initializeVals(ap);
 }
 
-InNetActivityState::InNetActivityState(ConnectivityParams &cp, std::fstream &infile)
+InNetActivityState::InNetActivityState(std::fstream &infile)
 {
-	stateRW(cp, true, infile);
+	stateRW(true, infile);
 }
 
 //InNetActivityState::InNetActivityState(const InNetActivityState &state)
@@ -25,7 +25,7 @@ InNetActivityState::InNetActivityState(ConnectivityParams &cp, std::fstream &inf
 //
 //	allocateMemory();
 //	goTimeStep = 0;
-//	for (int i = 0; i < cp->numMF; i++)
+//	for (int i = 0; i < numMF; i++)
 //	{
 //		histMF[i] = state.histMF[i];
 //		apBufMF[i] = state.apBufMF[i];
@@ -37,7 +37,7 @@ InNetActivityState::InNetActivityState(ConnectivityParams &cp, std::fstream &inf
 //		depAmpMFUBC[i] = state.depAmpMFUBC[i];
 //	}
 //
-//	for(int i = 0; i < cp->numGO; i++)
+//	for(int i = 0; i < numGO; i++)
 //	{
 //		apGO[i] = state.apGO[i];
 //		spkGO[i] = state.spkGO[i];
@@ -71,14 +71,14 @@ InNetActivityState::InNetActivityState(ConnectivityParams &cp, std::fstream &inf
 //		gluGO[i] = state.gluGO[i];
 //	}
 //
-//	for (int i = 0; i < cp->numGR; i++)
+//	for (int i = 0; i < numGR; i++)
 //	{
 //		apGR[i] = state.apGR[i];
 //		apBufGR[i] = state.apBufGR[i];
 //		
 //		gSum_MFGR[i] = state.gSum_MFGR[i];
 //		
-//		for (int j = 0; j < cp->maxnumpGRfromMFtoGR; j++)
+//		for (int j = 0; j < maxnumpGRfromMFtoGR; j++)
 //		{
 //			gMFGR[i][j] = state.gMFGR[i][j];
 //			gUBCGR[i][j] = state.gUBCGR[i][j];
@@ -102,7 +102,7 @@ InNetActivityState::InNetActivityState(ConnectivityParams &cp, std::fstream &inf
 //		depAmpGOtoGR[i] = 1;
 //		dynamicAmpGOtoGR[i] = 1;
 //		
-//		for(int j = 0; j < cp->maxnumpGRfromGOtoGR; j++)
+//		for(int j = 0; j < maxnumpGRfromGOtoGR; j++)
 //		{
 //			gGOGR[i][j] = state.gGOGR[i][j];
 //		}
@@ -114,7 +114,7 @@ InNetActivityState::InNetActivityState(ConnectivityParams &cp, std::fstream &inf
 //		historyGR[i] = state.historyGR[i];
 //	}
 //
-//	for (int i = 0; i < cp->numSC; i++)
+//	for (int i = 0; i < numSC; i++)
 //	{
 //		apSC[i] = state.apSC[i];
 //		apBufSC[i] = state.apBufSC[i];
@@ -124,7 +124,7 @@ InNetActivityState::InNetActivityState(ConnectivityParams &cp, std::fstream &inf
 //		inputSumPFSC[i] = state.inputSumPFSC[i];
 //	}
 //
-//	for (int i = 0; i < cp->numUBC; i++)
+//	for (int i = 0; i < numUBC; i++)
 //	{
 //		gRise_MFtoUBC[i] = state.gRise_MFtoUBC[i];
 //		gDecay_MFtoUBC[i] = state.gDecay_MFtoUBC[i];
@@ -159,22 +159,22 @@ InNetActivityState::InNetActivityState(ConnectivityParams &cp, std::fstream &inf
 
 InNetActivityState::~InNetActivityState() {}
 
-void InNetActivityState::writeState(ConnectivityParams &cp, std::fstream &outfile)
+void InNetActivityState::writeState(std::fstream &outfile)
 {
-	stateRW(cp, false, outfile);
+	stateRW(false, outfile);
 }
 
-bool InNetActivityState::state_equal(ConnectivityParams &cp, const InNetActivityState &compState)
+bool InNetActivityState::state_equal(const InNetActivityState &compState)
 {
 	bool equal = true;
 
-	for (int i = 0; i < cp.NUM_MF; i++)
+	for (int i = 0; i < NUM_MF; i++)
 	{
 		equal = equal && (histMF[i] == compState.histMF[i]);
 		equal = equal && (apBufMF[i] == compState.apBufMF[i]);
 	}
 
-	for (int i = 0; i < cp.NUM_GO; i++)
+	for (int i = 0; i < NUM_GO; i++)
 	{
 		equal = equal && (apGO[i] == compState.apGO[i]);
 		equal = equal && (spkGO[i] == compState.spkGO[i]);
@@ -183,7 +183,7 @@ bool InNetActivityState::state_equal(ConnectivityParams &cp, const InNetActivity
 		equal = equal && (threshCurGO[i] == compState.threshCurGO[i]);
 	}
 
-	for (int i = 0; i < cp.NUM_SC; i++)
+	for (int i = 0; i < NUM_SC; i++)
 	{
 		equal = equal && (vSC[i] == compState.vSC[i]);
 	}
@@ -191,323 +191,323 @@ bool InNetActivityState::state_equal(ConnectivityParams &cp, const InNetActivity
 	return equal;
 }
 
-bool InNetActivityState::state_unequal(ConnectivityParams &cp, const InNetActivityState &compState)
+bool InNetActivityState::state_unequal(const InNetActivityState &compState)
 {
-	return !state_equal(cp, compstate);
+	return !state_equal(compState);
 }
 
 //bool InNetActivityState::validateState()
 //{
 //	bool valid = true;
 //
-//	valid = valid && validateFloatArray(vGO, cp->numGO);
-//	valid = valid && validateFloatArray(gMFGO, cp->numGO);
-//	valid = valid && validateFloatArray(gNMDAMFGO, cp->numGO);
-//	valid = valid && validateFloatArray(gNMDAUBCGO, cp->numGO);
-//	valid = valid && validateFloatArray(gNMDAIncMFGO, cp->numGO);
-//	valid = valid && validateFloatArray(gGRGO, cp->numGO);
+//	valid = valid && validateFloatArray(vGO, numGO);
+//	valid = valid && validateFloatArray(gMFGO, numGO);
+//	valid = valid && validateFloatArray(gNMDAMFGO, numGO);
+//	valid = valid && validateFloatArray(gNMDAUBCGO, numGO);
+//	valid = valid && validateFloatArray(gNMDAIncMFGO, numGO);
+//	valid = valid && validateFloatArray(gGRGO, numGO);
 //
-//	valid = valid && validate2DfloatArray(gMFGR, cp->numGR*cp->maxnumpGRfromMFtoGR);
-//	valid = valid && validate2DfloatArray(gUBCGR, cp->numGR*cp->maxnumpGRfromMFtoGR);
-//	valid = valid && validate2DfloatArray(gGOGR, cp->numGR*cp->maxnumpGRfromGOtoGR);
-//	valid = valid && validateFloatArray(vGR, cp->numGR);
-//	valid = valid && validateFloatArray(gKCaGR, cp->numGR);
+//	valid = valid && validate2DfloatArray(gMFGR, numGR*maxnumpGRfromMFtoGR);
+//	valid = valid && validate2DfloatArray(gUBCGR, numGR*maxnumpGRfromMFtoGR);
+//	valid = valid && validate2DfloatArray(gGOGR, numGR*maxnumpGRfromGOtoGR);
+//	valid = valid && validateFloatArray(vGR, numGR);
+//	valid = valid && validateFloatArray(gKCaGR, numGR);
 //
-//	valid = valid && validateFloatArray(gPFSC, cp->numSC);
-//	valid = valid && validateFloatArray(vSC, cp->numSC);
+//	valid = valid && validateFloatArray(gPFSC, numSC);
+//	valid = valid && validateFloatArray(vSC, numSC);
 //
 //	return valid;
 //}
 
-void InNetActivityState::resetState(ConnectivityParams &cp, ActivityParams *ap)
+void InNetActivityState::resetState(ActivityParams *ap)
 {
-	initializeVals(cp, ap);
+	initializeVals(ap);
 }
 
 //void InNetActivityState::allocateMemory()
 //{	
-//	//histMF = new ct_uint8_t[cp->numMF];
-//	//apBufMF = new ct_uint32_t[cp->numMF];
+//	//histMF = new ct_uint8_t[numMF];
+//	//apBufMF = new ct_uint32_t[numMF];
 //
-//	//spkGO  = new int[cp->numGO];
-//	//goFR_HP = new float[cp->numGO];
-//	//goSpkSumHP = new int[cp->numGO];
-//	//synWscalerGRtoGO = new float[cp->numGO];
-//	//synWscalerGOtoGO = new float[cp->numGO];
-//	//apGO = new ct_uint8_t[cp->numGO];
-//	//apBufGO = new ct_uint32_t[cp->numGO];
-//	//vGO = new float[cp->numGO];
-//	//exGOInput = new float[cp->numGO];
-//	//inhGOInput = new float[cp->numGO];
-//	//vCoupleGO = new float[cp->numGO];
-//	//threshCurGO = new float[cp->numGO];
-//	//inputMFGO = new ct_uint32_t[cp->numGO];
-//	//inputUBCGO = new ct_uint32_t[cp->numGO];
-//	//depAmpMFGO = new float[cp->numMF];
-//	//gi_MFtoGO = new float[cp->numMF];
-//	//gSum_MFGO = new float[cp->numGO];
-//	//inputGOGO = new ct_uint32_t[cp->numGO];
+//	//spkGO  = new int[numGO];
+//	//goFR_HP = new float[numGO];
+//	//goSpkSumHP = new int[numGO];
+//	//synWscalerGRtoGO = new float[numGO];
+//	//synWscalerGOtoGO = new float[numGO];
+//	//apGO = new ct_uint8_t[numGO];
+//	//apBufGO = new ct_uint32_t[numGO];
+//	//vGO = new float[numGO];
+//	//exGOInput = new float[numGO];
+//	//inhGOInput = new float[numGO];
+//	//vCoupleGO = new float[numGO];
+//	//threshCurGO = new float[numGO];
+//	//inputMFGO = new ct_uint32_t[numGO];
+//	//inputUBCGO = new ct_uint32_t[numGO];
+//	//depAmpMFGO = new float[numMF];
+//	//gi_MFtoGO = new float[numMF];
+//	//gSum_MFGO = new float[numGO];
+//	//inputGOGO = new ct_uint32_t[numGO];
 //
-//	//gi_GOtoGO = new float[cp->numGO];
-//	//depAmpGOGO = new float[cp->numGO];
-//	//gSum_GOGO = new float[cp->numGO];
-//	//depAmpGOGR = new float[cp->numGO];
-//	//dynamicAmpGOGR = new float[cp->numGO];
+//	//gi_GOtoGO = new float[numGO];
+//	//depAmpGOGO = new float[numGO];
+//	//gSum_GOGO = new float[numGO];
+//	//depAmpGOGR = new float[numGO];
+//	//dynamicAmpGOGR = new float[numGO];
 //	//
-//	//gSum_UBCtoGO = new float[cp->numGO];
+//	//gSum_UBCtoGO = new float[numGO];
 //
-//	//vSum_GOGO = new float[cp->numGO];
-//	//vSum_GRGO = new float[cp->numGO];
-//	//vSum_MFGO = new float[cp->numGO];
+//	//vSum_GOGO = new float[numGO];
+//	//vSum_GRGO = new float[numGO];
+//	//vSum_MFGO = new float[numGO];
 //	
 //	//todo: synaptic depression test
-//	//inputGOGABASynDepGO = new float[cp->numGO];
-//	//goGABAOutSynScaleGOGO = new float[cp->numGO];
+//	//inputGOGABASynDepGO = new float[numGO];
+//	//goGABAOutSynScaleGOGO = new float[numGO];
 //
-//	//gMFGO = new float[cp->numGO];
-//	//gNMDAMFGO = new float[cp->numGO];
-//	//gNMDAUBCGO = new float[cp->numGO];
-//	//gNMDAIncMFGO = new float[cp->numGO];
-//	//gGRGO = new float[cp->numGO];
-//	//gGRGO_NMDA = new float[cp->numGO];
-//	//gGOGO = new float[cp->numGO];
-//	//gMGluRGO = new float[cp->numGO];
-//	//gMGluRIncGO = new float[cp->numGO];
-//	//mGluRGO = new float[cp->numGO];
-//	//gluGO = new float[cp->numGO];
+//	//gMFGO = new float[numGO];
+//	//gNMDAMFGO = new float[numGO];
+//	//gNMDAUBCGO = new float[numGO];
+//	//gNMDAIncMFGO = new float[numGO];
+//	//gGRGO = new float[numGO];
+//	//gGRGO_NMDA = new float[numGO];
+//	//gGOGO = new float[numGO];
+//	//gMGluRGO = new float[numGO];
+//	//gMGluRIncGO = new float[numGO];
+//	//mGluRGO = new float[numGO];
+//	//gluGO = new float[numGO];
 //
 //	//New GR stuff
-//	//depAmpMFGR = new float[cp->numMF];
-//	////depAmpMFUBC = new float[cp->numMF];
-//	//gi_MFtoGR = new float[cp->numMF];
-//	//gSum_MFGR = new float[cp->numGR];
+//	//depAmpMFGR = new float[numMF];
+//	////depAmpMFUBC = new float[numMF];
+//	//gi_MFtoGR = new float[numMF];
+//	//gSum_MFGR = new float[numGR];
 //
-//	//apGR = new ct_uint8_t[cp->numGR];
-//	//apBufGR =  new ct_uint32_t[cp->numGR];
-//	//gMFGR = allocate2DArray<float>(cp->numGR, cp->maxnumpGRfromMFtoGR);
-//	//gUBCGR = allocate2DArray<float>(cp->numGR, cp->maxnumpGRfromMFtoGR);
-//	//gMFSumGR = new float[cp->numGR];
-//	//gMFDirectGR = new float[cp->numGR];
-//	//gMFSpilloverGR = new float[cp->numGR];	
-//	//gGODirectGR = new float[cp->numGR];
-//	//gGOSpilloverGR = new float[cp->numGR];	
-//	//apMFtoGR = new int[cp->numGR];
-//	//apUBCtoGR = new int[cp->numGR];
-//	//gUBCSumGR = new float[cp->numGR];
-//	//gUBCDirectGR = new float[cp->numGR];
-//	//gUBCSpilloverGR = new float[cp->numGR];	
-//	//gNMDAGR = new float[cp->numGR];
-//	//gNMDAIncGR = new float[cp->numGR];
-//	//gLeakGR = new float[cp->numGR];
-//	//depAmpMFtoGR = new float[cp->numGR];
-//	//depAmpUBCtoGR = new float[cp->numGR];
-//	//depAmpGOtoGR = new float[cp->numGR];
-//	//dynamicAmpGOtoGR = new float[cp->numGR];	
-//	//gGOGR = allocate2DArray<float>(cp->numGR, cp->maxnumpGRfromGOtoGR);
-//	//gGOSumGR = new float[cp->numGR];
-//	//threshGR = new float[cp->numGR];
-//	//vGR = new float[cp->numGR];
-//	//gKCaGR = new float[cp->numGR];
-//	//historyGR = new ct_uint64_t[cp->numGR];
+//	//apGR = new ct_uint8_t[numGR];
+//	//apBufGR =  new ct_uint32_t[numGR];
+//	//gMFGR = allocate2DArray<float>(numGR, maxnumpGRfromMFtoGR);
+//	//gUBCGR = allocate2DArray<float>(numGR, maxnumpGRfromMFtoGR);
+//	//gMFSumGR = new float[numGR];
+//	//gMFDirectGR = new float[numGR];
+//	//gMFSpilloverGR = new float[numGR];	
+//	//gGODirectGR = new float[numGR];
+//	//gGOSpilloverGR = new float[numGR];	
+//	//apMFtoGR = new int[numGR];
+//	//apUBCtoGR = new int[numGR];
+//	//gUBCSumGR = new float[numGR];
+//	//gUBCDirectGR = new float[numGR];
+//	//gUBCSpilloverGR = new float[numGR];	
+//	//gNMDAGR = new float[numGR];
+//	//gNMDAIncGR = new float[numGR];
+//	//gLeakGR = new float[numGR];
+//	//depAmpMFtoGR = new float[numGR];
+//	//depAmpUBCtoGR = new float[numGR];
+//	//depAmpGOtoGR = new float[numGR];
+//	//dynamicAmpGOtoGR = new float[numGR];	
+//	//gGOGR = allocate2DArray<float>(numGR, maxnumpGRfromGOtoGR);
+//	//gGOSumGR = new float[numGR];
+//	//threshGR = new float[numGR];
+//	//vGR = new float[numGR];
+//	//gKCaGR = new float[numGR];
+//	//historyGR = new ct_uint64_t[numGR];
 //
 //	// sc
-//	//apSC = new ct_uint8_t[cp->numSC];
-//	//apBufSC = new ct_uint32_t[cp->numSC];
-//	//gPFSC = new float[cp->numSC];
-//	//threshSC = new float[cp->numSC];
-//	//vSC = new float[cp->numSC];
-//	//inputSumPFSC = new ct_uint32_t[cp->numSC];
+//	//apSC = new ct_uint8_t[numSC];
+//	//apBufSC = new ct_uint32_t[numSC];
+//	//gPFSC = new float[numSC];
+//	//threshSC = new float[numSC];
+//	//vSC = new float[numSC];
+//	//inputSumPFSC = new ct_uint32_t[numSC];
 //
 //	//UBC
-//	//gRise_MFtoUBC = new float[cp->numUBC];
-//	//gDecay_MFtoUBC = new float[cp->numUBC];
-//	//gSum_MFtoUBC = new float[cp->numUBC];
-//	//depAmpUBCtoUBC = new float[cp->numUBC];
-//	//gRise_UBCNMDA = new float[cp->numUBC];
-//	//gDecay_UBCNMDA = new float[cp->numUBC];
-//	//gSum_UBCNMDA = new float[cp->numUBC];
-//	//gK_UBC = new float[cp->numUBC];
+//	//gRise_MFtoUBC = new float[numUBC];
+//	//gDecay_MFtoUBC = new float[numUBC];
+//	//gSum_MFtoUBC = new float[numUBC];
+//	//depAmpUBCtoUBC = new float[numUBC];
+//	//gRise_UBCNMDA = new float[numUBC];
+//	//gDecay_UBCNMDA = new float[numUBC];
+//	//gSum_UBCNMDA = new float[numUBC];
+//	//gK_UBC = new float[numUBC];
 //	//
-//	//gRise_UBCtoUBC = new float[cp->numUBC];
-//	//gDecay_UBCtoUBC = new float[cp->numUBC];
-//	//gSumOutUBCtoUBC = new float[cp->numUBC];
-//	//gSumInUBCtoUBC = new float[cp->numUBC];
+//	//gRise_UBCtoUBC = new float[numUBC];
+//	//gDecay_UBCtoUBC = new float[numUBC];
+//	//gSumOutUBCtoUBC = new float[numUBC];
+//	//gSumInUBCtoUBC = new float[numUBC];
 //	//
-//	//inputMFUBC = new int[cp->numUBC];
-//	//inputGOUBC = new int[cp->numUBC];
-//	//gSum_GOtoUBC = new float[cp->numUBC];	
-//	//vUBC = new float[cp->numUBC];	
-//	//apUBC = new ct_uint8_t[cp->numUBC];	
-//	//threshUBC = new float[cp->numUBC];	
-//	//inputUBCtoUBC = new int[cp->numUBC];	
+//	//inputMFUBC = new int[numUBC];
+//	//inputGOUBC = new int[numUBC];
+//	//gSum_GOtoUBC = new float[numUBC];	
+//	//vUBC = new float[numUBC];	
+//	//apUBC = new ct_uint8_t[numUBC];	
+//	//threshUBC = new float[numUBC];	
+//	//inputUBCtoUBC = new int[numUBC];	
 //
-//	//gi_UBCtoGO = new float[cp->numUBC];
-//	//depAmpUBCGO = new float[cp->numUBC];
-//	//depAmpUBCGR = new float[cp->numUBC];
+//	//gi_UBCtoGO = new float[numUBC];
+//	//depAmpUBCGO = new float[numUBC];
+//	//depAmpUBCGR = new float[numUBC];
 //}
 
-void InNetActivityState::stateRW(ConnectivityParams &cp, bool read, std::fstream &file)
+void InNetActivityState::stateRW(bool read, std::fstream &file)
 {
-	rawBytesRW((char *)histMF, cp.NUM_MF * sizeof(ct_uint8_t), read, file);
-	rawBytesRW((char *)apBufMF, cp.NUM_MF * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)histMF, NUM_MF * sizeof(ct_uint8_t), read, file);
+	rawBytesRW((char *)apBufMF, NUM_MF * sizeof(ct_uint32_t), read, file);
 
-	rawBytesRW((char *)spkGO, cp.NUM_GO * sizeof(int), read, file);
-	rawBytesRW((char *)apGO, cp.NUM_GO * sizeof(ct_uint8_t), read, file);
-	rawBytesRW((char *)apBufGO, cp.NUM_GO * sizeof(ct_uint32_t), read, file);
-	rawBytesRW((char *)vGO, cp.NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)vCoupleGO, cp.NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)threshCurGO, cp.NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)inputMFGO, cp.NUM_GO * sizeof(ct_uint32_t), read, file);
-	rawBytesRW((char *)inputUBCGO, cp.NUM_GO * sizeof(ct_uint32_t), read, file);
-	rawBytesRW((char *)depAmpMFGO, cp.NUM_MF * sizeof(float), read, file);
-	rawBytesRW((char *)gi_MFtoGO, cp.NUM_MF * sizeof(float), read, file);
-	rawBytesRW((char *)gSum_MFGO, cp.NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)inputGOGO, cp.NUM_GO * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)spkGO, NUM_GO * sizeof(int), read, file);
+	rawBytesRW((char *)apGO, NUM_GO * sizeof(ct_uint8_t), read, file);
+	rawBytesRW((char *)apBufGO, NUM_GO * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)vGO, NUM_GO * sizeof(float), read, file);
+	rawBytesRW((char *)vCoupleGO, NUM_GO * sizeof(float), read, file);
+	rawBytesRW((char *)threshCurGO, NUM_GO * sizeof(float), read, file);
+	rawBytesRW((char *)inputMFGO, NUM_GO * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)inputUBCGO, NUM_GO * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)depAmpMFGO, NUM_MF * sizeof(float), read, file);
+	rawBytesRW((char *)gi_MFtoGO, NUM_MF * sizeof(float), read, file);
+	rawBytesRW((char *)gSum_MFGO, NUM_GO * sizeof(float), read, file);
+	rawBytesRW((char *)inputGOGO, NUM_GO * sizeof(ct_uint32_t), read, file);
 
-	rawBytesRW((char *)gi_GOtoGO, cp.NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)depAmpGOGO, cp.NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)gSum_GOGO, cp.NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)depAmpGOGR, cp.NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)dynamicAmpGOGR, cp.NUM_GO * sizeof(float), read, file);
+	rawBytesRW((char *)gi_GOtoGO, NUM_GO * sizeof(float), read, file);
+	rawBytesRW((char *)depAmpGOGO, NUM_GO * sizeof(float), read, file);
+	rawBytesRW((char *)gSum_GOGO, NUM_GO * sizeof(float), read, file);
+	rawBytesRW((char *)depAmpGOGR, NUM_GO * sizeof(float), read, file);
+	rawBytesRW((char *)dynamicAmpGOGR, NUM_GO * sizeof(float), read, file);
 	
-	rawBytesRW((char *)gSum_UBCtoGO, cp.NUM_GO * sizeof(float), read, file);
+	rawBytesRW((char *)gSum_UBCtoGO, NUM_GO * sizeof(float), read, file);
 
-	rawBytesRW((char *)depAmpMFGR, cp.NUM_MF * sizeof(float), read, file);
-	rawBytesRW((char *)depAmpMFUBC, cp.NUM_MF * sizeof(float), read, file);
-	rawBytesRW((char *)gi_MFtoGR, cp.NUM_MF * sizeof(float), read, file);
-	rawBytesRW((char *)gSum_MFGR, cp.NUM_GR * sizeof(float), read, file);
+	rawBytesRW((char *)depAmpMFGR, NUM_MF * sizeof(float), read, file);
+	rawBytesRW((char *)depAmpMFUBC, NUM_MF * sizeof(float), read, file);
+	rawBytesRW((char *)gi_MFtoGR, NUM_MF * sizeof(float), read, file);
+	rawBytesRW((char *)gSum_MFGR, NUM_GR * sizeof(float), read, file);
 
-	rawBytesRW((char *)inputGOGABASynDepGO, cp.NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)goGABAOutSynScaleGOGO, cp.NUM_GO * sizeof(float), read, file);
+	rawBytesRW((char *)inputGOGABASynDepGO, NUM_GO * sizeof(float), read, file);
+	rawBytesRW((char *)goGABAOutSynScaleGOGO, NUM_GO * sizeof(float), read, file);
 
-	rawBytesRW((char *)gMFGO, cp.NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)gNMDAUBCGO, cp.NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)gNMDAMFGO, cp.NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)gNMDAIncMFGO, cp.NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)gGRGO, cp.NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)gGRGO_NMDA, cp.NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)gGOGO, cp.NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)gMGluRGO, cp.NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)gMGluRIncGO, cp.NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)mGluRGO, cp.NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)gluGO, cp.NUM_GO * sizeof(float), read, file);
+	rawBytesRW((char *)gMFGO, NUM_GO * sizeof(float), read, file);
+	rawBytesRW((char *)gNMDAUBCGO, NUM_GO * sizeof(float), read, file);
+	rawBytesRW((char *)gNMDAMFGO, NUM_GO * sizeof(float), read, file);
+	rawBytesRW((char *)gNMDAIncMFGO, NUM_GO * sizeof(float), read, file);
+	rawBytesRW((char *)gGRGO, NUM_GO * sizeof(float), read, file);
+	rawBytesRW((char *)gGRGO_NMDA, NUM_GO * sizeof(float), read, file);
+	rawBytesRW((char *)gGOGO, NUM_GO * sizeof(float), read, file);
+	rawBytesRW((char *)gMGluRGO, NUM_GO * sizeof(float), read, file);
+	rawBytesRW((char *)gMGluRIncGO, NUM_GO * sizeof(float), read, file);
+	rawBytesRW((char *)mGluRGO, NUM_GO * sizeof(float), read, file);
+	rawBytesRW((char *)gluGO, NUM_GO * sizeof(float), read, file);
 
-	rawBytesRW((char *)apGR, cp.NUM_GR * sizeof(ct_uint8_t), read, file);
-	rawBytesRW((char *)apBufGR, cp.NUM_GR * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)apGR, NUM_GR * sizeof(ct_uint8_t), read, file);
+	rawBytesRW((char *)apBufGR, NUM_GR * sizeof(ct_uint32_t), read, file);
 
-	rawBytesRW((char *)gMFGR[0], cp.NUM_GR * cp.MAX_NUM_P_GR_FROM_MF_TO_GR * sizeof(float), read, file);
-	rawBytesRW((char *)gUBCGR[0], cp.NUM_GR * cp.MAX_NUM_P_GR_FROM_MF_TO_GR * sizeof(float), read, file);
-	rawBytesRW((char *)gMFSumGR, cp.NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)gMFDirectGR, cp.NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)gMFSpilloverGR, cp.NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)gGODirectGR, cp.NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)gGOSpilloverGR, cp.NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)apMFtoGR, cp.NUM_GR * sizeof(int), read, file);
-	rawBytesRW((char *)apUBCtoGR, cp.NUM_GR * sizeof(int), read, file);
-	rawBytesRW((char *)gUBCSumGR, cp.NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)gUBCDirectGR, cp.NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)gUBCSpilloverGR, cp.NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)gNMDAGR, cp.NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)gNMDAIncGR, cp.NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)gLeakGR, cp.NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)depAmpMFtoGR, cp.NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)depAmpUBCtoGR, cp.NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)depAmpGOtoGR, cp.NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)dynamicAmpGOtoGR, cp.NUM_GR * sizeof(float), read, file);
+	rawBytesRW((char *)gMFGR[0], NUM_GR * MAX_NUM_P_GR_FROM_MF_TO_GR * sizeof(float), read, file);
+	rawBytesRW((char *)gUBCGR[0], NUM_GR * MAX_NUM_P_GR_FROM_MF_TO_GR * sizeof(float), read, file);
+	rawBytesRW((char *)gMFSumGR, NUM_GR * sizeof(float), read, file);
+	rawBytesRW((char *)gMFDirectGR, NUM_GR * sizeof(float), read, file);
+	rawBytesRW((char *)gMFSpilloverGR, NUM_GR * sizeof(float), read, file);
+	rawBytesRW((char *)gGODirectGR, NUM_GR * sizeof(float), read, file);
+	rawBytesRW((char *)gGOSpilloverGR, NUM_GR * sizeof(float), read, file);
+	rawBytesRW((char *)apMFtoGR, NUM_GR * sizeof(int), read, file);
+	rawBytesRW((char *)apUBCtoGR, NUM_GR * sizeof(int), read, file);
+	rawBytesRW((char *)gUBCSumGR, NUM_GR * sizeof(float), read, file);
+	rawBytesRW((char *)gUBCDirectGR, NUM_GR * sizeof(float), read, file);
+	rawBytesRW((char *)gUBCSpilloverGR, NUM_GR * sizeof(float), read, file);
+	rawBytesRW((char *)gNMDAGR, NUM_GR * sizeof(float), read, file);
+	rawBytesRW((char *)gNMDAIncGR, NUM_GR * sizeof(float), read, file);
+	rawBytesRW((char *)gLeakGR, NUM_GR * sizeof(float), read, file);
+	rawBytesRW((char *)depAmpMFtoGR, NUM_GR * sizeof(float), read, file);
+	rawBytesRW((char *)depAmpUBCtoGR, NUM_GR * sizeof(float), read, file);
+	rawBytesRW((char *)depAmpGOtoGR, NUM_GR * sizeof(float), read, file);
+	rawBytesRW((char *)dynamicAmpGOtoGR, NUM_GR * sizeof(float), read, file);
 
-	rawBytesRW((char *)gGOGR[0], cp.NUM_GR * cp.MAX_NUM_P_GR_FROM_GO_TO_GR * sizeof(float), read, file);
-	rawBytesRW((char *)gGOSumGR, cp.NUM_GR * sizeof(float), read, file);
+	rawBytesRW((char *)gGOGR[0], NUM_GR * MAX_NUM_P_GR_FROM_GO_TO_GR * sizeof(float), read, file);
+	rawBytesRW((char *)gGOSumGR, NUM_GR * sizeof(float), read, file);
 
-	rawBytesRW((char *)threshGR, cp.NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)vGR, cp.NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)gKCaGR, cp.NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)historyGR, cp.NUM_GR * sizeof(ct_uint64_t), read, file);
+	rawBytesRW((char *)threshGR, NUM_GR * sizeof(float), read, file);
+	rawBytesRW((char *)vGR, NUM_GR * sizeof(float), read, file);
+	rawBytesRW((char *)gKCaGR, NUM_GR * sizeof(float), read, file);
+	rawBytesRW((char *)historyGR, NUM_GR * sizeof(ct_uint64_t), read, file);
 
-	rawBytesRW((char *)apSC, cp.NUM_SC * sizeof(ct_uint8_t), read, file);
-	rawBytesRW((char *)apBufSC, cp.NUM_SC * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)apSC, NUM_SC * sizeof(ct_uint8_t), read, file);
+	rawBytesRW((char *)apBufSC, NUM_SC * sizeof(ct_uint32_t), read, file);
 
-	rawBytesRW((char *)gPFSC, cp.NUM_SC * sizeof(float), read, file);
-	rawBytesRW((char *)threshSC, cp.NUM_SC * sizeof(float), read, file);
-	rawBytesRW((char *)vSC, cp.NUM_SC * sizeof(float), read, file);
+	rawBytesRW((char *)gPFSC, NUM_SC * sizeof(float), read, file);
+	rawBytesRW((char *)threshSC, NUM_SC * sizeof(float), read, file);
+	rawBytesRW((char *)vSC, NUM_SC * sizeof(float), read, file);
 
-	rawBytesRW((char *)inputSumPFSC, cp.NUM_SC * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)inputSumPFSC, NUM_SC * sizeof(ct_uint32_t), read, file);
 
 	//UBCs
-	rawBytesRW((char *)gRise_MFtoUBC, cp.NUM_UBC * sizeof(float), read, file);
-	rawBytesRW((char *)gDecay_MFtoUBC, cp.NUM_UBC * sizeof(float), read, file);
-	rawBytesRW((char *)gSum_MFtoUBC, cp.NUM_UBC * sizeof(float), read, file);
-	rawBytesRW((char *)depAmpUBCtoUBC, cp.NUM_UBC * sizeof(float), read, file);
+	rawBytesRW((char *)gRise_MFtoUBC, NUM_UBC * sizeof(float), read, file);
+	rawBytesRW((char *)gDecay_MFtoUBC, NUM_UBC * sizeof(float), read, file);
+	rawBytesRW((char *)gSum_MFtoUBC, NUM_UBC * sizeof(float), read, file);
+	rawBytesRW((char *)depAmpUBCtoUBC, NUM_UBC * sizeof(float), read, file);
 	
-	rawBytesRW((char *)gRise_UBCNMDA, cp.NUM_UBC * sizeof(float), read, file);
-	rawBytesRW((char *)gDecay_UBCNMDA, cp.NUM_UBC * sizeof(float), read, file);
-	rawBytesRW((char *)gSum_UBCNMDA, cp.NUM_UBC * sizeof(float), read, file);
-	rawBytesRW((char *)gK_UBC, cp.NUM_UBC * sizeof(float), read, file);
+	rawBytesRW((char *)gRise_UBCNMDA, NUM_UBC * sizeof(float), read, file);
+	rawBytesRW((char *)gDecay_UBCNMDA, NUM_UBC * sizeof(float), read, file);
+	rawBytesRW((char *)gSum_UBCNMDA, NUM_UBC * sizeof(float), read, file);
+	rawBytesRW((char *)gK_UBC, NUM_UBC * sizeof(float), read, file);
 	
-	rawBytesRW((char *)gRise_UBCtoUBC, cp.NUM_UBC * sizeof(float), read, file);
-	rawBytesRW((char *)gDecay_UBCtoUBC, cp.NUM_UBC * sizeof(float), read, file);
-	rawBytesRW((char *)gSumOutUBCtoUBC, cp.NUM_UBC * sizeof(float), read, file);
-	rawBytesRW((char *)gSumInUBCtoUBC, cp.NUM_UBC * sizeof(float), read, file);
+	rawBytesRW((char *)gRise_UBCtoUBC, NUM_UBC * sizeof(float), read, file);
+	rawBytesRW((char *)gDecay_UBCtoUBC, NUM_UBC * sizeof(float), read, file);
+	rawBytesRW((char *)gSumOutUBCtoUBC, NUM_UBC * sizeof(float), read, file);
+	rawBytesRW((char *)gSumInUBCtoUBC, NUM_UBC * sizeof(float), read, file);
 	
-	rawBytesRW((char *)inputMFUBC, cp.NUM_UBC * sizeof(int), read, file);
-	rawBytesRW((char *)inputGOUBC, cp.NUM_UBC * sizeof(int), read, file);
-	rawBytesRW((char *)gSum_GOtoUBC, cp.NUM_UBC * sizeof(float), read, file);
-	rawBytesRW((char *)vUBC, cp.NUM_UBC * sizeof(float), read, file);
+	rawBytesRW((char *)inputMFUBC, NUM_UBC * sizeof(int), read, file);
+	rawBytesRW((char *)inputGOUBC, NUM_UBC * sizeof(int), read, file);
+	rawBytesRW((char *)gSum_GOtoUBC, NUM_UBC * sizeof(float), read, file);
+	rawBytesRW((char *)vUBC, NUM_UBC * sizeof(float), read, file);
 	
-	rawBytesRW((char *)apUBC, cp.NUM_UBC * sizeof(ct_uint8_t), read, file);
-	rawBytesRW((char *)threshUBC, cp.NUM_UBC * sizeof(float), read, file);
-	rawBytesRW((char *)inputUBCtoUBC, cp.NUM_UBC * sizeof(int), read, file);
+	rawBytesRW((char *)apUBC, NUM_UBC * sizeof(ct_uint8_t), read, file);
+	rawBytesRW((char *)threshUBC, NUM_UBC * sizeof(float), read, file);
+	rawBytesRW((char *)inputUBCtoUBC, NUM_UBC * sizeof(int), read, file);
 	
-	rawBytesRW((char *)gi_UBCtoGO, cp.NUM_UBC * sizeof(float), read, file);
-	rawBytesRW((char *)depAmpUBCGO, cp.NUM_UBC * sizeof(float), read, file);
-	rawBytesRW((char *)depAmpUBCGR, cp.NUM_UBC * sizeof(float), read, file);
+	rawBytesRW((char *)gi_UBCtoGO, NUM_UBC * sizeof(float), read, file);
+	rawBytesRW((char *)depAmpUBCGO, NUM_UBC * sizeof(float), read, file);
+	rawBytesRW((char *)depAmpUBCGR, NUM_UBC * sizeof(float), read, file);
 }
 
-void InNetActivityState::initializeVals(ConnectivityParams &cp, ActivityParams *ap)
+void InNetActivityState::initializeVals(ActivityParams *ap)
 {
 	// only actively initializing those arrays whose initial values we want
 	// differ from the default initilizer value
 	goTimeStep = 0;
 
 	// mf
-	std::fill(histMF, histMF + cp.NUM_MF, false);
-	std::fill(depAmpMFGO, depAmpMFGO + cp.NUM_MF, 1.0);
-	std::fill(depAmpMFGR, depAmpMFGR + cp.NUM_MF, 1.0);
-	std::fill(depAmpMFUBC, depAmpMFUBC + cp.NUM_MF, 1.0);
+	std::fill(histMF, histMF + NUM_MF, false);
+	std::fill(depAmpMFGO, depAmpMFGO + NUM_MF, 1.0);
+	std::fill(depAmpMFGR, depAmpMFGR + NUM_MF, 1.0);
+	std::fill(depAmpMFUBC, depAmpMFUBC + NUM_MF, 1.0);
 
 	// go	
-	std::fill(synWscalerGRtoGO, synWscalerGRtoGO + cp.NUM_GO, 1.0);
-	std::fill(synWscalerGOtoGO, synWscalerGOtoGO + cp.NUM_GO, 1.0);
-	std::fill(apGO, apGO + cp.NUM_GO, false);
-	std::fill(vGO, vGO + cp.NUM_GO, ap->eLeakGO);
-	std::fill(threshCurGO, threshCurGO + cp.NUM_GO, ap->threshRestGO);
-	std::fill(vSum_GOGO, vSum_GOGO + cp.NUM_GO, ap->eLeakGO);
-	std::fill(vSum_GRGO, vSum_GRGO + cp.NUM_GO, ap->eLeakGO);
-	std::fill(vSum_MFGO, vSum_MFGO + cp.NUM_GO, ap->eLeakGO);
-	std::fill(goGABAOutSynScaleGOGO, goGABAOutSynScaleGOGO + cp.NUM_GO, 1.0);
+	std::fill(synWscalerGRtoGO, synWscalerGRtoGO + NUM_GO, 1.0);
+	std::fill(synWscalerGOtoGO, synWscalerGOtoGO + NUM_GO, 1.0);
+	std::fill(apGO, apGO + NUM_GO, false);
+	std::fill(vGO, vGO + NUM_GO, ap->eLeakGO);
+	std::fill(threshCurGO, threshCurGO + NUM_GO, ap->threshRestGO);
+	std::fill(vSum_GOGO, vSum_GOGO + NUM_GO, ap->eLeakGO);
+	std::fill(vSum_GRGO, vSum_GRGO + NUM_GO, ap->eLeakGO);
+	std::fill(vSum_MFGO, vSum_MFGO + NUM_GO, ap->eLeakGO);
+	std::fill(goGABAOutSynScaleGOGO, goGABAOutSynScaleGOGO + NUM_GO, 1.0);
 
 	// gr
-	std::fill(apGR, apGR + cp.NUM_GR, false);
-	std::fill(gLeakGR, gLeakGR + cp.NUM_GR, 0.11);
-	std::fill(depAmpMFtoGR, depAmpMFtoGR + cp.NUM_GR, 1.0);
-	std::fill(depAmpUBCtoGR, depAmpUBCtoGR + cp.NUM_GR, 1.0);
-	std::fill(depAmpGOtoGR, depAmpGOtoGR + cp.NUM_GR, 1.0);
-	std::fill(threshGR, threshGR + cp.NUM_GR, ap->threshRestGR);
-	std::fill(vGR, vGR + cp.NUM_GR, ap->eLeakGR);
+	std::fill(apGR, apGR + NUM_GR, false);
+	std::fill(gLeakGR, gLeakGR + NUM_GR, 0.11);
+	std::fill(depAmpMFtoGR, depAmpMFtoGR + NUM_GR, 1.0);
+	std::fill(depAmpUBCtoGR, depAmpUBCtoGR + NUM_GR, 1.0);
+	std::fill(depAmpGOtoGR, depAmpGOtoGR + NUM_GR, 1.0);
+	std::fill(threshGR, threshGR + NUM_GR, ap->threshRestGR);
+	std::fill(vGR, vGR + NUM_GR, ap->eLeakGR);
 
 	// sc
-	std::fill(apSC, apSC + cp.NUM_SC, false);	
-	std::fill(threshSC, threshSC + cp.NUM_SC, ap->threshRestSC);
-	std::fill(apSC, apSC + cp.NUM_SC, false);
-	std::fill(threshSC, threshSC + cp.NUM_SC, ap->threshRestSC);
-	std::fill(vSC, vSC + cp.NUM_SC, ap->eLeakSC);
+	std::fill(apSC, apSC + NUM_SC, false);	
+	std::fill(threshSC, threshSC + NUM_SC, ap->threshRestSC);
+	std::fill(apSC, apSC + NUM_SC, false);
+	std::fill(threshSC, threshSC + NUM_SC, ap->threshRestSC);
+	std::fill(vSC, vSC + NUM_SC, ap->eLeakSC);
 
 	// ubc
-	std::fill(depAmpUBCtoUBC, depAmpUBCtoUBC + cp.NUM_UBC, 1.0);
-	std::fill(vUBC, vUBC + cp.NUM_UBC, -70.0);
-	std::fill(threshUBC, threshUBC + cp.NUM_UBC, ap->threshRestGO);
-	std::fill(apUBC, apUBC + cp.NUM_UBC, false);
-	std::fill(inputUBCtoUBC, inputUBCtoUBC + cp.NUM_UBC, false);
-	std::fill(depAmpUBCGO, depAmpUBCGO + cp.NUM_UBC, 1.0);
-	std::fill(depAmpUBCGR, depAmpUBCGR + cp.NUM_UBC, 1.0);
+	std::fill(depAmpUBCtoUBC, depAmpUBCtoUBC + NUM_UBC, 1.0);
+	std::fill(vUBC, vUBC + NUM_UBC, -70.0);
+	std::fill(threshUBC, threshUBC + NUM_UBC, ap->threshRestGO);
+	std::fill(apUBC, apUBC + NUM_UBC, false);
+	std::fill(inputUBCtoUBC, inputUBCtoUBC + NUM_UBC, false);
+	std::fill(depAmpUBCGO, depAmpUBCGO + NUM_UBC, 1.0);
+	std::fill(depAmpUBCGR, depAmpUBCGR + NUM_UBC, 1.0);
 }
 

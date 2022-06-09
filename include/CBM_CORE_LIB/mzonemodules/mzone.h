@@ -40,44 +40,41 @@
 class MZone : virtual public MZoneInterface
 {
 public:
-	MZone(ConnectivityParams &cp, ActivityParams *ap,
-			MZoneConnectivityState *conState, MZoneActivityState *actState, int randSeed,
-			ct_uint32_t **actBufGRGPU, ct_uint32_t **delayMaskGRGPU, ct_uint64_t **histGRGPU,
-			int gpuIndStart, int numGPUs);
-
+	MZone();
+	MZone(ActivityParams *ap, MZoneConnectivityState *conState,
+			MZoneActivityState *actState, int randSeed, ct_uint32_t **actBufGRGPU,
+			ct_uint32_t **delayMaskGRGPU, ct_uint64_t **histGRGPU, int gpuIndStart, int numGPUs);
 	~MZone();
 
-	void writeToState(ConnectivityParams &cp);
-	void cpyPFPCSynWCUDA(ConnectivityParams &cp);
+	void writeToState();
+	void cpyPFPCSynWCUDA();
 
-	void setErrDrive(ActivityParams *ap, float errDriveRelative);
+	void setErrDrive(float errDriveRelative);
 	void updateMFActivities(const ct_uint8_t *actMF);
 	void updateTrueMFs(bool *trueMF);
 	void updateSCActivities(const ct_uint8_t *actSC);
 	void updatePFBCSum(const ct_uint32_t *pfBCSum);
 
-	void calcPCActivities(ConnectivityParams &cp, ActivityParams *ap);
-	void calcBCActivities(ConnectivityParams &cp, ActivityParams *ap, ct_uint32_t **pfInput);
-	void calcIOActivities(ConnectivityParams &cp, ActivityParams *ap);
-	void calcNCActivities(ConnectivityParams &cp, ActivityParams *ap);
+	void calcPCActivities();
+	void calcBCActivities(ct_uint32_t **pfInput);
+	void calcIOActivities();
+	void calcNCActivities();
 
-	void updatePCOut(ConnectivityParams &cp);
-	void updateBCPCOut(ConnectivityParams &cp);
-	void updateSCPCOut(ConnectivityParams &cp);
-	void updateIOOut(ConnectivityParams &cp, ActivityParams *ap);
-	void updateNCOut(ConnectivityParams &cp, ActivityParams *ap);
-	void updateMFNCOut(ConnectivityParams &cp);
-	void updateMFNCSyn(ConnectivityParams &cp, ActivityParams *ap,
-		const ct_uint8_t *histMF, unsigned long t);
+	void updatePCOut();
+	void updateBCPCOut();
+	void updateSCPCOut();
+	void updateIOOut();
+	void updateNCOut();
+	void updateMFNCOut();
+	void updateMFNCSyn(const ct_uint8_t *histMF, unsigned long t);
 
-	void runPFPCOutCUDA(ConnectivityParams &cp, cudaStream_t **sts, int streamN);
-	void runPFPCSumCUDA(ConnectivityParams &cp, cudaStream_t **sts, int streamN);
-	void cpyPFPCSumCUDA(ConnectivityParams &cp, cudaStream_t **sts, int streamN);
-	void runPFPCPlastCUDA(ConnectivityParams &cp, ActivityParams *ap,
-		cudaStream_t **sts, int streamN, unsigned long t);
+	void runPFPCOutCUDA(cudaStream_t **sts, int streamN);
+	void runPFPCSumCUDA(cudaStream_t **sts, int streamN);
+	void cpyPFPCSumCUDA(cudaStream_t **sts, int streamN);
+	void runPFPCPlastCUDA(cudaStream_t **sts, int streamN, unsigned long t);
 
 	void setGRPCPlastSteps(float ltdStep, float ltpStep);
-	void resetGRPCPlastSteps(ActivityParams *ap);
+	void resetGRPCPlastSteps();
 
 	const ct_uint8_t* exportAPNC();
 	const ct_uint8_t* exportAPBC();
@@ -90,7 +87,7 @@ public:
 	const float* exportVmIO();	
 	const float* exportgBCPC();
 	const float* exportgPFPC();
-	const float* exportPFPCWeights(ConnectivityParams &cp);
+	const float* exportPFPCWeights();
 
 	const ct_uint32_t* exportAPBufBC();
 	const ct_uint32_t* exportAPBufPC();
@@ -98,16 +95,10 @@ public:
 	const ct_uint32_t* exportAPBufNC();
 
 private:
-	MZone();
 
-	//ConnectivityParams *cp;
-	//ActivityParams *ap;
+	ActivityParams *ap;
 	MZoneConnectivityState *cs;
 	MZoneActivityState *as;
-
-	void initCUDA(ConnectivityParams &cp);
-
-	void testReduction(ConnectivityParams &cp);
 
 	//global variables
 	CRandomSFMT0 *randGen;
@@ -149,6 +140,10 @@ private:
 	float *pfPCPlastStepIO;
 	float tempGRPCLTDStep;
 	float tempGRPCLTPStep;
+
+	void initCUDA();
+	void testReduction();
+
 };
 
 #endif /* MZONE_H_ */

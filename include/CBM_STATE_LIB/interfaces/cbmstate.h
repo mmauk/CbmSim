@@ -31,7 +31,7 @@ class CBMState
 		CBMState();
 		//CBMState(std::fstream &infile);
 		// VVVV the one we actually use...
-		CBMState(ConnectivityParams &cp, ActivityParams *cp, unsigned int nZones);
+		CBMState(ActivityParams *ap, unsigned int nZones);
 
 		//CBMState(std::fstream &actPFile, std::fstream &conPFile, unsigned int nZones,
 		//	int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed);
@@ -41,8 +41,8 @@ class CBMState
 
 		void writeState(std::fstream &outfile);
 
-		bool state_equal(ConnectivityParams &cp, CBMState &compState);
-		bool state_unequal(ConnectivityParams &cp, CBMState &compState);
+		//bool state_equal(CBMState &compState);
+		//bool state_unequal(CBMState &compState);
 
 		ct_uint32_t getNumZones();
 
@@ -50,8 +50,8 @@ class CBMState
 
 		IMZoneActState* getMZoneActState(unsigned int zoneN);
 
-		//ActivityParams* getActParamsInternal();
-		//ConnectivityParams* getConParamsInternal();
+		ActivityParams* getActParamsInternal();
+		// ConnectivityParams* getConParamsInternal();
 
 		InNetActivityState* getInnetActStateInternal();
 		MZoneActivityState* getMZoneActStateInternal(unsigned int zoneN);
@@ -61,7 +61,7 @@ class CBMState
 
 	private:
 		
-		void newState(ConnectivityParams &cp, ActivityParams *ap, unsigned int nZones,
+		void newState(ActivityParams *ap, unsigned int nZones,
 			int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed);
 	
 		// don't know wtf this is from	
@@ -69,6 +69,9 @@ class CBMState
 		//		int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed, int spanP, int numConP);
 
 		ct_uint32_t numZones;
+
+		//ConnectivityParams *cp;
+		ActivityParams *ap;
 
 		InNetConnectivityState *innetConState;
 		MZoneConnectivityState **mzoneConStates;

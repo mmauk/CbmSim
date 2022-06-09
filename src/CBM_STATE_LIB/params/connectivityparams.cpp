@@ -5,10 +5,10 @@
  *      Author: varicella
  */
 
-#include "params/connectivityparams.h"
+//#include "params/connectivityparams.h"
 
-ConnectivityParams::ConnectivityParams(std::fstream &infile)
-{
+//ConnectivityParams::ConnectivityParams(std::fstream &infile)
+//{
 	//Assumes that file is in the following format:
 	//key\tvalue\n
 	//key\tvalue\n
@@ -169,7 +169,7 @@ ConnectivityParams::ConnectivityParams(std::fstream &infile)
 //	numpIOfromNCtoIO = numNC; //all to all connection
 //	numpIOInIOIO	 = numIO - 1;
 //	numpIOOutIOIO	 = numIO - 1;
-}
+//}
 
 //void ConnectivityParams::writeParams(std::fstream &outfile)
 //{

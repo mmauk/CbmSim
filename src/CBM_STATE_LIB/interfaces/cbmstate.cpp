@@ -29,7 +29,7 @@
 //	}
 //}
 
-CBMState::CBMState(ConnectivityParams &cp, ActivityParams *ap,
+CBMState::CBMState(ActivityParams *ap,
 	unsigned int nZones)
 {
 	int innetCRSeed;
@@ -45,7 +45,7 @@ CBMState::CBMState(ConnectivityParams &cp, ActivityParams *ap,
 		mzoneARSeed[i] = randGen.IRandom(0, INT_MAX);
 	}
 
-	newState(cp, ap, nZones, innetCRSeed, mzoneCRSeed, mzoneARSeed);
+	newState(ap, nZones, innetCRSeed, mzoneCRSeed, mzoneARSeed);
 
 	delete[] mzoneCRSeed;
 	delete[] mzoneARSeed;
@@ -69,23 +69,23 @@ CBMState::~CBMState()
 	delete[] mzoneActStates;
 }
 
-void CBMState::newState(ConnectivityParams &cp, ActivityParams *ap,
+void CBMState::newState(ActivityParams *ap,
 	unsigned int nZones, int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed)
 {
-	// TODO: start here, continue to fix conParams (replace vars w constants, reference directly w . op)
-	innetConState  = new InNetConnectivityState(cp, ap->msPerTimeStep, innetCRSeed);
+	this->ap = ap;	
+	innetConState  = new InNetConnectivityState(ap->msPerTimeStep, innetCRSeed);
 	mzoneConStates = new MZoneConnectivityState*[numZones];
-	innetActState  = new InNetActivityState(cp, ap);
+	innetActState  = new InNetActivityState(ap);
 	mzoneActStates = new MZoneActivityState*[numZones];
 
 	for (int i = 0; i < numZones; i++)
 	{
-		mzoneConStates[i] = new MZoneConnectivityState(cp, mzoneCRSeed[i]);
-		mzoneActStates[i] = new MZoneActivityState(cp, ap, mzoneARSeed[i]);
+		mzoneConStates[i] = new MZoneConnectivityState(mzoneCRSeed[i]);
+		mzoneActStates[i] = new MZoneActivityState(ap, mzoneARSeed[i]);
 	}
 }
 
-void CBMState::writeState(ConnectivityParams &cp, ActivityParams *ap, std::fstream &outfile)
+void CBMState::writeState(std::fstream &outfile)
 {
 	// Debatable whether to write std::endl to file. Yes it flushes the output
 	// after sending a newline, but doing this too often can lead to poor disk
@@ -96,26 +96,26 @@ void CBMState::writeState(ConnectivityParams &cp, ActivityParams *ap, std::fstre
 	//cp.writeParams(outfile);
 	//ap->writeParams(outfile);
 	
-	innetConState->writeState(cp, outfile);
-	innetActState->writeState(cp, outfile);
+	innetConState->writeState(outfile);
+	innetActState->writeState(outfile);
 	
 	for (int i=0; i < numZones; i++)
 	{
-		mzoneConStates[i]->writeState(cp, outfile);
-		mzoneActStates[i]->writeState(cp, ap, outfile);
+		mzoneConStates[i]->writeState(outfile);
+		mzoneActStates[i]->writeState(outfile);
 	}
 }
 
-bool CBMState::state_equal(ConnectivityParams &cp, CBMState &compState)
-{
-	(numZones == compState.getNumZones()) ? return true : 
-		return state_equal(cp, compState.getInnetConStateInternal());
-}
+//bool CBMState::state_equal(CBMState &compState)
+//{
+//	(numZones == compState.getNumZones()) ? return true : 
+//		return state_equal(compState.getInnetConStateInternal());
+//}
 
-bool CBMState::state_unequal(ConnectivityParams &cp, CBMState & compState)
-{
-	return !state_equal(cp, compState);
-}
+//bool CBMState::state_unequal(CBMState &compState)
+//{
+//	return !state_equal(compState);
+//}
 
 ct_uint32_t CBMState::getNumZones()
 {
@@ -132,15 +132,16 @@ IMZoneActState* CBMState::getMZoneActState(unsigned int zoneN)
 	return (IMZoneActState *)mzoneActStates[zoneN];
 }
 
-//ActivityParams* CBMState::getActParamsInternal()
-//{
-//	return actParams;
-//}
-
 //ConnectivityParams* CBMState::getConParamsInternal()
 //{
-//	return conParams;
+//	return cp;
 //}
+
+ActivityParams* CBMState::getActParamsInternal()
+{
+	return ap;
+}
+
 
 InNetActivityState* CBMState::getInnetActStateInternal()
 {

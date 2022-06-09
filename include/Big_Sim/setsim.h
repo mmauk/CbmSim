@@ -16,7 +16,7 @@ class SetSim {
 
 public:
 	// yikes. for now, pass actParams as a pointer by value while we fix conParams (06/01/2022)
-	SetSim(ConnectivityParams &cp, ActivityParams *ap);
+	SetSim(ActivityParams *ap);
 	~SetSim();
 
 	// State	
@@ -62,10 +62,10 @@ public:
 	
 	
 	ECMFPopulation* MFFreq;
-	ECMFPopulation* getMFFreq(ConnectivityParams &cp, float csMineRate, float csMaxRate);
+	ECMFPopulation* getMFFreq(float csMineRate, float csMaxRate);
 
 	PoissonRegenCells* MFs;
-	PoissonRegenCells* getMFs(ConnectivityParams &cp, ActivityParams *ap);
+	PoissonRegenCells* getMFs(ActivityParams *ap);
 
 	// Eyelid integrator 
 	float gDecayTau = 11;

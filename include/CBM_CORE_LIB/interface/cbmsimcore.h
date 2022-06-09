@@ -33,10 +33,9 @@ class CBMSimCore
 {
 public:
 	CBMSimCore();
-	CBMSimCore(ConnectivityParams &cp, ActivityParams *ap, CBMState *state,
-		int gpuIndStart = -1, int numGPUP2 = -1);
-	CBMSimCore(ConnectivityParams &cp, ActivityParams *ap, CBMState *state,
-		int *mzoneRSeed, int gpuIndStart = -1, int numGPUP2 = -1);
+	CBMSimCore(ActivityParams *ap, CBMState *state, int gpuIndStart = -1, int numGPUP2 = -1);
+	CBMSimCore(ActivityParams *ap, CBMState *state, int *mzoneRSeed, int gpuIndStart = -1,
+		int numGPUP2 = -1);
 
 	~CBMSimCore();
 
@@ -55,7 +54,7 @@ public:
 	MZoneInterface** getMZoneList();
 
 protected:
-	void initCUDA();
+	void initCUDAStreams();
 	void initAuxVars();
 
 	void syncCUDA(std::string title);
@@ -72,14 +71,14 @@ protected:
 	int numGPUs;
 
 private:
-	void construct(ConnectivityParams &cp, ActivityParams *ap, CBMState *state,
-		int *mzoneRSeed, int gpuIndStart, int numGPUP2);
-
 	bool isGRStim  	 =  false;
 	int numGRStim  	 =  0;
 	int startGRStim  =  0;
 
 	unsigned long curTime;
+
+	void construct(ActivityParams *ap, CBMState *state, int *mzoneRSeed,
+		int gpuIndStart, int numGPUP2);
 };
 
 #endif /* CBMSIMCORE_H_ */
