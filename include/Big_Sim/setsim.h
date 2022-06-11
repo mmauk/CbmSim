@@ -4,7 +4,7 @@
 #include <iostream> 
 #include <fstream>
 #include <string>
-#include "connectivityparams.h"
+#include "params/connectivityparams.h"
 #include <interfaces/cbmstate.h>
 #include <interfaces/iactivityparams.h>
 #include <interface/cbmsimcore.h>

@@ -10,16 +10,16 @@
 MZoneActivityState::MZoneActivityState(ActivityParams *ap, int randSeed)
 {
 	this->ap = ap;
-	allocateMemory(ap);
-	initializeVals(ap, randSeed);
+	allocateMemory();
+	initializeVals(randSeed);
 }
 
 MZoneActivityState::MZoneActivityState(ActivityParams *ap,
 		std::fstream &infile)
 {
 	this->ap = ap;
-	allocateMemory(ap);
-	stateRW(ap, true, infile);
+	allocateMemory();
+	stateRW(true, infile);
 }
 
 //MZoneActivityState::MZoneActivityState(const MZoneActivityState &state)
@@ -127,7 +127,7 @@ MZoneActivityState::~MZoneActivityState()
 
 void MZoneActivityState::writeState(std::fstream &outfile)
 {
-	stateRW(ap, false, outfile);
+	stateRW(false, outfile);
 }
 
 bool MZoneActivityState::state_equal(const MZoneActivityState &compState)
@@ -199,7 +199,7 @@ void MZoneActivityState::initializeVals(int randSeed)
 	std::fill(threshPC, threshPC + NUM_PC, ap->threshRestPC);	
 
 	std::fill(pfSynWeightPC[0], pfSynWeightPC[0]
-		+ NUM_PC * NUM_P_PC_FROM_GR_TO_PC, ap->initSynWofGRtoPC)
+		+ NUM_PC * NUM_P_PC_FROM_GR_TO_PC, ap->initSynWofGRtoPC);
 
 	std::fill(histPCPopAct, histPCPopAct + ap->numPopHistBinsPC, 0);	
 

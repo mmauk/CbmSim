@@ -11,6 +11,8 @@
 #ifndef CONNECTIVITYPARAMS_H_
 #define CONNECTIVITYPARAMS_H_
 
+#include "stdDefinitions/pstdint.h"
+
 /*
  * a couple notes:
  * 		- NUM_CELL type variables are not in original conParams_binChoice2_1.txt
@@ -187,6 +189,7 @@ const int NUM_P_PC_FROM_GR_TO_PC = 32768; /* NUM_GR / NUM_PC */
 const int NUM_P_PC_FROM_GR_TO_PC_P2 = 15;
 
 // mf -> nc
+const int NUM_P_MF_FROM_MF_TO_NC = 1;
 const int NUM_P_NC_FROM_MF_TO_NC = 512; /* NUM_MF / NUM_NC */
 
 // nc -> io

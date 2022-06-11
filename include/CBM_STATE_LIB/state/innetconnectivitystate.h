@@ -210,13 +210,13 @@ protected:
 
 
 private:
-	void connectCommon(int **srcConArr, int32_t *srcNumCon,
-			int **destConArr, int *destNumCon,
-			int srcMaxNumCon, int numSrcCells,
-			int destMaxNumCon, int destNormNumCon,
-			int srcGridX, int srcGridY, int destGridX, int destGridY,
-			int srcSpanOnDestGridX, int srcSpanOnDestGridY,
-			int normConAttempts, int maxConAttempts, bool needUnique, CRandomSFMT &randGen);
+	//void connectCommon(int **srcConArr, int32_t *srcNumCon,
+	//		int **destConArr, int *destNumCon,
+	//		int srcMaxNumCon, int numSrcCells,
+	//		int destMaxNumCon, int destNormNumCon,
+	//		int srcGridX, int srcGridY, int destGridX, int destGridY,
+	//		int srcSpanOnDestGridX, int srcSpanOnDestGridY,
+	//		int normConAttempts, int maxConAttempts, bool needUnique, CRandomSFMT &randGen);
 
 	
 	//void translateCommon(int **pPreGLConArr, int *numpPreGLCon,

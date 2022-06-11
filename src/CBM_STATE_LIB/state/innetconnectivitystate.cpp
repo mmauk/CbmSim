@@ -510,16 +510,76 @@ void InNetConnectivityState::connectMFGL_noUBC(CRandomSFMT &randGen)
 
 void InNetConnectivityState::connectGLGR(CRandomSFMT &randGen)
 {
-	connectCommon(pGRfromGLtoGR, numpGRfromGLtoGR,
-			pGLfromGLtoGR, numpGLfromGLtoGR,
-			MAX_NUM_P_GR_FROM_GL_TO_GR, NUM_GR,
-			MAX_NUM_P_GL_FROM_GL_TO_GR, LOW_NUM_P_GL_FROM_GL_TO_GR,
-			GR_X, GR_Y, GL_X, GL_Y,
-			SPAN_GL_TO_GR_X, SPAN_GL_TO_GR_Y,
-			LOW_GL_TO_GR_ATTEMPTS, MAX_GL_TO_GR_ATTEMPTS, true, randGen);
+	int grX = GR_X;
+	int grY = GR_Y;
+	int glX = GL_X;
+	int glY = GL_Y;
+
+	float gridXScaleStoD = (float)grX / (float)glX;
+	float gridYScaleStoD = (float)grY / (float)glY;
+
+	bool srcConnected[NUM_GR];
+
+	for (int i = 0; i < MAX_NUM_P_GR_FROM_GL_TO_GR; i++)
+	{
+		int srcNumConnected = 0;
+		std::fill(srcConnected, srcConnected + NUM_GR, false);
+
+		while (srcNumConnected < NUM_GR)
+		{
+			int srcIndex = randGen.IRandom(0, NUM_GR - 1);
+			if (!srcConnected[srcIndex])
+			{
+				int srcPosX = srcIndex % grX;
+				int srcPosY = (int)(srcIndex / grX);
+
+				int tempDestNumConLim = LOW_NUM_P_GL_FROM_GL_TO_GR;
+
+				for (int attempts = 0; attempts < MAX_GL_TO_GR_ATTEMPTS; attempts++)
+				{
+					if (attempts == LOW_GL_TO_GR_ATTEMPTS) tempDestNumConLim = MAX_NUM_P_GL_FROM_GL_TO_GR;
+
+					int destPosX = (int)round(srcPosX / gridXScaleStoD);
+					int destPosY = (int)round(srcPosY / gridXScaleStoD);
+
+					// again, should add 1 to spans
+					destPosX += round((randGen.Random() - 0.5) * SPAN_GL_TO_GR_X);
+					destPosY += round((randGen.Random() - 0.5) * SPAN_GL_TO_GR_Y);
+
+					destPosX = ((destPosX % glX + glX) % glX);
+					destPosY = ((destPosY % glY + glY) % glY);
+
+					int destIndex = destPosY * glX + destPosX;
+
+					// for gl -> gr, we set needUnique to true
+					bool unique = true;
+					for (int j = 0; j < i; j++)
+					{
+						if (destIndex == pGRfromGLtoGR[srcIndex][j])
+						{
+							unique = false;
+							break;
+						}
+					}
+
+					if (!unique) continue;
+
+					if (numpGLfromGLtoGR[destIndex] < tempDestNumConLim)
+					{
+						pGLfromGLtoGR[destIndex][numpGLfromGLtoGR[destIndex]] = srcIndex;
+						numpGLfromGLtoGR[destIndex]++;
+						pGRfromGLtoGR[srcIndex][i] = destIndex;
+						numpGRfromGLtoGR[srcIndex]++;
+						break;
+					}
+				}
+				srcConnected[srcIndex] = true;
+				srcNumConnected++;
+			}
+		}
+	}
 
 	int count = 0;
-
 	for (int i = 0; i < NUM_GL; i++)
 	{
 		count += numpGLfromGLtoGR[i];
@@ -527,6 +587,7 @@ void InNetConnectivityState::connectGLGR(CRandomSFMT &randGen)
 
 	std::cout << "Total number of Glomeruli to Granule connections:	" << count << std::endl; 
 	std::cout << "Correct number: " << NUM_GR * MAX_NUM_P_GR_FROM_GL_TO_GR << std::endl;
+	// for now, no empty counter
 }
 
 void InNetConnectivityState::connectGRGO(CRandomSFMT &randGen)
@@ -684,18 +745,89 @@ void InNetConnectivityState::connectGRGO(CRandomSFMT &randGen)
 
 void InNetConnectivityState::connectGOGL(CRandomSFMT &randGen)
 {
-	connectCommon(pGOfromGLtoGO, numpGOfromGLtoGO,
-			pGLfromGLtoGO, numpGLfromGLtoGO,
-			MAX_NUM_P_GO_FROM_GL_TO_GO, NUM_GO,
-			MAX_NUM_P_GL_FROM_GL_TO_GO, LOW_NUM_P_GL_FROM_GL_TO_GO,
-			GO_X, GO_Y, GL_X, GL_Y,
-			SPAN_GL_TO_GO_X, SPAN_GL_TO_GO_Y,
-			LOW_GL_TO_GO_ATTEMPTS, MAX_GL_TO_GO_ATTEMPTS, false, randGen);
-
+	// using old connectivity alg for now , cannot generalize (do not always know
+	// at least both array bounds for 2D arrays at compile time)
+	// gl -> go
 	int goX = GO_X;
 	int goY = GO_Y;
 	int glX = GL_X;
 	int glY = GL_Y;
+
+	float gridXScaleStoD = (float)goX / (float)glX;
+	float gridYScaleStoD = (float)goY / (float)glY;
+
+	bool srcConnected[NUM_GO];
+
+	for (int i = 0; i < MAX_NUM_P_GO_FROM_GL_TO_GO; i++)
+	{
+		// NOTE: watch out with initialization with memset. There are better ways.	
+		int srcNumConnected = 0;
+		std::fill(srcConnected, srcConnected + NUM_GO, false);
+
+		while (srcNumConnected < NUM_GO)
+		{
+			int srcIndex = randGen.IRandom(0, NUM_GO - 1);
+			if (!srcConnected[srcIndex])
+			{
+				int srcPosX = srcIndex % goX;
+				int srcPosY = (int)(srcIndex / goX);
+
+				int tempDestNumConLim = LOW_NUM_P_GL_FROM_GL_TO_GO;
+
+				for (int attempts = 0; attempts < MAX_GL_TO_GO_ATTEMPTS; attempts++)
+				{
+					int destPosX;
+					int destPosY;
+					int destIndex;
+
+					if (attempts == LOW_GL_TO_GO_ATTEMPTS) tempDestNumConLim = MAX_NUM_P_GL_FROM_GL_TO_GO;
+
+					destPosX = (int)round(srcPosX / gridXScaleStoD);
+					destPosY = (int)round(srcPosY / gridXScaleStoD);
+
+					// should multiply spans by 1 for full coverage
+					destPosX += round((randGen.Random() - 0.5) * SPAN_GL_TO_GO_X);
+					destPosY += round((randGen.Random() - 0.5) * SPAN_GL_TO_GO_Y);
+
+					destPosX = (destPosX % glX + glX) % glX;
+					destPosY = (destPosY % glY + glY) % glY;
+
+					destIndex = destPosY * glX + destPosX;
+
+					// alg set to not need unique for gl->go, whatever that means (06/10/2022)
+					//if (needUnique)
+					//{
+					//	//NOTE: JUST USE A SET!	
+					//	bool unique = true;
+					//	
+					//	for (int j = 0; j < i; j++)
+					//	{
+					//		if (derivedDestInd == srcConArr[srcInd][j])
+					//		{
+					//			unique = false;
+					//			break;
+					//		}
+					//	}
+
+					//	if (!unique) continue;
+					//}
+
+					if (numpGLfromGLtoGO[destIndex] < tempDestNumConLim)
+					{
+						pGLfromGLtoGO[destIndex][numpGLfromGLtoGO[destIndex]] = srcIndex;
+						numpGLfromGLtoGO[destIndex]++;
+						pGOfromGLtoGO[srcIndex][i] = destIndex;
+						numpGOfromGLtoGO[srcIndex]++;
+						break;
+					}
+				}
+				srcConnected[srcIndex] = true;
+				srcNumConnected++;
+			}
+		}
+	}
+
+	// go --> gl
 
 	int spanArrayGOtoGLX[SPAN_GO_TO_GL_X + 1] = {0};
 	int spanArrayGOtoGLY[SPAN_GO_TO_GL_Y + 1] = {0};
@@ -723,7 +855,6 @@ void InNetConnectivityState::connectGOGL(CRandomSFMT &randGen)
 	//Make Random Golgi cell Index Array	
 	int rGOInd[NUM_GO] = {0};
 	for (int i = 0; i < NUM_GO; i++) rGOInd[i] = i;
-	std::random_shuffle(rGOInd, rGOInd + NUM_GO);
 
 	//Make Random Span Array
 	int rGOSpanInd[NUM_P_GO_TO_GL] = {0};
@@ -773,8 +904,8 @@ void InNetConnectivityState::connectGOGL(CRandomSFMT &randGen)
 				destPosX = xCoorsGOGL[rGOSpanInd[j]];
 				destPosY = yCoorsGOGL[rGOSpanInd[j]];	
 
-				destPosX += (int)round(srcPosX / gridXScaleSrctoDest) + destPosX; 
-				destPosY += (int)round(srcPosY / gridYScaleSrctoDest) + destPosY;
+				destPosX += (int)round(srcPosX / gridXScaleSrctoDest); 
+				destPosY += (int)round(srcPosY / gridYScaleSrctoDest);
 
 				destPosX = (destPosX % glX + glX) % glX;  
 				destPosY = (destPosY % glY + glY) % glY;
@@ -858,30 +989,24 @@ void InNetConnectivityState::connectGOGODecayP(CRandomSFMT &randGen)
 	int rGOGOSpanInd[NUM_P_GO_TO_GO] = {0};
 	for (int i = 0; i < NUM_P_GO_TO_GO; i++) rGOGOSpanInd[i] = i;
 
-	int srcPosX;
-	int srcPosY;
-	int destPosX;
-	int destPosY;
-	int destIndex;
-
 	for (int attempts = 0; attempts < MAX_GO_TO_GO_ATTEMPTS; attempts++) 
 	{
 		for (int i = 0; i < NUM_GO; i++) 
 		{	
-			srcPosX = i % goX;
-			srcPosY = i / goX;	
+			int srcPosX = i % goX;
+			int srcPosY = i / goX;	
 			
 			std::random_shuffle(rGOGOSpanInd, rGOGOSpanInd + NUM_P_GO_TO_GO);		
 			
 			for (int j = 0; j < NUM_P_GO_TO_GO; j++)
 		   	{	
-				destPosX = srcPosX + xCoorsGOGOsyn[rGOGOSpanInd[j]]; 
-				destPosY = srcPosY + yCoorsGOGOsyn[rGOGOSpanInd[j]];	
+				int destPosX = srcPosX + xCoorsGOGOsyn[rGOGOSpanInd[j]]; 
+				int destPosY = srcPosY + yCoorsGOGOsyn[rGOGOSpanInd[j]];	
 
 				destPosX = (destPosX % goX + goX) % goX;
 				destPosY = (destPosY % goY + goY) % goY;
 						
-				destIndex = destPosY * goX + destPosX;
+				int destIndex = destPosY * goX + destPosX;
 			
 				// Normal One	
 				if (GO_GO_RECIP_CONS && !REDUCE_BASE_RECIP_GO_GO
@@ -2175,110 +2300,110 @@ void InNetConnectivityState::assignGRDelays(unsigned int msPerStep)
 //	}
 //}
 
-void InNetConnectivityState::connectCommon(int **srcConArr, int *srcNumCon,
-		int **destConArr, int *destNumCon, int srcMaxNumCon, int numSrcCells,
-		int destMaxNumCon, int destNormNumCon, int srcGridX, int srcGridY,
-		int destGridX, int destGridY, int srcSpanOnDestGridX, int srcSpanOnDestGridY,
-		int normConAttempts, int maxConAttempts, bool needUnique, CRandomSFMT &randGen)
-{
-	float gridXScaleStoD;
-	float gridYScaleStoD;
-
-	gridXScaleStoD = (float)srcGridX / (float)destGridX;
-	gridYScaleStoD = (float)srcGridY / (float)destGridY;
-
-	bool *srcConnected = new bool[numSrcCells];
-
-	std::cout << "srcMaxNumCon: " << srcMaxNumCon <<" numSrcCells: " << numSrcCells << std::endl;
-	std::cout << "destMaxNumCon " << destMaxNumCon <<" destNormNumCon "<< destNormNumCon << std::endl;
-	std::cout << "srcGridX: " << srcGridX <<" srcGridY: "<< srcGridY << " destGridX: "<< destGridX << 
-		" destGridY: " << destGridY << std::endl;
-	std::cout << "srcSpanOnDestGridX: " << srcSpanOnDestGridX << " srcSpanOnDestGridY: " <<
-		srcSpanOnDestGridY << std::endl;
-	std::cout << "gridXScaleStoD: " << gridXScaleStoD << " gridYScaleStoD: "<< gridYScaleStoD << std::endl;
-
-	for (int i = 0; i < srcMaxNumCon; i++)
-	{
-		// NOTE: watch out with initialization with memset. There are better ways.	
-		int srcNumConnected = 0;
-		memset(srcConnected, false, numSrcCells*sizeof(bool));
-
-		std::cout << "i: " << i << std::endl;
-
-		while (srcNumConnected < numSrcCells)
-		{
-			int srcInd;
-			int srcPosX;
-			int srcPosY;
-			int attempts;
-			int tempDestNumConLim;
-			bool complete;
-
-			srcInd = randGen.IRandom(0, numSrcCells - 1);
-
-			if (srcConnected[srcInd])
-			{
-				continue;
-			}
-			
-			srcConnected[srcInd] = true;
-			srcNumConnected++;
-
-			srcPosX = srcInd % srcGridX;
-			srcPosY = (int)(srcInd / srcGridX);
-
-			tempDestNumConLim = destNormNumCon;
-
-			for (attempts = 0; attempts < maxConAttempts; attempts++)
-			{
-				int tempDestPosX;
-				int tempDestPosY;
-				int derivedDestInd;
-
-				if (attempts == normConAttempts) tempDestNumConLim = destMaxNumCon;
-
-				tempDestPosX = (int)round(srcPosX / gridXScaleStoD);
-				tempDestPosY = (int)round(srcPosY / gridXScaleStoD);
-
-				tempDestPosX += round((randGen.Random() - 0.5) * srcSpanOnDestGridX);
-				tempDestPosY += round((randGen.Random() - 0.5) * srcSpanOnDestGridY);
-
-				tempDestPosX = ((tempDestPosX % destGridX + destGridX) % destGridX);
-				tempDestPosY = ((tempDestPosY % destGridY + destGridY) % destGridY);
-
-				derivedDestInd = tempDestPosY *destGridX + tempDestPosX;
-
-				if (needUnique)
-				{
-					//NOTE: JUST USE A SET!	
-					bool unique = true;
-					
-					for (int j = 0; j < i; j++)
-					{
-						if (derivedDestInd == srcConArr[srcInd][j])
-						{
-							unique = false;
-							break;
-						}
-					}
-
-					if (!unique) continue;
-				}
-
-				if (destNumCon[derivedDestInd] < tempDestNumConLim)
-				{
-					destConArr[derivedDestInd][destNumCon[derivedDestInd]] = srcInd;
-					destNumCon[derivedDestInd]++;
-					srcConArr[srcInd][i] = derivedDestInd;
-					srcNumCon[srcInd]++;
-					break;
-				}
-			}
-		}
-	}
-
-	delete[] srcConnected;
-}
+//void InNetConnectivityState::connectCommon(int **srcConArr, int *srcNumCon,
+//		int **destConArr, int *destNumCon, int srcMaxNumCon, int numSrcCells,
+//		int destMaxNumCon, int destNormNumCon, int srcGridX, int srcGridY,
+//		int destGridX, int destGridY, int srcSpanOnDestGridX, int srcSpanOnDestGridY,
+//		int normConAttempts, int maxConAttempts, bool needUnique, CRandomSFMT &randGen)
+//{
+//	float gridXScaleStoD;
+//	float gridYScaleStoD;
+//
+//	gridXScaleStoD = (float)srcGridX / (float)destGridX;
+//	gridYScaleStoD = (float)srcGridY / (float)destGridY;
+//
+//	bool *srcConnected = new bool[numSrcCells];
+//
+//	std::cout << "srcMaxNumCon: " << srcMaxNumCon <<" numSrcCells: " << numSrcCells << std::endl;
+//	std::cout << "destMaxNumCon " << destMaxNumCon <<" destNormNumCon "<< destNormNumCon << std::endl;
+//	std::cout << "srcGridX: " << srcGridX <<" srcGridY: "<< srcGridY << " destGridX: "<< destGridX << 
+//		" destGridY: " << destGridY << std::endl;
+//	std::cout << "srcSpanOnDestGridX: " << srcSpanOnDestGridX << " srcSpanOnDestGridY: " <<
+//		srcSpanOnDestGridY << std::endl;
+//	std::cout << "gridXScaleStoD: " << gridXScaleStoD << " gridYScaleStoD: "<< gridYScaleStoD << std::endl;
+//
+//	for (int i = 0; i < srcMaxNumCon; i++)
+//	{
+//		// NOTE: watch out with initialization with memset. There are better ways.	
+//		int srcNumConnected = 0;
+//		memset(srcConnected, false, numSrcCells*sizeof(bool));
+//
+//		std::cout << "i: " << i << std::endl;
+//
+//		while (srcNumConnected < numSrcCells)
+//		{
+//			int srcInd;
+//			int srcPosX;
+//			int srcPosY;
+//			int attempts;
+//			int tempDestNumConLim;
+//			bool complete;
+//
+//			srcInd = randGen.IRandom(0, numSrcCells - 1);
+//
+//			if (srcConnected[srcInd])
+//			{
+//				continue;
+//			}
+//			
+//			srcConnected[srcInd] = true;
+//			srcNumConnected++;
+//
+//			srcPosX = srcInd % srcGridX;
+//			srcPosY = (int)(srcInd / srcGridX);
+//
+//			tempDestNumConLim = destNormNumCon;
+//
+//			for (attempts = 0; attempts < maxConAttempts; attempts++)
+//			{
+//				int tempDestPosX;
+//				int tempDestPosY;
+//				int derivedDestInd;
+//
+//				if (attempts == normConAttempts) tempDestNumConLim = destMaxNumCon;
+//
+//				tempDestPosX = (int)round(srcPosX / gridXScaleStoD);
+//				tempDestPosY = (int)round(srcPosY / gridXScaleStoD);
+//
+//				tempDestPosX += round((randGen.Random() - 0.5) * srcSpanOnDestGridX);
+//				tempDestPosY += round((randGen.Random() - 0.5) * srcSpanOnDestGridY);
+//
+//				tempDestPosX = ((tempDestPosX % destGridX + destGridX) % destGridX);
+//				tempDestPosY = ((tempDestPosY % destGridY + destGridY) % destGridY);
+//
+//				derivedDestInd = tempDestPosY *destGridX + tempDestPosX;
+//
+//				if (needUnique)
+//				{
+//					//NOTE: JUST USE A SET!	
+//					bool unique = true;
+//					
+//					for (int j = 0; j < i; j++)
+//					{
+//						if (derivedDestInd == srcConArr[srcInd][j])
+//						{
+//							unique = false;
+//							break;
+//						}
+//					}
+//
+//					if (!unique) continue;
+//				}
+//
+//				if (destNumCon[derivedDestInd] < tempDestNumConLim)
+//				{
+//					destConArr[derivedDestInd][destNumCon[derivedDestInd]] = srcInd;
+//					destNumCon[derivedDestInd]++;
+//					srcConArr[srcInd][i] = derivedDestInd;
+//					srcNumCon[srcInd]++;
+//					break;
+//				}
+//			}
+//		}
+//	}
+//
+//	delete[] srcConnected;
+//}
 
 //void InNetConnectivityState::translateCommon(int **pPreGLConArr, int *numpPreGLCon,
 //		int **pGLPostGLConArr, int *numpGLPostGLCon, int **pPreConArr, int *numpPreCon,

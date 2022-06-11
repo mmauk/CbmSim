@@ -88,7 +88,7 @@ void MZoneConnectivityState::stateRW(bool read, std::fstream &file)
 	rawBytesRW((char *)pIOfromIOtoPC[0], NUM_IO * NUM_P_IO_FROM_IO_TO_PC * sizeof(ct_uint32_t), read, file);
 	rawBytesRW((char *)pIOfromNCtoIO[0], NUM_IO * NUM_P_IO_FROM_NC_TO_IO * sizeof(ct_uint32_t), read, file);
 	rawBytesRW((char *)pIOInIOIO[0], NUM_IO * NUM_P_IO_IN_IO_TO_IO * sizeof(ct_uint32_t), read, file);
-	rawBytesRW((char *)pIOOutIOIO[0], NUM_IO * NUMP_IO_OUT_IO_TO_IO * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)pIOOutIOIO[0], NUM_IO * NUM_P_IO_OUT_IO_TO_IO * sizeof(ct_uint32_t), read, file);
 }
 
 bool MZoneConnectivityState::state_equal(const MZoneConnectivityState &compState)
@@ -131,14 +131,14 @@ void MZoneConnectivityState::initializeVars()
 	std::fill(pPCfromPCtoNC[0], pPCfromPCtoNC[0] + NUM_PC * NUM_P_PC_FROM_PC_TO_NC, UINT_MAX);
 	std::fill(pPCfromIOtoPC, pPCfromIOtoPC + NUM_PC, UINT_MAX);
 
-	std::fill(pNCfromPCtoNC[0], pNCfromPCtoNC[0] + num_NC * NUM_P_NC_FROM_PC_TO_NC, UINT_MAX);
-	std::fill(pNCfromNCtoIO[0], pNCfromNCtoIO[0] + num_NC * NUM_P_NC_FROM_NC_TO_IO, UINT_MAX);
-	std::fill(pNCfromMFtoNC[0], pNCfromMFtoNC[0] + num_NC * NUM_P_NC_FROM_MF_TO_NC, UINT_MAX);
+	std::fill(pNCfromPCtoNC[0], pNCfromPCtoNC[0] + NUM_NC * NUM_P_NC_FROM_PC_TO_NC, UINT_MAX);
+	std::fill(pNCfromNCtoIO[0], pNCfromNCtoIO[0] + NUM_NC * NUM_P_NC_FROM_NC_TO_IO, UINT_MAX);
+	std::fill(pNCfromMFtoNC[0], pNCfromMFtoNC[0] + NUM_NC * NUM_P_NC_FROM_MF_TO_NC, UINT_MAX);
 
 	std::fill(pIOfromIOtoPC[0], pIOfromIOtoPC[0] + NUM_IO * NUM_P_IO_FROM_IO_TO_PC, UINT_MAX);
 	std::fill(pIOfromNCtoIO[0], pIOfromNCtoIO[0] + NUM_IO * NUM_P_IO_FROM_NC_TO_IO, UINT_MAX);
 	std::fill(pIOInIOIO[0], pIOInIOIO[0] + NUM_IO * NUM_P_IO_IN_IO_TO_IO, UINT_MAX);
-	std::fill(pIOOutIOIO[0], pIOOutIOIO[0] + NUM_IO * NUMP_IO_OUT_IO_TO_IO, UINT_MAX);
+	std::fill(pIOOutIOIO[0], pIOOutIOIO[0] + NUM_IO * NUM_P_IO_OUT_IO_TO_IO, UINT_MAX);
 }
 
 void MZoneConnectivityState::connectBCtoPC()
@@ -218,12 +218,12 @@ void MZoneConnectivityState::connectPCtoNC(int randSeed)
 		for (int j = NUM_P_NC_FROM_PC_TO_NC / 3; j < NUM_P_NC_FROM_PC_TO_NC; j++)
 		{
 			int countPCNC = 0;
-			
+			int pcInd;	
 			while(true)
 			{
 				bool connect = true;
 
-				int pcInd = randGen.IRandomX(0, NUM_PC - 1);
+				pcInd = randGen.IRandomX(0, NUM_PC - 1);
 
 				if (pcNumConnected[pcInd] >= NUM_P_PC_FROM_PC_TO_NC) continue;
 				for (int k = 0; k < pcNumConnected[pcInd]; k++)
