@@ -339,70 +339,61 @@ void InNetConnectivityState::stateRW(bool read, std::fstream &file)
 void InNetConnectivityState::initializeVals()
 {
 	// gl
-	std::fill(pGLfromGLtoGO[0], pGLfromGLtoGO[0]
-		+ NUM_GL * MAX_NUM_P_GL_FROM_GL_TO_GO, UINT_MAX);
-	std::fill(pGLfromGOtoGL[0], pGLfromGOtoGL[0]
-		+ NUM_GL * MAX_NUM_P_GL_FROM_GO_TO_GL, UINT_MAX);
-	std::fill(pGLfromGLtoGR[0], pGLfromGLtoGR[0]
-		+ NUM_GL * MAX_NUM_P_GL_FROM_GL_TO_GR, UINT_MAX);
-	std::fill(pGLfromMFtoGL, pGLfromMFtoGL + NUM_GL, UINT_MAX);
+	std::fill(&pGLfromGLtoGO[0][0], &pGLfromGLtoGO[0][0]
+		+ sizeof(pGLfromGLtoGO) / sizeof(pGLfromGLtoGO[0][0]), INT_MAX);
+	std::fill(&pGLfromGOtoGL[0][0], &pGLfromGOtoGL[0][0]
+		+ sizeof(pGLfromGOtoGL) / sizeof(pGLfromGOtoGL[0][0]), INT_MAX);
+	std::fill(&pGLfromGLtoGR[0][0], &pGLfromGLtoGR[0][0]
+		+ sizeof(pGLfromGLtoGR) / sizeof(pGLfromGLtoGR[0][0]), INT_MAX);
+	std::fill(&pGLfromMFtoGL[0], &pGLfromMFtoGL[0]
+		+ sizeof(pGLfromMFtoGL) / sizeof(pGLfromMFtoGL[0]), INT_MAX);
 
 	//mf
-	std::fill(pMFfromMFtoGL[0], pMFfromMFtoGL[0]
-		+ NUM_MF * MAX_NUM_P_MF_FROM_MF_TO_GL, UINT_MAX);
-
-	std::fill(pMFfromMFtoGR[0], pMFfromMFtoGR[0]
-		+ NUM_MF * MAX_NUM_P_MF_FROM_MF_TO_GR, UINT_MAX);
-	std::fill(pMFfromMFtoGO[0], pMFfromMFtoGO[0]
-		+ NUM_MF * MAX_NUM_P_MF_FROM_MF_TO_GO, UINT_MAX);
+	std::fill(&pMFfromMFtoGL[0][0], &pMFfromMFtoGL[0][0]
+		+ sizeof(pMFfromMFtoGL) / sizeof(pMFfromMFtoGL[0][0]), INT_MAX);
+	std::fill(&pMFfromMFtoGR[0][0], &pMFfromMFtoGR[0][0]
+		+ sizeof(pMFfromMFtoGR) / sizeof(pMFfromMFtoGR[0][0]), INT_MAX);
+	std::fill(&pMFfromMFtoGO[0][0], &pMFfromMFtoGO[0][0]
+		+ sizeof(pMFfromMFtoGO) / sizeof(pMFfromMFtoGO[0][0]), INT_MAX);
 
 	// go
-	std::fill(pGOfromGLtoGO[0], pGOfromGLtoGO[0]
-		+ NUM_GO * MAX_NUM_P_GO_FROM_GL_TO_GO, UINT_MAX);
-
-	std::fill(pGOfromGOtoGL[0], pGOfromGOtoGL[0]
-		+ NUM_GO * MAX_NUM_P_GO_FROM_GO_TO_GL, UINT_MAX);
-
-	std::fill(pGOfromMFtoGO[0], pGOfromMFtoGO[0]
-		+ NUM_GO * MAX_NUM_P_GO_FROM_MF_TO_GO, UINT_MAX);
-
-	std::fill(pGOfromGOtoGR[0], pGOfromGOtoGR[0]
-		+ NUM_GO * MAX_NUM_P_GO_FROM_GO_TO_GR, UINT_MAX);
-
-	std::fill(pGOfromGRtoGO[0], pGOfromGRtoGO[0]
-		+ NUM_GO * MAX_NUM_P_GO_FROM_GR_TO_GO, UINT_MAX);
-	
-	std::fill(pGOGABAInGOGO[0], pGOGABAInGOGO[0]
-		+ NUM_CON_GO_TO_GO, UINT_MAX);
-
-	std::fill(pGOGABAOutGOGO[0], pGOGABAOutGOGO[0]
-		+ NUM_GO * NUM_CON_GO_TO_GO, UINT_MAX);
+	std::fill(&pGOfromGLtoGO[0][0], &pGOfromGLtoGO[0][0]
+		+ sizeof(pGOfromGLtoGO) / sizeof(pGOfromGLtoGO[0][0]), INT_MAX);
+	std::fill(&pGOfromGOtoGL[0][0], &pGOfromGOtoGL[0][0]
+		+ sizeof(pGOfromGOtoGL) / sizeof(pGOfromGOtoGL[0][0]), INT_MAX);
+	std::fill(&pGOfromMFtoGO[0][0], &pGOfromMFtoGO[0][0]
+		+ sizeof(pGOfromMFtoGO) / sizeof(pGOfromMFtoGO[0][0]), INT_MAX);
+	std::fill(&pGOfromGOtoGR[0][0], &pGOfromGOtoGR[0][0]
+		+ sizeof(pGOfromGOtoGR) / sizeof(pGOfromGOtoGR[0][0]), INT_MAX);
+	std::fill(&pGOfromGRtoGO[0][0], &pGOfromGRtoGO[0][0]
+		+ sizeof(pGOfromGRtoGO) / sizeof(pGOfromGRtoGO[0][0]), INT_MAX);
+	std::fill(&pGOGABAInGOGO[0][0], &pGOGABAInGOGO[0][0]
+		+ sizeof(pGOGABAInGOGO) / sizeof(pGOGABAInGOGO[0][0]), INT_MAX);
+	std::fill(&pGOGABAOutGOGO[0][0], &pGOGABAOutGOGO[0][0]
+		+ sizeof(pGOGABAOutGOGO) / sizeof(pGOGABAOutGOGO[0][0]), INT_MAX);
 
 	// go gap junctions
-	std::fill(pGOCoupInGOGO[0], pGOCoupInGOGO[0]
-		+ NUM_GO * NUM_P_GO_TO_GO_GJ, UINT_MAX);
-	std::fill(pGOCoupInGOGOCCoeff[0], pGOCoupInGOGOCCoeff[0]
-		+ NUM_GO * NUM_P_GO_TO_GO_GJ, UINT_MAX);
-	std::fill(pGOCoupOutGOGO[0], pGOCoupOutGOGO[0]
-		+ NUM_GO * NUM_P_GO_TO_GO_GJ, UINT_MAX);
-	std::fill(pGOCoupOutGOGOCCoeff[0], pGOCoupOutGOGOCCoeff[0]
-		+ NUM_GO * NUM_P_GO_TO_GO_GJ, UINT_MAX);
-	
+	std::fill(&pGOCoupInGOGO[0][0], &pGOCoupInGOGO[0][0]
+		+ sizeof(pGOCoupInGOGO) / sizeof(pGOCoupInGOGO[0][0]), INT_MAX);
+	std::fill(&pGOCoupInGOGOCCoeff[0][0], &pGOCoupInGOGOCCoeff[0][0]
+		+ sizeof(pGOCoupInGOGOCCoeff) / sizeof(pGOCoupInGOGOCCoeff[0][0]), INT_MAX);
+	std::fill(&pGOCoupOutGOGO[0][0], &pGOCoupOutGOGO[0][0]
+		+ sizeof(pGOCoupOutGOGO) / sizeof(pGOCoupOutGOGO[0][0]), INT_MAX);
+	std::fill(&pGOCoupOutGOGOCCoeff[0][0], &pGOCoupOutGOGOCCoeff[0][0]
+		+ sizeof(pGOCoupOutGOGOCCoeff) / sizeof(pGOCoupOutGOGOCCoeff[0][0]), INT_MAX);
 	
 	// gr
-	std::fill(pGRfromGLtoGR[0], pGRfromGLtoGR[0]
-		+ NUM_GR * MAX_NUM_P_GR_FROM_GL_TO_GR, UINT_MAX);
+	std::fill(&pGRfromGLtoGR[0][0], &pGRfromGLtoGR[0][0]
+		+ sizeof(pGRfromGLtoGR) / sizeof(pGRfromGLtoGR[0][0]), INT_MAX);
+	std::fill(&pGRfromGRtoGO[0][0], &pGRfromGRtoGO[0][0]
+		+ sizeof(pGRfromGRtoGO) / sizeof(pGRfromGRtoGO[0][0]), INT_MAX);
+	std::fill(&pGRDelayMaskfromGRtoGO[0][0], &pGRDelayMaskfromGRtoGO[0][0]
+		+ sizeof(pGRDelayMaskfromGRtoGO) / sizeof(pGRDelayMaskfromGRtoGO[0][0]), INT_MAX);
+	std::fill(&pGRfromGOtoGR[0][0], &pGRfromGOtoGR[0][0]
+		+ sizeof(pGRfromGOtoGR) / sizeof(pGRfromGOtoGR[0][0]), INT_MAX);
 
-	std::fill(pGRfromGRtoGO[0], pGRfromGRtoGO[0]
-		+ NUM_GR * MAX_NUM_P_GR_FROM_GR_TO_GO, UINT_MAX);
-	std::fill(pGRDelayMaskfromGRtoGO[0], pGRDelayMaskfromGRtoGO[0]
-		+ NUM_GR * MAX_NUM_P_GR_FROM_GR_TO_GO, UINT_MAX);
-
-	std::fill(pGRfromGOtoGR[0], pGRfromGOtoGR[0]
-		+ NUM_GR * MAX_NUM_P_GR_FROM_GO_TO_GR, UINT_MAX);
-
-	std::fill(pGRfromMFtoGR[0], pGRfromMFtoGR[0]
-		+ NUM_GR * MAX_NUM_P_GR_FROM_MF_TO_GR, UINT_MAX);
+	std::fill(&pGRfromMFtoGR[0][0], &pGRfromMFtoGR[0][0]
+		+ sizeof(pGRfromMFtoGR) / sizeof(pGRfromMFtoGR[0][0]), INT_MAX);
 }
 
 void InNetConnectivityState::connectMFGL_noUBC(CRandomSFMT &randGen)
@@ -753,16 +744,16 @@ void InNetConnectivityState::connectGOGL(CRandomSFMT &randGen)
 	int glX = GL_X;
 	int glY = GL_Y;
 
-	float gridXScaleStoD = (float)goX / (float)glX;
-	float gridYScaleStoD = (float)goY / (float)glY;
+	float gridXScaleSrctoDest = (float)goX / (float)glX;
+	float gridYScaleSrctoDest = (float)goY / (float)glY;
 
 	bool srcConnected[NUM_GO];
 
 	for (int i = 0; i < MAX_NUM_P_GO_FROM_GL_TO_GO; i++)
 	{
-		// NOTE: watch out with initialization with memset. There are better ways.	
 		int srcNumConnected = 0;
-		std::fill(srcConnected, srcConnected + NUM_GO, false);
+		std::fill(&srcConnected[0], &srcConnected[0]
+			+ sizeof(srcConnected) / sizeof(srcConnected[0]), false);
 
 		while (srcNumConnected < NUM_GO)
 		{
@@ -782,8 +773,8 @@ void InNetConnectivityState::connectGOGL(CRandomSFMT &randGen)
 
 					if (attempts == LOW_GL_TO_GO_ATTEMPTS) tempDestNumConLim = MAX_NUM_P_GL_FROM_GL_TO_GO;
 
-					destPosX = (int)round(srcPosX / gridXScaleStoD);
-					destPosY = (int)round(srcPosY / gridXScaleStoD);
+					destPosX = (int)round(srcPosX / gridXScaleSrctoDest);
+					destPosY = (int)round(srcPosY / gridXScaleSrctoDest);
 
 					// should multiply spans by 1 for full coverage
 					destPosX += round((randGen.Random() - 0.5) * SPAN_GL_TO_GO_X);
@@ -882,12 +873,9 @@ void InNetConnectivityState::connectGOGL(CRandomSFMT &randGen)
 	int destPosY;
 	int destIndex;
 
-	float gridXScaleSrctoDest = (float)goX / (float)glX;
-	float gridYScaleSrctoDest = (float)goY / (float)glY;
-
 	for (int attempts = 0; attempts < MAX_GO_TO_GL_ATTEMPTS; attempts++)
 	{
-		std::random_shuffle(rGOInd, rGOInd + NUM_GO);	
+		std::random_shuffle(&rGOInd[0], &rGOInd[0] + sizeof(rGOInd) / sizeof(rGOInd[0]));	
 		
 		// Go through each golgi cell 
 		for (int i = 0; i < NUM_GO; i++)
@@ -896,7 +884,8 @@ void InNetConnectivityState::connectGOGL(CRandomSFMT &randGen)
 			srcPosX = rGOInd[i] % goX;
 			srcPosY = rGOInd[i] / goX;	
 			
-			std::random_shuffle(rGOSpanInd, rGOSpanInd + NUM_P_GO_TO_GL);	
+			std::random_shuffle(&rGOSpanInd[0], &rGOSpanInd[0]
+				+ sizeof(rGOSpanInd) / sizeof(rGOInd[0]));	
 			
 			for (int j = 0; j < NUM_P_GO_TO_GL; j++)   
 			{	
@@ -1091,8 +1080,8 @@ void InNetConnectivityState::connectGOGODecayP(CRandomSFMT &randGen)
 		{
 			for (int k = 0; k < numpGOGABAOutGOGO[i]; k++)
 			{
-				if (pGOGABAInGOGO[i][j] == pGOGABAOutGOGO[i][k] && pGOGABAInGOGO[i][j] != UINT_MAX 
-						&& pGOGABAOutGOGO[i][k] != UINT_MAX)
+				if (pGOGABAInGOGO[i][j] == pGOGABAOutGOGO[i][k] && pGOGABAInGOGO[i][j] != INT_MAX 
+						&& pGOGABAOutGOGO[i][k] != INT_MAX)
 				{
 					recipCounter++;	
 				}
@@ -2198,8 +2187,8 @@ void InNetConnectivityState::assignGRDelays(unsigned int msPerStep)
 //		{
 //			for (int k = 0; k < numpGOGABAOutGOGO[i]; k++)
 //			{
-//				if (pGOGABAInGOGO[i][j] == pGOGABAOutGOGO[i][k] && pGOGABAInGOGO[i][j] != UINT_MAX
-//						&& pGOGABAOutGOGO[i][k] != UINT_MAX) recipCounter++; 
+//				if (pGOGABAInGOGO[i][j] == pGOGABAOutGOGO[i][k] && pGOGABAInGOGO[i][j] != INT_MAX
+//						&& pGOGABAOutGOGO[i][k] != INT_MAX) recipCounter++; 
 //			}
 //		}
 //	}
