@@ -29,7 +29,7 @@ public:
 	MZoneConnectivityState(std::fstream &infile);
 	//MZoneConnectivityState(const MZoneConnectivityState &state);
 
-	virtual ~MZoneConnectivityState();
+	~MZoneConnectivityState();
 
 	void writeState(std::fstream &outfile);
 

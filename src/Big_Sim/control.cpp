@@ -180,7 +180,6 @@ void Control::saveOutputArraysToFile(int goRecipParam, int simNum)
 	// TODO: put these into an input file instead of here :weird_champ:
 	int conv[8] = {5000, 4000, 3000, 2000, 1000, 500, 250, 125};
 	
-	// TODO: once get matrix class, rewrite
 	std::string allGOPSTHFileName = "allGOPSTH_noGOGO_grgoConv" + std::to_string(conv[goRecipParam]) +
 		"_" + std::to_string(simNum) + ".bin";	
 	write2DCharArray(allGOPSTHFileName, allGOPSTH, NUM_GO, allGOPOSTHColSize);
@@ -270,8 +269,10 @@ void Control::write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
 
 void Control::deleteOutputArrays()
 {
-	delete2DArray<ct_uint8_t>(allGOPSTH);
-	delete2DArray<ct_uint8_t>(allBCRaster);
+	delete2DArray<ct_uint8_t>(allPCRaster);
+	delete2DArray<ct_uint8_t>(allNCRaster);
 	delete2DArray<ct_uint8_t>(allSCRaster);
+	delete2DArray<ct_uint8_t>(allBCRaster);
+	delete2DArray<ct_uint8_t>(allGOPSTH);
 }
 

@@ -105,5 +105,4 @@ protected:
 	void assignGRDelays(unsigned int msPerStep);
 };
 
-
 #endif /* INNETCONNECTIVITYSTATE_H_ */
