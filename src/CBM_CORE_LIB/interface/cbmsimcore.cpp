@@ -10,21 +10,17 @@
 //#define NO_ASYNC
 //#define DISP_CUDA_ERR
 
-CBMSimCore::CBMSimCore(ActivityParams *ap, CBMState *state,
-	int *mzoneRSeed, int gpuIndStart, int numGPUP2)
-{
-	construct(ap, state, mzoneRSeed, gpuIndStart, numGPUP2);
-}
+CBMSimCore::CBMSimCore() {}
 
-CBMSimCore::CBMSimCore(ActivityParams *ap, CBMState *state,
+CBMSimCore::CBMSimCore(ActivityParams &ap, CBMState *state,
 	int gpuIndStart, int numGPUP2)
 {
-	CRandomSFMT0 *randGen = new CRandomSFMT0(time(0));
-	int *mzoneRSeed 	  = new int[state->getNumZones()];
+	CRandomSFMT0 randGen(time(0));
+	int *mzoneRSeed = new int[state->getNumZones()];
 
 	for (int i = 0; i < state->getNumZones(); i++)
 	{
-		mzoneRSeed[i] = randGen->IRandom(0, INT_MAX);
+		mzoneRSeed[i] = randGen.IRandom(0, INT_MAX);
 	}
 
 	construct(ap, state, mzoneRSeed, gpuIndStart, numGPUP2);
@@ -67,11 +63,10 @@ void CBMSimCore::writeToState()
 	}
 }
 
-void CBMSimCore::writeToState(std::fstream& outfile)
+void CBMSimCore::writeState(ActivityParams &ap, std::fstream& outfile)
 {	
 	writeToState();
-
-	simState->writeState(outfile);
+	simState->writeState(ap, outfile);
 }
 
 void CBMSimCore::initCUDAStreams()
@@ -457,7 +452,7 @@ MZoneInterface** CBMSimCore::getMZoneList()
 	return (MZoneInterface **)zones;
 }
 
-void CBMSimCore::construct(ActivityParams *ap, CBMState *state,
+void CBMSimCore::construct(ActivityParams &ap, CBMState *state,
 	int *mzoneRSeed, int gpuIndStart, int numGPUP2)
 {
 	int maxNumGPUs;
@@ -507,7 +502,7 @@ void CBMSimCore::construct(ActivityParams *ap, CBMState *state,
 	for (int i = 0; i < numZones; i++)
 	{
 		// same thing for zones as with innet	
-		zones[i] = new MZone(state->getActParamsInternal(), state->getMZoneConStateInternal(i),
+		zones[i] = new MZone(ap, state->getMZoneConStateInternal(i),
 			state->getMZoneActStateInternal(i), mzoneRSeed[i], inputNet->getApBufGRGPUPointer(),
 			inputNet->getDelayBCPCSCMaskGPUPointer(), inputNet->getHistGRGPUPointer(),
 			this->gpuIndStart, numGPUs);

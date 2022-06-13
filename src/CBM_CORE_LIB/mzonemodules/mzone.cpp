@@ -7,15 +7,18 @@
 
 #include "mzonemodules/mzone.h"
 
-MZone::MZone(ActivityParams *ap, MZoneConnectivityState *conState,
-		MZoneActivityState *actState, int randSeed, ct_uint32_t **actBufGRGPU,
+MZone::MZone() {}
+
+MZone::MZone(ActivityParams &ap, MZoneConnectivityState *cs,
+		MZoneActivityState *as, int randSeed, ct_uint32_t **actBufGRGPU,
 		ct_uint32_t **delayMaskGRGPU, ct_uint64_t **histGRGPU, int gpuIndStart, int numGPUs)
 {
+	// TODO: make this a non dynamic object wtf bruh
 	randGen = new CRandomSFMT0(randSeed);
 
-	this->ap = ap;
-	cs = conState;
-	as = actState;
+	this->ap = ap; /* deep copy implemented biiiiiiitch */
+	this->cs = cs; /* shallow copy (boo) */
+	this->as = as; /* also shallow copy */
 
 	apBufGRGPU 			 = actBufGRGPU;
 	delayBCPCSCMaskGRGPU = delayMaskGRGPU;
@@ -24,8 +27,8 @@ MZone::MZone(ActivityParams *ap, MZoneConnectivityState *conState,
 	pfSynWeightPCLinear = new float[NUM_GR];
 	pfPCPlastStepIO = new float[NUM_IO];
 
-	tempGRPCLTDStep = ap->synLTDStepSizeGRtoPC;
-	tempGRPCLTPStep = ap->synLTPStepSizeGRtoPC;
+	tempGRPCLTDStep = ap.synLTDStepSizeGRtoPC;
+	tempGRPCLTPStep = ap.synLTPStepSizeGRtoPC;
 
 	this->numGPUs 	  = numGPUs;
 	this->gpuIndStart = gpuIndStart;
@@ -163,7 +166,7 @@ void MZone::cpyPFPCSynWCUDA()
 
 void MZone::setErrDrive(float errDriveRelative)
 {
-	as->errDrive = errDriveRelative * ap->maxExtIncVIO;
+	as->errDrive = errDriveRelative * ap.maxExtIncVIO;
 }
 
 void MZone::updateMFActivities(const ct_uint8_t *actMF)
@@ -195,32 +198,32 @@ void MZone::calcPCActivities()
 		{
 			float gSCPCSum;
 
-			as->gPFPC[i] = as->gPFPC[i] + inputSumPFPCMZH[i] * ap->gIncGRtoPC;
-			as->gPFPC[i] = as->gPFPC[i] * ap->gDecGRtoPC;
-			as->gBCPC[i] = as->gBCPC[i] + as->inputBCPC[i] * ap->gIncBCtoPC;
-			as->gBCPC[i] = as->gBCPC[i] * ap->gDecBCtoPC;
+			as->gPFPC[i] = as->gPFPC[i] + inputSumPFPCMZH[i] * ap.gIncGRtoPC;
+			as->gPFPC[i] = as->gPFPC[i] * ap.gDecGRtoPC;
+			as->gBCPC[i] = as->gBCPC[i] + as->inputBCPC[i] * ap.gIncBCtoPC;
+			as->gBCPC[i] = as->gBCPC[i] * ap.gDecBCtoPC;
 
 			gSCPCSum = 0;
 
 			for (int j = 0; j < NUM_P_PC_FROM_SC_TO_PC; j++)
 			{
-				as->gSCPC[i][j] = as->gSCPC[i][j] + ap->gIncSCtoPC *(1 - as->gSCPC[i][j]) * as->inputSCPC[i][j];
-				as->gSCPC[i][j] = as->gSCPC[i][j] * ap->gDecSCtoPC;//GSCDECAYPC;
+				as->gSCPC[i][j] = as->gSCPC[i][j] + ap.gIncSCtoPC *(1 - as->gSCPC[i][j]) * as->inputSCPC[i][j];
+				as->gSCPC[i][j] = as->gSCPC[i][j] * ap.gDecSCtoPC;//GSCDECAYPC;
 				gSCPCSum += as->gSCPC[i][j];
 			}
 
 			as->vPC[i] = as->vPC[i] +
-					(ap->gLeakPC * (ap->eLeakPC - as->vPC[i])) -
+					(ap.gLeakPC * (ap.eLeakPC - as->vPC[i])) -
 					(as->gPFPC[i] * as->vPC[i]) +
-					(as->gBCPC[i] * (ap->eBCtoPC-as->vPC[i])) +
-					(gSCPCSum * (ap->eSCtoPC - as->vPC[i]));	
+					(as->gBCPC[i] * (ap.eBCtoPC-as->vPC[i])) +
+					(gSCPCSum * (ap.eSCtoPC - as->vPC[i]));	
 
-			as->threshPC[i] = as->threshPC[i] + (ap->threshDecPC * (ap->threshRestPC - as->threshPC[i]));
+			as->threshPC[i] = as->threshPC[i] + (ap.threshDecPC * (ap.threshRestPC - as->threshPC[i]));
 
 			as->apPC[i] = as->vPC[i] > as->threshPC[i];
 			as->apBufPC[i] = (as->apBufPC[i] << 1) | (as->apPC[i] * 0x00000001);
 
-			as->threshPC[i] = as->apPC[i] * ap->threshMaxPC + (!as->apPC[i]) * as->threshPC[i];
+			as->threshPC[i] = as->apPC[i] * ap.threshMaxPC + (!as->apPC[i]) * as->threshPC[i];
 			as->pcPopAct = as->pcPopAct + as->apPC[i];
 		}
 	}		
@@ -240,21 +243,21 @@ void MZone::calcBCActivities(ct_uint32_t **pfInput)
 				totalPFInput += pfInput[j][i];	
 			}
 			
-			as->gPFBC[i] = as->gPFBC[i] + (sumPFBCInput[i] * ap->gIncGRtoBC);
-			as->gPFBC[i] = as->gPFBC[i] * ap->gDecGRtoBC;
-			as->gPCBC[i] = as->gPCBC[i] + (as->inputPCBC[i] * ap->gIncPCtoBC);
-			as->gPCBC[i] = as->gPCBC[i] * ap->gDecPCtoBC;
+			as->gPFBC[i] = as->gPFBC[i] + (sumPFBCInput[i] * ap.gIncGRtoBC);
+			as->gPFBC[i] = as->gPFBC[i] * ap.gDecGRtoBC;
+			as->gPCBC[i] = as->gPCBC[i] + (as->inputPCBC[i] * ap.gIncPCtoBC);
+			as->gPCBC[i] = as->gPCBC[i] * ap.gDecPCtoBC;
 
 			as->vBC[i] = as->vBC[i] +
-					(ap->gLeakBC * (ap->eLeakBC - as->vBC[i])) -
+					(ap.gLeakBC * (ap.eLeakBC - as->vBC[i])) -
 					(as->gPFBC[i] * as->vBC[i]) +
-					(as->gPCBC[i] * (ap->ePCtoBC - as->vBC[i]));
+					(as->gPCBC[i] * (ap.ePCtoBC - as->vBC[i]));
 
-			as->threshBC[i] = as->threshBC[i] + ap->threshDecBC * (ap->threshRestBC - as->threshBC[i]);
+			as->threshBC[i] = as->threshBC[i] + ap.threshDecBC * (ap.threshRestBC - as->threshBC[i]);
 			as->apBC[i] = as->vBC[i] > as->threshBC[i];
 			as->apBufBC[i] = (as->apBufBC[i] << 1) | (as->apBC[i] * 0x00000001);
 
-			as->threshBC[i] = as->apBC[i] * ap->threshMaxBC + (!as->apBC[i]) * (as->threshBC[i]);
+			as->threshBC[i] = as->apBC[i] * ap.threshMaxBC + (!as->apBC[i]) * (as->threshBC[i]);
 		}
 	}
 }
@@ -276,10 +279,10 @@ void MZone::calcIOActivities()
 
 		for (int j = 0; j < NUM_P_IO_FROM_NC_TO_IO; j++)
 		{
-			as->gNCIO[i][j] = as->gNCIO[i][j] * exp(-ap->msPerTimeStep /
-				(-ap->gDecTSofNCtoIO * exp(-as->gNCIO[i][j] / ap->gDecTTofNCtoIO) + ap->gDecT0ofNCtoIO));
+			as->gNCIO[i][j] = as->gNCIO[i][j] * exp(-ap.msPerTimeStep /
+				(-ap.gDecTSofNCtoIO * exp(-as->gNCIO[i][j] / ap.gDecTTofNCtoIO) + ap.gDecT0ofNCtoIO));
 			as->gNCIO[i][j] = as->gNCIO[i][j] + as->inputNCIO[i][j]
-				* ap->gIncNCtoIO * exp(-as->gNCIO[i][j] / ap->gIncTauNCtoIO);
+				* ap.gIncNCtoIO * exp(-as->gNCIO[i][j] / ap.gIncTauNCtoIO);
 			gNCSum += as->gNCIO[i][j];
 
 			as->inputNCIO[i][j] = 0;
@@ -287,15 +290,15 @@ void MZone::calcIOActivities()
 
 		gNCSum = 1.5 * gNCSum / 3.1;
 
-		as->vIO[i] = as->vIO[i] + ap->gLeakIO*(ap->eLeakIO - as->vIO[i]) +
-				gNCSum * (ap->eNCtoIO - as->vIO[i]) + as->vCoupleIO[i] +
+		as->vIO[i] = as->vIO[i] + ap.gLeakIO*(ap.eLeakIO - as->vIO[i]) +
+				gNCSum * (ap.eNCtoIO - as->vIO[i]) + as->vCoupleIO[i] +
 				as->errDrive + gNoise;
 
 		as->apIO[i] = as->vIO[i] > as->threshIO[i];
 		as->apBufIO[i] = (as->apBufIO[i] << 1) |(as->apIO[i] * 0x00000001);
 
-		as->threshIO[i] = ap->threshMaxIO * as->apIO[i] +
-				(!as->apIO[i]) * (as->threshIO[i] + ap->threshDecIO * (ap->threshRestIO - as->threshIO[i]));
+		as->threshIO[i] = ap.threshMaxIO * as->apIO[i] +
+				(!as->apIO[i]) * (as->threshIO[i] + ap.threshDecIO * (ap.threshRestIO - as->threshIO[i]));
 	}
 	as->errDrive = 0;
 }
@@ -327,12 +330,12 @@ float gDecay = exp(-1.0 / 20.0);
 				inputMFNCSum += as->inputMFNC[i][j];
 
 				as->gMFAMPANC[i][j] = as->gMFAMPANC[i][j] * gDecay + 
-					(ap->gAMPAIncMFtoNC * as->inputMFNC[i][j] * as->mfSynWeightNC[i][j]);
+					(ap.gAMPAIncMFtoNC * as->inputMFNC[i][j] * as->mfSynWeightNC[i][j]);
 				gMFAMPASum += as->gMFAMPANC[i][j];
 			}
 
-			gMFNMDASum = gMFNMDASum * ap->msPerTimeStep / ((float)NUM_P_NC_FROM_MF_TO_NC);
-			gMFAMPASum = gMFAMPASum * ap->msPerTimeStep / ((float)NUM_P_NC_FROM_MF_TO_NC);
+			gMFNMDASum = gMFNMDASum * ap.msPerTimeStep / ((float)NUM_P_NC_FROM_MF_TO_NC);
+			gMFAMPASum = gMFAMPASum * ap.msPerTimeStep / ((float)NUM_P_NC_FROM_MF_TO_NC);
 			gMFNMDASum = gMFNMDASum * -as->vNC[i] / 80.0f;
 
 			gPCNCSum = 0;
@@ -342,21 +345,21 @@ float gDecay = exp(-1.0 / 20.0);
 			{
 				inputPCNCSum += as->inputPCNC[i][j];
 
-				as->gPCNC[i][j] = as->gPCNC[i][j] * ap->gDecPCtoNC + 
-					as->inputPCNC[i][j] * ap->gIncAvgPCtoNC*(1 - as->gPCNC[i][j]);
+				as->gPCNC[i][j] = as->gPCNC[i][j] * ap.gDecPCtoNC + 
+					as->inputPCNC[i][j] * ap.gIncAvgPCtoNC*(1 - as->gPCNC[i][j]);
 				gPCNCSum += as->gPCNC[i][j];
 
 			}
-			gPCNCSum = gPCNCSum * ap->msPerTimeStep / ((float)NUM_P_NC_FROM_PC_TO_NC);
+			gPCNCSum = gPCNCSum * ap.msPerTimeStep / ((float)NUM_P_NC_FROM_PC_TO_NC);
 			
-			as->vNC[i] = as->vNC[i] + ap->gLeakNC * (ap->eLeakNC - as->vNC[i]) -
-					(gMFNMDASum + gMFAMPASum) * as->vNC[i] + gPCNCSum * (ap->ePCtoNC - as->vNC[i]);
+			as->vNC[i] = as->vNC[i] + ap.gLeakNC * (ap.eLeakNC - as->vNC[i]) -
+					(gMFNMDASum + gMFAMPASum) * as->vNC[i] + gPCNCSum * (ap.ePCtoNC - as->vNC[i]);
 			
-			as->threshNC[i] = as->threshNC[i] + ap->threshDecNC * (ap->threshRestNC - as->threshNC[i]);
+			as->threshNC[i] = as->threshNC[i] + ap.threshDecNC * (ap.threshRestNC - as->threshNC[i]);
 			as->apNC[i] = as->vNC[i] > as->threshNC[i];
 			as->apBufNC[i] = (as->apBufNC[i] << 1) | (as->apNC[i] * 0x00000001);
 
-			as->threshNC[i] = as->apNC[i] * ap->threshMaxNC + (!as->apNC[i]) * as->threshNC[i];
+			as->threshNC[i] = as->apNC[i] * ap.threshMaxNC + (!as->apNC[i]) * as->threshNC[i];
 		}
 	}
 }
@@ -434,11 +437,11 @@ void MZone::updateIOOut()
 {
 	for (int i = 0; i < NUM_IO; i++)
 	{
-		as->pfPCPlastTimerIO[i] = (!as->apIO[i]) * (as->pfPCPlastTimerIO[i] +1 ) + as->apIO[i]*ap->tsLTPEndAPIO;
+		as->pfPCPlastTimerIO[i] = (!as->apIO[i]) * (as->pfPCPlastTimerIO[i] +1 ) + as->apIO[i]*ap.tsLTPEndAPIO;
 		as->vCoupleIO[i] = 0;
 		for (int j = 0; j < NUM_P_IO_IN_IO_TO_IO; j++)
 		{
-			as->vCoupleIO[i] += ap->coupleRiRjRatioIO * (as->vIO[cs->pIOInIOIO[i][j]] - as->vIO[i]);
+			as->vCoupleIO[i] += ap.coupleRiRjRatioIO * (as->vIO[cs->pIOInIOIO[i][j]] - as->vIO[i]);
 		}
 	}
 }
@@ -447,11 +450,11 @@ void MZone::updateNCOut()
 {
 	for (int i = 0; i < NUM_NC; i++)
 	{
-		as->synIOPReleaseNC[i] *= exp(-ap->msPerTimeStep / 
-				(ap->relPDecTSofNCtoIO * exp(-as->synIOPReleaseNC[i] / ap->relPDecTTofNCtoIO) +
-				 ap->relPDecT0ofNCtoIO));
-		as->synIOPReleaseNC[i] += as->apNC[i] * ap->relPIncNCtoIO *
-				exp(-as->synIOPReleaseNC[i] / ap->relPIncTauNCtoIO);
+		as->synIOPReleaseNC[i] *= exp(-ap.msPerTimeStep / 
+				(ap.relPDecTSofNCtoIO * exp(-as->synIOPReleaseNC[i] / ap.relPDecTTofNCtoIO) +
+				 ap.relPDecT0ofNCtoIO));
+		as->synIOPReleaseNC[i] += as->apNC[i] * ap.relPIncNCtoIO *
+				exp(-as->synIOPReleaseNC[i] / ap.relPIncTauNCtoIO);
 	}
 
 	for (int i = 0; i < NUM_IO; i++)
@@ -485,7 +488,7 @@ void MZone::updateMFNCSyn(const ct_uint8_t *histMF, unsigned long t)
 #ifdef DEBUGOUT
 	float sumSynW;
 #endif
-	if(t % ap->tsPerPopHistBinPC == 0) return;
+	if(t % ap.tsPerPopHistBinPC == 0) return;
 
 	histMFInput = histMF;
 
@@ -493,9 +496,9 @@ void MZone::updateMFNCSyn(const ct_uint8_t *histMF, unsigned long t)
 	as->histPCPopAct[as->histPCPopActCurBinN] = as->pcPopAct;
 	as->pcPopAct = 0;
 	as->histPCPopActCurBinN++;
-	as->histPCPopActCurBinN %= ap->numPopHistBinsPC;
+	as->histPCPopActCurBinN %= ap.numPopHistBinsPC;
 
-	avgAllAPPC = ((float)as->histPCPopActSum) / ap->numPopHistBinsPC;
+	avgAllAPPC = ((float)as->histPCPopActSum) / ap.numPopHistBinsPC;
 
 #ifdef DEBUGOUT
 	std::cout << "avgAllAPPC: " << avgAllAPPC << std::endl;
@@ -503,22 +506,22 @@ void MZone::updateMFNCSyn(const ct_uint8_t *histMF, unsigned long t)
 
 	doLTD = false;
 	doLTP = false;
-	if (avgAllAPPC >= ap->synLTDPCPopActThreshMFtoNC && !as->noLTDMFNC)
+	if (avgAllAPPC >= ap.synLTDPCPopActThreshMFtoNC && !as->noLTDMFNC)
 	{
 		doLTD = true;
 		as->noLTDMFNC = true;
 	}
-	else if (avgAllAPPC < ap->synLTDPCPopActThreshMFtoNC)
+	else if (avgAllAPPC < ap.synLTDPCPopActThreshMFtoNC)
 	{
 		as->noLTDMFNC = false;
 	}
 
-	if (avgAllAPPC <= ap->synLTPPCPopActThreshMFtoNC && !as->noLTPMFNC)
+	if (avgAllAPPC <= ap.synLTPPCPopActThreshMFtoNC && !as->noLTPMFNC)
 	{
 		doLTP = true;
 		as->noLTPMFNC = true;
 	}
-	else if (avgAllAPPC > ap->synLTPPCPopActThreshMFtoNC)
+	else if (avgAllAPPC > ap.synLTPPCPopActThreshMFtoNC)
 	{
 		as->noLTPMFNC = false;
 	}
@@ -531,8 +534,8 @@ void MZone::updateMFNCSyn(const ct_uint8_t *histMF, unsigned long t)
 		for(int j = 0; j < NUM_P_NC_FROM_MF_TO_NC; j++)
 		{
 			float synWDelta;
-			synWDelta = histMFInput[cs->pNCfromMFtoNC[i][j]] * (doLTD * ap->synLTDStepSizeMFtoNC +
-					doLTP * ap->synLTPStepSizeMFtoNC);
+			synWDelta = histMFInput[cs->pNCfromMFtoNC[i][j]] * (doLTD * ap.synLTDStepSizeMFtoNC +
+					doLTP * ap.synLTPStepSizeMFtoNC);
 			as->mfSynWeightNC[i][j] += synWDelta;
 			as->mfSynWeightNC[i][j] *= as->mfSynWeightNC[i][j] > 0;
 			as->mfSynWeightNC[i][j] *= as->mfSynWeightNC[i][j] <= 1; 
@@ -584,7 +587,7 @@ void MZone::cpyPFPCSumCUDA(cudaStream_t **sts, int streamN)
 void MZone::runPFPCPlastCUDA(cudaStream_t **sts, int streamN, unsigned long t)
 {
 	cudaError_t error;
-	if (t % ap->tsPerHistBinGR == 0)
+	if (t % ap.tsPerHistBinGR == 0)
 	{
 		int curGROffset;
 		int curGPUInd;
@@ -600,13 +603,13 @@ void MZone::runPFPCPlastCUDA(cudaStream_t **sts, int streamN, unsigned long t)
 
 		for (int i = 0; i < NUM_IO; i++)
 		{
-			if (as->pfPCPlastTimerIO[i] < (ap->tsLTDStartAPIO + ((int)(ap->tsLTDDurationIO))) &&
-					as->pfPCPlastTimerIO[i] >= ap->tsLTDStartAPIO)
+			if (as->pfPCPlastTimerIO[i] < (ap.tsLTDStartAPIO + ((int)(ap.tsLTDDurationIO))) &&
+					as->pfPCPlastTimerIO[i] >= ap.tsLTDStartAPIO)
 			{
 				pfPCPlastStepIO[i] = tempGRPCLTDStep;
 			}
-			else if (as->pfPCPlastTimerIO[i] >= ap->tsLTPStartAPIO ||
-					as->pfPCPlastTimerIO[i] < ap->tsLTPEndAPIO)
+			else if (as->pfPCPlastTimerIO[i] >= ap.tsLTPStartAPIO ||
+					as->pfPCPlastTimerIO[i] < ap.tsLTPEndAPIO)
 			{
 				pfPCPlastStepIO[i] = tempGRPCLTPStep;
 			}
@@ -635,7 +638,7 @@ void MZone::runPFPCPlastCUDA(cudaStream_t **sts, int streamN, unsigned long t)
 			}
 			callUpdatePFPCPlasticityIOKernel(sts[curGPUInd][streamN + curIOInd],
 					updatePFPCSynWNumBlocks, updatePFPCSynWNumGRPerB, pfSynWeightPCGPU[curGPUInd],
-					historyGRGPU[curGPUInd], ap->grPCHistCheckBinIO, curGROffset, pfPCPlastStepIO[curIOInd]);
+					historyGRGPU[curGPUInd], ap.grPCHistCheckBinIO, curGROffset, pfPCPlastStepIO[curIOInd]);
 
 			curGROffset += NUM_P_PC_FROM_GR_TO_PC;
 		}
@@ -650,8 +653,8 @@ void MZone::setGRPCPlastSteps(float ltdStep, float ltpStep)
 
 void MZone::resetGRPCPlastSteps()
 {
-	tempGRPCLTDStep = ap->synLTDStepSizeGRtoPC;
-	tempGRPCLTPStep = ap->synLTPStepSizeGRtoPC;
+	tempGRPCLTDStep = ap.synLTDStepSizeGRtoPC;
+	tempGRPCLTPStep = ap.synLTPStepSizeGRtoPC;
 }
 
 const float* MZone::exportPFPCWeights()

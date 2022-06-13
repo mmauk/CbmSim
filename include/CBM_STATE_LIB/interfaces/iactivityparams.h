@@ -19,13 +19,7 @@ public:
 	virtual ~IActivityParams();
 
 	virtual unsigned int getMSPerTimeStep()=0;
-
-	virtual void showParams(std::ostream &outSt)=0;
-
-	virtual std::map<std::string, float> getParamCopy()=0;
-
 	virtual float getParam(std::string paramName)=0;
-
 	virtual bool setParam(std::string paramName, float value)=0;
 };
 

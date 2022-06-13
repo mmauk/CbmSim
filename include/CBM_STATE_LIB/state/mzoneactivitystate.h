@@ -10,39 +10,27 @@
 
 #include <fstream>
 #include <iostream>
-#include <vector>
 #include <algorithm> /* std::fill */
-
-#include <memoryMgmt/dynamic2darray.h>
-#include <memoryMgmt/arrayvalidate.h>
 #include <fileIO/rawbytesrw.h>
 #include <stdDefinitions/pstdint.h>
 #include <randGenerators/sfmt.h>
-
 #include "params/connectivityparams.h"
 #include "params/activityparams.h"
-
 #include "interfaces/imzoneactstate.h"
 
 class MZoneActivityState : public virtual IMZoneActState
 {
 public:
 	MZoneActivityState();
-	MZoneActivityState(ActivityParams *actParams, int randSeed);
-	MZoneActivityState(ActivityParams *actParams, std::fstream &infile);
-	//MZoneActivityState(const MZoneActivityState &state);
+	MZoneActivityState(ActivityParams &ap, int randSeed);
+	MZoneActivityState(ActivityParams &ap, std::fstream &infile);
 
 	virtual ~MZoneActivityState();
 
-	void writeState(std::fstream &outfile);
+	void writeState(ActivityParams &ap, std::fstream &outfile);
 
-	bool state_equal(const MZoneActivityState &compState);
-	bool state_unequal(const MZoneActivityState &compState);
-
-	virtual std::vector<float> getGRPCSynWeightLinear();
-	virtual void resetGRPCSynWeight();
-
-	//static const ConnectivityParams *cp;
+	//virtual std::vector<float> getGRPCSynWeightLinear();
+	//virtual void resetGRPCSynWeight(float initSynWofGRtoPC);
 
 	//basket cells
 	ct_uint8_t apBC[NUM_BC] = {0};
@@ -101,10 +89,9 @@ public:
 	float synIOPReleaseNC[NUM_NC] = {0};
 
 private:
-	ActivityParams *ap;
-	void allocateMemory();
-	void initializeVals(int randSeed);
-	void stateRW(bool read, std::fstream &file);
+	void allocateMemory(ct_uint32_t numPopHistBinsPC);
+	void initializeVals(ActivityParams &ap, int randSeed);
+	void stateRW(ct_uint32_t numPopHistBinsPC, bool read, std::fstream &file);
 };
 
 

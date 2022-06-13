@@ -7,37 +7,15 @@
 
 #include "interfaces/cbmstate.h"
 
-//CBMState::CBMState(std::fstream &infile)
-//{
-//	infile >> numZones;
-//
-//	conParams = new ConnectivityParams(infile);
-//	actParams = new ActivityParams(infile);
-//
-//	infile.seekg(1, std::ios::cur);
-//
-//	innetConState = new InNetConnectivityState(conParams, infile);
-//	mzoneConStates = new MZoneConnectivityState*[numZones];
-//
-//	innetActState = new InNetActivityState(conParams, infile);
-//	mzoneActStates = new MZoneActivityState*[numZones];
-//
-//	for (int i = 0; i < numZones; i++)
-//	{
-//		mzoneConStates[i] = new MZoneConnectivityState(conParams, infile);
-//		mzoneActStates[i] = new MZoneActivityState(conParams, actParams, infile);
-//	}
-//}
+CBMState::CBMState() {}
 
-CBMState::CBMState(ActivityParams *ap,
-	unsigned int nZones)
+CBMState::CBMState(ActivityParams &ap, unsigned int nZones)
 {
-	int innetCRSeed;
 	int *mzoneCRSeed = new int[nZones];
 	int *mzoneARSeed = new int[nZones];
 
 	CRandomSFMT0 randGen(time(0));
-	innetCRSeed = randGen.IRandom(0, INT_MAX);
+	int innetCRSeed = randGen.IRandom(0, INT_MAX);
 
 	for (int i = 0; i < nZones; i++)
 	{
@@ -53,9 +31,6 @@ CBMState::CBMState(ActivityParams *ap,
 
 CBMState::~CBMState()
 {
-	//delete actParams;	
-	//delete conParams;
-
 	delete innetConState;
 	delete innetActState;
 
@@ -69,11 +44,10 @@ CBMState::~CBMState()
 	delete[] mzoneActStates;
 }
 
-void CBMState::newState(ActivityParams *ap,
+void CBMState::newState(ActivityParams &ap,
 	unsigned int nZones, int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed)
 {
-	this->ap = ap;	
-	innetConState  = new InNetConnectivityState(ap->msPerTimeStep, innetCRSeed);
+	innetConState  = new InNetConnectivityState(ap.msPerTimeStep, innetCRSeed);
 	mzoneConStates = new MZoneConnectivityState*[numZones];
 	innetActState  = new InNetActivityState(ap);
 	mzoneActStates = new MZoneActivityState*[numZones];
@@ -85,7 +59,7 @@ void CBMState::newState(ActivityParams *ap,
 	}
 }
 
-void CBMState::writeState(std::fstream &outfile)
+void CBMState::writeState(ActivityParams &ap, std::fstream &outfile)
 {
 	// Debatable whether to write std::endl to file. Yes it flushes the output
 	// after sending a newline, but doing this too often can lead to poor disk
@@ -102,46 +76,19 @@ void CBMState::writeState(std::fstream &outfile)
 	for (int i=0; i < numZones; i++)
 	{
 		mzoneConStates[i]->writeState(outfile);
-		mzoneActStates[i]->writeState(outfile);
+		mzoneActStates[i]->writeState(ap, outfile);
 	}
 }
-
-//bool CBMState::state_equal(CBMState &compState)
-//{
-//	(numZones == compState.getNumZones()) ? return true : 
-//		return state_equal(compState.getInnetConStateInternal());
-//}
-
-//bool CBMState::state_unequal(CBMState &compState)
-//{
-//	return !state_equal(compState);
-//}
 
 ct_uint32_t CBMState::getNumZones()
 {
 	return numZones;
 }
 
-//IActivityParams* CBMState::getActivityParams()
-//{
-//	return (IActivityParams *)actParams;
-//}
-
 IMZoneActState* CBMState::getMZoneActState(unsigned int zoneN)
 {
 	return (IMZoneActState *)mzoneActStates[zoneN];
 }
-
-//ConnectivityParams* CBMState::getConParamsInternal()
-//{
-//	return cp;
-//}
-
-ActivityParams* CBMState::getActParamsInternal()
-{
-	return ap;
-}
-
 
 InNetActivityState* CBMState::getInnetActStateInternal()
 {

@@ -9,14 +9,15 @@
 
 using namespace std;
 
-InNet::InNet(ActivityParams *ap, InNetConnectivityState *cs, InNetActivityState *as,
+InNet::InNet() {}
+
+InNet::InNet(ActivityParams &ap, InNetConnectivityState *cs, InNetActivityState *as,
 		int gpuIndStart, int numGPUs)
 {
-	randGen = new CRandomSFMT0(time(NULL));
-
-	this->ap = ap;
-	this->cs = cs;
-	this->as = as;
+   	this->ap = ap; /* thas a deep copy! */
+	// TODO: deep copy below?
+	this->cs = cs; /* this is a shallow copy *yikes* */
+	this->as = as; /* as is this :/ */
 
 	this->gpuIndStart = gpuIndStart;
 	this->numGPUs	  = numGPUs;
@@ -31,22 +32,17 @@ InNet::InNet(ActivityParams *ap, InNetConnectivityState *cs, InNetActivityState 
 	
 	pGRfromGRtoGOT = allocate2DArray<ct_uint32_t>(MAX_NUM_P_GR_FROM_GR_TO_GO, NUM_GR);
 	
-	apBufGRHistMask = (1<<(ap->tsPerHistBinGR))-1;
-
-	std::cout << "apBufGRHistMask "<< hex << apBufGRHistMask << dec << std::endl;
+	apBufGRHistMask = (1<<(ap.tsPerHistBinGR))-1;
 
 	sumGRInputGO 		   = new ct_uint32_t[NUM_GO];
 	sumInputGOGABASynDepGO = new float[NUM_GO];
 
-	tempGIncGRtoGO = ap->gIncGRtoGO;
-	
 	initCUDA();
 }
 
 InNet::~InNet()
 {
 	std::cout << "**********************************************CUDA DESTRUCTOR ENTERED**********************************************" << std::endl;
-	delete randGen;
 
 	//gpu related host variables
 	cudaFreeHost(outputGRH);
@@ -334,16 +330,6 @@ void InNet::grStim(int startGRStim, int numGRStim)
 	}
 }
 
-void InNet::setGIncGRtoGO(float inc)
-{
-	tempGIncGRtoGO=inc;
-}
-
-void InNet::resetGIncGRtoGO()
-{
-	tempGIncGRtoGO=ap->gIncGRtoGO;
-}
-
 const ct_uint8_t* InNet::exportAPMF()
 {
 	return (const ct_uint8_t *)apMFOut;
@@ -588,7 +574,7 @@ void InNet::calcGOActivities(float goMin, int simNum, float GRGO, float MFGO, fl
 
 	as->goTimeStep++;
 
-	float gConstGO = ap->gConstGO;
+	float gConstGO = ap.gConstGO;
 
 	//50ms
 	float gLeakGO = 0.02;
@@ -614,30 +600,30 @@ void InNet::calcGOActivities(float goMin, int simNum, float GRGO, float MFGO, fl
 		//NMDA High
 		as->gNMDAIncMFGO[i]=(0.00000011969*as->vGO[i]*as->vGO[i]*as->vGO[i])+(0.000089369*as->vGO[i]*as->vGO[i])+(0.0151*as->vGO[i])+0.7713; 
 	
-		as->gSum_MFGO[i] = (as->inputMFGO[i]/*ap->gIncMFtoGO*/*MFGO) + as->gSum_MFGO[i]*ap->gDecMFtoGO;
+		as->gSum_MFGO[i] = (as->inputMFGO[i]/*ap.gIncMFtoGO*/*MFGO) + as->gSum_MFGO[i]*ap.gDecMFtoGO;
 		as->gSum_GOGO[i] = 0;
-		as->gNMDAMFGO[i]=as->inputMFGO[i]*(/*ap->gIncMFtoGO*/MFGO*ap->NMDA_AMPAratioMFGO*as->gNMDAIncMFGO[i])+as->gNMDAMFGO[i]*ap->gDecayMFtoGONMDA;	
-		as->gNMDAUBCGO[i]=as->inputUBCGO[i]*(ap->gIncUBCtoGO*1.0*as->gNMDAIncMFGO[i])+as->gNMDAMFGO[i]*ap->gDecayMFtoGONMDA;	
+		as->gNMDAMFGO[i]=as->inputMFGO[i]*(/*ap.gIncMFtoGO*/MFGO*ap.NMDA_AMPAratioMFGO*as->gNMDAIncMFGO[i])+as->gNMDAMFGO[i]*ap.gDecayMFtoGONMDA;	
+		as->gNMDAUBCGO[i]=as->inputUBCGO[i]*(ap.gIncUBCtoGO*1.0*as->gNMDAIncMFGO[i])+as->gNMDAMFGO[i]*ap.gDecayMFtoGONMDA;	
 		
-		as->gGRGO[i]=(sumGRInputGO[i]*GRGO/*tempGIncGRtoGO*/)*as->synWscalerGRtoGO[i]+as->gGRGO[i]*ap->gDecGRtoGO;
-		as->gGRGO_NMDA[i]=sumGRInputGO[i]*(/*tempGIncGRtoGO*/(GRGO*as->synWscalerGRtoGO[i])*0.6*gNMDAIncGRGO) + as->gGRGO_NMDA[i]*ap->gDecayMFtoGONMDA;
+		as->gGRGO[i]=(sumGRInputGO[i]*GRGO)*as->synWscalerGRtoGO[i]+as->gGRGO[i]*ap.gDecGRtoGO;
+		as->gGRGO_NMDA[i]=sumGRInputGO[i]*((GRGO*as->synWscalerGRtoGO[i])*0.6*gNMDAIncGRGO) + as->gGRGO_NMDA[i]*ap.gDecayMFtoGONMDA;
 		
-		as->threshCurGO[i]=as->threshCurGO[i]+(ap->threshRestGO-as->threshCurGO[i])*ap->threshDecGO;
+		as->threshCurGO[i]=as->threshCurGO[i]+(ap.threshRestGO-as->threshCurGO[i])*ap.threshDecGO;
 		
-		as->vGO[i]=as->vGO[i]+(gLeakGO*(ap->eLeakGO-as->vGO[i]))
-				+(as->gSum_GOGO[i]*(ap->eGABAGO-as->vGO[i]))
+		as->vGO[i]=as->vGO[i]+(gLeakGO*(ap.eLeakGO-as->vGO[i]))
+				+(as->gSum_GOGO[i]*(ap.eGABAGO-as->vGO[i]))
 				-(as->gSum_MFGO[i]+as->gGRGO[i]+as->gNMDAUBCGO[i]+as->gNMDAMFGO[i]+as->gSum_UBCtoGO[i]+as->gGRGO_NMDA[i])*as->vGO[i]
 				- (as->vCoupleGO[i]*as->vGO[i]);
 		
-		if(as->vGO[i] > (ap->threshMaxGO))
+		if(as->vGO[i] > (ap.threshMaxGO))
 		{
-			as->vGO[i] = (ap->threshMaxGO);
+			as->vGO[i] = (ap.threshMaxGO);
 		}
 		
 		as->apGO[i]=as->vGO[i]>as->threshCurGO[i];
 		as->apBufGO[i]=(as->apBufGO[i]<<1)|(as->apGO[i]*0x00000001);
 
-		as->threshCurGO[i]=as->apGO[i]*ap->threshMaxGO+(!as->apGO[i])*as->threshCurGO[i];
+		as->threshCurGO[i]=as->apGO[i]*ap.threshMaxGO+(!as->apGO[i])*as->threshCurGO[i];
 
 		as->inputMFGO[i]=0;
 		as->inputUBCGO[i]=0;	
@@ -661,42 +647,30 @@ void InNet::calcSCActivities()
 #pragma omp for
 		for(int i=0; i<NUM_SC; i++)
 		{
-			as->gPFSC[i]=as->gPFSC[i]+(inputSumPFSCH[i]*ap->gIncGRtoSC);
-			as->gPFSC[i]=as->gPFSC[i]*ap->gDecGRtoSC;
+			as->gPFSC[i]=as->gPFSC[i]+(inputSumPFSCH[i]*ap.gIncGRtoSC);
+			as->gPFSC[i]=as->gPFSC[i]*ap.gDecGRtoSC;
 
-			as->vSC[i]=as->vSC[i]+(ap->gLeakSC*(ap->eLeakSC-as->vSC[i]))-as->gPFSC[i]*as->vSC[i];
+			as->vSC[i]=as->vSC[i]+(ap.gLeakSC*(ap.eLeakSC-as->vSC[i]))-as->gPFSC[i]*as->vSC[i];
 
 			as->apSC[i]=as->vSC[i]>as->threshSC[i];
 			as->apBufSC[i]=(as->apBufSC[i]<<1)|(as->apSC[i]*0x00000001);
 
-			as->threshSC[i]=as->threshSC[i]+ap->threshDecSC*(ap->threshRestSC-as->threshSC[i]);
-			as->threshSC[i]=as->apSC[i]*ap->threshMaxSC+(!as->apSC[i])*(as->threshSC[i]);
+			as->threshSC[i]=as->threshSC[i]+ap.threshDecSC*(ap.threshRestSC-as->threshSC[i]);
+			as->threshSC[i]=as->apSC[i]*ap.threshMaxSC+(!as->apSC[i])*(as->threshSC[i]);
 		}
 	}
 }
 
-//void InNet::calcUBCActivities() {}
-//
-//void InNet::updateMFtoUBCOut() {}
-//
-//void InNet::updateGOtoUBCOut() {}
-//
-//void InNet::updateUBCtoUBCOut() {}
-//
-//void InNet::updateUBCtoGOOut() {}
-//
-//void InNet::updateUBCtoGROut() {}
-
 void InNet::updateMFtoGROut()
 {
-	float recoveryRate = 1/ap->recoveryTauMF;
+	float recoveryRate = 1/ap.recoveryTauMF;
 
 #pragma omp parallel
 	{
 #pragma omp for
 		for(int i=0; i<NUM_MF; i++)
 		{			
-			as->depAmpMFGR[i] = apMFH[0][i]*as->depAmpMFGR[i]*ap->fracDepMF + (!apMFH[0][i])*( as->depAmpMFGR[i]+recoveryRate*(1-as->depAmpMFGR[i]) ); 
+			as->depAmpMFGR[i] = apMFH[0][i]*as->depAmpMFGR[i]*ap.fracDepMF + (!apMFH[0][i])*( as->depAmpMFGR[i]+recoveryRate*(1-as->depAmpMFGR[i]) ); 
 			
 #pragma omp critical	
 			{	
@@ -711,15 +685,15 @@ void InNet::updateMFtoGROut()
 
 void InNet::updateMFtoGOOut()
 {
-	float recoveryRate = 1/ap->recoveryTauMF;
+	float recoveryRate = 1/ap.recoveryTauMF;
 
 #pragma omp parallel
 	{
 #pragma omp for
 		for(int i=0; i<NUM_MF; i++)
 		{			
-			as->gi_MFtoGO[i] = apMFH[0][i]*ap->gIncMFtoGO*as->depAmpMFGO[i] + as->gi_MFtoGO[i]*ap->gDecMFtoGO; 
-			as->depAmpMFGO[i] = apMFH[0][i]*as->depAmpMFGO[i]*ap->fracDepMF + (!apMFH[0][i])*( as->depAmpMFGO[i]+recoveryRate*(1-as->depAmpMFGO[i]) ); 
+			as->gi_MFtoGO[i] = apMFH[0][i]*ap.gIncMFtoGO*as->depAmpMFGO[i] + as->gi_MFtoGO[i]*ap.gDecMFtoGO; 
+			as->depAmpMFGO[i] = apMFH[0][i]*as->depAmpMFGO[i]*ap.fracDepMF + (!apMFH[0][i])*( as->depAmpMFGO[i]+recoveryRate*(1-as->depAmpMFGO[i]) ); 
 
 			if(apMFH[0][i])
 			{
@@ -741,10 +715,10 @@ void InNet::updateMFtoGOOut()
 void InNet::updateGOtoGROutParameters(float GOGR, float spillFrac)
 {
 
-	float scalerGOGR = GOGR*ap->gIncFracSpilloverGOtoGR*1.4;
+	float scalerGOGR = GOGR*ap.gIncFracSpilloverGOtoGR*1.4;
 	float halfShift = 12.0;//shift;
 	float steepness = 20.0;//steep; 
-	float recoveryRate = 1/ap->recoveryTauGO;
+	float recoveryRate = 1/ap.recoveryTauGO;
 	float baselvl = spillFrac*GOGR;
 
 #pragma omp parallel
@@ -773,8 +747,8 @@ void InNet::updateGOtoGROutParameters(float GOGR, float spillFrac)
 
 void InNet::updateGOtoGOOut()
 {
-	float gjCoupleScaler = ap->coupleRiRjRatioGO;
-	float recoveryRate = 1 / ap->recoveryTauGO;
+	float gjCoupleScaler = ap.coupleRiRjRatioGO;
+	float recoveryRate = 1 / ap.recoveryTauGO;
 
 #pragma omp parallel
 	{
@@ -782,7 +756,7 @@ void InNet::updateGOtoGOOut()
 		for(int i=0; i<NUM_GO; i++)
 		{
 			
-			as->gi_GOtoGO[i] =  as->apGO[i]*ap->gGABAIncGOtoGO*as->depAmpGOGO[i]  +  as->gi_GOtoGO[i]*ap->gGABADecGOtoGO  ; 
+			as->gi_GOtoGO[i] =  as->apGO[i]*ap.gGABAIncGOtoGO*as->depAmpGOGO[i]  +  as->gi_GOtoGO[i]*ap.gGABADecGOtoGO  ; 
 			as->depAmpGOGO[i] = 1;
 		}
 
@@ -816,7 +790,7 @@ void InNet::updateGOtoGOOut()
 
 void InNet::resetMFHist(unsigned long t)
 {
-	if(t%ap->numTSinMFHist==0)
+	if(t%ap.numTSinMFHist==0)
 	{
 #pragma omp parallel
 		{
@@ -833,7 +807,7 @@ void InNet::runGRActivitiesCUDA(cudaStream_t **sts, int streamN)
 {
 	cudaError_t error;
 	
-	float gAMPAInc = (ap->gIncDirectMFtoGR)+(ap->gIncDirectMFtoGR*ap->gIncFracSpilloverMFtoGR); 
+	float gAMPAInc = (ap.gIncDirectMFtoGR)+(ap.gIncDirectMFtoGR*ap.gIncFracSpilloverMFtoGR); 
 
 	for(int i=0; i<numGPUs; i++)
 	{	
@@ -842,8 +816,8 @@ void InNet::runGRActivitiesCUDA(cudaStream_t **sts, int streamN)
 				vGRGPU[i], gKCaGRGPU[i],  gLeakGRGPU[i], gNMDAGRGPU[i], gNMDAIncGRGPU[i], threshGRGPU[i],
 				apBufGRGPU[i], outputGRGPU[i], apGRGPU[i],
 				apMFtoGRGPU[i], apUBCtoGRGPU[i], gEGRSumGPU[i], gUBC_EGRSumGPU[i], gIGRSumGPU[i],
-				ap->eLeakGR, ap->eGOGR, gAMPAInc,  
-				ap->threshRestGR, ap->threshMaxGR, ap->threshDecGR);
+				ap.eLeakGR, ap.eGOGR, gAMPAInc,  
+				ap.threshRestGR, ap.threshMaxGR, ap.threshDecGR);
 #ifdef DEBUGOUT
 		error=cudaGetLastError();
 		cerr<<"grActivityCUDA: kernel launch for gpu #"<<i<<
@@ -984,8 +958,8 @@ void InNet::runUpdateMFInGRCUDA(cudaStream_t **sts, int streamN)
 				NUM_MF, apMFGPU[i], depAmpMFGRGPU[i] ,gEGRGPU[i], gEGRGPUP[i],   
 				grConMFOutGRGPU[i], grConMFOutGRGPUP[i],
 				numMFInPerGRGPU[i], apMFtoGRGPU[i], gEGRSumGPU[i], gEDirectGPU[i], gESpilloverGPU[i], 
-				ap->gDirectDecMFtoGR, ap->gIncDirectMFtoGR, ap->gSpilloverDecMFtoGR,
-				ap->gIncFracSpilloverMFtoGR);
+				ap.gDirectDecMFtoGR, ap.gIncDirectMFtoGR, ap.gSpilloverDecMFtoGR,
+				ap.gIncFracSpilloverMFtoGR);
 #ifdef DEBUGOUT
 		error=cudaGetLastError();
 		cerr<<"runUpdateMFInGRCUDA: kernel launch for gpu #"<<i<<
@@ -1026,7 +1000,7 @@ void InNet::runUpdateGOInGRCUDA(cudaStream_t **sts, int streamN, float GOGR)
 				NUM_GO, apGOGPU[i], dynamicAmpGOGRGPU[i], gIGRGPU[i], gIGRGPUP[i],
 				grConGOOutGRGPU[i], grConGOOutGRGPUP[i],
 				numGOInPerGRGPU[i], gIGRSumGPU[i], gIDirectGPU[i], gISpilloverGPU[i], 
-				ap->gDirectDecGOtoGR, GOGR, ap->gIncFracSpilloverGOtoGR, ap->gSpilloverDecGOtoGR);
+				ap.gDirectDecGOtoGR, GOGR, ap.gIncFracSpilloverGOtoGR, ap.gSpilloverDecGOtoGR);
 #ifdef DEBUGOUT
 		error=cudaGetLastError();
 		cerr<<"runUpdateGOInGRCUDA: kernel launch for gpu #"<<i<<
@@ -1195,7 +1169,7 @@ void InNet::runUpdateGRHistoryCUDA(cudaStream_t **sts, int streamN, unsigned lon
 	for(int i=0; i<numGPUs; i++)
 	{
 		error=cudaSetDevice(i+gpuIndStart);
-		if(t%ap->tsPerHistBinGR==0)
+		if(t%ap.tsPerHistBinGR==0)
 		{
 			callUpdateGRHistKernel(sts[i][streamN], updateGRHistNumBlocks, updateGRHistNumGRPerB,
 					apBufGRGPU[i], historyGRGPU[i], apBufGRHistMask);
@@ -1271,13 +1245,6 @@ void InNet::initCUDA()
 	cerr<<"updateGOInGRNumBlocks "<<updateGOInGRNumBlocks<<endl;
 
 	cerr<<"updateGRHistNumBlocks "<<updateGRHistNumBlocks<<endl;
-
-
-
-//	cudaSetDevice(gpuIndStart);
-//	error=cudaMalloc<float>(&testA, 1024*sizeof(float));
-//	error=cudaMalloc<float>(&testB, 1024*sizeof(float));
-//	error=cudaMalloc<float>(&testC, 1024*sizeof(float));
 
 	cerr<<"input network cuda init..."<<endl;
 	

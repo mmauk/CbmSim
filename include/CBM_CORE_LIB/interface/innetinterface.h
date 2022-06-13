@@ -15,9 +15,6 @@ class InNetInterface
 public:
 	virtual ~InNetInterface();
 
-	virtual void setGIncGRtoGO(float inc) = 0;
-	virtual void resetGIncGRtoGO() 		  = 0;
-
 	virtual const ct_uint8_t* exportAPMF()  = 0;
 	virtual const ct_uint8_t* exportAPSC()  = 0;
 	virtual const ct_uint8_t* exportAPGO()  = 0;

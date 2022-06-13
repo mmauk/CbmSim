@@ -47,11 +47,11 @@ BIG_SIM_OBJ_PATH     = $(BUILD_PATH)Big_Sim/
 
 BIG_SIM_SOURCES    = $(BIG_SIM_SRC_PATH)control.cpp \
 		             $(BIG_SIM_SRC_PATH)main.cpp \
-		             $(BIG_SIM_SRC_PATH)setsim.cpp 
+		             $(BIG_SIM_SRC_PATH)simulation.cpp 
 
 BIG_SIM_OBJECTS    = $(BIG_SIM_OBJ_PATH)control.o \
 		             $(BIG_SIM_OBJ_PATH)main.o \
-		             $(BIG_SIM_OBJ_PATH)setsim.o
+		             $(BIG_SIM_OBJ_PATH)simulation.o
 
 
 ####### CBM Core Directories
@@ -211,15 +211,15 @@ $(TARGET):  $(MODULE_OBJECTS) $(BIG_SIM_OBJECTS)
 ####### Compile Big Simulation
 
 $(BIG_SIM_OBJ_PATH)control.o: $(BIG_SIM_SRC_PATH)control.cpp $(BIG_SIM_INCLUDE_PATH)control.h \
-		$(BIG_SIM_INCLUDE_PATH)setsim.h
+		$(BIG_SIM_INCLUDE_PATH)simulation.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o $(BIG_SIM_OBJ_PATH)control.o $(BIG_SIM_SRC_PATH)control.cpp
 
 $(BIG_SIM_OBJ_PATH)main.o: $(BIG_SIM_SRC_PATH)main.cpp $(BIG_SIM_INCLUDE_PATH)control.h \
-		$(BIG_SIM_INCLUDE_PATH)setsim.h
+		$(BIG_SIM_INCLUDE_PATH)simulation.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o $(BIG_SIM_OBJ_PATH)main.o $(BIG_SIM_SRC_PATH)main.cpp
 
-$(BIG_SIM_OBJ_PATH)setsim.o: $(BIG_SIM_SRC_PATH)setsim.cpp $(BIG_SIM_INCLUDE_PATH)setsim.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o $(BIG_SIM_OBJ_PATH)setsim.o $(BIG_SIM_SRC_PATH)setsim.cpp
+$(BIG_SIM_OBJ_PATH)simulation.o: $(BIG_SIM_SRC_PATH)simulation.cpp $(BIG_SIM_INCLUDE_PATH)simulation.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o $(BIG_SIM_OBJ_PATH)simulation.o $(BIG_SIM_SRC_PATH)simulation.cpp
 
 
 # ====================================== COMPILE MODULES =========================================

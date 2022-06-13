@@ -14,61 +14,34 @@
 #include <math.h>
 #endif
 
-#include <vector>
 #include <string.h>
 #include <sstream>
 #include <iostream>
 #include <fstream>
 #include <omp.h>
-
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <device_functions.h>
-
-#include <stdDefinitions/pstdint.h>
-#include <randGenerators/sfmt.h>
-#include <memoryMgmt/dynamic2darray.h>
-
-#include <params/connectivityparams.h>
-#include <params/activityparams.h>
-#include <state/innetconnectivitystate.h>
-#include <state/innetactivitystate.h>
-
+#include "stdDefinitions/pstdint.h"
+#include "memoryMgmt/dynamic2darray.h"
+#include "params/connectivityparams.h" /* global const connectivity params */
+#include "params/activityparams.h"
+#include "state/innetconnectivitystate.h"
+#include "state/innetactivitystate.h"
 #include "cuda/kernels.h"
-
 #include "interface/innetinterface.h"
 
 class InNet : virtual public InNetInterface
 {
 public:
 	InNet();
-	InNet(ActivityParams *ap, InNetConnectivityState *cs, InNetActivityState *as,
+	InNet(ActivityParams &ap, InNetConnectivityState *cs, InNetActivityState *as,
 		int gpuIndStart, int numGPUs);
 	virtual ~InNet();
 
 	void writeToState();
-	//void printVGRGPU();
 	void getnumGPUs();
 	void grStim(int startGR, int numGR);
-
-	unsigned int totalGRIn;
-	
-	float goalRate 		  = 7.0;
-	float avgISI 		  = 1000.0 / goalRate;
-	float weightScalerEX  = 0.0000005;
-	float weightScalerINH = 0.0000005;
-	
-	float exDecrease = weightScalerEX * avgISI;
-	float exIncrease = weightScalerEX;
-	
-	float inhDecrease = weightScalerINH * avgISI;
-	float inhIncrease = weightScalerINH;
-	
-	float **goGRGOScaler;	
-	
-	
-	virtual void setGIncGRtoGO(float inc);
-	virtual void resetGIncGRtoGO();
 
 	virtual const ct_uint8_t* exportAPMF();
 	virtual const ct_uint8_t* exportAPSC();
@@ -123,12 +96,6 @@ public:
 	virtual void updateMFActivties(const ct_uint8_t *actInMF);
 	virtual void calcGOActivities(float goMin, int simNum, float GRGO, float MFGO, float GOGR, float gogoW);
 	virtual void calcSCActivities();
-	//virtual void calcUBCActivities();
-	//virtual void updateMFtoUBCOut();
-	//virtual void updateGOtoUBCOut();
-	//virtual void updateUBCtoUBCOut();
-	//virtual void updateUBCtoGOOut();
-	//virtual void updateUBCtoGROut();
 
 	virtual void updateMFtoGROut();	
 	virtual void updateMFtoGOOut();
@@ -175,12 +142,10 @@ public:
 	virtual void runUpdateGRHistoryCUDA(cudaStream_t **sts, int streamN, unsigned long t);
 
 protected:
-	ActivityParams 	 *ap;
+	ActivityParams 	 ap;
 
 	InNetConnectivityState *cs;
 	InNetActivityState 	   *as;
-
-	CRandomSFMT0 *randGen;
 
 	int gpuIndStart;
 	int numGPUs;

@@ -7,117 +7,19 @@
 
 #include "state/mzoneactivitystate.h"
 
-MZoneActivityState::MZoneActivityState(ActivityParams *ap, int randSeed)
+MZoneActivityState::MZoneActivityState() {}
+
+MZoneActivityState::MZoneActivityState(ActivityParams &ap, int randSeed)
 {
-	this->ap = ap;
-	allocateMemory();
-	initializeVals(randSeed);
+	allocateMemory(ap.numPopHistBinsPC);
+	initializeVals(ap, randSeed);
 }
 
-MZoneActivityState::MZoneActivityState(ActivityParams *ap,
-		std::fstream &infile)
+MZoneActivityState::MZoneActivityState(ActivityParams &ap, std::fstream &infile)
 {
-	this->ap = ap;
-	allocateMemory();
-	stateRW(true, infile);
+	allocateMemory(ap.numPopHistBinsPC);
+	stateRW(ap.numPopHistBinsPC, true, infile);
 }
-
-//MZoneActivityState::MZoneActivityState(const MZoneActivityState &state)
-//{
-//	// TODO: for all states, overload assignment op for deep copying.
-//	// or overload the constructor and use in assignment
-//	cp = state.cp;
-//	ap = state.ap;
-//
-//	allocateMemory();
-//
-//	for (int i = 0; i < numBC; i++)
-//	{
-//		apBC[i]		 = state.apBC[i];
-//		apBufBC[i]	 = state.apBufBC[i];
-//		inputPCBC[i] = state.inputPCBC[i];
-//		gPFBC[i]	 = state.gPCBC[i];
-//		gPCBC[i]	 = state.gPCBC[i];
-//		threshBC[i]	 = state.threshBC[i];
-//		vBC[i]		 = state.vBC[i];
-//	}
-//
-//	for (int i = 0; i < numPC; i++)
-//	{
-//		apPC[i]			= state.apPC[i];
-//		apBufPC[i]		= state.apBufPC[i];
-//		inputBCPC[i]	= state.inputBCPC[i];
-//		inputSumPFPC[i]	= state.inputSumPFPC[i];
-//		gPFPC[i]		= state.gPFPC[i];
-//		gBCPC[i]		= state.gBCPC[i];
-//		vPC[i]			= state.vPC[i];
-//		threshPC[i]		= state.threshPC[i];
-//
-//		for (int j = 0; j < numpPCfromSCtoPC; j++)
-//		{
-//			inputSCPC[i][j] = state.inputSCPC[i][j];
-//			gSCPC[i][j]		=state.gSCPC[i][j];
-//		}
-//
-//		for (int j = 0; j < numpPCfromGRtoPC; j++)
-//		{
-//			pfSynWeightPC[i][j] = state.pfSynWeightPC[i][j];
-//		}
-//	}
-//
-//	for (int i = 0; i < ap->numPopHistBinsPC; i++) histPCPopAct[i] = state.histPCPopAct[i];
-//
-//	histPCPopActSum		= state.histPCPopActSum;
-//	histPCPopActCurBinN = state.histPCPopActCurBinN;
-//	pcPopAct			= state.pcPopAct;
-//
-//	for (int i = 0; i < numIO; i++)
-//	{
-//		apIO[i]				= state.apIO[i];
-//		apBufIO[i]			= state.apBufIO[i];
-//		threshIO[i] 		= state.threshIO[i];
-//		vIO[i]				= state.vIO[i];
-//		vCoupleIO[i]		= state.vCoupleIO[i];
-//		pfPCPlastTimerIO[i] = state.pfPCPlastTimerIO[i];
-//
-//		for (int j = 0; j < numpIOfromNCtoIO; j++)
-//		{
-//			inputNCIO[i][j] = state.inputNCIO[i][j];
-//			gNCIO[i][j]		= state.gNCIO[i][j];
-//		}
-//	}
-//
-//	errDrive = state.errDrive;
-//
-//	for (int i = 0; i < numNC; i++)
-//	{
-//		apNC[i]	   		   = state.apNC[i];
-//		apBufNC[i] 		   = state.apBufNC[i];
-//		threshNC[i]		   = state.threshNC[i];
-//		vNC[i]     		   = state.vNC[i];
-//		synIOPReleaseNC[i] = state.synIOPReleaseNC[i];
-//
-//		for (int j = 0; j < numpNCfromPCtoNC; j++)
-//		{
-//			inputPCNC[i][j]  = state.inputPCNC[i][j];
-//			gPCNC[i][j]		 = state.gPCNC[i][j];
-//			gPCScaleNC[i][j] = state.gPCScaleNC[i][j];
-//		}
-//
-//		for (int j = 0; j < numpNCfromMFtoNC; j++)
-//		{
-//			inputMFNC[i][j]	   	   = state.inputMFNC[i][j];
-//			mfSynWeightNC[i][j]	   = state.mfSynWeightNC[i][j];
-//			gmaxNMDAofMFtoNC[i][j] = state.gmaxNMDAofMFtoNC[i][j];
-//			gmaxAMPAofMFtoNC[i][j] = state.gmaxAMPAofMFtoNC[i][j];
-//			gMFNMDANC[i][j]		   = state.gMFNMDANC[i][j];
-//			gMFAMPANC[i][j]		   = state.gMFAMPANC[i][j];
-//		}
-//	}
-//
-//	noLTPMFNC =state.noLTPMFNC;
-//	noLTDMFNC =state.noLTDMFNC;
-//}
 
 MZoneActivityState::~MZoneActivityState()
 {
@@ -125,91 +27,66 @@ MZoneActivityState::~MZoneActivityState()
 
 }
 
-void MZoneActivityState::writeState(std::fstream &outfile)
+void MZoneActivityState::writeState(ActivityParams &ap, std::fstream &outfile)
 {
-	stateRW(false, outfile);
-}
-
-bool MZoneActivityState::state_equal(const MZoneActivityState &compState)
-{
-	bool eq = true;
-
-	for (int i = 0; i < NUM_BC; i++)
-	{
-		eq = eq && (threshBC[i] == compState.threshBC[i]) && (vBC[i] == compState.vBC[i]);
-	}
-	for (int i = 0; i < NUM_PC; i++)
-	{
-		eq = eq && (threshPC[i] == compState.threshPC[i]) && (vPC[i] == compState.vPC[i]);
-	}
-	for (int i = 0; i < NUM_NC; i++)
-	{
-		eq = eq && (vNC[i] == compState.vNC[i]) && (synIOPReleaseNC[i]==compState.synIOPReleaseNC[i]);
-	}
-
-	return eq;
-}
-
-bool MZoneActivityState::state_unequal(const MZoneActivityState &compState) 
-{
-	return !state_equal(compState);
+	stateRW(ap.numPopHistBinsPC, false, outfile);
 }
 
 // where do we use this function??
-std::vector<float> MZoneActivityState::getGRPCSynWeightLinear()
+//std::vector<float> MZoneActivityState::getGRPCSynWeightLinear()
+//{
+//	std::vector<float> retVec(NUM_GR, 0.0);
+//	for (int i = 0; i < NUM_PC; i++)
+//	{
+//		for (int j = 0; j < NUM_P_PC_FROM_GR_TO_PC; j++)
+//		{
+//			retVec[i * NUM_P_PC_FROM_GR_TO_PC + j] = pfSynWeightPC[i][j];
+//		}
+//	}
+//	return retVec;
+//}
+
+//void MZoneActivityState::resetGRPCSynWeight(float initSynWofGRtoPC)
+//{
+//	for (int i = 0; i < NUM_PC; i++)
+//	{
+//		for (int j = 0; j < NUM_P_PC_FROM_GR_TO_PC; j++)
+//		{
+//			pfSynWeightPC[i][j] = initSynWofGRtoPC;
+//		}
+//	}
+//}
+
+void MZoneActivityState::allocateMemory(ct_uint32_t numPopHistBinsPC)
 {
-	std::vector<float> retVec(NUM_GR, 0.0);
-	for (int i = 0; i < NUM_PC; i++)
-	{
-		for (int j = 0; j < NUM_P_PC_FROM_GR_TO_PC; j++)
-		{
-			retVec[i * NUM_P_PC_FROM_GR_TO_PC + j] = pfSynWeightPC[i][j];
-		}
-	}
-	return retVec;
+	histPCPopAct  = new ct_uint32_t[numPopHistBinsPC];
 }
 
-void MZoneActivityState::resetGRPCSynWeight()
-{
-	for (int i = 0; i < NUM_PC; i++)
-	{
-		for (int j = 0; j < NUM_P_PC_FROM_GR_TO_PC; j++)
-		{
-			pfSynWeightPC[i][j] = ap->initSynWofGRtoPC;
-		}
-	}
-}
-
-void MZoneActivityState::allocateMemory()
-{
-	histPCPopAct  = new ct_uint32_t[ap->numPopHistBinsPC];
-}
-
-void MZoneActivityState::initializeVals(int randSeed)
+void MZoneActivityState::initializeVals(ActivityParams &ap, int randSeed)
 {
 	//uncomment for actual runs 	
 	//CRandomSFMT0 randGen(randSeed);
 
 	// bc
-	std::fill(threshBC, threshBC + NUM_BC, ap->threshRestBC);
-	std::fill(vBC, vBC + NUM_BC, ap->eLeakBC);
+	std::fill(threshBC, threshBC + NUM_BC, ap.threshRestBC);
+	std::fill(vBC, vBC + NUM_BC, ap.eLeakBC);
 
 	// pc
-	std::fill(vPC, vPC + NUM_PC, ap->eLeakPC);
-	std::fill(threshPC, threshPC + NUM_PC, ap->threshRestPC);	
+	std::fill(vPC, vPC + NUM_PC, ap.eLeakPC);
+	std::fill(threshPC, threshPC + NUM_PC, ap.threshRestPC);	
 
 	std::fill(pfSynWeightPC[0], pfSynWeightPC[0]
-		+ NUM_PC * NUM_P_PC_FROM_GR_TO_PC, ap->initSynWofGRtoPC);
+		+ NUM_PC * NUM_P_PC_FROM_GR_TO_PC, ap.initSynWofGRtoPC);
 
-	std::fill(histPCPopAct, histPCPopAct + ap->numPopHistBinsPC, 0);	
+	std::fill(histPCPopAct, histPCPopAct + ap.numPopHistBinsPC, 0);	
 
 	histPCPopActSum		= 0;
 	histPCPopActCurBinN = 0;
 	pcPopAct			= 0;
 
 	// IO
-	std::fill(threshIO, threshIO + NUM_IO, ap->threshRestIO);
-	std::fill(vIO, vIO + NUM_IO, ap->eLeakIO);
+	std::fill(threshIO, threshIO + NUM_IO, ap.threshRestIO);
+	std::fill(vIO, vIO + NUM_IO, ap.eLeakIO);
 
 	errDrive = 0;
 	
@@ -217,16 +94,16 @@ void MZoneActivityState::initializeVals(int randSeed)
 	noLTPMFNC = 0;
 	noLTDMFNC = 0;
 
-	std::fill(threshNC, threshNC + NUM_NC, ap->threshRestNC);
-	std::fill(vNC, vNC + NUM_NC, ap->eLeakNC);
+	std::fill(threshNC, threshNC + NUM_NC, ap.threshRestNC);
+	std::fill(vNC, vNC + NUM_NC, ap.eLeakNC);
 	std::fill(gPCScaleNC[0], gPCScaleNC[0]
-		+ NUM_NC * NUM_P_NC_FROM_PC_TO_NC, ap->gIncAvgPCtoNC);
+		+ NUM_NC * NUM_P_NC_FROM_PC_TO_NC, ap.gIncAvgPCtoNC);
 
 	std::fill(mfSynWeightNC[0], mfSynWeightNC[0]
-		+ NUM_NC * NUM_P_NC_FROM_MF_TO_NC, ap->initSynWofMFtoNC);
+		+ NUM_NC * NUM_P_NC_FROM_MF_TO_NC, ap.initSynWofMFtoNC);
 }
 
-void MZoneActivityState::stateRW(bool read, std::fstream &file)
+void MZoneActivityState::stateRW(ct_uint32_t numPopHistBinsPC, bool read, std::fstream &file)
 {
 	rawBytesRW((char *)apBC, NUM_BC * sizeof(ct_uint8_t), read, file);
 	rawBytesRW((char *)apBufBC, NUM_BC * sizeof(ct_uint32_t), read, file);
@@ -250,7 +127,7 @@ void MZoneActivityState::stateRW(bool read, std::fstream &file)
 	rawBytesRW((char *)vPC, NUM_PC * sizeof(float), read, file);
 	rawBytesRW((char *)threshPC, NUM_PC * sizeof(float), read, file);
 	// ONE ARRAY WHYYYY
-	rawBytesRW((char *)histPCPopAct, ap->numPopHistBinsPC * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)histPCPopAct, numPopHistBinsPC * sizeof(ct_uint32_t), read, file);
 	rawBytesRW((char *)&histPCPopActSum, sizeof(ct_uint32_t), read, file);
 	rawBytesRW((char *)&histPCPopActCurBinN, sizeof(ct_uint32_t), read, file);
 	rawBytesRW((char *)&pcPopAct, sizeof(ct_uint32_t), read, file);

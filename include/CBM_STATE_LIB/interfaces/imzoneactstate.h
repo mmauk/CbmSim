@@ -15,8 +15,8 @@ class IMZoneActState
 {
 public:
 	virtual ~IMZoneActState();
-	virtual std::vector<float> getGRPCSynWeightLinear() = 0;
-	virtual void resetGRPCSynWeight() = 0;
+	//virtual std::vector<float> getGRPCSynWeightLinear() = 0;
+	//virtual void resetGRPCSynWeight() = 0;
 };
 
 #endif /* IMZONEACTSTATE_H_ */

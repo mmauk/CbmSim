@@ -24,22 +24,13 @@ class InNetActivityState
 {
 public:
 	InNetActivityState();
-	InNetActivityState(ActivityParams *ap);
+	InNetActivityState(ActivityParams &ap);
 	InNetActivityState(std::fstream &infile);
-	//InNetActivityState(const InNetActivityState &state);
 
 	virtual ~InNetActivityState();
 
 	void writeState(std::fstream &outfile);
-
-	bool state_equal(const InNetActivityState &compState);
-	bool state_unequal(const InNetActivityState &compState);
-
-	//bool validateState();
-
-	void resetState(ActivityParams *ap);
-
-	//static const ConnectivityParams *cp;
+	void resetState(ActivityParams &ap);
 
 	//mossy fiber
 	ct_uint8_t histMF[NUM_MF] = {0};
@@ -167,9 +158,8 @@ public:
 	float depAmpUBCGR[NUM_UBC] = {0.0};
 
 private:
-	//void allocateMemory();
 	void stateRW(bool read, std::fstream &file);
-	void initializeVals(ActivityParams *ap);
+	void initializeVals(ActivityParams &ap);
 };
 
 #endif /* INNETACTIVITYSTATE_H_ */

@@ -5,7 +5,11 @@
  *      Author: varicella
  */
 
+#include <assert.h>
 #include "params/activityparams.h"
+
+ActivityParams::ActivityParams() {}
+
 // TODO: CHANGE THIS ALGORITHM IN THE FUTURE TO ONE IN CONPARAM.cpp
 ActivityParams::ActivityParams(std::string actParamFile)
 {
@@ -52,6 +56,13 @@ ActivityParams::ActivityParams(std::string actParamFile)
 	updateParams();
 }
 
+ActivityParams::ActivityParams(const ActivityParams &copyFrom) : paramMap(copyFrom.paramMap)
+{
+	updateParams();
+}
+
+ActivityParams::~ActivityParams() {}
+
 void ActivityParams::writeParams(std::fstream &outfile)
 {
 	for (auto i = paramMap.begin(); i != paramMap.end(); i++)
@@ -67,159 +78,9 @@ unsigned int ActivityParams::getMSPerTimeStep()
 	return msPerTimeStep;
 }
 
-void ActivityParams::showParams(std::ostream &outSt)
-{
-	outSt << "msPerTimeStep " << msPerTimeStep << std::endl << std::endl;
-
-	outSt << "msPerHistBinMF " << msPerHistBinMF << std::endl;
-	outSt << "tsPerHistbinMF " << numTSinMFHist << std::endl << std::endl;
-
-	outSt << "coupleRiRjRatioGO " << coupleRiRjRatioGO << std::endl;
-	outSt << "eLeakGO " << eLeakGO << std::endl;
-	outSt << "eMGluRGO " << eMGluRGO << std::endl;
-	outSt << "eGABAGO " << eGABAGO << std::endl;
-	outSt  <<  "threshMaxGO " << threshMaxGO << std::endl;
-	outSt  <<  "threshRestGO " << threshRestGO << std::endl;
-	outSt  <<  "gIncMFtoGO " << gIncMFtoGO << std::endl;
-	outSt  <<  "gIncGRtoGO " << gIncGRtoGO << std::endl;
-	outSt  <<  "gGABAIncGOtoGO " << gGABAIncGOtoGO << std::endl;
-	outSt  <<  "gMGluRScaleGRtoGO " << gMGluRScaleGRtoGO << std::endl;
-	outSt  <<  "mGluRScaleGO " << mGluRScaleGO << std::endl;
-	outSt  <<  "gluScaleGO " << gluScaleGO << std::endl;
-	outSt  <<  "gLeakGO " << gLeakGO << std::endl;
-	outSt  <<  "gDecTauMFtoGO " << gDecTauMFtoGO << std::endl;
-	outSt  <<  "gDecMFtoGO " << gDecMFtoGO << std::endl;
-	outSt  <<  "gDecTauGRtoGO " << gDecTauGRtoGO << std::endl;
-	outSt  <<  "gDecGRtoGO " << gDecGRtoGO << std::endl;
-	outSt  <<  "gGABADecTauGOtoGO" << gGABADecTauGOtoGO << std::endl;
-	outSt  <<  "gGABADecGOtoGO " << gGABADecGOtoGO << std::endl;
-	outSt  <<  "mGluRDecayGO " << mGluRDecayGO << std::endl;
-	outSt  <<  "gMGluRIncDecayGO " << gMGluRIncDecayGO << std::endl;
-	outSt  <<  "gluDecayGO " << gluDecayGO << std::endl;
-	outSt  <<  "threshDecTauGO " << threshDecTauGO << std::endl;
-	outSt  <<  "threshDecGO " << threshDecGO << std::endl << std::endl;
-
-	outSt  <<  "eLeakGR " << eLeakGR << std::endl;
-	outSt  <<  "eGOGR " << eGOGR << std::endl;
-	outSt  <<  "eMFGR " << eMFGR << std::endl;
-	outSt  <<  "threshMaxGR " << threshMaxGR << std::endl;
-	outSt  <<  "threshRestGR " << threshRestGR << std::endl;
-	outSt << "threshDecTauGR " << threshDecTauGR << std::endl;
-	outSt << "threshDecGR " << threshDecGR << std::endl;
-	outSt << "gLeakGR " << gLeakGR << std::endl;
-	outSt << "msPerHistBinGR " << msPerHistBinGR << std::endl;
-	outSt << "tsPerHistBinGR " << tsPerHistBinGR << std::endl << std::endl;
-
-	outSt << "eLeakSC " << eLeakSC << std::endl;
-	outSt << "gLeakSC " << gLeakSC << std::endl;
-	outSt << "gDecTauGRtoSC " << gDecTauGRtoSC << std::endl;
-	outSt << "gDecGRtoSC " << gDecGRtoSC << std::endl;
-	outSt << "threshMaxSC " << threshMaxSC << std::endl;
-	outSt << "threshRestSC " << threshRestSC << std::endl;
-	outSt << "threshDecTauSC " << threshDecTauSC << std::endl;
-	outSt << "threshDecSC " << threshDecSC << std::endl;
-	outSt << "gIncGRtoSC " << gIncGRtoSC << std::endl << std::endl;
-
-	outSt << "eLeakBC " << eLeakBC << std::endl;
-	outSt << "ePCtoBC " << ePCtoBC << std::endl;
-	outSt << "gLeakBC " << gLeakBC << std::endl;
-	outSt << "gDecTauGRtoBC " << gDecTauGRtoBC << std::endl;
-	outSt << "gDecGRtoBC " << gDecGRtoBC << std::endl;
-	outSt << "gDecTauPCtoBC " << gDecTauPCtoBC << std::endl;
-	outSt << "gDecPCtoBC " << gDecPCtoBC << std::endl;
-	outSt << "threshRestBC " << threshRestBC << std::endl;
-	outSt << "threshMaxBC " << threshMaxBC << std::endl;
-	outSt << "threshDecTauBC " << threshDecTauBC << std::endl;
-	outSt << "threshDecBC " << threshDecBC << std::endl;
-	outSt << "gIncGRtoBC " << gIncGRtoBC << std::endl;
-	outSt << "gIncPCtoBC " << gIncPCtoBC << std::endl << std::endl;
-
-	outSt << "initSynWofGRtoPC " << initSynWofGRtoPC << std::endl;
-	outSt << "eLeakPC " << eLeakPC << std::endl;
-	outSt << "eBCtoPC " << eBCtoPC << std::endl;
-	outSt << "eSCtoPC " << eSCtoPC << std::endl;
-	outSt << "threshMaxPC " << threshMaxPC << std::endl;
-	outSt << "threshRestPC " << threshRestPC << std::endl;
-	outSt << "threshDecTauPC " << threshDecTauPC << std::endl;
-	outSt << "threshDecPC " << threshDecPC << std::endl;
-	outSt << "gLeakPC " << gLeakPC << std::endl;
-	outSt << "gDecTauGRtoPC " << gDecTauGRtoPC << std::endl;
-	outSt << "gDecGRtoPC " << gDecGRtoPC << std::endl;
-	outSt << "gDecTauBCtoPC " << gDecTauBCtoPC << std::endl;
-	outSt << "gDecBCtoPC " << gDecBCtoPC << std::endl;
-	outSt << "gDecTauSCtoPC " << gDecTauSCtoPC << std::endl;
-	outSt << "gDecSCtoPC " << gDecSCtoPC << std::endl;
-	outSt << "gIncSCtoPC " << gIncSCtoPC << std::endl;
-	outSt << "gIncGRtoPC " << gIncGRtoPC << std::endl;
-	outSt << "gIncBCtoPC " << gIncBCtoPC << std::endl;
-	outSt << "tsPopHistPC " << tsPopHistPC << std::endl;
-	outSt << "tsPerPopHistBinPC " << tsPerPopHistBinPC << std::endl;
-	outSt << "numPopHistBinsPC " << numPopHistBinsPC << std::endl << std::endl;
-
-	outSt << "coupleRiRjRatioIO " << coupleRiRjRatioIO << std::endl;
-	outSt << "eLeakIO " << eLeakIO << std::endl;
-	outSt << "eNCtoIO " << eNCtoIO << std::endl;
-	outSt << "gLeakIO " << gLeakIO << std::endl;
-	outSt << "gDecTSofNCtoIO " << gDecTSofNCtoIO << std::endl;
-	outSt << "gDecTTofNCtoIO " << gDecTTofNCtoIO << std::endl;
-	outSt << "gDecT0ofNCtoIO " << gDecT0ofNCtoIO << std::endl;
-	outSt << "gIncNCtoIO " << gIncNCtoIO << std::endl;
-	outSt << "gIncTauNCtoIO " << gIncTauNCtoIO << std::endl;
-	outSt << "threshRestIO " << threshRestIO << std::endl;
-	outSt << "threshMaxIO " << threshMaxIO << std::endl;
-	outSt << "threshDecTauIO " << threshDecTauIO << std::endl;
-	outSt << "threshDecIO " << threshDecIO << std::endl;
-	outSt << "tsLTDDurationIO " << tsLTDDurationIO << std::endl;
-	outSt << "tsLTDStartAPIO " << tsLTDStartAPIO << std::endl;
-	outSt << "tsLTPStartAPIO " << tsLTPStartAPIO << std::endl;
-	outSt << "tsLTPEndAPIO " << tsLTPEndAPIO << std::endl;
-	outSt << "synLTPStepSizeGRtoPC " << synLTPStepSizeGRtoPC << std::endl;
-	outSt << "synLTDStepSizeGRtoPC " << synLTDStepSizeGRtoPC << std::endl;
-	outSt << "grPCHistCheckBinIO " << grPCHistCheckBinIO << std::endl;
-	outSt << "maxExtIncVIO " << maxExtIncVIO << std::endl << std::endl;
-
-	outSt << "eLeakNC " << eLeakNC << std::endl;
-	outSt << "ePCtoNC " << ePCtoNC << std::endl;
-	outSt << "gmaxNMDADecTauMFtoNC " << gmaxNMDADecTauMFtoNC << std::endl;
-	outSt << "gmaxNMDADecMFtoNC " << gmaxNMDADecMFtoNC << std::endl;
-	outSt << "gmaxAMPADecTauMFtoNC " << gmaxAMPADecTauMFtoNC << std::endl;
-	outSt << "gmaxAMPADecMFtoNC " << gmaxAMPADecMFtoNC << std::endl;
-	outSt << "gNMDAIncMFtoNC " << gNMDAIncMFtoNC << std::endl;
-	outSt << "gAMPAIncMFtoNC " << gAMPAIncMFtoNC << std::endl;
-	outSt << "gIncAvgPCtoNC " << gIncAvgPCtoNC << std::endl;
-	outSt << "gDecTauPCtoNC " << gDecTauPCtoNC << std::endl;
-	outSt << "gDecPCtoNC " << gDecPCtoNC << std::endl;
-	outSt << "gLeakNC " << gLeakNC << std::endl;
-	outSt << "threshDecTauNC " << threshDecTauNC << std::endl;
-	outSt << "threshDecNC " << threshDecNC << std::endl;
-	outSt << "threshMaxNC " << threshMaxNC << std::endl;
-	outSt << "threshRestNC " << threshRestNC << std::endl;
-	outSt << "relPDecTSofNCtoIO " << relPDecTSofNCtoIO << std::endl;
-	outSt << "relPDecTTofNCtoIO " << relPDecTTofNCtoIO << std::endl;
-	outSt << "relPDecT0ofNCtoIO " << relPDecT0ofNCtoIO << std::endl;
-	outSt << "relPIncNCtoIO " << relPIncNCtoIO << std::endl;
-	outSt << "relPIncTauNCtoIO " << relPIncTauNCtoIO << std::endl;
-	outSt << "initSynWofMFtoNC " << initSynWofMFtoNC << std::endl;
-	outSt << "synLTDPCPopActThreshMFtoNC " << synLTDPCPopActThreshMFtoNC << std::endl;
-	outSt << "synLTPPCPopActThreshMFtoNC " << synLTPPCPopActThreshMFtoNC << std::endl;
-	outSt << "synLTDStepSizeMFtoNC " << synLTDStepSizeMFtoNC << std::endl;
-	outSt << "synLTPStepSizeMFtoNC " << synLTPStepSizeMFtoNC << std::endl;
-}
-
-std::map<std::string, float> ActivityParams::getParamCopy()
-{
-	std::map<std::string, float> paramCopy;
-
-	for (auto i = paramMap.begin(); i!=paramMap.end(); i++)
-	{
-		paramCopy[i->first] = i->second;
-	}
-
-	return paramCopy;
-}
-
 float ActivityParams::getParam(std::string paramName)
 {
+   	assert(paramMap.find(paramName) != paramMap.end());
 	return paramMap[paramName];
 }
 
@@ -233,6 +94,36 @@ bool ActivityParams::setParam(std::string paramName, float value)
 	updateParams();
 
 	return true;
+}
+
+// NOTE: I am pretty sure we define params in the header that are not in the input file
+// for reasons that I simply cannot fathom. SO this guy wont return a *full* string 
+// representation of the activity parameters. *deep sigh*
+std::string ActivityParams::toString()
+{
+	std::string outString = "";
+	for (auto i = paramMap.begin(); i != paramMap.end(); i++)
+	{
+		// for now, have to use std::to_string: in future, make map<str, str>
+		outString += i->first + " " + std::to_string(i->second) + "\n";
+	}
+	return outString;
+}
+
+std::ostream &operator<<(std::ostream &os, ActivityParams &ap)
+{
+	return os << ap.toString();
+}
+
+ActivityParams &ActivityParams::operator=(const ActivityParams &copyFrom)
+{
+	if (this != &copyFrom)
+	{
+	   this->paramMap.clear();
+	   this->paramMap = copyFrom.paramMap; /* stl supports assignment op overload of maps */
+	   updateParams();
+	}
+	return *this;
 }
 
 void ActivityParams::updateParams()
@@ -282,7 +173,6 @@ void ActivityParams::updateParamsOriginal()
 	threshMaxGO = paramMap["threshMaxGO"];
 	threshRestGO = paramMap["threshBaseGO"];
 	gIncMFtoGO = paramMap["gMFIncGO"];
-	gIncGRtoGO = paramMap["gGRIncGO"];
 	gGABAIncGOtoGO = paramMap["gGOIncGO"];
 	coupleRiRjRatioGO = paramMap["coupleRiRjRatioGO"];
 
@@ -498,7 +388,6 @@ void ActivityParams::updateParamsV1()
 	threshMaxGO = paramMap["threshMaxGO"];
 	threshRestGO = paramMap["threshRestGO"];
 	gIncMFtoGO = paramMap["gIncMFtoGO"];
-	gIncGRtoGO = paramMap["gIncGRtoGO"];
 	gGABAIncGOtoGO = paramMap["gGABAIncGOtoGO"];
 	coupleRiRjRatioGO = paramMap["coupleRiRjRatioGO"];
 

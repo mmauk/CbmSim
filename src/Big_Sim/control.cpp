@@ -1,48 +1,51 @@
 #include <time.h>
 #include "control.h"
 
-Control::Control(std::string actParamFile)
+Control::Control() {}
+
+Control::Control(std::string actParamFile) : ap(actParamFile)
 {
-	ap = new ActivityParams(actParamFile);
+	std::cout << "[INFO]: Initializing state..." << std::endl;	
+	simState = new CBMState(ap, numMZones);
+	std::cout << "[INFO]: Finished initializing state..." << std::endl;
+	
+	std::cout << "[INFO]: Initializing simulation core..." << std::endl;
+	simCore = new CBMSimCore(ap, simState, gpuIndex, gpuP2);	
+	std::cout << "[INFO]: Finished initializing simulation core." << std::endl;
+
+	std::cout << "[INFO]: Initializing MF Frequencies..." << std::endl;
+	mfFreq = new ECMFPopulation(NUM_MF, mfRandSeed, CSTonicMFFrac, CSPhasicMFFrac,
+		  contextMFFrac, nucCollFrac, bgFreqMin, csbgFreqMin, contextFreqMin, 
+		  tonicFreqMin, phasicFreqMin, bgFreqMax, csbgFreqMax, contextFreqMax, 
+		  tonicFreqMax, phasicFreqMax, collaterals_off, fracImport, secondCS, fracOverlap);
+	std::cout << "[INFO]: Finished initializing MF Frequencies." << std::endl;
+
+	std::cout << "[INFO]: Initializing Poisson MF Population..." << std::endl;
+	mfs = new PoissonRegenCells(NUM_MF, mfRandSeed, threshDecayTau, ap.msPerTimeStep,
+		  	numMZones, NUM_NC);
+	std::cout << "[INFO]: Finished initializing Poisson MF Population." << std::endl;
+
+	// allocate and initialize output arrays
+	std::cout << "[INFO]: Initializing output arrays..." << std::endl;
+	initializeOutputArrays(csLength, numTrainingTrials);	
+	std::cout << "[INFO]: Finished initializing output arrays." << std::endl;
 }
 
 Control::~Control()
 {
-	delete ap;
-}
-
-void Control::runSimulationWithGRdata(int goRecipParam, int numTuningTrials, int numGrDetectionTrials,
-		int numTrainingTrials, int simNum, int csSize, float csFracMFs, float goMin, float GOGR,
-		float GRGO, float MFGO, float csMinRate, float csMaxRate, float gogoW, int inputStrength, 
-		float spillFrac)
-{
-	// set all relevant variables to the sim	
-	// TODO: move these initialization steps to the constructor. wth are we doing initializing these
-	// things here? what is the point of the setsim object versus the control object?
-	// cp and ap are internal params now (06/09/2022)
-	SetSim simulation(ap);
-	joestate  = simulation.getstate();
-	joesim    = simulation.getsim();
-	joeMFFreq = simulation.getMFFreq(csMinRate, csMaxRate);
-	joeMFs    = simulation.getMFs(ap);
-
-	// allocate and fill all of the output arrays	
-	initializeOutputArrays(csSize, numTrainingTrials);
-
-	// run all trials of sim
-	runTrials(joesim, joeMFs, joeMFFreq, numTuningTrials, numGrDetectionTrials, numTrainingTrials,
-		simNum, csSize, goMin, GOGR, GRGO, MFGO, csMinRate, csMaxRate, gogoW, spillFrac);
-
-	// Save Data 
-	saveOutputArraysToFile(numTrainingTrials, csSize, goRecipParam, simNum, inputStrength);
+	// delete all dynamic objects
+	delete simState;
+	delete simCore;
+	delete mfFreq;
+	delete mfs;
 
 	// deallocate output arrays
 	deleteOutputArrays();
 }
 
-void Control::initializeOutputArrays(int csSize, int numTrainingTrials)
+void Control::initializeOutputArrays(int csLength, int numTrainingTrials)
 {
-	int allGOPSTHColSize = csSize + msPreCS + msPostCS;
+	int allGOPSTHColSize = csLength + msPreCS + msPostCS;
 	int rasterColumnSize = allGOPSTHColSize * numTrainingTrials;	
 
 	// Allocate and Initialize PSTH and Raster arrays
@@ -66,84 +69,80 @@ void Control::initializeOutputArrays(int csSize, int numTrainingTrials)
 	std::fill(allGOPSTH[0], allGOPSTH[0] + NUM_GO * allGOPSTHColSize, 0);
 }
 
-void Control::runTrials(CBMSimCore *joesim, PoissonRegenCells *joeMFs, ECMFPopulation *joeMFFreq,
-	int numTuningTrials, int numGrDetectionTrials, int numTrainingTrials, int simNum,
-	int csSize, float goMin, float GOGR, float GRGO, float MFGO,
-	float csMinRate, float csMaxRate, float gogoW, float spillFrac)
+void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 {
-	int preTrialNumber   = numTuningTrials + numGrDetectionTrials;
-	// numTotalTrials should be numTrainingTrials	
+	int preTrialNumber   = homeoTuningTrials + granuleActDetectTrials;
 	int numTotalTrials   = preTrialNumber + numTrainingTrials;  
 
 	float medTrials;
 	clock_t timer;
 
 	int rasterCounter = 0;
-	int *goSpkCounter = new int[numGO];
+	int goSpkCounter[NUM_GO] = {0};
 
-	for (int trial = 0; trial < numTrainingTrials; trial++)
+	for (int trial = 0; trial < numTotalTrials; trial++)
 	{
 		timer = clock();
 		
 		// re-initialize spike counter vector	
-		std::fill(goSpkCounter, goSpkCounter + numGO, 0);	
+		std::fill(goSpkCounter, goSpkCounter + NUM_GO, 0);	
 
 		int PSTHCounter = 0;	
 		float gGRGO_sum = 0;
 		float gMFGO_sum = 0;
 
-
-		trial <= numTuningTrials ?
+		trial <= homeoTuningTrials ?
 			std::cout << "Pre-tuning trial number: " << trial << std::endl :
 			std::cout << "Post-tuning trial number: " << trial << std::endl;
 		
 		// Homeostatic plasticity trials
-		if (trial >= numTuningTrials)
+		if (trial >= homeoTuningTrials)
 		{	
 		
-			for (tts = 0; tts < trialTime; tts++)
+			for (int tts = 0; tts < trialTime; tts++)
 			{			
 				// TODO: get the model for these periods, update accordingly
-				if (tts == csStart + csSize)
+				if (tts == csStart + csLength)
 				{
-					// Deliver US 
-					joesim->updateErrDrive(0, 0.0);
+		   		   // Deliver US 
+				   // why zoneN and errDriveRelative set manually???
+					simCore->updateErrDrive(0, 0.0);
 				}
 				
-				if (tts < csStart || tts >= csStart + csSize)
+				if (tts < csStart || tts >= csStart + csLength)
 				{
 					// Background MF activity in the Pre and Post CS period
-					mfAP = joeMFs->calcPoissActivity(joeMFFreq->getMFBG(),
-							joesim->getMZoneList());	
+					mfAP = mfs->calcPoissActivity(mfFreq->getMFBG(),
+							simCore->getMZoneList());	
 				}
 				else if (tts >= csStart && tts < csStart + csPhasicSize) 
 				{
 					// Phasic MF activity during the CS for a duration set in control.h 
-					mfAP = joeMFs->calcPoissActivity(joeMFFreq->getMFFreqInCSPhasic(),
-							joesim->getMZoneList());
+					mfAP = mfs->calcPoissActivity(mfFreq->getMFFreqInCSPhasic(),
+							simCore->getMZoneList());
 				}
 				else
 				{
 					// Tonic MF activity during the CS period
 					// this never gets reached...
-					mfAP = joeMFs->calcPoissActivity(joeMFFreq->getMFInCSTonicA(),
-							joesim->getMZoneList());
+					mfAP = mfs->calcPoissActivity(mfFreq->getMFInCSTonicA(),
+							simCore->getMZoneList());
 				}
 
-				bool *isTrueMF = joeMFs->calcTrueMFs(joeMFFreq->getMFBG());
-				joesim->updateTrueMFs(isTrueMF);
-				joesim->updateMFInput(mfAP);
-				joesim->calcActivity(goMin, simNum, GOGR, GRGO, MFGO, gogoW, spillFrac);	
+				bool *isTrueMF = mfs->calcTrueMFs(mfFreq->getMFBG());
+				simCore->updateTrueMFs(isTrueMF);
+				simCore->updateMFInput(mfAP);
+				simCore->calcActivity(goMin, simNum, GOGR, GRGO, MFGO, gogoW, spillFrac);	
 				
-				if (tts >= csStart && tts < csStart + csSize)
+				if (tts >= csStart && tts < csStart + csLength)
 				{
 
-					mfgoG  = joesim->getInputNet()->exportgSum_MFGO();
-					grgoG  = joesim->getInputNet()->exportgSum_GRGO();
-					goSpks = joesim->getInputNet()->exportAPGO();
+					mfgoG  = simCore->getInputNet()->exportgSum_MFGO();
+					grgoG  = simCore->getInputNet()->exportgSum_GRGO();
+					goSpks = simCore->getInputNet()->exportAPGO();
 					
 					//TODO: change for loop into std::transform
-					for (int i = 0; i < numGO; i++)
+					for (int i = 0; i < NUM_GO; i++)
 					{
 							goSpkCounter[i] += goSpks[i];
 							gGRGO_sum 		+= grgoG[i];
@@ -151,18 +150,18 @@ void Control::runTrials(CBMSimCore *joesim, PoissonRegenCells *joeMFs, ECMFPopul
 					}
 				}
 				// why is this case separate from the above	
-				if (tts == csStart + csSize)
+				if (tts == csStart + csLength)
 				{
 					countGOSpikes(goSpkCounter, medTrials);	
-					std::cout << "mean gGRGO   = " << gGRGO_sum / (numGO * csSize) << std::endl;
-					std::cout << "mean gMFGO   = " << gMFGO_sum / (numGO * csSize) << std::endl;
+					std::cout << "mean gGRGO   = " << gGRGO_sum / (NUM_GO * csLength) << std::endl;
+					std::cout << "mean gMFGO   = " << gMFGO_sum / (NUM_GO * csLength) << std::endl;
 					std::cout << "GR:MF ratio  = " << gGRGO_sum / gMFGO_sum << std::endl;
 				}
 
 				if (trial >= preTrialNumber && tts >= csStart-msPreCS &&
-						tts < csStart + csSize + msPostCS)
+						tts < csStart + csLength + msPostCS)
 				{
-					fillRasterArrays(joesim, rasterCounter);
+					fillRasterArrays(simCore, rasterCounter);
 
 					PSTHCounter++;
 					rasterCounter++;
@@ -172,15 +171,11 @@ void Control::runTrials(CBMSimCore *joesim, PoissonRegenCells *joeMFs, ECMFPopul
 		timer = clock() - timer;
 		std::cout << "Trial time seconds: " << (float)timer / CLOCKS_PER_SEC << std::endl;
 	}
-
-	delete[] goSpkCounter;
 }
 
-void Control::saveOutputArraysToFile(int numTrainingTrials, int csSize, int goRecipParam,
-	int simNum, int inputStrength)
+void Control::saveOutputArraysToFile(int goRecipParam, int simNum)
 {
-	int allGOPOSTHColSize = csSize + msPreCS + msPostCS; 
-	
+	int allGOPOSTHColSize = csLength + msPreCS + msPostCS; 
 	// array of possible convergences to test. 
 	// TODO: put these into an input file instead of here :weird_champ:
 	int conv[8] = {5000, 4000, 3000, 2000, 1000, 500, 250, 125};
@@ -213,20 +208,20 @@ void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
 	float goSpkSum = 0;
 
 	//TODO: change for loop into std::transform
-	for (int i = 0; i < numGO; i++) goSpkSum += goSpkCounter[i];
+	for (int i = 0; i < NUM_GO; i++) goSpkSum += goSpkCounter[i];
 	
-	std::cout << "Mean GO Rate: " << goSpkSum / (float)numGO << std::endl;
+	std::cout << "Mean GO Rate: " << goSpkSum / (float)NUM_GO << std::endl;
 
 	medTrials += m / 2.0;
 	std::cout << "Median GO Rate: " << m / 2.0 << std::endl;
 }
 
-void Control::fillRasterArrays(CBMSimCore *joesim, int rasterCounter)
+void Control::fillRasterArrays(CBMSimCore *simCore, int rasterCounter)
 {
-	const ct_uint8_t* pcSpks = joesim->getMZoneList()[0]->exportAPPC();
-	const ct_uint8_t* ncSpks = joesim->getMZoneList()[0]->exportAPNC();
-	const ct_uint8_t* bcSpks = joesim->getMZoneList()[0]->exportAPBC();
-	const ct_uint8_t* scSpks = joesim->getInputNet()->exportAPSC();
+	const ct_uint8_t* pcSpks = simCore->getMZoneList()[0]->exportAPPC();
+	const ct_uint8_t* ncSpks = simCore->getMZoneList()[0]->exportAPNC();
+	const ct_uint8_t* bcSpks = simCore->getMZoneList()[0]->exportAPBC();
+	const ct_uint8_t* scSpks = simCore->getInputNet()->exportAPSC();
 	
 	for (int i = 0; i < NUM_PC; i++)
 	{
@@ -279,137 +274,4 @@ void Control::deleteOutputArrays()
 	delete2DArray<ct_uint8_t>(allBCRaster);
 	delete2DArray<ct_uint8_t>(allSCRaster);
 }
-
-//int* Control::getGRIndicies(CBMState *joestate, ECMFPopulation *joeMFFreq, float csMinRate, float csMaxRate, float CStonicMFfrac) 
-//{
-//
-//	int numMF = 4096;
-//	int numGR = 1048576;
-//
-//	bool* tonicMFsA = joeMFFreq->getTonicMFInd();
-//	bool* tonicMFsB = joeMFFreq->getTonicMFIndOverlap();
-//	
-//	int numTonic = numMF*CStonicMFfrac; 
-//	int numActiveMFs = numTonic;
-//
-//	std::cout << "Number of CS MossyFibers:	" << numActiveMFs << std::endl;
-//	
-//	int *activeMFIndA = new int[numActiveMFs];
-//	int *activeMFIndB = new int[numActiveMFs];
-//	
-//	int counterMFA=0;
-//	int counterMFB=0;
-//	
-//	for (int i = 0; i < numMF; i++)
-//	{	
-//		if (tonicMFsA[i])
-//		{
-//			activeMFIndA[counterMFA] = i;
-//			counterMFA++;
-//		}
-//		
-//		if (tonicMFsB[i])
-//		{
-//			activeMFIndB[counterMFB] = i;
-//			counterMFB++;
-//		}
-//	}
-//
-//	std::cout << "NumMFs in A: " << counterMFA << std::endl;
-//	std::cout << "NumMFs in B: " << counterMFB << std::endl;
-//	
-//	std::vector<int> MFtoGRs;	
-//	int numPostSynGRs;
-//	// why is this labelled a bool when its an int array?
-//	int *pActiveGRsBool = new int[numGR]();
-//	for (int i = 0; i < numActiveMFs; i++)
-//	{
-//		MFtoGRs = joestate->getInnetConStateInternal()->getpMFfromMFtoGRCon(activeMFIndA[i]);
-//		numPostSynGRs = MFtoGRs.size();
-//		
-//		for (int j = 0; j < numPostSynGRs; j++)
-//		{
-//			pActiveGRsBool[MFtoGRs[j]]++;
-//		}
-//	}
-//	
-//	int counterGR = 0;
-//	
-//	for (int i = 0; i < numGR; i++)
-//	{
-//		if (pActiveGRsBool[i] >= 1) counterGR++;
-//	}
-//
-//	int *pActiveGRs = new int[counterGR](); 
-//	int counterAGR = 0;
-//	
-//	for (int i = 0; i < numGR; i++)
-//	{
-//		if (pActiveGRsBool[i] >= 1)
-//		{		
-//			pActiveGRs[counterAGR] = i;
-//			counterAGR++;
-//		}
-//	}	
-//
-//	return pActiveGRs;
-//}
-
-// NOTE: this function is basically the same as the above.
-//int Control::getNumGRIndicies(CBMState *joestate, ECMFPopulation *joeMFFreq, float csMinRate, float csMaxRate, float CStonicMFfrac) 
-//{
-//	int numMF = 4096;
-//	int numGR = 1048576;
-//
-//	float CSphasicMFfrac = 0.0;
-//	float contextMFfrac  = 0.0;
-//	
-//	bool* contextMFs = joeMFFreq->getContextMFInd();
-//	bool* phasicMFs  = joeMFFreq->getPhasicMFInd();
-//	bool* tonicMFs   = joeMFFreq->getTonicMFInd();
-//	
-//	int numContext 	 = numMF*contextMFfrac; 
-//	int numPhasic  	 = numMF*CSphasicMFfrac; 
-//	int numTonic   	 = numMF*CStonicMFfrac; 
-//	int numActiveMFs = numContext+numPhasic+numTonic;
-//	
-//	int *activeMFInd;
-//	activeMFInd = new int[numActiveMFs];
-//	
-//	int counterMF = 0;
-//	for (int i = 0; i < numMF; i++)
-//	{	
-//		if (contextMFs[i] || tonicMFs[i] || phasicMFs[i])
-//		{
-//			activeMFInd[counterMF] = i;
-//			counterMF++;
-//		}
-//	}
-//
-//	std::vector<int> MFtoGRs;	
-//	int numPostSynGRs;
-//	int pActiveGRsBool[numGR] = {};
-//
-//	for (int i = 0; i < numActiveMFs; i++)
-//	{
-//		MFtoGRs 	  = joestate->getInnetConStateInternal()->getpMFfromMFtoGRCon(activeMFInd[i]);
-//		numPostSynGRs = MFtoGRs.size();
-//		
-//		for (int j = 0; j < numPostSynGRs; j++)
-//		{
-//			pActiveGRsBool[MFtoGRs[j]]++;
-//		}
-//	}
-//	
-//	int counterGR = 0;
-//	for (int i = 0; i < numGR; i++)
-//	{
-//		if (pActiveGRsBool[i] >= 1)
-//		{		
-//			counterGR++;
-//		}
-//	}
-//	
-//	return counterGR;
-//}
 

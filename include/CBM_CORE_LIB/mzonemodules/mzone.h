@@ -19,30 +19,25 @@
 #include <iostream>
 #include <fstream>
 #include <string.h>
-
-#include <stdDefinitions/pstdint.h>
-#include <randGenerators/sfmt.h>
-#include <memoryMgmt/dynamic2darray.h>
-
-#include <params/connectivityparams.h>
-#include <params/activityparams.h>
-#include <state/mzoneconnectivitystate.h>
-#include <state/mzoneactivitystate.h>
-
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <device_functions.h>
-
+#include "stdDefinitions/pstdint.h"
+#include "randGenerators/sfmt.h"
+#include "memoryMgmt/dynamic2darray.h"
+#include "params/connectivityparams.h"
+#include "params/activityparams.h"
+#include "state/mzoneconnectivitystate.h"
+#include "state/mzoneactivitystate.h"
 #include "cuda/kernels.h"
-
 #include "interface/mzoneinterface.h"
 
 class MZone : virtual public MZoneInterface
 {
 public:
 	MZone();
-	MZone(ActivityParams *ap, MZoneConnectivityState *conState,
-			MZoneActivityState *actState, int randSeed, ct_uint32_t **actBufGRGPU,
+	MZone(ActivityParams &ap, MZoneConnectivityState *cs,
+			MZoneActivityState *as, int randSeed, ct_uint32_t **actBufGRGPU,
 			ct_uint32_t **delayMaskGRGPU, ct_uint64_t **histGRGPU, int gpuIndStart, int numGPUs);
 	~MZone();
 
@@ -95,12 +90,10 @@ public:
 	const ct_uint32_t* exportAPBufNC();
 
 private:
-
-	ActivityParams *ap;
+	ActivityParams ap;
 	MZoneConnectivityState *cs;
 	MZoneActivityState *as;
 
-	//global variables
 	CRandomSFMT0 *randGen;
 
 	int gpuIndStart;
@@ -143,7 +136,6 @@ private:
 
 	void initCUDA();
 	void testReduction();
-
 };
 
 #endif /* MZONE_H_ */

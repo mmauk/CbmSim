@@ -7,7 +7,4 @@
 
 #include "interfaces/imzoneactstate.h"
 
-IMZoneActState::~IMZoneActState()
-{
-
-}
+IMZoneActState::~IMZoneActState() {}

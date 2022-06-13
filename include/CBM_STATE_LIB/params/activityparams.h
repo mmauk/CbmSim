@@ -10,32 +10,28 @@
 
 #include <math.h>
 #include <stdlib.h>
-
 #include <map>
 #include <string>
 #include <iostream>
 #include <fstream>
-
 #include <stdDefinitions/pstdint.h>
-
 #include "interfaces/iactivityparams.h"
 
 class ActivityParams : public virtual IActivityParams
 {
 public:
+	ActivityParams();
 	ActivityParams(std::string actParamFile);
+	ActivityParams(const ActivityParams &copyFrom);
+	~ActivityParams(); /*here to serve the Rule of Three: map deallocates itself bwahaha*/
 
 	void writeParams(std::fstream &outfile);
-
 	unsigned int getMSPerTimeStep();
-
-	void showParams(std::ostream &outSt);
-
 	float getParam(std::string paramName);
-
 	bool setParam(std::string paramName, float value);
-
-	std::map<std::string, float> getParamCopy();
+	std::string toString();
+	friend std::ostream &operator<<(std::ostream &os, ActivityParams &ap);
+	ActivityParams &operator=(const ActivityParams &copyFrom);
 
 	//universtal parameters
 	float msPerTimeStep;
@@ -56,7 +52,6 @@ public:
 	float gDecTauMFtoGONMDA;
 	float gDecayMFtoGONMDA;
 
-	float gIncGRtoGO;
 	float gGABAIncGOtoGO;
 	float coupleRiRjRatioGO;
 
@@ -239,8 +234,6 @@ public:
 	float synLTPStepSizeMFtoNC;
 
 private:
-	ActivityParams();
-
 	void updateParams();
 	void updateParamsOriginal();
 	void updateParamsV1();
