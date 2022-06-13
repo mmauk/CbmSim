@@ -9,21 +9,21 @@
 
 InNetConnectivityState::InNetConnectivityState(unsigned int msPerStep, int randSeed)
 {
-	CRandomSFMT randGen(randSeed);
+	CRandomSFMT0 randGen(randSeed);
 	
 	std::cout << "[INFO]: Initializing innet connections..." << std::endl;
 
-	std::cout << "[INFO]: Connecting MF and GL" << std::endl;
-	connectMFGL_noUBC(randGen);
+	//std::cout << "[INFO]: Connecting MF and GL" << std::endl;
+	//connectMFGL_noUBC(randGen);
 
 	std::cout << "[INFO]: Connecting GR and GL" << std::endl;
 	connectGLGR(randGen);
 
-	std::cout << "[INFO]: Connecting GR to GO" << std::endl;
-	connectGRGO(randGen);
+	//std::cout << "[INFO]: Connecting GR to GO" << std::endl;
+	//connectGRGO(randGen);
 
-	std::cout << "[INFO]: Connecting GO and GL" << std::endl;
-	connectGOGL(randGen);
+	//std::cout << "[INFO]: Connecting GO and GL" << std::endl;
+	//connectGOGL(randGen);
 	
 	std::cout << "[INFO]: Connecting GO to GO" << std::endl;
 	connectGOGODecayP(randGen);	
@@ -39,7 +39,7 @@ InNetConnectivityState::InNetConnectivityState(unsigned int msPerStep, int randS
 
 	std::cout << "[INFO]: Assigning GR delays" << std::endl;
 	assignGRDelays(msPerStep);
-	std::cout << "[INFO] Finished making innet connections." << std::endl;
+	std::cout << "[INFO]: Finished making innet connections." << std::endl;
 }
 
 //InNetConnectivityState::InNetConnectivityState(ConnectivityParams *parameters, std::fstream &infile)
@@ -159,8 +159,6 @@ void InNetConnectivityState::stateRW(bool read, std::fstream &file)
 
 	std::cout << "glomerulus 3" << std::endl;
 	rawBytesRW((char *)numpGLfromGOtoGL, NUM_GL * sizeof(int), read, file);
-	rawBytesRW((char *)haspGLfromGOtoGL, NUM_GL * sizeof(int), read, file);
-	//rawBytesRW((char *)pGLfromGOtoGL, numGL*sizeof(int), read, file);
 
 	std::cout << "glomerulus 4" << std::endl;
 	rawBytesRW((char *)numpGLfromGLtoGR, NUM_GL * sizeof(int), read, file);
@@ -355,7 +353,7 @@ void InNetConnectivityState::connectGLGR(CRandomSFMT &randGen)
 	float gridXScaleStoD = (float)grX / (float)glX;
 	float gridYScaleStoD = (float)grY / (float)glY;
 
-	bool srcConnected[NUM_GR];
+	bool srcConnected[NUM_GR] = {false};
 
 	for (int i = 0; i < MAX_NUM_P_GR_FROM_GL_TO_GR; i++)
 	{
@@ -383,8 +381,8 @@ void InNetConnectivityState::connectGLGR(CRandomSFMT &randGen)
 					destPosX += round((randGen.Random() - 0.5) * SPAN_GL_TO_GR_X);
 					destPosY += round((randGen.Random() - 0.5) * SPAN_GL_TO_GR_Y);
 
-					destPosX = ((destPosX % glX + glX) % glX);
-					destPosY = ((destPosY % glY + glY) % glY);
+					destPosX = (destPosX % glX + glX) % glX;
+					destPosY = (destPosY % glY + glY) % glY;
 
 					int destIndex = destPosY * glX + destPosX;
 
@@ -399,9 +397,7 @@ void InNetConnectivityState::connectGLGR(CRandomSFMT &randGen)
 						}
 					}
 
-					if (!unique) continue;
-
-					if (numpGLfromGLtoGR[destIndex] < tempDestNumConLim)
+					if (unique && numpGLfromGLtoGR[destIndex] < tempDestNumConLim)
 					{
 						pGLfromGLtoGR[destIndex][numpGLfromGLtoGR[destIndex]] = srcIndex;
 						numpGLfromGLtoGR[destIndex]++;
@@ -593,14 +589,11 @@ void InNetConnectivityState::connectGOGL(CRandomSFMT &randGen)
 	float gridXScaleSrctoDest = (float)goX / (float)glX;
 	float gridYScaleSrctoDest = (float)goY / (float)glY;
 
-	bool srcConnected[NUM_GO];
+	bool srcConnected[NUM_GO] = {false};
 
 	for (int i = 0; i < MAX_NUM_P_GO_FROM_GL_TO_GO; i++)
 	{
 		int srcNumConnected = 0;
-		std::fill(&srcConnected[0], &srcConnected[0]
-			+ sizeof(srcConnected) / sizeof(srcConnected[0]), false);
-
 		while (srcNumConnected < NUM_GO)
 		{
 			int srcIndex = randGen.IRandom(0, NUM_GO - 1);
@@ -642,9 +635,14 @@ void InNetConnectivityState::connectGOGL(CRandomSFMT &randGen)
 				}
 				srcConnected[srcIndex] = true;
 				srcNumConnected++;
+				std::fill(&srcConnected[0], &srcConnected[0]
+					 + sizeof(srcConnected) / sizeof(srcConnected[0]), false);
 			}
 		}
 	}
+
+	std::cout << "[INFO]: Finished making gl go connections." << std::endl;
+	std::cout << "[INFO]: Starting on go gl connections..." << std::endl;
 
 	// go --> gl
 
@@ -652,7 +650,7 @@ void InNetConnectivityState::connectGOGL(CRandomSFMT &randGen)
 	int spanArrayGOtoGLY[SPAN_GO_TO_GL_Y + 1] = {0};
 	int xCoorsGOGL[NUM_P_GO_TO_GL] = {0};
 	int yCoorsGOGL[NUM_P_GO_TO_GL] = {0};
-	float pConGOGL[NUM_P_GO_TO_GL] = {0};
+	float pConGOGL[NUM_P_GO_TO_GL] = {0.0};
 
 	// Make span Array
 	for (int i = 0; i < SPAN_GO_TO_GL_X + 1; i++)
@@ -744,6 +742,8 @@ void InNetConnectivityState::connectGOGL(CRandomSFMT &randGen)
 		}
 	}
 
+	std::cout << "[INFO]: Finished making go gl connections." << std::endl;
+
 	int shitCounter = 0;
 	int totalGOGL = 0;
 
@@ -769,8 +769,7 @@ void InNetConnectivityState::connectGOGODecayP(CRandomSFMT &randGen)
 	int yCoorsGOGOsyn[NUM_P_GO_TO_GO] = {0};
 	float Pcon[NUM_P_GO_TO_GO] = {0}; 				
 
-	bool conGOGOBoolOut[NUM_GO][NUM_GO] = {0};
-	std::fill(conGOGOBoolOut[0], conGOGOBoolOut[0] + NUM_GO * NUM_GO, false);
+	bool conGOGOBoolOut[NUM_GO][NUM_GO] = {false};
 
 	// pre fill the golgi arrays with INT_MAX
 	std::fill(&pGOGABAInGOGO[0][0], &pGOGABAInGOGO[0][0]
@@ -941,8 +940,7 @@ void InNetConnectivityState::connectGOGO_GJ(CRandomSFMT &randGen)
 	float gjPCon[NUM_P_GO_TO_GO_GJ] = {0.0};
 	float gjCC[NUM_P_GO_TO_GO_GJ] = {0.0};
 
-	bool gjConBool[NUM_GO][NUM_GO] = {0};
-	std::fill(gjConBool[0], gjConBool[0] + (NUM_GO * NUM_GO), false);
+	bool gjConBool[NUM_GO][NUM_GO] = {false};
 
 	for (int i = 0; i < SPAN_GO_TO_GO_GJ_X + 1; i++)
 	{

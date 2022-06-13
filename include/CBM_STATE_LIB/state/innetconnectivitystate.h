@@ -37,14 +37,13 @@ public:
 
 	//glomerulus
 
+	bool haspGLfromMFtoGL[NUM_GL] = {false};
 	int numpGLfromGLtoGO[NUM_GL] = {0};
 	int pGLfromGLtoGO[NUM_GL][MAX_NUM_P_GL_FROM_GL_TO_GO] = {0};
-	int haspGLfromGOtoGL[NUM_GL] = {0};
 	int numpGLfromGOtoGL[NUM_GL] = {0};
 	int pGLfromGOtoGL[NUM_GL][MAX_NUM_P_GL_FROM_GO_TO_GL] = {0};
 	int numpGLfromGLtoGR[NUM_GL] = {0};
 	int pGLfromGLtoGR[NUM_GL][MAX_NUM_P_GL_FROM_GL_TO_GR] = {0};
-	int haspGLfromMFtoGL[NUM_GL] = {0};
 	int pGLfromMFtoGL[NUM_GL] = {0};
 	int numpMFfromMFtoGL[NUM_MF] = {0};
 	int pMFfromMFtoGL[NUM_MF][MAX_NUM_P_MF_FROM_MF_TO_GL] = {0};
@@ -78,7 +77,6 @@ public:
 	int pGOCoupOutGOGO[NUM_GO][NUM_P_GO_TO_GO_GJ] = {0};
 	float pGOCoupOutGOGOCCoeff[NUM_GO][NUM_P_GO_TO_GO_GJ] = {0};
 	float pGOCoupInGOGOCCoeff[NUM_GO][NUM_P_GO_TO_GO_GJ] = {0};
-
 
 	//granule
 	ct_uint32_t pGRDelayMaskfromGRtoBSP[NUM_GR] = {0};
