@@ -94,8 +94,6 @@ public:
 
 protected:
 
-	void initializeVals();
-
 	void stateRW(bool read, std::fstream &file);
 
 	void connectMFGL_noUBC(CRandomSFMT &randGen);

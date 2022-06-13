@@ -11,38 +11,35 @@ InNetConnectivityState::InNetConnectivityState(unsigned int msPerStep, int randS
 {
 	CRandomSFMT randGen(randSeed);
 	
-	std::cout << "Input net state construction..." << std::endl;
+	std::cout << "[INFO]: Initializing innet connections..." << std::endl;
+
+	std::cout << "[INFO]: Connecting MF and GL" << std::endl;
+	connectMFGL_noUBC(randGen);
+
+	std::cout << "[INFO]: Connecting GR and GL" << std::endl;
+	connectGLGR(randGen);
+
+	std::cout << "[INFO]: Connecting GR to GO" << std::endl;
+	connectGRGO(randGen);
+
+	std::cout << "[INFO]: Connecting GO and GL" << std::endl;
+	connectGOGL(randGen);
 	
-	std::cout << "Initializing connections..." << std::endl;
-	initializeVals();
-
-	//std::cout << "connecting MF and GL" << std::endl;
-	//connectMFGL_noUBC(randGen);
-
-	//std::cout << "connecting GR and GL" << std::endl;
-	//connectGLGR(randGen);
-
-	//std::cout << "connecting GR to GO" << std::endl;
-	//connectGRGO(randGen);
-
-	//std::cout << "connecting GO and GL" << std::endl;
-	//connectGOGL(randGen);
-	
-	std::cout << "connecting GO to GO" << std::endl;
+	std::cout << "[INFO]: Connecting GO to GO" << std::endl;
 	connectGOGODecayP(randGen);	
 
-	std::cout << "connecting GO to GO gap junctions" << std::endl;
+	std::cout << "[INFO]: Connecting GO to GO gap junctions" << std::endl;
 	connectGOGO_GJ(randGen);
 	
-	std::cout << "translating MF GL" << std::endl;
+	std::cout << "[INFO]: Translating MF GL" << std::endl;
 	translateMFGL();
 	
-	std::cout << "translating GO and GL" << std::endl;
+	std::cout << "[INFO]: Translating GO and GL" << std::endl;
 	translateGOGL();
 
-	std::cout << "assigning GR delays" << std::endl;
+	std::cout << "[INFO]: Assigning GR delays" << std::endl;
 	assignGRDelays(msPerStep);
-	std::cout << "done" << std::endl;
+	std::cout << "[INFO] Finished making innet connections." << std::endl;
 }
 
 //InNetConnectivityState::InNetConnectivityState(ConnectivityParams *parameters, std::fstream &infile)
@@ -243,71 +240,6 @@ void InNetConnectivityState::stateRW(bool read, std::fstream &file)
 	rawBytesRW((char *)numpGRfromMFtoGR, NUM_GR * sizeof(int), read, file);
 	rawBytesRW((char *)pGRfromMFtoGR[0],
 		NUM_GR * MAX_NUM_P_GR_FROM_MF_TO_GR * sizeof(int), read, file);
-}
-
-/* 
- * NOTE: since static arrays have the initializer (parentheses after square brackets) which,
- * for most numeric types defaults to zero, we only have to initialize those arrays whose default
- * values for our purposes are other than zero
- */
-void InNetConnectivityState::initializeVals()
-{
-	// gl
-	std::fill(&pGLfromGLtoGO[0][0], &pGLfromGLtoGO[0][0]
-		+ sizeof(pGLfromGLtoGO) / sizeof(pGLfromGLtoGO[0][0]), INT_MAX);
-	std::fill(&pGLfromGOtoGL[0][0], &pGLfromGOtoGL[0][0]
-		+ sizeof(pGLfromGOtoGL) / sizeof(pGLfromGOtoGL[0][0]), INT_MAX);
-	std::fill(&pGLfromGLtoGR[0][0], &pGLfromGLtoGR[0][0]
-		+ sizeof(pGLfromGLtoGR) / sizeof(pGLfromGLtoGR[0][0]), INT_MAX);
-	std::fill(&pGLfromMFtoGL[0], &pGLfromMFtoGL[0]
-		+ sizeof(pGLfromMFtoGL) / sizeof(pGLfromMFtoGL[0]), INT_MAX);
-
-	//mf
-	std::fill(&pMFfromMFtoGL[0][0], &pMFfromMFtoGL[0][0]
-		+ sizeof(pMFfromMFtoGL) / sizeof(pMFfromMFtoGL[0][0]), INT_MAX);
-	std::fill(&pMFfromMFtoGR[0][0], &pMFfromMFtoGR[0][0]
-		+ sizeof(pMFfromMFtoGR) / sizeof(pMFfromMFtoGR[0][0]), INT_MAX);
-	std::fill(&pMFfromMFtoGO[0][0], &pMFfromMFtoGO[0][0]
-		+ sizeof(pMFfromMFtoGO) / sizeof(pMFfromMFtoGO[0][0]), INT_MAX);
-
-	// go
-	std::fill(&pGOfromGLtoGO[0][0], &pGOfromGLtoGO[0][0]
-		+ sizeof(pGOfromGLtoGO) / sizeof(pGOfromGLtoGO[0][0]), INT_MAX);
-	std::fill(&pGOfromGOtoGL[0][0], &pGOfromGOtoGL[0][0]
-		+ sizeof(pGOfromGOtoGL) / sizeof(pGOfromGOtoGL[0][0]), INT_MAX);
-	std::fill(&pGOfromMFtoGO[0][0], &pGOfromMFtoGO[0][0]
-		+ sizeof(pGOfromMFtoGO) / sizeof(pGOfromMFtoGO[0][0]), INT_MAX);
-	std::fill(&pGOfromGOtoGR[0][0], &pGOfromGOtoGR[0][0]
-		+ sizeof(pGOfromGOtoGR) / sizeof(pGOfromGOtoGR[0][0]), INT_MAX);
-	std::fill(&pGOfromGRtoGO[0][0], &pGOfromGRtoGO[0][0]
-		+ sizeof(pGOfromGRtoGO) / sizeof(pGOfromGRtoGO[0][0]), INT_MAX);
-	std::fill(&pGOGABAInGOGO[0][0], &pGOGABAInGOGO[0][0]
-		+ sizeof(pGOGABAInGOGO) / sizeof(pGOGABAInGOGO[0][0]), INT_MAX);
-	std::fill(&pGOGABAOutGOGO[0][0], &pGOGABAOutGOGO[0][0]
-		+ sizeof(pGOGABAOutGOGO) / sizeof(pGOGABAOutGOGO[0][0]), INT_MAX);
-
-	// go gap junctions
-	std::fill(&pGOCoupInGOGO[0][0], &pGOCoupInGOGO[0][0]
-		+ sizeof(pGOCoupInGOGO) / sizeof(pGOCoupInGOGO[0][0]), INT_MAX);
-	std::fill(&pGOCoupInGOGOCCoeff[0][0], &pGOCoupInGOGOCCoeff[0][0]
-		+ sizeof(pGOCoupInGOGOCCoeff) / sizeof(pGOCoupInGOGOCCoeff[0][0]), INT_MAX);
-	std::fill(&pGOCoupOutGOGO[0][0], &pGOCoupOutGOGO[0][0]
-		+ sizeof(pGOCoupOutGOGO) / sizeof(pGOCoupOutGOGO[0][0]), INT_MAX);
-	std::fill(&pGOCoupOutGOGOCCoeff[0][0], &pGOCoupOutGOGOCCoeff[0][0]
-		+ sizeof(pGOCoupOutGOGOCCoeff) / sizeof(pGOCoupOutGOGOCCoeff[0][0]), INT_MAX);
-	
-	// gr
-	std::fill(&pGRfromGLtoGR[0][0], &pGRfromGLtoGR[0][0]
-		+ sizeof(pGRfromGLtoGR) / sizeof(pGRfromGLtoGR[0][0]), INT_MAX);
-	std::fill(&pGRfromGRtoGO[0][0], &pGRfromGRtoGO[0][0]
-		+ sizeof(pGRfromGRtoGO) / sizeof(pGRfromGRtoGO[0][0]), INT_MAX);
-	std::fill(&pGRDelayMaskfromGRtoGO[0][0], &pGRDelayMaskfromGRtoGO[0][0]
-		+ sizeof(pGRDelayMaskfromGRtoGO) / sizeof(pGRDelayMaskfromGRtoGO[0][0]), INT_MAX);
-	std::fill(&pGRfromGOtoGR[0][0], &pGRfromGOtoGR[0][0]
-		+ sizeof(pGRfromGOtoGR) / sizeof(pGRfromGOtoGR[0][0]), INT_MAX);
-
-	std::fill(&pGRfromMFtoGR[0][0], &pGRfromMFtoGR[0][0]
-		+ sizeof(pGRfromMFtoGR) / sizeof(pGRfromMFtoGR[0][0]), INT_MAX);
 }
 
 void InNetConnectivityState::connectMFGL_noUBC(CRandomSFMT &randGen)
@@ -839,6 +771,13 @@ void InNetConnectivityState::connectGOGODecayP(CRandomSFMT &randGen)
 
 	bool conGOGOBoolOut[NUM_GO][NUM_GO] = {0};
 	std::fill(conGOGOBoolOut[0], conGOGOBoolOut[0] + NUM_GO * NUM_GO, false);
+
+	// pre fill the golgi arrays with INT_MAX
+	std::fill(&pGOGABAInGOGO[0][0], &pGOGABAInGOGO[0][0]
+		+ sizeof(pGOGABAInGOGO) / sizeof(pGOGABAInGOGO[0][0]), INT_MAX);
+	std::fill(&pGOGABAOutGOGO[0][0], &pGOGABAOutGOGO[0][0]
+		+ sizeof(pGOGABAOutGOGO) / sizeof(pGOGABAOutGOGO[0][0]), INT_MAX);
+
 
 	for (int i = 0; i < SPAN_GO_TO_GO_X + 1; i++)
    	{

@@ -15,7 +15,6 @@
 #include <math.h>
 #include <limits.h>
 
-#include <memoryMgmt/dynamic2darray.h>
 #include <fileIO/rawbytesrw.h>
 #include <stdDefinitions/pstdint.h>
 #include <randGenerators/sfmt.h>
@@ -33,11 +32,6 @@ public:
 	virtual ~MZoneConnectivityState();
 
 	void writeState(std::fstream &outfile);
-
-	bool state_equal(const MZoneConnectivityState &compState);
-	bool state_unequal(const MZoneConnectivityState &compState);
-
-	//static const ConnectivityParams *cp;
 
 	//basket cells
 	ct_uint32_t pBCfromBCtoPC[NUM_BC][NUM_P_BC_FROM_BC_TO_PC] = {0};
@@ -66,8 +60,6 @@ public:
 
 private:
 	void stateRW(bool read, std::fstream &file);
-
-	void initializeVars();
 	
 	void connectBCtoPC();
 	void connectPCtoBC();
@@ -80,3 +72,4 @@ private:
 };
 
 #endif /* MZONECONNECTIVITYSTATE_H_ */
+

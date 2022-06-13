@@ -11,12 +11,14 @@ CBMState::CBMState() {}
 
 CBMState::CBMState(ActivityParams &ap, unsigned int nZones)
 {
+	CRandomSFMT randGen(time(0));
+
 	int *mzoneCRSeed = new int[nZones];
 	int *mzoneARSeed = new int[nZones];
 
-	CRandomSFMT0 randGen(time(0));
+	std::cout << INT_MAX << std::endl;
 	int innetCRSeed = randGen.IRandom(0, INT_MAX);
-
+	std::cout << innetCRSeed << std::endl;
 	for (int i = 0; i < nZones; i++)
 	{
 		mzoneCRSeed[i] = randGen.IRandom(0, INT_MAX);

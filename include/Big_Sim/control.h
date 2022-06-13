@@ -10,7 +10,7 @@
 #include "stdDefinitions/pstdint.h"
 #include "interfaces/cbmstate.h"
 #include "params/connectivityparams.h"
-#include "interfaces/iactivityparams.h"
+#include "params/activityparams.h"
 #include "state/innetconnectivitystate.h"
 #include "state/innetactivitystate.h"
 #include "interface/cbmsimcore.h"

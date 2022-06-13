@@ -9,16 +9,24 @@
 
 MZoneConnectivityState::MZoneConnectivityState(int randSeed)
 {
-	initializeVars();
-
+	std::cout << "[INFO]: Initializing mzone connections..." << std::endl;
+	std::cout << "[INFO]: Connecting BC to PC" << std::endl;
 	connectBCtoPC();
+	std::cout << "[INFO]: Connecting PC to BC" << std::endl;
 	connectPCtoBC();
+	std::cout << "[INFO]: Connecting SC and PC" << std::endl;
 	connectSCtoPC();
+	std::cout << "[INFO]: Connecting PC and NC" << std::endl;
 	connectPCtoNC(randSeed);
+	std::cout << "[INFO]: Connecting NC and IO" << std::endl;
 	connectNCtoIO();
+	std::cout << "[INFO]: Connecting MF and NC" << std::endl;
 	connectMFtoNC();
+	std::cout << "[INFO]: Connecting IO and PC" << std::endl;
 	connectIOtoPC();
+	std::cout << "[INFO]: Connecting IO and IO" << std::endl;
 	connectIOtoIO();
+	std::cout << "[INFO]: Finished making mzone connections." << std::endl;
 }
 
 MZoneConnectivityState::MZoneConnectivityState(std::fstream &infile)
@@ -89,56 +97,6 @@ void MZoneConnectivityState::stateRW(bool read, std::fstream &file)
 	rawBytesRW((char *)pIOfromNCtoIO[0], NUM_IO * NUM_P_IO_FROM_NC_TO_IO * sizeof(ct_uint32_t), read, file);
 	rawBytesRW((char *)pIOInIOIO[0], NUM_IO * NUM_P_IO_IN_IO_TO_IO * sizeof(ct_uint32_t), read, file);
 	rawBytesRW((char *)pIOOutIOIO[0], NUM_IO * NUM_P_IO_OUT_IO_TO_IO * sizeof(ct_uint32_t), read, file);
-}
-
-bool MZoneConnectivityState::state_equal(const MZoneConnectivityState &compState)
-{
-	bool eq = true;
-
-	for (int i = 0; i < NUM_BC; i++)
-	{
-		for (int j = 0; j < NUM_P_BC_FROM_PC_TO_BC; j++)
-		{
-			eq = eq && (pBCfromPCtoBC[i][j] == compState.pBCfromPCtoBC[i][j]);
-		}
-	}
-
-	for (int i = 0; i < NUM_IO; i++)
-	{
-		for (int j = 0; j < NUM_P_IO_IN_IO_TO_IO; j++)
-		{
-			eq = eq && (pIOInIOIO[i][j] == compState.pIOInIOIO[i][j]);
-		}
-	}
-	return eq;
-}
-
-bool MZoneConnectivityState::state_unequal(const MZoneConnectivityState &compState)
-{
-	return !state_equal(compState);
-}
-
-void MZoneConnectivityState::initializeVars()
-{
-	std::fill(pBCfromBCtoPC[0], pBCfromBCtoPC[0] + NUM_BC * NUM_P_BC_FROM_BC_TO_PC, UINT_MAX);
-	std::fill(pBCfromPCtoBC[0], pBCfromPCtoBC[0] + NUM_BC * NUM_P_BC_FROM_PC_TO_BC, UINT_MAX);
-
-	std::fill(pSCfromSCtoPC[0], pSCfromSCtoPC[0] + NUM_SC * NUM_P_SC_FROM_SC_TO_PC, UINT_MAX);
-
-	std::fill(pPCfromBCtoPC[0], pPCfromBCtoPC[0] + NUM_PC * NUM_P_PC_FROM_BC_TO_PC, UINT_MAX);
-	std::fill(pPCfromPCtoBC[0], pPCfromPCtoBC[0] + NUM_PC * NUM_P_PC_FROM_PC_TO_BC, UINT_MAX);
-	std::fill(pPCfromSCtoPC[0], pPCfromSCtoPC[0] + NUM_PC * NUM_P_PC_FROM_SC_TO_PC, UINT_MAX);
-	std::fill(pPCfromPCtoNC[0], pPCfromPCtoNC[0] + NUM_PC * NUM_P_PC_FROM_PC_TO_NC, UINT_MAX);
-	std::fill(pPCfromIOtoPC, pPCfromIOtoPC + NUM_PC, UINT_MAX);
-
-	std::fill(pNCfromPCtoNC[0], pNCfromPCtoNC[0] + NUM_NC * NUM_P_NC_FROM_PC_TO_NC, UINT_MAX);
-	std::fill(pNCfromNCtoIO[0], pNCfromNCtoIO[0] + NUM_NC * NUM_P_NC_FROM_NC_TO_IO, UINT_MAX);
-	std::fill(pNCfromMFtoNC[0], pNCfromMFtoNC[0] + NUM_NC * NUM_P_NC_FROM_MF_TO_NC, UINT_MAX);
-
-	std::fill(pIOfromIOtoPC[0], pIOfromIOtoPC[0] + NUM_IO * NUM_P_IO_FROM_IO_TO_PC, UINT_MAX);
-	std::fill(pIOfromNCtoIO[0], pIOfromNCtoIO[0] + NUM_IO * NUM_P_IO_FROM_NC_TO_IO, UINT_MAX);
-	std::fill(pIOInIOIO[0], pIOInIOIO[0] + NUM_IO * NUM_P_IO_IN_IO_TO_IO, UINT_MAX);
-	std::fill(pIOOutIOIO[0], pIOOutIOIO[0] + NUM_IO * NUM_P_IO_OUT_IO_TO_IO, UINT_MAX);
 }
 
 void MZoneConnectivityState::connectBCtoPC()

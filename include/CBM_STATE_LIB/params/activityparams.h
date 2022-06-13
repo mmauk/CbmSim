@@ -15,9 +15,9 @@
 #include <iostream>
 #include <fstream>
 #include <stdDefinitions/pstdint.h>
-#include "interfaces/iactivityparams.h"
+//#include "interfaces/iactivityparams.h"
 
-class ActivityParams : public virtual IActivityParams
+class ActivityParams
 {
 public:
 	ActivityParams();

@@ -22,7 +22,7 @@
 #include "state/mzoneactivitystate.h"
 
 #include "params/connectivityparams.h" // <-- added in 06/01/2022
-#include "iactivityparams.h"
+#include "params/activityparams.h"
 #include "imzoneactstate.h"
 
 class CBMState
