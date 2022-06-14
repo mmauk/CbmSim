@@ -12,15 +12,11 @@
 #include <iostream>
 #include <time.h>
 #include <limits.h>
-
 #include "stdDefinitions/pstdint.h"
-
 #include "state/innetconnectivitystate.h"
-#include "state/innetconstateggialtcon.h"
 #include "state/mzoneconnectivitystate.h"
 #include "state/innetactivitystate.h"
 #include "state/mzoneactivitystate.h"
-
 #include "params/connectivityparams.h" // <-- added in 06/01/2022
 #include "params/activityparams.h"
 #include "imzoneactstate.h"
@@ -31,8 +27,7 @@ class CBMState
 		CBMState();
 		CBMState(ActivityParams &ap, unsigned int nZones);
 
-		// y virtual where is the inheritance
-		virtual ~CBMState();	
+		~CBMState();	
 
 		void writeState(ActivityParams &ap, std::fstream &outfile);
 

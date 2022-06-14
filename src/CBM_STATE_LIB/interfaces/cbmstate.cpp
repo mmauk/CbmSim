@@ -9,7 +9,7 @@
 
 CBMState::CBMState() {}
 
-CBMState::CBMState(ActivityParams &ap, unsigned int nZones)
+CBMState::CBMState(ActivityParams &ap, unsigned int nZones) : numZones(nZones)
 {
 	CRandomSFMT randGen(time(0));
 
@@ -44,15 +44,15 @@ CBMState::~CBMState()
 	delete[] mzoneActStates;
 }
 
-void CBMState::newState(ActivityParams &ap,
-	unsigned int nZones, int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed)
+void CBMState::newState(ActivityParams &ap, unsigned int nZones, int innetCRSeed,
+	 int *mzoneCRSeed, int *mzoneARSeed)
 {
 	innetConState  = new InNetConnectivityState(ap.msPerTimeStep, innetCRSeed);
-	mzoneConStates = new MZoneConnectivityState*[numZones];
+	mzoneConStates = new MZoneConnectivityState*[nZones];
 	innetActState  = new InNetActivityState(ap);
-	mzoneActStates = new MZoneActivityState*[numZones];
+	mzoneActStates = new MZoneActivityState*[nZones];
 
-	for (int i = 0; i < numZones; i++)
+	for (int i = 0; i < nZones; i++)
 	{
 		mzoneConStates[i] = new MZoneConnectivityState(mzoneCRSeed[i]);
 		mzoneActStates[i] = new MZoneActivityState(ap, mzoneARSeed[i]);

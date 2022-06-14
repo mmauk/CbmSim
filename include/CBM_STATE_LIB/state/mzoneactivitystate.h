@@ -16,21 +16,17 @@
 #include <randGenerators/sfmt.h>
 #include "params/connectivityparams.h"
 #include "params/activityparams.h"
-#include "interfaces/imzoneactstate.h"
 
-class MZoneActivityState : public virtual IMZoneActState
+class MZoneActivityState
 {
 public:
 	MZoneActivityState();
 	MZoneActivityState(ActivityParams &ap, int randSeed);
 	MZoneActivityState(ActivityParams &ap, std::fstream &infile);
 
-	virtual ~MZoneActivityState();
+	~MZoneActivityState();
 
 	void writeState(ActivityParams &ap, std::fstream &outfile);
-
-	//virtual std::vector<float> getGRPCSynWeightLinear();
-	//virtual void resetGRPCSynWeight(float initSynWofGRtoPC);
 
 	//basket cells
 	ct_uint8_t apBC[NUM_BC] = {0};

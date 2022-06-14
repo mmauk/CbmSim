@@ -20,16 +20,16 @@ BUILD_PATH	  = $(ROOT)build/
 # NOTE using update alternatives: to switch back to ver11, use update-alternatives --config g++
 CXX              = g++
 # CXXFLAGS         = -m64 -pipe -std=c++11 -O3 -g -Wall 
-CXXFLAGS         = -m64 -pipe -std=c++11 -g -Wall 
+CXXFLAGS         = -m64 -std=c++11 -g -Wall
 # MODULE_CXX_FLAGS = -m64 -pipe -std=c++11 -O2 -g -Wall -fPIC 
-MODULE_CXX_FLAGS = -m64 -pipe -std=c++11 -g -Wall -fPIC 
+MODULE_CXX_FLAGS = -m64 -std=c++11 -g -Wall
 INCPATH          = -I. -Iinclude/Big_Sim -I/usr/local/cuda/include -I$(ROOT)include/CBM_CORE_LIB -I$(ROOT)include/CBM_DATA_LIB \
 			       -I$(ROOT)include/CBM_STATE_LIB -I$(ROOT)include/CBM_TOOLS_LIB -I$(ROOT)include/CXX_TOOLS_LIB 
 LIBS             = -L/user/local/cuda/lib64 -L/usr/local/cuda/lib64 -L/usr/lib64 -L/opt/cuda/lib64 -lcudart
 LINK             = g++
 LFLAGS           = -m64 
 # MODULE_LFLAGS    = -m64 -Wl, -O1 -shared
-MODULE_LFLAGS    = -m64 -Wl, -shared
+MODULE_LFLAGS    = -m64
 
 CHK_DIR_EXISTS   = test -d
 MKDIR            = mkdir -p
@@ -118,7 +118,6 @@ CBM_STATE_SOURCES  = $(CBM_STATE_SRC_PATH)interfaces/cbmstate.cpp \
 			         $(CBM_STATE_SRC_PATH)params/connectivityparams.cpp \
 			         $(CBM_STATE_SRC_PATH)state/innetactivitystate.cpp \
 			         $(CBM_STATE_SRC_PATH)state/innetconnectivitystate.cpp \
-			         $(CBM_STATE_SRC_PATH)state/innetconstateggialtcon.cpp \
 			         $(CBM_STATE_SRC_PATH)state/mzoneactivitystate.cpp \
 			         $(CBM_STATE_SRC_PATH)state/mzoneconnectivitystate.cpp
 
@@ -128,7 +127,6 @@ CBM_STATE_OBJECTS  = $(CBM_STATE_OBJ_PATH)cbmstate.o \
                      $(CBM_STATE_OBJ_PATH)connectivityparams.o \
                      $(CBM_STATE_OBJ_PATH)innetactivitystate.o \
                      $(CBM_STATE_OBJ_PATH)innetconnectivitystate.o \
-                     $(CBM_STATE_OBJ_PATH)innetconstateggialtcon.o \
                      $(CBM_STATE_OBJ_PATH)mzoneactivitystate.o \
                      $(CBM_STATE_OBJ_PATH)mzoneconnectivitystate.o
 
@@ -794,7 +792,6 @@ $(CBM_STATE_OBJ_PATH)cbmstate.o: $(CBM_STATE_SRC_PATH)interfaces/cbmstate.cpp $(
 		$(CBM_STATE_INCLUDE_PATH)params/activityparams.h \
 		$(CBM_STATE_INCLUDE_PATH)params/connectivityparams.h \
 		$(CBM_STATE_INCLUDE_PATH)state/innetconnectivitystate.h \
-		$(CBM_STATE_INCLUDE_PATH)state/innetconstateggialtcon.h \
 		$(CBM_STATE_INCLUDE_PATH)state/mzoneconnectivitystate.h \
 		$(CBM_STATE_INCLUDE_PATH)state/innetactivitystate.h \
 		$(CBM_STATE_INCLUDE_PATH)state/mzoneactivitystate.h \
@@ -819,11 +816,6 @@ $(CBM_STATE_OBJ_PATH)innetactivitystate.o: $(CBM_STATE_SRC_PATH)state/innetactiv
 $(CBM_STATE_OBJ_PATH)innetconnectivitystate.o: $(CBM_STATE_SRC_PATH)state/innetconnectivitystate.cpp $(CBM_STATE_INCLUDE_PATH)state/innetconnectivitystate.h \
 		                                       $(CBM_STATE_INCLUDE_PATH)params/connectivityparams.h
 	$(CXX) -c $(MODULE_CXX_FLAGS) $(CBM_STATE_INCLUDES) -o $(CBM_STATE_OBJ_PATH)innetconnectivitystate.o $(CBM_STATE_SRC_PATH)state/innetconnectivitystate.cpp
-
-$(CBM_STATE_OBJ_PATH)innetconstateggialtcon.o: $(CBM_STATE_SRC_PATH)state/innetconstateggialtcon.cpp $(CBM_STATE_INCLUDE_PATH)state/innetconstateggialtcon.h \
-		                                       $(CBM_STATE_INCLUDE_PATH)state/innetconnectivitystate.h \
-		                                       $(CBM_STATE_INCLUDE_PATH)params/connectivityparams.h
-	$(CXX) -c $(MODULE_CXX_FLAGS) $(CBM_STATE_INCLUDES) -o $(CBM_STATE_OBJ_PATH)innetconstateggialtcon.o $(CBM_STATE_SRC_PATH)state/innetconstateggialtcon.cpp
 
 $(CBM_STATE_OBJ_PATH)mzoneactivitystate.o: $(CBM_STATE_SRC_PATH)state/mzoneactivitystate.cpp $(CBM_STATE_INCLUDE_PATH)state/mzoneactivitystate.h \
 		                                   $(CBM_STATE_INCLUDE_PATH)params/connectivityparams.h \

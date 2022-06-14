@@ -13,15 +13,11 @@
 #include <sstream>
 #include <string.h>
 #include <math.h>
-#include <vector>
 #include <limits.h>
 #include <algorithm>
-
-#include <memoryMgmt/dynamic2darray.h>
-#include <fileIO/rawbytesrw.h>
-#include <stdDefinitions/pstdint.h>
-#include <randGenerators/sfmt.h>
-
+#include "fileIO/rawbytesrw.h"
+#include "stdDefinitions/pstdint.h"
+#include "randGenerators/sfmt.h"
 #include "params/connectivityparams.h"
 
 class InNetConnectivityState

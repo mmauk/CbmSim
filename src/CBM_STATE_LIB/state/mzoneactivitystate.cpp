@@ -32,31 +32,6 @@ void MZoneActivityState::writeState(ActivityParams &ap, std::fstream &outfile)
 	stateRW(ap.numPopHistBinsPC, false, outfile);
 }
 
-// where do we use this function??
-//std::vector<float> MZoneActivityState::getGRPCSynWeightLinear()
-//{
-//	std::vector<float> retVec(NUM_GR, 0.0);
-//	for (int i = 0; i < NUM_PC; i++)
-//	{
-//		for (int j = 0; j < NUM_P_PC_FROM_GR_TO_PC; j++)
-//		{
-//			retVec[i * NUM_P_PC_FROM_GR_TO_PC + j] = pfSynWeightPC[i][j];
-//		}
-//	}
-//	return retVec;
-//}
-
-//void MZoneActivityState::resetGRPCSynWeight(float initSynWofGRtoPC)
-//{
-//	for (int i = 0; i < NUM_PC; i++)
-//	{
-//		for (int j = 0; j < NUM_P_PC_FROM_GR_TO_PC; j++)
-//		{
-//			pfSynWeightPC[i][j] = initSynWofGRtoPC;
-//		}
-//	}
-//}
-
 void MZoneActivityState::allocateMemory(ct_uint32_t numPopHistBinsPC)
 {
 	histPCPopAct  = new ct_uint32_t[numPopHistBinsPC];

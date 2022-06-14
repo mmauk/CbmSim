@@ -13,17 +13,17 @@ InNetConnectivityState::InNetConnectivityState(unsigned int msPerStep, int randS
 	
 	std::cout << "[INFO]: Initializing innet connections..." << std::endl;
 
-	//std::cout << "[INFO]: Connecting MF and GL" << std::endl;
-	//connectMFGL_noUBC(randGen);
+	std::cout << "[INFO]: Connecting MF and GL" << std::endl;
+	connectMFGL_noUBC(randGen);
 
 	std::cout << "[INFO]: Connecting GR and GL" << std::endl;
 	connectGLGR(randGen);
 
-	//std::cout << "[INFO]: Connecting GR to GO" << std::endl;
-	//connectGRGO(randGen);
+	std::cout << "[INFO]: Connecting GR to GO" << std::endl;
+	connectGRGO(randGen);
 
-	//std::cout << "[INFO]: Connecting GO and GL" << std::endl;
-	//connectGOGL(randGen);
+	std::cout << "[INFO]: Connecting GO and GL" << std::endl;
+	connectGOGL(randGen);
 	
 	std::cout << "[INFO]: Connecting GO to GO" << std::endl;
 	connectGOGODecayP(randGen);	
