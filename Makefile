@@ -20,9 +20,9 @@ BUILD_PATH	  = $(ROOT)build/
 # NOTE using update alternatives: to switch back to ver11, use update-alternatives --config g++
 CXX              = g++
 # CXXFLAGS         = -m64 -pipe -std=c++11 -O3 -g -Wall 
-CXXFLAGS         = -m64 -std=c++11 -g -Wall
+CXXFLAGS         = -m64 -std=c++14 -g -Wall
 # MODULE_CXX_FLAGS = -m64 -pipe -std=c++11 -O2 -g -Wall -fPIC 
-MODULE_CXX_FLAGS = -m64 -std=c++11 -g -Wall
+MODULE_CXX_FLAGS = -m64 -std=c++14 -g -Wall
 INCPATH          = -I. -Iinclude/Big_Sim -I/usr/local/cuda/include -I$(ROOT)include/CBM_CORE_LIB -I$(ROOT)include/CBM_DATA_LIB \
 			       -I$(ROOT)include/CBM_STATE_LIB -I$(ROOT)include/CBM_TOOLS_LIB -I$(ROOT)include/CXX_TOOLS_LIB 
 LIBS             = -L/user/local/cuda/lib64 -L/usr/local/cuda/lib64 -L/usr/lib64 -L/opt/cuda/lib64 -lcudart
@@ -64,7 +64,6 @@ CBM_CORE_OBJ_PATH     = $(BUILD_PATH)CBM_CORE_LIB/
 ####### CBM Core Files
 
 CBM_CORE_SOURCES  = $(CBM_CORE_SRC_PATH)innetmodules/innet.cpp \
-			        $(CBM_CORE_SRC_PATH)innetmodules/innetallgrmfgo.cpp \
 			        $(CBM_CORE_SRC_PATH)interface/cbmsimcore.cpp \
 			        $(CBM_CORE_SRC_PATH)interface/innetinterface.cpp \
 			        $(CBM_CORE_SRC_PATH)interface/mzoneinterface.cpp \
@@ -72,7 +71,6 @@ CBM_CORE_SOURCES  = $(CBM_CORE_SRC_PATH)innetmodules/innet.cpp \
 
 CBM_CORE_OBJECTS  = $(CBM_CORE_OBJ_PATH)kernels_cuda.o \
                     $(CBM_CORE_OBJ_PATH)innet.o \
-                    $(CBM_CORE_OBJ_PATH)innetallgrmfgo.o \
                     $(CBM_CORE_OBJ_PATH)cbmsimcore.o \
                     $(CBM_CORE_OBJ_PATH)innetinterface.o \
                     $(CBM_CORE_OBJ_PATH)mzoneinterface.o \
@@ -710,19 +708,12 @@ $(CBM_CORE_OBJ_PATH)innet.o: $(CBM_CORE_SRC_PATH)innetmodules/innet.cpp $(CBM_CO
                              $(CBM_CORE_INCLUDE_PATH)interface/innetinterface.h
 	$(CXX) -c $(MODULE_CXX_FLAGS) $(CBM_CORE_INCLUDES) -o $(CBM_CORE_OBJ_PATH)innet.o $(CBM_CORE_SRC_PATH)innetmodules/innet.cpp
  
-$(CBM_CORE_OBJ_PATH)innetallgrmfgo.o: $(CBM_CORE_SRC_PATH)innetmodules/innetallgrmfgo.cpp $(CBM_CORE_INCLUDE_PATH)innetmodules/innetallgrmfgo.h \
-                                      $(CBM_CORE_INCLUDE_PATH)innetmodules/innet.h \
-                                      $(CBM_CORE_INCLUDE_PATH)cuda/kernels.h \
-                                      $(CBM_CORE_INCLUDE_PATH)interface/innetinterface.h
-	$(CXX) -c $(MODULE_CXX_FLAGS) $(CBM_CORE_INCLUDES) -o $(CBM_CORE_OBJ_PATH)innetallgrmfgo.o $(CBM_CORE_SRC_PATH)innetmodules/innetallgrmfgo.cpp
- 
 $(CBM_CORE_OBJ_PATH)cbmsimcore.o: $(CBM_CORE_SRC_PATH)interface/cbmsimcore.cpp $(CBM_CORE_INCLUDE_PATH)interface/cbmsimcore.h \
                                   $(CBM_CORE_INCLUDE_PATH)interface/innetinterface.h \
                                   $(CBM_CORE_INCLUDE_PATH)interface/mzoneinterface.h \
                                   $(CBM_CORE_INCLUDE_PATH)mzonemodules/mzone.h \
                                   $(CBM_CORE_INCLUDE_PATH)cuda/kernels.h \
-                                  $(CBM_CORE_INCLUDE_PATH)innetmodules/innet.h \
-                                  $(CBM_CORE_INCLUDE_PATH)innetmodules/innetallgrmfgo.h
+                                  $(CBM_CORE_INCLUDE_PATH)innetmodules/innet.h
 	$(CXX) -c $(MODULE_CXX_FLAGS) $(CBM_CORE_INCLUDES) -o $(CBM_CORE_OBJ_PATH)cbmsimcore.o $(CBM_CORE_SRC_PATH)interface/cbmsimcore.cpp
   
 $(CBM_CORE_OBJ_PATH)innetinterface.o: $(CBM_CORE_SRC_PATH)interface/innetinterface.cpp $(CBM_CORE_INCLUDE_PATH)interface/innetinterface.h

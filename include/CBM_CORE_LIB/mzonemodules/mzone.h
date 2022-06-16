@@ -19,6 +19,7 @@
 #include <iostream>
 #include <fstream>
 #include <string.h>
+#include <memory>
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <device_functions.h>
@@ -61,7 +62,7 @@ public:
 	void updateIOOut();
 	void updateNCOut();
 	void updateMFNCOut();
-	void updateMFNCSyn(const ct_uint8_t *histMF, unsigned long t);
+	//void updateMFNCSyn(const std::unique_ptr<ct_uint8_t[]> histMF, unsigned long t);
 
 	void runPFPCOutCUDA(cudaStream_t **sts, int streamN);
 	void runPFPCSumCUDA(cudaStream_t **sts, int streamN);
@@ -108,7 +109,7 @@ private:
 
 	//mossy fiber variables
 	const ct_uint8_t *apMFInput;
-	const ct_uint8_t *histMFInput;
+	//const ct_uint8_t *histMFInput;
 	bool *isTrueMF;
 
 	//stellate cell variables

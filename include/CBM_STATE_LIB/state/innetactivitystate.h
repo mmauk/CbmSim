@@ -8,16 +8,12 @@
 #ifndef INNETACTIVITYSTATE_H_
 #define INNETACTIVITYSTATE_H_
 
+#include <memory>
 #include <fstream>
-
-#include <memoryMgmt/dynamic2darray.h>
-#include <memoryMgmt/arrayvalidate.h>
 #include <fileIO/rawbytesrw.h>
 #include <stdDefinitions/pstdint.h>
-
 #include "params/connectivityparams.h"
 #include "params/activityparams.h"
-#include "innetconnectivitystate.h"
 
 
 class InNetActivityState
@@ -33,25 +29,18 @@ public:
 	void resetState(ActivityParams &ap);
 
 	//mossy fiber
-	ct_uint8_t histMF[NUM_MF] = {0};
-	ct_uint32_t apBufMF[NUM_MF] = {0};
-	float depAmpMFUBC[NUM_MF] = {0.0};
+	std::unique_ptr<ct_uint8_t[]> histMF{nullptr};
+	std::unique_ptr<ct_uint32_t[]> apBufMF{nullptr};
 
 	//golgi cells
 	int goTimeStep;
-	float synWscalerGRtoGO[NUM_GO] = {0.0};
-	float synWscalerGOtoGO[NUM_GO] = {0.0};
-	int goSpkSumHP[NUM_GO] = {0};
-	float goFR_HP[NUM_GO] = {0.0};
-	ct_uint8_t apGO[NUM_GO] = {0};
-	ct_uint32_t apBufGO[NUM_GO] = {0};
-	int spkGO[NUM_GO] = {0};
-	float vGO[NUM_GO] = {0.0};
-	float exGOInput[NUM_GO] = {0.0};
-	float inhGOInput[NUM_GO] = {0.0};
-	float vCoupleGO[NUM_GO] = {0.0};
-	float threshCurGO[NUM_GO] = {0.0};
-	ct_uint32_t inputMFGO[NUM_GO] = {0};
+	std::unique_ptr<float[]> synWscalerGRtoGO{nullptr};
+	std::unique_ptr<ct_uint8_t[]> apGO{nullptr};
+	std::unique_ptr<ct_uint32_t[]> apBufGO{nullptr};
+	std::unique_ptr<float[]> vGO{nullptr};
+	std::unique_ptr<float[]> vCoupleGO{nullptr};
+	std::unique_ptr<float[]> threshCurGO{nullptr};
+	std::unique_ptr<ct_uint32_t[]> inputMFGO{nullptr};
 	ct_uint32_t inputUBCGO[NUM_GO] = {0};
 	float depAmpMFGO[NUM_MF] = {0.0};
 	float gi_MFtoGO[NUM_MF] = {0.0};
@@ -75,9 +64,9 @@ public:
 	float inputGOGABASynDepGO[NUM_GO] = {0.0};
 	float goGABAOutSynScaleGOGO[NUM_GO] = {0.0};
 
+	//NOTE: removed NMDA UBC GO conductance 06/15/2022
 	float gMFGO[NUM_GO] = {0.0};
 	float gNMDAMFGO[NUM_GO] = {0.0};
-	float gNMDAUBCGO[NUM_GO] = {0.0};
 	float gNMDAIncMFGO[NUM_GO] = {0.0};
 	float gGRGO[NUM_GO] = {0.0};
 	float gGRGO_NMDA[NUM_GO] = {0.0};
@@ -159,6 +148,7 @@ public:
 
 private:
 	void stateRW(bool read, std::fstream &file);
+	void allocateArrMem(ActivityParams &ap);
 	void initializeVals(ActivityParams &ap);
 };
 

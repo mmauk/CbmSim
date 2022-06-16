@@ -476,82 +476,84 @@ void MZone::updateMFNCOut()
 		}
 	}
 }
-
-void MZone::updateMFNCSyn(const ct_uint8_t *histMF, unsigned long t)
-{
-	
-	bool reset;
-	float avgAllAPPC;
-	bool doLTD;
-	bool doLTP;
-
-#ifdef DEBUGOUT
-	float sumSynW;
-#endif
-	if(t % ap.tsPerPopHistBinPC == 0) return;
-
-	histMFInput = histMF;
-
-	as->histPCPopActSum = (as->histPCPopActSum) - (as->histPCPopAct[as->histPCPopActCurBinN]) + (as->pcPopAct);
-	as->histPCPopAct[as->histPCPopActCurBinN] = as->pcPopAct;
-	as->pcPopAct = 0;
-	as->histPCPopActCurBinN++;
-	as->histPCPopActCurBinN %= ap.numPopHistBinsPC;
-
-	avgAllAPPC = ((float)as->histPCPopActSum) / ap.numPopHistBinsPC;
-
-#ifdef DEBUGOUT
-	std::cout << "avgAllAPPC: " << avgAllAPPC << std::endl;
-#endif
-
-	doLTD = false;
-	doLTP = false;
-	if (avgAllAPPC >= ap.synLTDPCPopActThreshMFtoNC && !as->noLTDMFNC)
-	{
-		doLTD = true;
-		as->noLTDMFNC = true;
-	}
-	else if (avgAllAPPC < ap.synLTDPCPopActThreshMFtoNC)
-	{
-		as->noLTDMFNC = false;
-	}
-
-	if (avgAllAPPC <= ap.synLTPPCPopActThreshMFtoNC && !as->noLTPMFNC)
-	{
-		doLTP = true;
-		as->noLTPMFNC = true;
-	}
-	else if (avgAllAPPC > ap.synLTPPCPopActThreshMFtoNC)
-	{
-		as->noLTPMFNC = false;
-	}
-
-#ifdef DEBUGOUT
-	sumSynW = 0;
-#endif
-	for (int i = 0; i < NUM_NC; i++)
-	{
-		for(int j = 0; j < NUM_P_NC_FROM_MF_TO_NC; j++)
-		{
-			float synWDelta;
-			synWDelta = histMFInput[cs->pNCfromMFtoNC[i][j]] * (doLTD * ap.synLTDStepSizeMFtoNC +
-					doLTP * ap.synLTPStepSizeMFtoNC);
-			as->mfSynWeightNC[i][j] += synWDelta;
-			as->mfSynWeightNC[i][j] *= as->mfSynWeightNC[i][j] > 0;
-			as->mfSynWeightNC[i][j] *= as->mfSynWeightNC[i][j] <= 1; 
-			as->mfSynWeightNC[i][j]	+= as->mfSynWeightNC[i][j] > 1;
-			
-			//Now uses isTrueMF to take collaterals into account
-			as->mfSynWeightNC[i][j] *= isTrueMF[cs->pNCfromMFtoNC[i][j]];
-#ifdef DEBUGOUT
-			sumSynW += as->mfSynWeightNC[i][j];
-#endif
-		}
-	}
-#ifdef DEBUGOUT
-	std::cout << sumSynW / NUM_MF << std::endl;
-#endif
-}
+/*
+ * NOTE: it is okay that we are passing the unique ptr by value, since we only read from it, not write
+ */
+//void MZone::updateMFNCSyn(const std::unique_ptr<ct_uint8_t[]> histMF, unsigned long t)
+//{
+//	
+//	bool reset;
+//	float avgAllAPPC;
+//	bool doLTD;
+//	bool doLTP;
+//
+//#ifdef DEBUGOUT
+//	float sumSynW;
+//#endif
+//	if(t % ap.tsPerPopHistBinPC == 0) return;
+//
+//	//histMFInput = histMF;
+//
+//	as->histPCPopActSum = (as->histPCPopActSum) - (as->histPCPopAct[as->histPCPopActCurBinN]) + (as->pcPopAct);
+//	as->histPCPopAct[as->histPCPopActCurBinN] = as->pcPopAct;
+//	as->pcPopAct = 0;
+//	as->histPCPopActCurBinN++;
+//	as->histPCPopActCurBinN %= ap.numPopHistBinsPC;
+//
+//	avgAllAPPC = ((float)as->histPCPopActSum) / ap.numPopHistBinsPC;
+//
+//#ifdef DEBUGOUT
+//	std::cout << "avgAllAPPC: " << avgAllAPPC << std::endl;
+//#endif
+//
+//	doLTD = false;
+//	doLTP = false;
+//	if (avgAllAPPC >= ap.synLTDPCPopActThreshMFtoNC && !as->noLTDMFNC)
+//	{
+//		doLTD = true;
+//		as->noLTDMFNC = true;
+//	}
+//	else if (avgAllAPPC < ap.synLTDPCPopActThreshMFtoNC)
+//	{
+//		as->noLTDMFNC = false;
+//	}
+//
+//	if (avgAllAPPC <= ap.synLTPPCPopActThreshMFtoNC && !as->noLTPMFNC)
+//	{
+//		doLTP = true;
+//		as->noLTPMFNC = true;
+//	}
+//	else if (avgAllAPPC > ap.synLTPPCPopActThreshMFtoNC)
+//	{
+//		as->noLTPMFNC = false;
+//	}
+//
+//#ifdef DEBUGOUT
+//	sumSynW = 0;
+//#endif
+//	for (int i = 0; i < NUM_NC; i++)
+//	{
+//		for(int j = 0; j < NUM_P_NC_FROM_MF_TO_NC; j++)
+//		{
+//			float synWDelta;
+//			synWDelta = histMF[cs->pNCfromMFtoNC[i][j]] * (doLTD * ap.synLTDStepSizeMFtoNC +
+//					doLTP * ap.synLTPStepSizeMFtoNC);
+//			as->mfSynWeightNC[i][j] += synWDelta;
+//			as->mfSynWeightNC[i][j] *= as->mfSynWeightNC[i][j] > 0;
+//			as->mfSynWeightNC[i][j] *= as->mfSynWeightNC[i][j] <= 1; 
+//			as->mfSynWeightNC[i][j]	+= as->mfSynWeightNC[i][j] > 1;
+//			
+//			//Now uses isTrueMF to take collaterals into account
+//			as->mfSynWeightNC[i][j] *= isTrueMF[cs->pNCfromMFtoNC[i][j]];
+//#ifdef DEBUGOUT
+//			sumSynW += as->mfSynWeightNC[i][j];
+//#endif
+//		}
+//	}
+//#ifdef DEBUGOUT
+//	std::cout << sumSynW / NUM_MF << std::endl;
+//#endif
+//}
 
 void MZone::runPFPCOutCUDA(cudaStream_t **sts, int streamN)
 {

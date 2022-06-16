@@ -139,12 +139,13 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 
 					mfgoG  = simCore->getInputNet()->exportgSum_MFGO();
 					grgoG  = simCore->getInputNet()->exportgSum_GRGO();
-					goSpks = simCore->getInputNet()->exportAPGO();
-					
+					// NOTE: for now, comment out while refactor go spike counting...
+					//goSpks = simCore->getInputNet()->exportAPGO();
+				
 					//TODO: change for loop into std::transform
 					for (int i = 0; i < NUM_GO; i++)
 					{
-							goSpkCounter[i] += goSpks[i];
+							//goSpkCounter[i] += goSpks[i];
 							gGRGO_sum 		+= grgoG[i];
 							gMFGO_sum 		+= mfgoG[i];
 					}
@@ -152,7 +153,7 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 				// why is this case separate from the above	
 				if (tts == csStart + csLength)
 				{
-					countGOSpikes(goSpkCounter, medTrials);	
+					//countGOSpikes(goSpkCounter, medTrials);	
 					std::cout << "mean gGRGO   = " << gGRGO_sum / (NUM_GO * csLength) << std::endl;
 					std::cout << "mean gMFGO   = " << gMFGO_sum / (NUM_GO * csLength) << std::endl;
 					std::cout << "GR:MF ratio  = " << gGRGO_sum / gMFGO_sum << std::endl;
