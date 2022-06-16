@@ -175,6 +175,11 @@ ECMFPopulation::ECMFPopulation(
 
 ECMFPopulation::~ECMFPopulation()
 {
+	delete[] mfFreqBG;
+	delete[] mfFreqInCSPhasic;
+	delete[] mfFreqInCSTonicA;
+	delete[] mfFreqInCSTonicB;
+
     delete[] isCSTonicA;
     delete[] isCSTonicB;
     delete[] isCSPhasic;
@@ -182,10 +187,6 @@ ECMFPopulation::~ECMFPopulation()
 	delete[] isCollateral;
 	delete[] isImport;
 	delete[] isAny;
-	delete[] mfFreqBG;
-	delete[] mfFreqInCSTonicA;
-	delete[] mfFreqInCSTonicB;
-	delete[] mfFreqInCSPhasic;
 }
 
 void ECMFPopulation::setMFs(int numTypeMF, int numMF, CRandomSFMT0 *randGen, bool *isAny, bool *isType)

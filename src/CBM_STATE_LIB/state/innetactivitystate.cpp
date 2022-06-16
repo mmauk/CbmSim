@@ -44,37 +44,25 @@ void InNetActivityState::stateRW(bool read, std::fstream &file)
 	rawBytesRW((char *)vCoupleGO.get(), NUM_GO * sizeof(float), read, file);
 	rawBytesRW((char *)threshCurGO.get(), NUM_GO * sizeof(float), read, file);
 	rawBytesRW((char *)inputMFGO.get(), NUM_GO * sizeof(ct_uint32_t), read, file);
-	rawBytesRW((char *)inputUBCGO, NUM_GO * sizeof(ct_uint32_t), read, file);
-	rawBytesRW((char *)depAmpMFGO, NUM_MF * sizeof(float), read, file);
-	rawBytesRW((char *)gi_MFtoGO, NUM_MF * sizeof(float), read, file);
-	rawBytesRW((char *)gSum_MFGO, NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)inputGOGO, NUM_GO * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)depAmpMFGO.get(), NUM_MF * sizeof(float), read, file);
+	rawBytesRW((char *)gi_MFtoGO.get(), NUM_MF * sizeof(float), read, file);
+	rawBytesRW((char *)gSum_MFGO.get(), NUM_GO * sizeof(float), read, file);
+	rawBytesRW((char *)inputGOGO.get(), NUM_GO * sizeof(ct_uint32_t), read, file);
 
-	rawBytesRW((char *)gi_GOtoGO, NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)depAmpGOGO, NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)gSum_GOGO, NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)depAmpGOGR, NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)dynamicAmpGOGR, NUM_GO * sizeof(float), read, file);
+	rawBytesRW((char *)gi_GOtoGO.get(), NUM_GO * sizeof(float), read, file);
+	rawBytesRW((char *)depAmpGOGO.get(), NUM_GO * sizeof(float), read, file);
+	rawBytesRW((char *)gSum_GOGO.get(), NUM_GO * sizeof(float), read, file);
+	rawBytesRW((char *)depAmpGOGR.get(), NUM_GO * sizeof(float), read, file);
+	rawBytesRW((char *)dynamicAmpGOGR.get(), NUM_GO * sizeof(float), read, file);
 	
-	rawBytesRW((char *)gSum_UBCtoGO, NUM_GO * sizeof(float), read, file);
-
 	rawBytesRW((char *)depAmpMFGR, NUM_MF * sizeof(float), read, file);
 	rawBytesRW((char *)gi_MFtoGR, NUM_MF * sizeof(float), read, file);
 	rawBytesRW((char *)gSum_MFGR, NUM_GR * sizeof(float), read, file);
 
-	rawBytesRW((char *)inputGOGABASynDepGO, NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)goGABAOutSynScaleGOGO, NUM_GO * sizeof(float), read, file);
-
-	rawBytesRW((char *)gMFGO, NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)gNMDAMFGO, NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)gNMDAIncMFGO, NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)gGRGO, NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)gGRGO_NMDA, NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)gGOGO, NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)gMGluRGO, NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)gMGluRIncGO, NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)mGluRGO, NUM_GO * sizeof(float), read, file);
-	rawBytesRW((char *)gluGO, NUM_GO * sizeof(float), read, file);
+	rawBytesRW((char *)gNMDAMFGO.get(), NUM_GO * sizeof(float), read, file);
+	rawBytesRW((char *)gNMDAIncMFGO.get(), NUM_GO * sizeof(float), read, file);
+	rawBytesRW((char *)gGRGO.get(), NUM_GO * sizeof(float), read, file);
+	rawBytesRW((char *)gGRGO_NMDA.get(), NUM_GO * sizeof(float), read, file);
 
 	rawBytesRW((char *)apGR, NUM_GR * sizeof(ct_uint8_t), read, file);
 	rawBytesRW((char *)apBufGR, NUM_GR * sizeof(ct_uint32_t), read, file);
@@ -115,42 +103,13 @@ void InNetActivityState::stateRW(bool read, std::fstream &file)
 	rawBytesRW((char *)vSC, NUM_SC * sizeof(float), read, file);
 
 	rawBytesRW((char *)inputSumPFSC, NUM_SC * sizeof(ct_uint32_t), read, file);
-
-	//UBCs
-	rawBytesRW((char *)gRise_MFtoUBC, NUM_UBC * sizeof(float), read, file);
-	rawBytesRW((char *)gDecay_MFtoUBC, NUM_UBC * sizeof(float), read, file);
-	rawBytesRW((char *)gSum_MFtoUBC, NUM_UBC * sizeof(float), read, file);
-	rawBytesRW((char *)depAmpUBCtoUBC, NUM_UBC * sizeof(float), read, file);
-	
-	rawBytesRW((char *)gRise_UBCNMDA, NUM_UBC * sizeof(float), read, file);
-	rawBytesRW((char *)gDecay_UBCNMDA, NUM_UBC * sizeof(float), read, file);
-	rawBytesRW((char *)gSum_UBCNMDA, NUM_UBC * sizeof(float), read, file);
-	rawBytesRW((char *)gK_UBC, NUM_UBC * sizeof(float), read, file);
-	
-	rawBytesRW((char *)gRise_UBCtoUBC, NUM_UBC * sizeof(float), read, file);
-	rawBytesRW((char *)gDecay_UBCtoUBC, NUM_UBC * sizeof(float), read, file);
-	rawBytesRW((char *)gSumOutUBCtoUBC, NUM_UBC * sizeof(float), read, file);
-	rawBytesRW((char *)gSumInUBCtoUBC, NUM_UBC * sizeof(float), read, file);
-	
-	rawBytesRW((char *)inputMFUBC, NUM_UBC * sizeof(int), read, file);
-	rawBytesRW((char *)inputGOUBC, NUM_UBC * sizeof(int), read, file);
-	rawBytesRW((char *)gSum_GOtoUBC, NUM_UBC * sizeof(float), read, file);
-	rawBytesRW((char *)vUBC, NUM_UBC * sizeof(float), read, file);
-	
-	rawBytesRW((char *)apUBC, NUM_UBC * sizeof(ct_uint8_t), read, file);
-	rawBytesRW((char *)threshUBC, NUM_UBC * sizeof(float), read, file);
-	rawBytesRW((char *)inputUBCtoUBC, NUM_UBC * sizeof(int), read, file);
-	
-	rawBytesRW((char *)gi_UBCtoGO, NUM_UBC * sizeof(float), read, file);
-	rawBytesRW((char *)depAmpUBCGO, NUM_UBC * sizeof(float), read, file);
-	rawBytesRW((char *)depAmpUBCGR, NUM_UBC * sizeof(float), read, file);
 }
 
 void InNetActivityState::allocateArrMem(ActivityParams &ap)
 {
 	// mf
-	histMF  = std::make_unique<ct_uint8_t[]>(NUM_MF);
-	apBufMF = std::make_unique<ct_uint32_t[]>(NUM_MF);
+	histMF    = std::make_unique<ct_uint8_t[]>(NUM_MF);
+	apBufMF   = std::make_unique<ct_uint32_t[]>(NUM_MF);
 
 	// go
 	synWscalerGRtoGO = std::make_unique<float[]>(NUM_GO);
@@ -159,7 +118,24 @@ void InNetActivityState::allocateArrMem(ActivityParams &ap)
 	vGO				 = std::make_unique<float[]>(NUM_GO);
 	vCoupleGO		 = std::make_unique<float[]>(NUM_GO);
 	threshCurGO		 = std::make_unique<float[]>(NUM_GO);
-	inputMFGO		 = std::make_unique<ct_uint32_t[]>(NUM_GO);
+
+	inputMFGO  = std::make_unique<ct_uint32_t[]>(NUM_GO);
+	depAmpMFGO = std::make_unique<float[]>(NUM_GO);
+	gi_MFtoGO  = std::make_unique<float[]>(NUM_MF);
+	gSum_MFGO  = std::make_unique<float[]>(NUM_GO);
+	
+	inputGOGO  = std::make_unique<ct_uint32_t[]>(NUM_GO);
+	gi_GOtoGO  = std::make_unique<float[]>(NUM_GO);
+	depAmpGOGO = std::make_unique<float[]>(NUM_GO);
+	gSum_GOGO  = std::make_unique<float[]>(NUM_GO);
+	depAmpGOGR = std::make_unique<float[]>(NUM_GO);
+
+	dynamicAmpGOGR = std::make_unique<float[]>(NUM_GO);
+	gNMDAMFGO	   = std::make_unique<float[]>(NUM_GO);
+	gNMDAIncMFGO   = std::make_unique<float[]>(NUM_GO);
+	gGRGO		   = std::make_unique<float[]>(NUM_GO);
+	gGRGO_NMDA	   = std::make_unique<float[]>(NUM_GO);
+
 }
 
 void InNetActivityState::initializeVals(ActivityParams &ap)
@@ -169,17 +145,13 @@ void InNetActivityState::initializeVals(ActivityParams &ap)
 	goTimeStep = 0;
 
 	// mf
-	std::fill(depAmpMFGO, depAmpMFGO + NUM_MF, 1.0);
+	std::fill(depAmpMFGO.get(), depAmpMFGO.get() + NUM_MF, 1.0);
 	std::fill(depAmpMFGR, depAmpMFGR + NUM_MF, 1.0);
 
 	// go	
 	std::fill(synWscalerGRtoGO.get(), synWscalerGRtoGO.get() + NUM_GO, 1.0);
 	std::fill(vGO.get(), vGO.get() + NUM_GO, ap.eLeakGO);
 	std::fill(threshCurGO.get(), threshCurGO.get() + NUM_GO, ap.threshRestGO);
-	std::fill(vSum_GOGO, vSum_GOGO + NUM_GO, ap.eLeakGO);
-	std::fill(vSum_GRGO, vSum_GRGO + NUM_GO, ap.eLeakGO);
-	std::fill(vSum_MFGO, vSum_MFGO + NUM_GO, ap.eLeakGO);
-	std::fill(goGABAOutSynScaleGOGO, goGABAOutSynScaleGOGO + NUM_GO, 1.0);
 
 	// gr
 	std::fill(apGR, apGR + NUM_GR, false);
@@ -196,14 +168,5 @@ void InNetActivityState::initializeVals(ActivityParams &ap)
 	std::fill(apSC, apSC + NUM_SC, false);
 	std::fill(threshSC, threshSC + NUM_SC, ap.threshRestSC);
 	std::fill(vSC, vSC + NUM_SC, ap.eLeakSC);
-
-	// ubc
-	std::fill(depAmpUBCtoUBC, depAmpUBCtoUBC + NUM_UBC, 1.0);
-	std::fill(vUBC, vUBC + NUM_UBC, -70.0);
-	std::fill(threshUBC, threshUBC + NUM_UBC, ap.threshRestGO);
-	std::fill(apUBC, apUBC + NUM_UBC, false);
-	std::fill(inputUBCtoUBC, inputUBCtoUBC + NUM_UBC, false);
-	std::fill(depAmpUBCGO, depAmpUBCGO + NUM_UBC, 1.0);
-	std::fill(depAmpUBCGR, depAmpUBCGR + NUM_UBC, 1.0);
 }
 

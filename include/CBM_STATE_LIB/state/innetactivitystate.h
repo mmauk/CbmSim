@@ -40,41 +40,26 @@ public:
 	std::unique_ptr<float[]> vGO{nullptr};
 	std::unique_ptr<float[]> vCoupleGO{nullptr};
 	std::unique_ptr<float[]> threshCurGO{nullptr};
+
 	std::unique_ptr<ct_uint32_t[]> inputMFGO{nullptr};
-	ct_uint32_t inputUBCGO[NUM_GO] = {0};
-	float depAmpMFGO[NUM_MF] = {0.0};
-	float gi_MFtoGO[NUM_MF] = {0.0};
-	float gSum_MFGO[NUM_GO] = {0.0};
-	ct_uint32_t inputGOGO[NUM_GO] = {0};
-	
-	float gi_GOtoGO[NUM_GO] = {0.0};
-	float depAmpGOGO[NUM_GO] = {0.0};
-	float gSum_GOGO[NUM_GO] = {0.0};
-	float depAmpGOGR[NUM_GO] = {0.0};
-	float dynamicAmpGOGR[NUM_GO] = {0.0};
+	std::unique_ptr<float[]> depAmpMFGO{nullptr};
+	std::unique_ptr<float[]> gi_MFtoGO{nullptr};
+	std::unique_ptr<float[]> gSum_MFGO{nullptr};
 
-	float gSum_UBCtoGO[NUM_GO] = {0.0};
+	std::unique_ptr<ct_uint32_t[]> inputGOGO{nullptr};
+	std::unique_ptr<float[]> gi_GOtoGO{nullptr};
+	std::unique_ptr<float[]> depAmpGOGO{nullptr};
+	std::unique_ptr<float[]> gSum_GOGO{nullptr};
 
-	float vSum_GOGO[NUM_GO] = {0.0};
-	float vSum_GRGO[NUM_GO] = {0.0};
-	float vSum_MFGO[NUM_GO] = {0.0};
-
-
-	//todo: synaptic depression test
-	float inputGOGABASynDepGO[NUM_GO] = {0.0};
-	float goGABAOutSynScaleGOGO[NUM_GO] = {0.0};
+	std::unique_ptr<float[]> depAmpGOGR{nullptr};
+	std::unique_ptr<float[]> dynamicAmpGOGR{nullptr};
 
 	//NOTE: removed NMDA UBC GO conductance 06/15/2022
-	float gMFGO[NUM_GO] = {0.0};
-	float gNMDAMFGO[NUM_GO] = {0.0};
-	float gNMDAIncMFGO[NUM_GO] = {0.0};
-	float gGRGO[NUM_GO] = {0.0};
-	float gGRGO_NMDA[NUM_GO] = {0.0};
-	float gGOGO[NUM_GO] = {0.0};
-	float gMGluRGO[NUM_GO] = {0.0};
-	float gMGluRIncGO[NUM_GO] = {0.0};
-	float mGluRGO[NUM_GO] = {0.0};
-	float gluGO[NUM_GO] = {0.0};
+	std::unique_ptr<float[]> gNMDAMFGO{nullptr};
+	std::unique_ptr<float[]> gNMDAIncMFGO{nullptr};
+	std::unique_ptr<float[]> gGRGO{nullptr};
+	std::unique_ptr<float[]> gGRGO_NMDA{nullptr};
+	std::unique_ptr<float[]> gGOGO{nullptr};
 
 	//granule cells
 	float depAmpMFGR[NUM_MF] = {0.0};
@@ -118,33 +103,6 @@ public:
 	float threshSC[NUM_SC] = {0.0};
 	float vSC[NUM_SC] = {0.0};
 	ct_uint32_t inputSumPFSC[NUM_SC] = {0};
-
-	//UBCs
-	float gRise_MFtoUBC[NUM_UBC] = {0.0};
-	float gDecay_MFtoUBC[NUM_UBC] = {0.0};
-	float gSum_MFtoUBC[NUM_UBC] = {0.0};
-	float depAmpUBCtoUBC[NUM_UBC] = {0.0};
-	float gRise_UBCNMDA[NUM_UBC] = {0.0};
-	float gDecay_UBCNMDA[NUM_UBC] = {0.0};
-	float gSum_UBCNMDA[NUM_UBC] = {0.0};
-	float gK_UBC[NUM_UBC] = {0.0};
-	
-	float gRise_UBCtoUBC[NUM_UBC] = {0.0};
-	float gDecay_UBCtoUBC[NUM_UBC] = {0.0};
-	float gSumOutUBCtoUBC[NUM_UBC] = {0.0};
-	float gSumInUBCtoUBC[NUM_UBC] = {0.0};
-	
-	int inputMFUBC[NUM_UBC] = {0};
-	int inputGOUBC[NUM_UBC] = {0};
-	float gSum_GOtoUBC[NUM_UBC] = {0.0};
-	ct_uint8_t apUBC[NUM_UBC] = {0};
-	float vUBC[NUM_UBC] = {0.0};
-	float threshUBC[NUM_UBC] = {0.0};
-	int inputUBCtoUBC[NUM_UBC] = {0};
-
-	float gi_UBCtoGO[NUM_UBC] = {0.0};
-	float depAmpUBCGO[NUM_UBC] = {0.0};
-	float depAmpUBCGR[NUM_UBC] = {0.0};
 
 private:
 	void stateRW(bool read, std::fstream &file);

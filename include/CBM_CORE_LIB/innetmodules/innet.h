@@ -46,26 +46,17 @@ public:
 	virtual const ct_uint8_t* exportAPMF();
 	virtual const ct_uint8_t* exportAPSC();
 	virtual const ct_uint8_t* exportAPGR();
-	virtual const ct_uint8_t* exportAPUBC();
 
 	virtual const ct_uint32_t* exportAPBufGR();
 	virtual const ct_uint32_t* exportAPBufSC();
 	
-	virtual const float* exportvSum_GOGO();
-	virtual const float* exportvSum_GRGO();
-	virtual const float* exportvSum_MFGO();
-
 	virtual const float* exportVmGR();
-	virtual const float* exportgSum_MFGO();
-	virtual const float* exportgSum_GOGO();
-	virtual const float* exportgSum_GRGO();
 	
 	virtual const float* exportVmSC();
 	virtual const float* exportGESumGR();
 	virtual const float* exportGUBCESumGR();
 	virtual const float* exportDepSumUBCGR();
 	
-	virtual const float* exportDepSumGOGR();
 	virtual const float* exportDynamicSpillSumGOGR();
 	virtual const float* exportgNMDAGR();
 	virtual const int*   exportAPfromMFtoGR();
@@ -73,8 +64,6 @@ public:
 
 	virtual const ct_uint32_t* exportSumGRInputGO();
 	virtual const float* 	   exportSumGOInputGO();
-	virtual const float* 	   exportGOOutSynScaleGOGO();
-	virtual const float* 	   exportgGOGO();
 
 	virtual const ct_uint32_t* exportPFBCSum();
 

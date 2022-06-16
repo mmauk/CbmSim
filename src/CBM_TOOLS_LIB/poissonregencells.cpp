@@ -58,29 +58,30 @@ PoissonRegenCells::~PoissonRegenCells()
 	{
 		delete randGens[i];
 	}
-	delete[] randGens;
 
+	delete[] randGens;
+	delete normDist;
 	delete[] aps;
 	delete[] threshs;
+	delete[] isTrueMF;
+	delete[] dnCellIndex;
+	delete[] mZoneIndex;
 }
 
 void PoissonRegenCells::prepCollaterals(int rSeed)
 {
-	
-	unsigned int *tempNCs;
-	unsigned int *tempMZs;
-	unsigned int repeats;
-	repeats = nCells/(numZones*numNC) + 1;
-	tempNCs = new unsigned int[repeats*numZones*numNC];
-	tempMZs = new unsigned int[repeats*numZones*numNC];
+	unsigned int repeats = nCells / (numZones * numNC) + 1;
+	unsigned int *tempNCs = new unsigned int[repeats * numZones * numNC];
+	unsigned int *tempMZs = new unsigned int[repeats * numZones * numNC];
+
 	for(unsigned int i = 0; i < repeats; i++)
 	{
 		for(unsigned int j = 0; j < numZones; j++)
 		{
 			for(unsigned int k = 0; k < numNC; k++)
 			{
-				tempNCs[k + numNC*j + numNC*numZones*i] = k;
-				tempMZs[k + numNC*j + numNC*numZones*i] = j;
+				tempNCs[k + numNC * j + numNC * numZones * i] = k;
+				tempMZs[k + numNC * j + numNC * numZones * i] = j;
 			}
 		}
 	}
@@ -88,14 +89,6 @@ void PoissonRegenCells::prepCollaterals(int rSeed)
 	std::random_shuffle(tempNCs, tempNCs + repeats*numZones*numNC);
 	std::srand(rSeed);
 	std::random_shuffle(tempMZs, tempMZs + repeats*numZones*numNC);
-/*	// Debug section
-	std::cout << std::endl;
-	for (int i = 0; i < repeats*numZones*numNC; i++)
-		std::cout << tempNCs[i] << " ";
-	std::cout << std::endl;
-	for (int i = 0; i < repeats*numZones*numNC; i++)
-		std::cout << tempMZs[i] << " ";
-*/	// End debug section
 	std::copy(tempNCs, tempNCs + nCells, dnCellIndex);
 	std::copy(tempMZs, tempMZs + nCells, mZoneIndex);
 
@@ -136,39 +129,38 @@ const ct_uint8_t* PoissonRegenCells::calcPoissActivity(const float *frequencies,
 	float noise;
 	//std::normal_distribution<float> normDist(0, sigma);
 	spikeTimer++;
-	for(unsigned int i=0; i<nCells; i++)
+	for (unsigned int i = 0; i < nCells; i++)
 	{
-		if(frequencies[i] == -1)
+		if (frequencies[i] == -1)
 		{
 			holdNCs = mZoneList[mZoneIndex[countColls]]->exportAPNC();
 			aps[i] = holdNCs[dnCellIndex[countColls]];
 			countColls++;
-		}else if(frequencies[i] == -2)
-		{
-			aps[i] = spikeTimer == ispikei;
-		}else
+		}
+		else if (frequencies[i] == -2) aps[i] = (spikeTimer == ispikei);
+		else
 		{
 			int tid = 0;
-			if(sigma==0) 	noise = 0.0;
-			else			noise = (*normDist)((*noiseRandGen));
+			if (sigma == 0) noise = 0.0;
+			else noise = (*normDist)((*noiseRandGen));
 			
-			aps[i]=randGens[tid]->Random()<((frequencies[i]+noise)*sPerTS);
+			aps[i] = (randGens[tid]->Random() < (frequencies[i] + noise) * sPerTS);
 		}
 	}
-	if(spikeTimer == ispikei) spikeTimer=0;
+	if (spikeTimer == ispikei) spikeTimer = 0;
 
 	return (const ct_uint8_t *)aps;
 }
 
 bool* PoissonRegenCells::calcTrueMFs(const float *frequencies)
 {
-	for(unsigned int i=0; i<nCells; i++)
+	for (unsigned int i = 0; i < nCells; i++)
 	{
-		if(frequencies[i] == -1)
+		if (frequencies[i] == -1)
 		{
-			isTrueMF[i]=false;
+			isTrueMF[i] = false;
 		}
 	}
-
 	return isTrueMF;
 }
+

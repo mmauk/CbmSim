@@ -340,11 +340,6 @@ const ct_uint8_t* InNet::exportAPSC()
 	return (const ct_uint8_t *)as->apSC;
 }
 
-const ct_uint8_t* InNet::exportAPUBC()
-{
-	return (const ct_uint8_t *)as->apUBC;
-}
-
 const ct_uint8_t* InNet::exportAPGR()
 {
 	cudaError_t error;
@@ -365,36 +360,6 @@ const float* InNet::exportVmGR()
 {
 	getGRGPUData<float>(vGRGPU, as->vGR);
 	return (const float *)as->vGR;
-}
-
-const float* InNet::exportgSum_MFGO()
-{
-	return (const float *)as->gSum_MFGO;
-}
-
-const float* InNet::exportgSum_GRGO()
-{
-	return (const float *)as->gGRGO;
-}
-
-const float* InNet::exportgSum_GOGO()
-{
-	return (const float *)as->gSum_GOGO;
-}
-
-const float* InNet::exportvSum_GOGO()
-{
-	return (const float *)as->vSum_GOGO;
-}
-
-const float* InNet::exportvSum_GRGO()
-{
-	return (const float *)as->vSum_GRGO;
-}
-
-const float* InNet::exportvSum_MFGO()
-{
-	return (const float *)as->vSum_MFGO;
 }
 
 const float* InNet::exportVmSC()
@@ -418,12 +383,6 @@ const float* InNet::exportDepSumUBCGR()
 {
 	getGRGPUData<float>(depAmpUBCGRGPU, as->depAmpUBCtoGR);
 	return (const float *)as->depAmpUBCtoGR;
-}
-
-const float* InNet::exportDepSumGOGR()
-{
-	getGRGPUData<float>(depAmpGOGRGPU, as->depAmpGOtoGR);
-	return (const float *)as->depAmpGOtoGR;
 }
 
 const float* InNet::exportDynamicSpillSumGOGR()
@@ -455,19 +414,9 @@ const ct_uint32_t* InNet::exportSumGRInputGO()
 	return (const ct_uint32_t *)sumGRInputGO;
 }
 
-const float* InNet::exportgGOGO()
-{
-	return (const float *)as->gGOGO;
-}
-
 const float* InNet::exportSumGOInputGO()
 {
 	return (const float *)sumInputGOGABASynDepGO;
-}
-
-const float* InNet::exportGOOutSynScaleGOGO()
-{
-	return (const float *)as->goGABAOutSynScaleGOGO;
 }
 
 const ct_uint32_t* InNet::exportAPBufGR()
@@ -566,7 +515,7 @@ void InNet::calcGOActivities(float goMin, int simNum, float GRGO, float MFGO, fl
 		as->threshCurGO[i] = as->threshCurGO[i] + (ap.threshRestGO - as->threshCurGO[i]) * ap.threshDecGO;
 		
 		as->vGO[i] = as->vGO[i] + (gLeakGO * (ap.eLeakGO - as->vGO[i])) + (as->gSum_GOGO[i] * (ap.eGABAGO - as->vGO[i]))
-				- (as->gSum_MFGO[i] + as->gGRGO[i] + as->gNMDAMFGO[i] + as->gSum_UBCtoGO[i]
+				- (as->gSum_MFGO[i] + as->gGRGO[i] + as->gNMDAMFGO[i]
 					  + as->gGRGO_NMDA[i]) * as->vGO[i]
 				- (as->vCoupleGO[i] * as->vGO[i]);
 		
@@ -578,7 +527,6 @@ void InNet::calcGOActivities(float goMin, int simNum, float GRGO, float MFGO, fl
 		as->threshCurGO[i] = as->apGO[i] * ap.threshMaxGO + (!as->apGO[i]) * as->threshCurGO[i];
 
 		as->inputMFGO[i]  = 0;
-		as->inputUBCGO[i] = 0;	
 		as->inputGOGO[i]  = 0;
 	}
 
@@ -679,24 +627,22 @@ void InNet::updateGOtoGROutParameters(float GOGR, float spillFrac)
 #pragma omp parallel
 	{
 #pragma omp for
-		for(int i=0; i<NUM_GO; i++)
+		for (int i = 0; i < NUM_GO; i++)
 		{			
 			as->depAmpGOGR[i] = 1;
 
-			as->dynamicAmpGOGR[i] = baselvl + ( scalerGOGR * ( 1/ (1+ (  exp((counter[i]-halfShift)/steepness)  )) ) );
-			counter[i] = (1-as->apGO[i])*counter[i] + 1; 
+			as->dynamicAmpGOGR[i] = baselvl + (scalerGOGR * (1 / (1 + (exp((counter[i] - halfShift) / steepness)))));
+			counter[i] = (1 - as->apGO[i]) * counter[i] + 1; 
 
 #pragma omp critical
 			{
-				for(int j=0; j<numGPUs; j++)
+				for (int j = 0; j < numGPUs; j++)
 				{
 					depAmpGOH[j][i] = 1;
 					dynamicAmpGOH[j][i] = as->dynamicAmpGOGR[i];
 				}
 			}
-		
 		}
-	
 	}
 }
 
@@ -708,18 +654,19 @@ void InNet::updateGOtoGOOut()
 #pragma omp parallel
 	{
 #pragma omp for
-		for(int i=0; i<NUM_GO; i++)
+		for (int i = 0; i < NUM_GO; i++)
 		{
 			
-			as->gi_GOtoGO[i] =  as->apGO[i]*ap.gGABAIncGOtoGO*as->depAmpGOGO[i]  +  as->gi_GOtoGO[i]*ap.gGABADecGOtoGO  ; 
+			as->gi_GOtoGO[i] =  as->apGO[i] * ap.gGABAIncGOtoGO * as->depAmpGOGO[i]
+			   + as->gi_GOtoGO[i] * ap.gGABADecGOtoGO; 
 			as->depAmpGOGO[i] = 1;
 		}
 
-		for(int i=0; i<NUM_GO; i++)
+		for (int i = 0; i < NUM_GO; i++)
 		{
-			if(as->apGO[i])
+			if (as->apGO[i])
 			{
-				for(int j=0; j<cs->numpGOGABAOutGOGO[i]; j++)
+				for (int j = 0; j < cs->numpGOGABAOutGOGO[i]; j++)
 				{
 					as->inputGOGO[cs->pGOGABAOutGOGO[i][j]]++;	
 				}
@@ -1786,14 +1733,15 @@ void InNet::initSCCUDA()
 
 /* =========================== PRIVATE FUNCTIONS ============================= */
 
-template<typename Type>cudaError_t InNet::getGRGPUData(Type **gpuData, Type *hostData)
+template<typename Type>
+cudaError_t InNet::getGRGPUData(Type **gpuData, Type *hostData)
 {
-	cudaError_t error;
-	for(int i=0; i<numGPUs; i++)
+	//cudaError_t error;
+	for (int i = 0; i < numGPUs; i++)
 	{
-		cudaSetDevice(i+gpuIndStart);
-		cudaMemcpy((void *)&hostData[i*numGRPerGPU], gpuData[i],
-				numGRPerGPU*sizeof(Type), cudaMemcpyDeviceToHost);
+		cudaSetDevice(i + gpuIndStart);
+		cudaMemcpy((void *)&hostData[i * numGRPerGPU], gpuData[i],
+				numGRPerGPU * sizeof(Type), cudaMemcpyDeviceToHost);
 	}
 	return cudaGetLastError();
 }
