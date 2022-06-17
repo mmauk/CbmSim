@@ -62,15 +62,14 @@ public:
 	std::unique_ptr<float[]> gGOGO{nullptr};
 
 	//granule cells
-	float depAmpMFGR[NUM_MF] = {0.0};
-	float gi_MFtoGR[NUM_MF] = {0.0};
-	float gSum_MFGR[NUM_GR] = {0.0};
-	
-	ct_uint8_t apGR[NUM_GR] = {0};
-	ct_uint32_t apBufGR[NUM_GR] = {0};
-	float gMFGR[NUM_GR][MAX_NUM_P_GR_FROM_MF_TO_GR] = {0.0};
-	float gUBCGR[NUM_GR][MAX_NUM_P_GR_FROM_MF_TO_GR] = {0.0};
-	float gMFSumGR[NUM_GR] = {0.0};
+	std::unique_ptr<float[]> depAmpMFGR{nullptr};
+	std::unique_ptr<ct_uint8_t[]> apGR{nullptr}; // <- pulled via getGPUData	
+	std::unique_ptr<ct_uint32_t[]> apBufGR{nullptr};
+	// NOTE: gMFGR was 2D array, now 1D for smart ptr
+	// access using indices 0 <= i < NUM_GR, 0 <= j < MAX_NUM_P_GR_FROM_MF_TO_GR like so:
+	// i * NUM_GR + j
+	std::unique_ptr<float[]> gMFGR{nullptr};
+	std::unique_ptr<float[]> gMFSumGR{nullptr};
 	float gMFDirectGR[NUM_GR] = {0.0};
 	float gMFSpilloverGR[NUM_GR] = {0.0};
 	float gGODirectGR[NUM_GR] = {0.0};
@@ -95,6 +94,7 @@ public:
 	float gKCaGR[NUM_GR] = {0.0};
 	ct_uint64_t historyGR[NUM_GR] = {0};
 
+	// TODO: MOVE SC CELLS to mzoneactivitystate.... :pogO:
 	//stellate cells
 	ct_uint8_t apSC[NUM_SC] = {0};
 	ct_uint32_t apBufSC[NUM_SC] = {0};

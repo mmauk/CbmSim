@@ -248,9 +248,12 @@ void InNet::writeToState()
 {
 	cudaError_t error;
 	//GR variables
-	getGRGPUData<ct_uint8_t>(outputGRGPU, as->apGR);
-	getGRGPUData<ct_uint32_t>(apBufGRGPU, as->apBufGR);
-	getGRGPUData<float>(gEGRSumGPU, as->gMFSumGR);
+	// WARNING THIS IS A HORRIBLE IDEA. IF YOU GET BUGS CONSIDER THIS!
+	// Reason: the apGR is a unique_ptr. it should only be modifed in the scope
+	// that it is defined in.
+	getGRGPUData<ct_uint8_t>(outputGRGPU, as->apGR.get());
+	getGRGPUData<ct_uint32_t>(apBufGRGPU, as->apBufGR.get());
+	getGRGPUData<float>(gEGRSumGPU, as->gMFSumGR.get());
 	getGRGPUData<float>(gIGRSumGPU, as->gGOSumGR);
 
 	getGRGPUData<float>(threshGRGPU, as->threshGR);
@@ -280,11 +283,12 @@ void InNet::writeToState()
 		}
 	}
 
-	for(int i=0; i<MAX_NUM_P_GR_FROM_MF_TO_GR; i++)
+	for (int i = 0; i < MAX_NUM_P_GR_FROM_MF_TO_GR; i++)
 	{
-		for(int j=0; j<NUM_GR; j++)
+		for (int j = 0; j < NUM_GR; j++)
 		{
-			as->gMFGR[j][i]=gMFGRT[i][j];
+			// NOTE: gMFGR now 1D array.
+			as->gMFGR[j * NUM_GR + i] = gMFGRT[i][j];
 		}
 	}
 
@@ -304,31 +308,35 @@ void getnumGPUs()
 //	cout << numGPUs << endl;
 }
 
-void InNet::grStim(int startGRStim, int numGRStim)
-{
-	exportAPGR(); //getGRGPUData<ct_uint8_t>(outputGRGPU, as->apGR);
-	exportAPBufGR();  //getGRGPUData<ct_uint32_t>(apBufGRGPU, as->apBufGR);
-	for (int j=startGRStim; j<=startGRStim+numGRStim; j++)
-	{
-		as->apBufGR[j] = as->apBufGR[j]|1u; 
-		outputGRH[j] = true;
-	}
-	
-	for(int i=0; i<numGPUs; i++)
-	{
-		int cpyStartInd;
-		int cpySize;
-
-		cpyStartInd=numGRPerGPU*i;//numGR*i/numGPUs;
-		cpySize=numGRPerGPU;
-		cudaSetDevice(i+gpuIndStart);
-
-		cudaMemcpy(apBufGRGPU[i], &(as->apBufGR[cpyStartInd]),
-				cpySize*sizeof(ct_uint32_t), cudaMemcpyHostToDevice);
-		cudaMemcpy(outputGRGPU[i], &outputGRH[cpyStartInd],
-				cpySize*sizeof(ct_uint8_t), cudaMemcpyHostToDevice);
-	}
-}
+//void InNet::grStim(int startGRStim, int numGRStim)
+//{
+//	// might be a useless operation. would the state of these arrays
+//	// on cpu be the same as on gpu at the time we modify the segment below?
+//	// if so, no need to get gpu data. if not, need to get gpu data
+//	getGRGPUData<ct_uint8_t>(outputGRGPU, as->apGR.get());
+//	getGRGPUData<ct_uint32_t>(apBufGRGPU, as->apBufGR.get());
+//	for (int j = startGRStim; j <= startGRStim + numGRStim; j++)
+//	{
+//		/* as-> apBufGR[j] |= 1u; // try this to see if we get the same result */
+//		as->apBufGR[j] = as->apBufGR[j] | 1u; 
+//		outputGRH[j] = true;
+//	}
+//	
+//	for (int i = 0; i < numGPUs; i++)
+//	{
+//		int cpyStartInd;
+//		int cpySize;
+//
+//		cpyStartInd=numGRPerGPU*i;//numGR*i/numGPUs;
+//		cpySize=numGRPerGPU;
+//		cudaSetDevice(i+gpuIndStart);
+//
+//		cudaMemcpy(apBufGRGPU[i], &(as->apBufGR[cpyStartInd]),
+//				cpySize*sizeof(ct_uint32_t), cudaMemcpyHostToDevice);
+//		cudaMemcpy(outputGRGPU[i], &outputGRH[cpyStartInd],
+//				cpySize*sizeof(ct_uint8_t), cudaMemcpyHostToDevice);
+//	}
+//}
 
 const ct_uint8_t* InNet::exportAPMF()
 {
@@ -365,12 +373,6 @@ const float* InNet::exportVmGR()
 const float* InNet::exportVmSC()
 {
 	return (const float *)as->vSC;
-}
-
-const float* InNet::exportGESumGR()
-{
-	getGRGPUData<float>(gEGRSumGPU, as->gMFSumGR);
-	return (const float *)as->gMFSumGR;
 }
 
 const float* InNet::exportGUBCESumGR()
@@ -419,11 +421,11 @@ const float* InNet::exportSumGOInputGO()
 	return (const float *)sumInputGOGABASynDepGO;
 }
 
-const ct_uint32_t* InNet::exportAPBufGR()
-{
-	getGRGPUData<ct_uint32_t>(apBufGRGPU, as->apBufGR);
-	return (const ct_uint32_t *)as->apBufGR;
-}
+//const ct_uint32_t* InNet::exportAPBufGR()
+//{
+//	getGRGPUData<ct_uint32_t>(apBufGRGPU, as->apBufGR);
+//	return (const ct_uint32_t *)as->apBufGR;
+//}
 
 const unsigned int* InNet::exportAPBufSC()
 {
@@ -564,18 +566,18 @@ void InNet::calcSCActivities()
 
 void InNet::updateMFtoGROut()
 {
-	float recoveryRate = 1/ap.recoveryTauMF;
+	float recoveryRate = 1 / ap.recoveryTauMF;
 
 #pragma omp parallel
 	{
 #pragma omp for
-		for(int i=0; i<NUM_MF; i++)
+		for (int i = 0; i < NUM_MF; i++)
 		{			
-			as->depAmpMFGR[i] = apMFH[0][i]*as->depAmpMFGR[i]*ap.fracDepMF + (!apMFH[0][i])*( as->depAmpMFGR[i]+recoveryRate*(1-as->depAmpMFGR[i]) ); 
-			
+			as->depAmpMFGR[i] = apMFH[0][i] * as->depAmpMFGR[i] * ap.fracDepMF
+			   + (!apMFH[0][i]) * (as->depAmpMFGR[i] + recoveryRate * (1 - as->depAmpMFGR[i])); 
 #pragma omp critical	
 			{	
-				for(int j=0; j<numGPUs; j++)
+				for (int j = 0; j < numGPUs; j++)
 				{
 					depAmpMFH[j][i] = as->depAmpMFGR[i];
 				}
@@ -1408,12 +1410,12 @@ void InNet::initGRCUDA()
 		}
 	}
 
-	for(int i=0; i<MAX_NUM_P_GR_FROM_MF_TO_GR; i++)
+	for (int i = 0; i < MAX_NUM_P_GR_FROM_MF_TO_GR; i++)
 	{
-		for(int j=0; j<NUM_GR; j++)
+		for (int j = 0; j < NUM_GR; j++)
 		{
-			gMFGRT[i][j]=as->gMFGR[j][i];
-			pGRfromMFtoGRT[i][j]=cs->pGRfromMFtoGR[j][i];
+			gMFGRT[i][j] 		 = as->gMFGR[j * NUM_GR + i];
+			pGRfromMFtoGRT[i][j] = cs->pGRfromMFtoGR[j][i];
 		}
 	}
 	

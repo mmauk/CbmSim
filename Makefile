@@ -25,7 +25,7 @@ CXXFLAGS         = -m64 -std=c++14 -g -Wall
 MODULE_CXX_FLAGS = -m64 -std=c++14 -g -Wall
 INCPATH          = -I. -Iinclude/Big_Sim -I/usr/local/cuda/include -I$(ROOT)include/CBM_CORE_LIB -I$(ROOT)include/CBM_DATA_LIB \
 			       -I$(ROOT)include/CBM_STATE_LIB -I$(ROOT)include/CBM_TOOLS_LIB -I$(ROOT)include/CXX_TOOLS_LIB 
-LIBS             = -L/user/local/cuda/lib64 -L/usr/local/cuda/lib64 -L/usr/lib64 -L/opt/cuda/lib64 -lcudart
+LIBS             = -L/usr/local/cuda/lib64 -L/usr/lib64 -L/opt/cuda/lib64 -lcudart
 LINK             = g++
 LFLAGS           = -m64 
 # MODULE_LFLAGS    = -m64 -Wl, -O1 -shared

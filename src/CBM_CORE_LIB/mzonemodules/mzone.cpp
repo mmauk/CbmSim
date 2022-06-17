@@ -20,6 +20,10 @@ MZone::MZone(ActivityParams &ap, MZoneConnectivityState *cs,
 	this->cs = cs; /* shallow copy (boo) */
 	this->as = as; /* also shallow copy */
 
+	// NOTE if we turn these guys into unique ptrs, we'll have to refactor
+	// consider ownership: who should own these guys? maybe they should be global to both
+	// innet and mzone (so within cbmsimcore) and fed in as const args to the respective
+	// functions that call update kernels (06/16/2022)
 	apBufGRGPU 			 = actBufGRGPU;
 	delayBCPCSCMaskGRGPU = delayMaskGRGPU;
 	historyGRGPU 		 = histGRGPU;

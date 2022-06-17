@@ -10,7 +10,6 @@
 
 #include <cuda.h>
 #include <cuda_runtime.h>
-#include <device_functions.h>
 
 #include <iostream>
 
@@ -49,37 +48,18 @@ void callSumGRGOOutKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int
 void callSumGRBCOutKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGOPerBlock,
 		unsigned int numGROutRows, ct_uint32_t *grInBCGPU,  size_t grInBCGPUPitch, ct_uint32_t *grInBCSGPU);
 
-
-
-void callUpdateUBCInGRDepressionOPKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
-		unsigned int numInCells, float *depAmpGPU,
-		ct_uint32_t *conInGRGPU, size_t conInGRGPUP,
-		ct_int32_t *numInPerGRGPU, int *numUBCperGR, float *depAmpUBCGRGPU);
-
-
+void callUpdateGOInGRDepressionOPKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
+	  unsigned int numInCells, float *depAmpGPU, ct_uint32_t *conInGRGPU, size_t conInGRGPUP,
+	  ct_int32_t *numInPerGRGPU, float *depAmpGOGRGPU);
 
 void callUpdateMFInGRDepressionOPKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
-		unsigned int numInCells, float *depAmpGPU,
-		ct_uint32_t *conInGRGPU, size_t conInGRGPUP,
+	  	unsigned int numInCells, float *depAmpGPU, ct_uint32_t *conInGRGPU, size_t conInGRGPUP,
 		ct_int32_t *numInPerGRGPU, int *numMFperGR, float *depAmpMFGRGPU);
-
-void callUpdateGOInGRDepressionOPKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
-		unsigned int numInCells, float *depAmpGPU,
-		ct_uint32_t *conInGRGPU, size_t conInGRGPUP,
-		ct_int32_t *numInPerGRGPU, float *depAmpGOGRGPU);
 
 void callUpdateGOInGRDynamicSpillOPKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
 		unsigned int numInCells, float *dynamicAmpGPU,
 		ct_uint32_t *conInGRGPU, size_t conInGRGPUP,
 		ct_int32_t *numInPerGRGPU, float *dynamicAmpGOGRGPU);
-
-
-
-
-//void callUpdateInGRKernel(cudaStream_t &st, unsigned int nBlocks, unsigned int nThreadsPerB,
-//		unsigned int *apInGPU, float *gGPU, unsigned int gGPUP,
-//		unsigned int *conInGRGPU, unsigned int conInGRGPUP,
-//		int *numInPerGRGPU, float *gSumGPU, float gDecay, float gInc);
 
 void callUpdateInGROPKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
 		unsigned int numInCells, ct_uint32_t *apInGPU, float *dynamicAmpGPU, float *gGPU, size_t gGPUP,
@@ -99,9 +79,6 @@ void callUpdateMFInGROPKernel(cudaStream_t &st, unsigned int numBlocks, unsigned
 		ct_int32_t *numInPerGRGPU, int *apMFtoGRGPU, float *gSumGPU, float *gDirectGPU, float *gSpilloverGPU,
 		float gDecayDirect, float gIncDirect, float gDecaySpill, float gIncFracSpill);
 
-//void callupdateInSumGRKernel(cudaStream_t &st, unsigned int nBlocks, unsigned int nThreadsPerB,
-//		float *gGPU, float gDecay, float gInc, float inSum);
-
 void callUpdatePFBCSCOutKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
 		ct_uint32_t *apBufGPU, ct_uint32_t *delayMaskGPU,
 		ct_uint32_t *inPFBCGPU, size_t inPFBCGPUPitch, unsigned int numPFInPerBCP2,
@@ -118,7 +95,5 @@ void callUpdatePFPCPlasticityIOKernel(cudaStream_t &st, unsigned int numBlocks, 
 		float *synWeightGPU, ct_uint64_t *historyGPU, unsigned int pastBinNToCheck,
 		int offSet, float pfPCPlastStep);
 
-//void callUpdatePSHGPU(unsigned int *apBufGPU, unsigned int *pshGPU, unsigned int pshGPUP,
-//		int nBins, int tsPerBin, unsigned int extrashift, unsigned int nBlocks, unsigned int nThreadPerB);
-
 #endif /* KERNELS_H_ */
+

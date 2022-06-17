@@ -5,6 +5,7 @@ Control::Control() {}
 
 Control::Control(std::string actParamFile) : ap(actParamFile)
 {
+	// TODO: remove simState construction from here, construct within simCore!
 	std::cout << "[INFO]: Initializing state..." << std::endl;	
 	simState = new CBMState(ap, numMZones);
 	std::cout << "[INFO]: Finished initializing state..." << std::endl;
