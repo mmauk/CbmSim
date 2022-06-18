@@ -70,10 +70,9 @@ public:
 	// i * NUM_GR + j
 	std::unique_ptr<float[]> gMFGR{nullptr};
 	std::unique_ptr<float[]> gMFSumGR{nullptr};
-	float gMFDirectGR[NUM_GR] = {0.0};
-	float gMFSpilloverGR[NUM_GR] = {0.0};
-	float gGODirectGR[NUM_GR] = {0.0};
-	float gGOSpilloverGR[NUM_GR] = {0.0};
+	// NOTE: removed gMFDirectGR and gMFSpilloverGR as we only used to 
+	// initialize GPU vars of :similar: name
+	// also removed gGODirectGR and gGOSpillover
 	int apMFtoGR[NUM_GR] = {0};
 	int apUBCtoGR[NUM_GR] = {0};
 	float gUBCSumGR[NUM_GR] = {0.0};

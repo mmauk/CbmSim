@@ -1456,8 +1456,8 @@ void InNet::initGRCUDA()
 	
 		error=cudaMemcpy(vGRGPU[i], &(as->vGR[cpyStartInd]), cpySize*sizeof(float), cudaMemcpyHostToDevice);	
 		error=cudaMemcpy(gEGRSumGPU[i], &(as->gMFSumGR[cpyStartInd]), cpySize*sizeof(float), cudaMemcpyHostToDevice);	
-		error=cudaMemcpy(gEDirectGPU[i], &(as->gMFDirectGR[cpyStartInd]), cpySize*sizeof(float), cudaMemcpyHostToDevice);
-		error=cudaMemcpy(gESpilloverGPU[i], &(as->gMFSpilloverGR[cpyStartInd]), cpySize*sizeof(float), cudaMemcpyHostToDevice);
+		error = cudaMemset(gEDirectGPU[i], 0.0, cpySize * sizeof(float));
+		error = cudaMemset(gESpilloverGPU[i], 0.0, cpySize * sizeof(float));
 		error=cudaMemcpy(apMFtoGRGPU[i], &(as->apMFtoGR[cpyStartInd]), cpySize*sizeof(int), cudaMemcpyHostToDevice);
 		error=cudaMemcpy(numMFperGR[i], &(cs->numpGRfromMFtoGR[cpyStartInd]), cpySize*sizeof(int), cudaMemcpyHostToDevice);	
 		error=cudaMemcpy(apUBCtoGRGPU[i], &(as->apUBCtoGR[cpyStartInd]), cpySize*sizeof(int), cudaMemcpyHostToDevice);	
@@ -1495,8 +1495,8 @@ void InNet::initGRCUDA()
 		cout << "check" << endl;	
 
 		error=cudaMemcpy(gIGRSumGPU[i], &(as->gGOSumGR[cpyStartInd]), cpySize*sizeof(float), cudaMemcpyHostToDevice);
-		error=cudaMemcpy(gIDirectGPU[i], &(as->gGODirectGR[cpyStartInd]), cpySize*sizeof(float), cudaMemcpyHostToDevice);
-		error=cudaMemcpy(gISpilloverGPU[i], &(as->gGOSpilloverGR[cpyStartInd]), cpySize*sizeof(float), cudaMemcpyHostToDevice);
+		error = cudaMemset(gIDirectGPU[i], 0.0, cpySize * sizeof(float));	
+		error = cudaMemset(gISpilloverGPU[i], 0.0, cpySize * sizeof(float));
 
 		error=cudaMemcpy(apBufGRGPU[i], &(as->apBufGR[cpyStartInd]),
 				cpySize*sizeof(ct_uint32_t), cudaMemcpyHostToDevice);

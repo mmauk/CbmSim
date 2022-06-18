@@ -67,10 +67,6 @@ void InNetActivityState::stateRW(bool read, std::fstream &file)
 
 	rawBytesRW((char *)gMFGR.get(), NUM_GR * MAX_NUM_P_GR_FROM_MF_TO_GR * sizeof(float), read, file);
 	rawBytesRW((char *)gMFSumGR.get(), NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)gMFDirectGR, NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)gMFSpilloverGR, NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)gGODirectGR, NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)gGOSpilloverGR, NUM_GR * sizeof(float), read, file);
 	rawBytesRW((char *)apMFtoGR, NUM_GR * sizeof(int), read, file);
 	rawBytesRW((char *)apUBCtoGR, NUM_GR * sizeof(int), read, file);
 	rawBytesRW((char *)gUBCSumGR, NUM_GR * sizeof(float), read, file);
