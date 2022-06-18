@@ -73,35 +73,26 @@ public:
 	// NOTE: removed gMFDirectGR and gMFSpilloverGR as we only used to 
 	// initialize GPU vars of :similar: name
 	// also removed gGODirectGR and gGOSpillover
-	int apMFtoGR[NUM_GR] = {0};
-	int apUBCtoGR[NUM_GR] = {0};
-	float gUBCSumGR[NUM_GR] = {0.0};
-	float gUBCDirectGR[NUM_GR] = {0.0};
-	float gUBCSpilloverGR[NUM_GR] = {0.0};
-	float gNMDAGR[NUM_GR] = {0.0};
-	float gNMDAIncGR[NUM_GR] = {0.0};
-	float gLeakGR[NUM_GR] = {0.0};
-	float depAmpMFtoGR[NUM_GR] = {0.0};
-	float depAmpUBCtoGR[NUM_GR] = {0.0};
-	float depAmpGOtoGR[NUM_GR] = {0.0}; 
-	float dynamicAmpGOtoGR[NUM_GR] = {0.0};
+	std::unique_ptr<float[]> apMFtoGR{nullptr};
+	// removed gNMDA, gNMDAIncGR, gLeakGR, depAmpMFtoGR, dynamicAmpGOtoGR as were
+	// only used to initialize gpu vars
 
-	float gGOGR[NUM_GR][MAX_NUM_P_GR_FROM_GO_TO_GR] = {0.0};
-	float gGOSumGR[NUM_GR] = {0.0};
-	float threshGR[NUM_GR] = {0.0};
-	float vGR[NUM_GR] = {0.0};
-	float gKCaGR[NUM_GR] = {0.0};
-	ct_uint64_t historyGR[NUM_GR] = {0};
+	// NOTE: gGOGR used to be 2D array with dims NUM_GR and MAX_NUM_P_GR_FROM_GO_TO_GR
+	std::unique_ptr<float[]> gGOGR{nullptr};
+	std::unique_ptr<float[]> gGOSumGR{nullptr};
+	std::unique_ptr<float[]> threshGR{nullptr};
+	std::unique_ptr<float[]> vGR{nullptr};
+	std::unique_ptr<float[]> gKCaGR{nullptr};	   
+	std::unique_ptr<ct_uint64_t[]> historyGR{nullptr};
 
 	// TODO: MOVE SC CELLS to mzoneactivitystate.... :pogO:
 	//stellate cells
-	ct_uint8_t apSC[NUM_SC] = {0};
-	ct_uint32_t apBufSC[NUM_SC] = {0};
-
-	float gPFSC[NUM_SC] = {0.0};
-	float threshSC[NUM_SC] = {0.0};
-	float vSC[NUM_SC] = {0.0};
-	ct_uint32_t inputSumPFSC[NUM_SC] = {0};
+	std::unique_ptr<ct_uint8_t[]> apSC{nullptr};	
+	std::unique_ptr<ct_uint32_t[]> apBufSC{nullptr};
+	std::unique_ptr<float[]> gPFSC{nullptr};
+	std::unique_ptr<float[]> threshSC{nullptr};
+	std::unique_ptr<float[]> vSC{nullptr};
+	//std::unique_ptr<ct_uint32_t[]> inputSumPFSC{nullptr};
 
 private:
 	void stateRW(bool read, std::fstream &file);

@@ -21,8 +21,8 @@ __global__ void testKernel(float *a, float *b, float *c)
 
 __global__ void calcActivityGRGPU(float *vm, float *gKCa, float *gLeak, float *gNMDA, float *gNMDAInc,
 	float *thresh, ct_uint32_t *apBuf, ct_uint8_t *apOutGR, ct_uint32_t *apGR, int *apMFtoGR,
-	int *apUBCtoGR, float *gESum, float *gUBCESum, float *gISum, float eLeak, float eGOIn,
-	float gAMPAInc, float threshBase, float threshMax, float threshDecay)
+	float *gESum, float *gISum, float eLeak, float eGOIn, float gAMPAInc, 
+	float threshBase, float threshMax, float threshDecay)
 {
 	float tempThresh;
 	unsigned int tempAP;
@@ -177,43 +177,36 @@ __global__ void sumGRBCOutGPU(unsigned int nRows, ct_uint32_t *bcOut, size_t bcO
 	//bcOutSum[index]=1;
 }
 
-
-
-
 __global__ void updateGRInOPGPU(unsigned int inNLoads, ct_uint32_t *apIn, float *dynamicSpillAmp,
-		float *g, size_t gPitch,
-		ct_uint32_t *conFromIn, size_t conFromInPitch,
-		ct_int32_t *numInPerGR, float *gSum, float *gDirect, float *gSpillover, 
-		float gDecayD, float gIncD, float gDecayS, float gIncFracS)
+		float *g, size_t gPitch, ct_uint32_t *conFromIn, size_t conFromInPitch, ct_int32_t *numInPerGR,
+		float *gSum, float *gDirect, float *gSpillover,  float gDecayD, float gIncD, float gDecayS,
+		float gIncFracS)
 {
-	int tid=threadIdx.x;
-	int index=blockIdx.x*blockDim.x+threadIdx.x;
+	int tid = threadIdx.x;
+	int index = blockIdx.x * blockDim.x + threadIdx.x;
 
 	unsigned int *conRow;
 
-	int tempNSyn=numInPerGR[index];
+	int tempNSyn = numInPerGR[index];
 
-	int tempApInSum=0;
+	int tempApInSum = 0;
 
-	for(int i=0; i<inNLoads; i++)
+	for (int i = 0; i < inNLoads; i++)
 	{
-		sharedIOBufGR[tid+i*blockDim.x]=apIn[tid+i*blockDim.x];
+		sharedIOBufGR[tid + i * blockDim.x] = apIn[tid + i * blockDim.x];
 	}
 	__syncthreads();
 
-	for(int i=0; i<tempNSyn; i++)
+	for (int i = 0; i < tempNSyn; i++)
 	{
-		conRow=(unsigned int *)((char *)conFromIn+i*conFromInPitch);
-		tempApInSum+=sharedIOBufGR[conRow[index]];
-
+		conRow = (unsigned int *)((char *)conFromIn + i * conFromInPitch);
+		tempApInSum += sharedIOBufGR[conRow[index]];
 	}
 
-
-	gDirect[index] = gDirect[index]*gDecayD + gIncD*(tempApInSum);
-	gSpillover[index] = gSpillover[index]*0.9900 + dynamicSpillAmp[index]*(tempApInSum);
+	gDirect[index] = gDirect[index] * gDecayD + gIncD * tempApInSum;
+	gSpillover[index] = gSpillover[index] * 0.99 + dynamicSpillAmp[index] * tempApInSum;
 
 	gSum[index] = gDirect[index] + gSpillover[index]; 
-
 }
 
 __global__ void updateGOGRDepressionInOPGPU(unsigned int inNLoads, float *depAmp, ct_uint32_t *conFromIn,
@@ -536,16 +529,14 @@ void callTestKernel(cudaStream_t &st, float *a, float *b, float *c)
 }
 
 void callGRActKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
-		float *vGPU, float *gKCaGPU, float *gLeakGPU, float *gNMDAGRGPU, float *gNMDAIncGRGPU, float *threshGPU,
-		ct_uint32_t *apBufGPU, ct_uint8_t *apOutGRGPU, ct_uint32_t *apGRGPU,
-		int *apMFtoGRGPU, int *apUBCtoGRGPU, float *gESumGPU, float *gUBCESum, float *gISumGPU,
-		float eLeak, float eGOIn, float gAMPAInc,
-		float threshBase, float threshMax, float threshDecay)
+		float *vGPU, float *gKCaGPU, float *gLeakGPU, float *gNMDAGRGPU, float *gNMDAIncGRGPU,
+		float *threshGPU, ct_uint32_t *apBufGPU, ct_uint8_t *apOutGRGPU, ct_uint32_t *apGRGPU,
+		int *apMFtoGRGPU, float *gESumGPU, float *gISumGPU, float eLeak,
+		float eGOIn, float gAMPAInc, float threshBase, float threshMax, float threshDecay)
 {
-	calcActivityGRGPU<<<numBlocks, numGRPerBlock, 0, st>>>(vGPU, gKCaGPU, gLeakGPU, gNMDAGRGPU, gNMDAIncGRGPU, threshGPU,
-			apBufGPU, apOutGRGPU, apGRGPU,
-			apMFtoGRGPU, apUBCtoGRGPU, gESumGPU, gUBCESum, gISumGPU, eLeak, eGOIn, gAMPAInc,
-			threshBase, threshMax, threshDecay);
+	calcActivityGRGPU<<<numBlocks, numGRPerBlock, 0, st>>>(vGPU, gKCaGPU, gLeakGPU, gNMDAGRGPU,
+		  gNMDAIncGRGPU, threshGPU, apBufGPU, apOutGRGPU, apGRGPU, apMFtoGRGPU, gESumGPU, 
+		  gISumGPU, eLeak, eGOIn, gAMPAInc, threshBase, threshMax, threshDecay);
 }
 
 template<typename Type, bool inMultiP, bool outMultiP>

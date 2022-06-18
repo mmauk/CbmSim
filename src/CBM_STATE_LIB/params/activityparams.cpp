@@ -216,8 +216,6 @@ void ActivityParams::updateParamsOriginal()
 	threshDecTauGR = paramMap["threshDecayTGR"];
 	threshDecGR = 1 - exp(-msPerTimeStep / threshDecTauGR);
 
-	gLeakGR = paramMap["rawGLeakGR"] / (6 - msPerTimeStep);
-
 	msPerHistBinGR = paramMap["msPerHistBinGR"];
 	tsPerHistBinGR = msPerHistBinGR/msPerTimeStep;
 
@@ -450,8 +448,6 @@ void ActivityParams::updateParamsV1()
 	
 	threshDecTauGR = paramMap["threshDecTauGR"];
 	threshDecGR = 1 - exp(-msPerTimeStep / threshDecTauGR);
-
-	gLeakGR = paramMap["rawGLeakGR"] / (6 - msPerTimeStep);
 
 	msPerHistBinGR = paramMap["msPerHistBinGR"];
 	tsPerHistBinGR = msPerHistBinGR / msPerTimeStep;

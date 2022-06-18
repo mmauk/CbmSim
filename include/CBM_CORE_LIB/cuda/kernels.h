@@ -18,11 +18,10 @@
 void callTestKernel(cudaStream_t &st, float *a, float *b, float *c);
 
 void callGRActKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
-		float *vGPU, float *gKCaGPU, float *gLeakGRPGU, float *gNMDAGRGPU, float*gNMDAIncGRGPU, float *threshGPU,
-		ct_uint32_t *apBufGPU, ct_uint8_t *apOutGRGPU, ct_uint32_t *apGRGPU,
-		int *apMFtoGRGPU, int *apUBCtoGRGPU, float *gESumGPU, float *gUBCESum, float *gISumGPU,
-		float eLeak, float eGOIn, float gAMPAInc,
-		float threshBase, float threshMax, float threshDecay);
+		float *vGPU, float *gKCaGPU, float *gLeakGRPGU, float *gNMDAGRGPU, float*gNMDAIncGRGPU,
+		float *threshGPU, ct_uint32_t *apBufGPU, ct_uint8_t *apOutGRGPU, ct_uint32_t *apGRGPU,
+		int *apMFtoGRGPU, float *gESumGPU, float *gISumGPU, float eLeak, float eGOIn,
+		float gAMPAInc, float threshBase, float threshMax, float threshDecay);
 
 template<typename Type, bool inMultiP, bool outMultiP>
 void callSumKernel(cudaStream_t &st, Type *inGPU, size_t inGPUP, Type *outSumGPU, size_t outSumGPUP,

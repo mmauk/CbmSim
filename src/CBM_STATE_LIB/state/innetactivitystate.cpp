@@ -67,35 +67,24 @@ void InNetActivityState::stateRW(bool read, std::fstream &file)
 
 	rawBytesRW((char *)gMFGR.get(), NUM_GR * MAX_NUM_P_GR_FROM_MF_TO_GR * sizeof(float), read, file);
 	rawBytesRW((char *)gMFSumGR.get(), NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)apMFtoGR, NUM_GR * sizeof(int), read, file);
-	rawBytesRW((char *)apUBCtoGR, NUM_GR * sizeof(int), read, file);
-	rawBytesRW((char *)gUBCSumGR, NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)gUBCDirectGR, NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)gUBCSpilloverGR, NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)gNMDAGR, NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)gNMDAIncGR, NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)gLeakGR, NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)depAmpMFtoGR, NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)depAmpUBCtoGR, NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)depAmpGOtoGR, NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)dynamicAmpGOtoGR, NUM_GR * sizeof(float), read, file);
+	rawBytesRW((char *)apMFtoGR.get(), NUM_GR * sizeof(int), read, file);
 
-	rawBytesRW((char *)gGOGR[0], NUM_GR * MAX_NUM_P_GR_FROM_GO_TO_GR * sizeof(float), read, file);
-	rawBytesRW((char *)gGOSumGR, NUM_GR * sizeof(float), read, file);
+	rawBytesRW((char *)gGOGR.get(), NUM_GR * MAX_NUM_P_GR_FROM_GO_TO_GR * sizeof(float), read, file);
+	rawBytesRW((char *)gGOSumGR.get(), NUM_GR * sizeof(float), read, file);
 
-	rawBytesRW((char *)threshGR, NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)vGR, NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)gKCaGR, NUM_GR * sizeof(float), read, file);
-	rawBytesRW((char *)historyGR, NUM_GR * sizeof(ct_uint64_t), read, file);
+	rawBytesRW((char *)threshGR.get(), NUM_GR * sizeof(float), read, file);
+	rawBytesRW((char *)vGR.get(), NUM_GR * sizeof(float), read, file);
+	rawBytesRW((char *)gKCaGR.get(), NUM_GR * sizeof(float), read, file);
+	rawBytesRW((char *)historyGR.get(), NUM_GR * sizeof(ct_uint64_t), read, file);
 
-	rawBytesRW((char *)apSC, NUM_SC * sizeof(ct_uint8_t), read, file);
-	rawBytesRW((char *)apBufSC, NUM_SC * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)apSC.get(), NUM_SC * sizeof(ct_uint8_t), read, file);
+	rawBytesRW((char *)apBufSC.get(), NUM_SC * sizeof(ct_uint32_t), read, file);
 
-	rawBytesRW((char *)gPFSC, NUM_SC * sizeof(float), read, file);
-	rawBytesRW((char *)threshSC, NUM_SC * sizeof(float), read, file);
-	rawBytesRW((char *)vSC, NUM_SC * sizeof(float), read, file);
+	rawBytesRW((char *)gPFSC.get(), NUM_SC * sizeof(float), read, file);
+	rawBytesRW((char *)threshSC.get(), NUM_SC * sizeof(float), read, file);
+	rawBytesRW((char *)vSC.get(), NUM_SC * sizeof(float), read, file);
 
-	rawBytesRW((char *)inputSumPFSC, NUM_SC * sizeof(ct_uint32_t), read, file);
+	//rawBytesRW((char *)inputSumPFSC.get(), NUM_SC * sizeof(ct_uint32_t), read, file);
 }
 
 void InNetActivityState::allocateArrMem(ActivityParams &ap)
@@ -135,6 +124,21 @@ void InNetActivityState::allocateArrMem(ActivityParams &ap)
 	apBufGR		   = std::make_unique<ct_uint32_t[]>(NUM_GR);
 	gMFGR		   = std::make_unique<float[]>(NUM_GR * MAX_NUM_P_GR_FROM_MF_TO_GR);
 	gMFSumGR	   = std::make_unique<float[]>(NUM_GR);
+	apMFtoGR	   = std::make_unique<float[]>(NUM_GR);
+	gGOGR		   = std::make_unique<float[]>(NUM_GR * MAX_NUM_P_GR_FROM_GO_TO_GR);
+	gGOSumGR	   = std::make_unique<float[]>(NUM_GR);
+	threshGR	   = std::make_unique<float[]>(NUM_GR);
+	vGR			   = std::make_unique<float[]>(NUM_GR);
+	gKCaGR		   = std::make_unique<float[]>(NUM_GR);
+	historyGR	   = std::make_unique<ct_uint64_t[]>(NUM_GR);
+
+	apSC		   = std::make_unique<ct_uint8_t[]>(NUM_SC);
+	apBufSC		   = std::make_unique<ct_uint32_t[]>(NUM_SC);
+	gPFSC		   = std::make_unique<float[]>(NUM_SC);
+	threshSC	   = std::make_unique<float[]>(NUM_SC);
+	vSC		       = std::make_unique<float[]>(NUM_SC);
+	// Not used.
+	// inputSumPFSC   = std::make_unique<ct_uint32_t[]>(NUM_SC);
 }
 
 void InNetActivityState::initializeVals(ActivityParams &ap)
@@ -153,18 +157,12 @@ void InNetActivityState::initializeVals(ActivityParams &ap)
 	std::fill(threshCurGO.get(), threshCurGO.get() + NUM_GO, ap.threshRestGO);
 
 	// gr
-	std::fill(gLeakGR, gLeakGR + NUM_GR, 0.11);
-	std::fill(depAmpMFtoGR, depAmpMFtoGR + NUM_GR, 1.0);
-	std::fill(depAmpUBCtoGR, depAmpUBCtoGR + NUM_GR, 1.0);
-	std::fill(depAmpGOtoGR, depAmpGOtoGR + NUM_GR, 1.0);
-	std::fill(threshGR, threshGR + NUM_GR, ap.threshRestGR);
-	std::fill(vGR, vGR + NUM_GR, ap.eLeakGR);
+	std::fill(threshGR.get(), threshGR.get() + NUM_GR, ap.threshRestGR);
+	std::fill(vGR.get(), vGR.get() + NUM_GR, ap.eLeakGR);
 
 	// sc
-	std::fill(apSC, apSC + NUM_SC, false);	
-	std::fill(threshSC, threshSC + NUM_SC, ap.threshRestSC);
-	std::fill(apSC, apSC + NUM_SC, false);
-	std::fill(threshSC, threshSC + NUM_SC, ap.threshRestSC);
-	std::fill(vSC, vSC + NUM_SC, ap.eLeakSC);
+	// NOTE: no need to explicitly init apSC: false is the default value made by make_unique
+	std::fill(threshSC.get(), threshSC.get() + NUM_SC, ap.threshRestSC);
+	std::fill(vSC.get(), vSC.get() + NUM_SC, ap.eLeakSC);
 }
 

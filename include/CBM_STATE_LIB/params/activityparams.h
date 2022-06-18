@@ -106,14 +106,11 @@ public:
 	float recoveryTauGO;
 	float fracDepGO;
 
-
 	float threshDecTauGR;
 	float threshDecGR; //derived from tau
-	float gLeakGR; //derived from raw values
 
 	float msPerHistBinGR;
 	ct_uint32_t tsPerHistBinGR; //derived from raw values
-
 	
 	
 	//------------UBC variables

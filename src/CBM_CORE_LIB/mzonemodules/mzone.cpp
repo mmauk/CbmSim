@@ -13,7 +13,7 @@ MZone::MZone(ActivityParams &ap, MZoneConnectivityState *cs,
 		MZoneActivityState *as, int randSeed, ct_uint32_t **actBufGRGPU,
 		ct_uint32_t **delayMaskGRGPU, ct_uint64_t **histGRGPU, int gpuIndStart, int numGPUs)
 {
-	// TODO: make this a non dynamic object wtf bruh
+	// TODO: make this a non dynamic object wtf bro
 	randGen = new CRandomSFMT0(randSeed);
 
 	this->ap = ap; /* deep copy implemented biiiiiiitch */

@@ -42,25 +42,10 @@ public:
 
 	void writeToState();
 	void getnumGPUs();
-	//void grStim(int startGR, int numGR);
 
 	virtual const ct_uint8_t* exportAPMF();
 	virtual const ct_uint8_t* exportAPSC();
 	virtual const ct_uint8_t* exportAPGR();
-
-	//virtual const ct_uint32_t* exportAPBufGR();
-	virtual const ct_uint32_t* exportAPBufSC();
-	
-	virtual const float* exportVmGR();
-	
-	virtual const float* exportVmSC();
-	virtual const float* exportGUBCESumGR();
-	virtual const float* exportDepSumUBCGR();
-	
-	virtual const float* exportDynamicSpillSumGOGR();
-	virtual const float* exportgNMDAGR();
-	virtual const int*   exportAPfromMFtoGR();
-	virtual const float* exportGISumGR();
 
 	virtual const ct_uint32_t* exportSumGRInputGO();
 	virtual const float* 	   exportSumGOInputGO();
