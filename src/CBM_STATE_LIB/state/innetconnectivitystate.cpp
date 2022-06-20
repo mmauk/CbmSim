@@ -146,10 +146,170 @@ void InNetConnectivityState::writeState(std::fstream &outfile)
 
 void allocateMemory()
 {
-	haspGLfromMFtoGL = new bool[NUM_GL]();
+	haspGLfromMFtoGL = new int[NUM_GL]();
 	numpGLfromGLtoGO = new int[NUM_GL]();
-	pGLfromGLtoGO = allocate2DArray<int>(NUM_GL, MAX_NUM_P_GL_FROM_GL_TO_GO);
+	pGLfromGLtoGO    = allocate2DArray<int>(NUM_GL, MAX_NUM_P_GL_FROM_GL_TO_GO);
 	numpGLfromGOtoGL = new int[NUM_GL]();
+	pGLfromGOtoGL    = allocate2DArray<int>(NUM_GL, MAX_NUM_P_GL_FROM_GO_TO_GL);
+	numpGLfromGLtoGR = new int[NUM_GL];
+	pGLfromGLtoGR    = allocate2DArray<int>(NUM_GL, MAX_NUM_P_GL_FROM_GL_TO_GR);
+	pGLfromMFtoGL    = new int[NUM_GL];
+	numpMFfromMFtoGL = new int[NUM_MF];
+	pMFfromMFtoGL    = allocate2DArray<int>(NUM_MF, MAX_NUM_P_MF_FROM_MF_TO_GL);
+	numpMFfromMFtoGR = new int[NUM_MF];
+	pMFfromMFtoGR    = allocate<int>(NUM_MF, MAX_NUM_P_MF_FROM_MF_TO_GR);
+	numpMFfromMFtoGO = new int[NUM_MF];
+	pMFfromMFtoGO    = allocate2DArray<int>(NUM_MF, MAX_NUM_P_MF_FROM_MF_TO_GO);
+
+	//golgi
+	numpGOfromGLtoGO = new int[NUM_GO]();
+	pGOfromGLtoGO    = allocate2DArray<int>(NUM_GO, MAX_NUM_P_GO_FROM_GL_TO_GO);
+	numpGOfromGOtoGL = new int[NUM_GO];
+	pGOfromGOtoGL    = allocate2DArray<int>(NUM_GO, MAX_NUM_P_GO_FROM_GO_TO_GL);
+	numpGOfromMFtoGO = new int[NUM_GO]();
+	pGOfromMFtoGO    = allocate2DArray<int>(NUM_GO, MAX_NUM_P_GO_FROM_MF_TO_GO);
+	numpGOfromGOtoGR = new int[NUM_GO]();
+	pGOfromGOtoGR    = allocate2DArray<int>(NUM_GO, MAX_NUM_P_GO_FROM_GO_TO_GR);
+	numpGOfromGRtoGO = new int[NUM_GO]();
+	pGOfromGRtoGO    = allocate2DArray<int>(NUM_GO, MAX_NUM_P_GO_FROM_GR_TO_GO);
+
+	// coincidentally, numcongotogo == maxnumpgogabaingogo
+	numpGOGABAInGOGO  = new int[NUM_GO]();
+	pGOGABAInGOGO     = allocate2DArray<int>(NUM_GO, NUM_CON_GO_TO_GO);
+	numpGOGABAOutGOGO = new int[NUM_GO]();			
+	pGOGABAOutGOGO    = allocate2DArray<int>(NUM_GO, NUM_CON_GO_TO_GO);			
+
+	// go <-> go gap junctions
+	numpGOCoupInGOGO     = new int[NUM_GO]();
+	pGOCoupInGOGO        = allocate2DArray<int>(NUM_GO, NUM_P_GO_TO_GO_GJ);
+	numpGOCoupOutGOGO    = new int[NUM_GO]();
+	pGOCoupOutGOGO       = allocate2DArray<int>(NUM_GO, NUM_P_GO_TO_GO_GJ);
+	pGOCoupOutGOGOCCoeff = allocate2DArray<int>(NUM_GO, NUM_P_GO_TO_GO_GJ);
+	pGOCoupInGOGOCCoeff  = allocate2DArray<int>(NUM_GO, NUM_P_GO_TO_GO_GJ);
+
+	//granule
+	pGRDelayMaskfromGRtoBSP = new ct_uint32_t[NUM_GR]();
+	numpGRfromGLtoGR 		= new int[NUM_GR]();
+	pGRfromGLtoGR 			= allocate2DArray<int>(NUM_GR, MAX_NUM_P_GR_FROM_GL_TO_GR);
+	numpGRfromGRtoGO 		= new int[NUM_GR]();
+	pGRfromGRtoGO 			= allocate2DArray<int>(NUM_GR, MAX_NUM_P_GR_FROM_GR_TO_GO);
+	pGRDelayMaskfromGRtoGO  = allocate2DArray<int>(NUM_GR, MAX_NUM_P_GR_FROM_GR_TO_GO);
+	numpGRfromGOtoGR 		= new int[NUM_GR]();
+	pGRfromGOtoGR 			= allocate2DArray<int>(NUM_GR, MAX_NUM_P_GR_FROM_GO_TO_GR);
+	numpGRfromMFtoGR 		= new int[NUM_GR]();
+	pGRfromMFtoGR 			= allocate2DArray<int>(NUM_GR, MAX_NUM_P_GR_FROM_MF_TO_GR);
+}
+
+void initializeVals()
+{
+	std::fill(pGLfromGLtoGO[0], pGLfromGLtoGO[0]
+		+ sizeof(pGLfromGLtoGO) / sizeof(pGLfromGLtoGO[0][0]), 0);
+	std::fill(pGLfromGOtoGL[0], pGLfromGOtoGL[0]
+		+ sizeof(pGLfromGOtoGL) / sizeof(pGLfromGOtoGL[0][0]), 0);
+	std::fill(pGLfromGLtoGR[0], pGLfromGLtoGR[0]
+		+ sizeof(pGLfromGLtoGR) / sizeof(pGLfromGLtoGR[0][0]), 0);
+	std::fill(pMFfromMFtoGL[0], pMFfromMFtoGL[0]
+		+ sizeof(pMFfromMFtoGL) / sizeof(pMFfromMFtoGL[0][0]), 0);
+	std::fill(pMFfromMFtoGR[0], pMFfromMFtoGR[0]
+		+ sizeof(pMFfromMFtoGR) / sizeof(pMFfromMFtoGR[0][0]), 0);
+	std::fill(pMFfromMFtoGO[0], pMFfromMFtoGO[0]
+		+ sizeof(pMFfromMFtoGO) / sizeof(pMFfromMFtoGO[0][0]), 0);
+	std::fill(pGOfromGLtoGO[0], pGOfromGLtoGO[0]
+		+ sizeof(pGOfromGLtoGO) / sizeof(pGOfromGLtoGO[0][0]), 0);
+	std::fill(pGOfromGOtoGL[0], pGOfromGOtoGL[0]
+		+ sizeof(pGOfromGOtoGL) / sizeof(pGOfromGOtoGL[0][0]), 0);
+	std::fill(pGOfromMFtoGO[0], pGOfromMFtoGO[0]
+		+ sizeof(pGOfromMFtoGO) / sizeof(pGOfromMFtoGO[0][0]), 0);
+	std::fill(pGOfromGOtoGR[0], pGOfromGOtoGR[0]
+		+ sizeof(pGOfromGOtoGR) / sizeof(pGOfromGOtoGR[0][0]), 0);
+	std::fill(pGOfromGRtoGO[0], pGOfromGRtoGO[0]
+		+ sizeof(pGOfromGRtoGO) / sizeof(pGOfromGRtoGO[0][0]), 0);
+	std::fill(pGOGABAInGOGO[0], pGOGABAInGOGO[0]
+		+ sizeof(pGOGABAInGOGO) / sizeof(pGOGABAInGOGO[0][0]), 0);
+	std::fill(pGOGABAOutGOGO[0], pGOGABAOutGOGO[0]
+		+ sizeof(pGOGABAOutGOGO) / sizeof(pGOGABAOutGOGO[0][0]), 0);
+	std::fill(pGOCoupInGOGO[0], pGOCoupInGOGO[0]
+		+ sizeof(pGOCoupInGOGO) / sizeof(pGOCoupInGOGO[0][0]), 0);
+	std::fill(pGOCoupOutGOGO[0], pGOCoupOutGOGO[0]
+		+ sizeof(pGOCoupOutGOGO) / sizeof(pGOCoupOutGOGO[0][0]), 0);
+	std::fill(pGOCoupOutGOGOCCoeff[0], pGOCoupOutGOGOCCoeff[0]
+		+ sizeof(pGOCoupOutGOGOCCoeff) / sizeof(pGOCoupOutGOGOCCoeff[0][0]), 0);
+	std::fill(pGOCoupInGOGOCCoeff[0], pGOCoupInGOGOCCoeff[0]
+		+ sizeof(pGOCoupInGOGOCCoeff) / sizeof(pGOCoupInGOGOCCoeff[0][0]), 0);
+	std::fill(pGRfromGLtoGR[0], pGRfromGLtoGR[0]
+		+ sizeof(pGRfromGLtoGR) / sizeof(pGRfromGLtoGR[0][0]), 0);
+	std::fill(pGRfromGRtoGO[0], pGRfromGRtoGO[0]
+		+ sizeof(pGRfromGRtoGO) / sizeof(pGRfromGRtoGO[0][0]), 0);
+	std::fill(pGRDelayMaskfromGRtoGO[0], pGRDelayMaskfromGRtoGO[0]
+		+ sizeof(pGRDelayMaskfromGRtoGO) / sizeof(pGRDelayMaskfromGRtoGO[0][0]), 0);
+	std::fill(pGRfromGOtoGR[0], pGRfromGOtoGR[0]
+		+ sizeof(pGRfromGOtoGR) / sizeof(pGRfromGOtoGR[0][0]), 0);
+	std::fill(pGRfromMFtoGR[0], pGRfromMFtoGR[0]
+		+ sizeof(pGRfromMFtoGR) / sizeof(pGRfromMFtoGR[0][0]), 0);
+}
+
+void deallocMem()
+{
+	// mf
+	delete[] haspGLfromMFtoGL;
+	delete[] numpGLfromGLtoGO;
+	delete2DArray<int>(pGLfromGLtoGO);	
+	delete[] numpGLfromGOtoGL;
+	delete2DArray<int>(pGLfromGOtoGL);
+	delete[] numpGLfromGLtoGR;
+	delete2DArray<int>(pGLfromGLtoGR);
+	delete[] pGLfromMFtoGL;
+	delete[] numpMFfromMFtoGL;
+	delete2DArray<int>(pMFfromMFtoGL);
+	delete[] numpMFfromMFtoGR;
+	delete2DArray<int>(pMFfromMFtoGR);
+	delete[] numpMFfromMFtoGO;
+	delete2DArray<int>(pMFfromMFtoGO);
+
+	delete[] numpGOfromGLtoGO;
+	delete2DArray<int>(pGOfromGLtoGO);
+	delete[] numpGOfromGOtoGL;
+	delete2DArray<int>(pGOfromGOtoGL);
+	delete[] numpGOfromMFtoGO;
+	delete2DArray<int>(pGOfromMFtoGO);
+
+	// golgi
+	delete[] numpGOfromGLtoGO;
+	delete2DArray<int>(pGOfromGLtoGO);
+	delete[] numpGOfromGOtoGL;
+	delete2DArray<int>(pGOfromGOtoGL);
+	delete[] numpGOfromMFtoGO;
+	delete2DArray<int>(pGOfromMFtoGO);
+	delete[] numpGOfromGOtoGR;
+	delete2DArray<int>(pGOfromGOtoGR);
+	delete[] numpGOfromGRtoGO;
+	delete2DArray<int>(pGOfromGRtoGO);
+
+	// go gaba
+	delete[] numpGOGABAInGOGO;
+	delete2DArray<int>(pGOGABAInGOGO);
+	delete[] numpGOGABAOutGOGO;
+	delete2DArray<int>(pGOGABAOutGOGO);
+
+	// go gap junction
+	delete[] numpGOCoupInGOGO;
+	delete2DArray<int>(pGOCoupInGOGO);
+	delete[] numpGOCoupOutGOGO;
+	delete2DArray<int>(pGOCoupOutGOGO);
+	delete2DArray<int>(pGOCoupOutGOGOCCoeff);
+	delete2DArray<int>(pGOCoupInGOGOCCoeff);
+
+	// granule
+	delete[] pGRDelayMaskfromGRtoBSP;
+	delete[] numpGRfromGLtoGR;
+	delete2DArray<int>(pGRfromGLtoGR);
+	delete[] numpGRfromGRtoGO;
+	delete2DArray<int>(pGRfromGRtoGO);
+	delete2DArray<int>(pGRDelayMaskfromGRtoGO);
+	delete[] numpGRfromGOtoGR;
+	delete2DArray<int>(pGRfromGOtoGR);
+	delete[] numpGRfromMFtoGR;
+	delete2DArray<int>(pGRfromMFtoGR);
 }
 
 void InNetConnectivityState::stateRW(bool read, std::fstream &file)
