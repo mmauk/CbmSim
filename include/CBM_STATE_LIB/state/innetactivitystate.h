@@ -33,7 +33,6 @@ public:
 	std::unique_ptr<ct_uint32_t[]> apBufMF{nullptr};
 
 	//golgi cells
-	int goTimeStep;
 	std::unique_ptr<float[]> synWscalerGRtoGO{nullptr};
 	std::unique_ptr<ct_uint8_t[]> apGO{nullptr};
 	std::unique_ptr<ct_uint32_t[]> apBufGO{nullptr};

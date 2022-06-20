@@ -144,6 +144,14 @@ void InNetConnectivityState::writeState(std::fstream &outfile)
 	std::cout << "finished writing input network connectivity to disk." << std::endl;
 }
 
+void allocateMemory()
+{
+	haspGLfromMFtoGL = new bool[NUM_GL]();
+	numpGLfromGLtoGO = new int[NUM_GL]();
+	pGLfromGLtoGO = allocate2DArray<int>(NUM_GL, MAX_NUM_P_GL_FROM_GL_TO_GO);
+	numpGLfromGOtoGL = new int[NUM_GL]();
+}
+
 void InNetConnectivityState::stateRW(bool read, std::fstream &file)
 {
 	std::cout << "glomerulus" << std::endl;
@@ -239,6 +247,7 @@ void InNetConnectivityState::stateRW(bool read, std::fstream &file)
 	rawBytesRW((char *)pGRfromMFtoGR[0],
 		NUM_GR * MAX_NUM_P_GR_FROM_MF_TO_GR * sizeof(int), read, file);
 }
+
 
 void InNetConnectivityState::connectMFGL_noUBC(CRandomSFMT &randGen)
 {

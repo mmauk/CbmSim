@@ -10,7 +10,7 @@ const std::string ACT_PARAM_FILE = INPUT_DATA_PATH + "actParams.txt";
 int main(void) 
 {
 	float mfW = 0.0035;
-	float ws = 0.3275;
+	float ws = 0.3275; // weight scale
 	float gogr = 0.0105;
 
 	float grW[8] = { 0.00056, 0.0007, 0.000933, 0.0014, 0.0028, 0.0056, 0.0112, 0.0224 };
@@ -22,7 +22,7 @@ int main(void)
 	{
 		float GRGO = grW[goRecipParamNum] * ws;
 	   	float MFGO = mfW * ws;
-	   	float GOGR = gogr;
+	   	float GOGR = gogr; // 
 	   	for (int simNum = 0; simNum < 10; simNum++)
 	   	{
 			std::cout << "[INFO]: Running simulation #" << (simNum + 1) << std::endl;

@@ -145,7 +145,6 @@ void InNetActivityState::initializeVals(ActivityParams &ap)
 {
 	// only actively initializing those arrays whose initial values we want
 	// differ from the default initilizer value
-	goTimeStep = 0;
 
 	// mf
 	std::fill(depAmpMFGO.get(), depAmpMFGO.get() + NUM_MF, 1.0);

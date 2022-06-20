@@ -476,7 +476,6 @@ void InNet::calcGOActivities(float goMin, int simNum, float GRGO, float MFGO, fl
 			apGOH[j][i] = as->apGO[i];		
 		}
 	}
-	as->goTimeStep++;
 }
 
 
