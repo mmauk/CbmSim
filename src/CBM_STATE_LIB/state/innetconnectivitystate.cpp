@@ -139,7 +139,7 @@ InNetConnectivityState::InNetConnectivityState(unsigned int msPerStep, int randS
 //			numGR*maxnumpGRfromMFtoGR);
 //}
 
-InNetConnectivityState::~InNetConnectivityState() { deallocMem(); }
+InNetConnectivityState::~InNetConnectivityState() { deallocMemory(); }
 
 void InNetConnectivityState::writeState(std::fstream &outfile)
 {
@@ -252,7 +252,7 @@ void InNetConnectivityState::initializeVals()
 		+ sizeof(pGRfromMFtoGR) / sizeof(pGRfromMFtoGR[0][0]), 0);
 }
 
-void InNetConnectivityState::deallocMem()
+void InNetConnectivityState::deallocMemory()
 {
 	// mf
 	delete[] haspGLfromMFtoGL;

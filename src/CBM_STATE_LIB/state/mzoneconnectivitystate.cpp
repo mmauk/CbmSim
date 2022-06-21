@@ -76,6 +76,11 @@ void MZoneConnectivityState::writeState(std::fstream &outfile)
 	stateRW(false, outfile);
 }
 
+void MZoneConnectivityState::allocateMemory()
+{
+
+}
+
 void MZoneConnectivityState::stateRW(bool read, std::fstream &file)
 {
 	rawBytesRW((char *)pBCfromBCtoPC[0], NUM_BC * NUM_P_BC_FROM_BC_TO_PC * sizeof(ct_uint32_t), read, file);

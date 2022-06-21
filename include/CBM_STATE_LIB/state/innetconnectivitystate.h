@@ -89,7 +89,7 @@ public:
 protected:
 	void allocateMemory();
 	void initializeVals();
-	void deallocMem();
+	void deallocMemory();
 	void stateRW(bool read, std::fstream &file);
 
 	void connectMFGL_noUBC(CRandomSFMT &randGen);

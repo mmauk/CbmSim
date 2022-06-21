@@ -15,10 +15,10 @@
 #include <math.h>
 #include <limits.h>
 
-#include <fileIO/rawbytesrw.h>
-#include <stdDefinitions/pstdint.h>
-#include <randGenerators/sfmt.h>
-
+#include "fileIO/rawbytesrw.h"
+#include "stdDefinitions/pstdint.h"
+#include "randGenerators/sfmt.h"
+#include "memoryMgmt/dynamic2darray.h"
 #include "params/connectivityparams.h"
 
 class MZoneConnectivityState
@@ -59,6 +59,9 @@ public:
 	ct_uint32_t pIOOutIOIO[NUM_IO][NUM_P_IO_OUT_IO_TO_IO] = {0};
 
 private:
+	void allocateMemory();
+	void initializeVals();
+	void deallocMemory();
 	void stateRW(bool read, std::fstream &file);
 	
 	void connectBCtoPC();
