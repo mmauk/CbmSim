@@ -10,7 +10,11 @@
 InNetConnectivityState::InNetConnectivityState(unsigned int msPerStep, int randSeed)
 {
 	CRandomSFMT0 randGen(randSeed);
-	
+
+	std::cout << "[INFO]: allocating and initializing connectivity arrays..." << std::endl;
+	allocateMemory();
+	initializeVals();
+
 	std::cout << "[INFO]: Initializing innet connections..." << std::endl;
 
 	std::cout << "[INFO]: Connecting MF and GL" << std::endl;
@@ -135,7 +139,7 @@ InNetConnectivityState::InNetConnectivityState(unsigned int msPerStep, int randS
 //			numGR*maxnumpGRfromMFtoGR);
 //}
 
-InNetConnectivityState::~InNetConnectivityState() {}
+InNetConnectivityState::~InNetConnectivityState() { deallocMem(); }
 
 void InNetConnectivityState::writeState(std::fstream &outfile)
 {
@@ -144,27 +148,27 @@ void InNetConnectivityState::writeState(std::fstream &outfile)
 	std::cout << "finished writing input network connectivity to disk." << std::endl;
 }
 
-void allocateMemory()
+void InNetConnectivityState::allocateMemory()
 {
-	haspGLfromMFtoGL = new int[NUM_GL]();
+	haspGLfromMFtoGL = new bool[NUM_GL]();
 	numpGLfromGLtoGO = new int[NUM_GL]();
 	pGLfromGLtoGO    = allocate2DArray<int>(NUM_GL, MAX_NUM_P_GL_FROM_GL_TO_GO);
 	numpGLfromGOtoGL = new int[NUM_GL]();
 	pGLfromGOtoGL    = allocate2DArray<int>(NUM_GL, MAX_NUM_P_GL_FROM_GO_TO_GL);
-	numpGLfromGLtoGR = new int[NUM_GL];
+	numpGLfromGLtoGR = new int[NUM_GL]();
 	pGLfromGLtoGR    = allocate2DArray<int>(NUM_GL, MAX_NUM_P_GL_FROM_GL_TO_GR);
-	pGLfromMFtoGL    = new int[NUM_GL];
-	numpMFfromMFtoGL = new int[NUM_MF];
+	pGLfromMFtoGL    = new int[NUM_GL]();
+	numpMFfromMFtoGL = new int[NUM_MF]();
 	pMFfromMFtoGL    = allocate2DArray<int>(NUM_MF, MAX_NUM_P_MF_FROM_MF_TO_GL);
-	numpMFfromMFtoGR = new int[NUM_MF];
-	pMFfromMFtoGR    = allocate<int>(NUM_MF, MAX_NUM_P_MF_FROM_MF_TO_GR);
-	numpMFfromMFtoGO = new int[NUM_MF];
+	numpMFfromMFtoGR = new int[NUM_MF]();
+	pMFfromMFtoGR    = allocate2DArray<int>(NUM_MF, MAX_NUM_P_MF_FROM_MF_TO_GR);
+	numpMFfromMFtoGO = new int[NUM_MF]();
 	pMFfromMFtoGO    = allocate2DArray<int>(NUM_MF, MAX_NUM_P_MF_FROM_MF_TO_GO);
 
 	//golgi
 	numpGOfromGLtoGO = new int[NUM_GO]();
 	pGOfromGLtoGO    = allocate2DArray<int>(NUM_GO, MAX_NUM_P_GO_FROM_GL_TO_GO);
-	numpGOfromGOtoGL = new int[NUM_GO];
+	numpGOfromGOtoGL = new int[NUM_GO]();
 	pGOfromGOtoGL    = allocate2DArray<int>(NUM_GO, MAX_NUM_P_GO_FROM_GO_TO_GL);
 	numpGOfromMFtoGO = new int[NUM_GO]();
 	pGOfromMFtoGO    = allocate2DArray<int>(NUM_GO, MAX_NUM_P_GO_FROM_MF_TO_GO);
@@ -184,8 +188,8 @@ void allocateMemory()
 	pGOCoupInGOGO        = allocate2DArray<int>(NUM_GO, NUM_P_GO_TO_GO_GJ);
 	numpGOCoupOutGOGO    = new int[NUM_GO]();
 	pGOCoupOutGOGO       = allocate2DArray<int>(NUM_GO, NUM_P_GO_TO_GO_GJ);
-	pGOCoupOutGOGOCCoeff = allocate2DArray<int>(NUM_GO, NUM_P_GO_TO_GO_GJ);
-	pGOCoupInGOGOCCoeff  = allocate2DArray<int>(NUM_GO, NUM_P_GO_TO_GO_GJ);
+	pGOCoupOutGOGOCCoeff = allocate2DArray<float>(NUM_GO, NUM_P_GO_TO_GO_GJ);
+	pGOCoupInGOGOCCoeff  = allocate2DArray<float>(NUM_GO, NUM_P_GO_TO_GO_GJ);
 
 	//granule
 	pGRDelayMaskfromGRtoBSP = new ct_uint32_t[NUM_GR]();
@@ -200,7 +204,7 @@ void allocateMemory()
 	pGRfromMFtoGR 			= allocate2DArray<int>(NUM_GR, MAX_NUM_P_GR_FROM_MF_TO_GR);
 }
 
-void initializeVals()
+void InNetConnectivityState::initializeVals()
 {
 	std::fill(pGLfromGLtoGO[0], pGLfromGLtoGO[0]
 		+ sizeof(pGLfromGLtoGO) / sizeof(pGLfromGLtoGO[0][0]), 0);
@@ -248,7 +252,7 @@ void initializeVals()
 		+ sizeof(pGRfromMFtoGR) / sizeof(pGRfromMFtoGR[0][0]), 0);
 }
 
-void deallocMem()
+void InNetConnectivityState::deallocMem()
 {
 	// mf
 	delete[] haspGLfromMFtoGL;
@@ -296,8 +300,8 @@ void deallocMem()
 	delete2DArray<int>(pGOCoupInGOGO);
 	delete[] numpGOCoupOutGOGO;
 	delete2DArray<int>(pGOCoupOutGOGO);
-	delete2DArray<int>(pGOCoupOutGOGOCCoeff);
-	delete2DArray<int>(pGOCoupInGOGOCCoeff);
+	delete2DArray<float>(pGOCoupOutGOGOCCoeff);
+	delete2DArray<float>(pGOCoupInGOGOCCoeff);
 
 	// granule
 	delete[] pGRDelayMaskfromGRtoBSP;
@@ -515,12 +519,12 @@ void InNetConnectivityState::connectMFGL_noUBC(CRandomSFMT &randGen)
 void InNetConnectivityState::connectGLGR(CRandomSFMT &randGen)
 {
 	int grX = GR_X;
-	int grY = GR_Y;
+	// int grY = GR_Y; /* unused */
 	int glX = GL_X;
 	int glY = GL_Y;
 
 	float gridXScaleStoD = (float)grX / (float)glX;
-	float gridYScaleStoD = (float)grY / (float)glY;
+	// float gridYScaleStoD = (float)grY / (float)glY; /* unused actually :/ */
 
 	bool srcConnected[NUM_GR] = {false};
 

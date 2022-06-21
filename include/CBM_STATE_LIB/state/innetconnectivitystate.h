@@ -17,6 +17,7 @@
 #include <algorithm>
 #include "fileIO/rawbytesrw.h"
 #include "stdDefinitions/pstdint.h"
+#include "memoryMgmt/dynamic2darray.h"
 #include "randGenerators/sfmt.h"
 #include "params/connectivityparams.h"
 
@@ -32,63 +33,63 @@ public:
 	void writeState(std::fstream &outfile);
 
 	//glomerulus
-
-	bool *haspGLfromMFtoGL[NUM_GL] = {false};
-	int *numpGLfromGLtoGO[NUM_GL] = {0};
-	int *pGLfromGLtoGO[NUM_GL][MAX_NUM_P_GL_FROM_GL_TO_GO] = {0};
-	int *numpGLfromGOtoGL[NUM_GL] = {0};
-	int *pGLfromGOtoGL[NUM_GL][MAX_NUM_P_GL_FROM_GO_TO_GL] = {0};
-	int *numpGLfromGLtoGR[NUM_GL] = {0};
-	int *pGLfromGLtoGR[NUM_GL][MAX_NUM_P_GL_FROM_GL_TO_GR] = {0};
-	int *pGLfromMFtoGL[NUM_GL] = {0};
-	int *numpMFfromMFtoGL[NUM_MF] = {0};
-	int *pMFfromMFtoGL[NUM_MF][MAX_NUM_P_MF_FROM_MF_TO_GL] = {0};
-	int *numpMFfromMFtoGR[NUM_MF] = {0};
-	int *pMFfromMFtoGR[NUM_MF][MAX_NUM_P_MF_FROM_MF_TO_GR] = {0};
-	int *numpMFfromMFtoGO[NUM_MF] = {0};
-	int *pMFfromMFtoGO[NUM_MF][MAX_NUM_P_MF_FROM_MF_TO_GO] = {0};
+	bool *haspGLfromMFtoGL;
+	int *numpGLfromGLtoGO;
+	int **pGLfromGLtoGO;
+	int *numpGLfromGOtoGL;
+	int **pGLfromGOtoGL;
+	int *numpGLfromGLtoGR;
+	int **pGLfromGLtoGR;
+	int *pGLfromMFtoGL;
+	int *numpMFfromMFtoGL;
+	int **pMFfromMFtoGL;
+	int *numpMFfromMFtoGR;
+	int **pMFfromMFtoGR;
+	int *numpMFfromMFtoGO;
+	int **pMFfromMFtoGO;
 
 	//golgi
-	int *numpGOfromGLtoGO[NUM_GO] = {0};
-	int *pGOfromGLtoGO[NUM_GO][MAX_NUM_P_GO_FROM_GL_TO_GO] = {0};
-	int *numpGOfromGOtoGL[NUM_GO] = {0};
-	int *pGOfromGOtoGL[NUM_GO][MAX_NUM_P_GO_FROM_GO_TO_GL] = {0};
-	int *numpGOfromMFtoGO[NUM_GO] = {0};
-	int *pGOfromMFtoGO[NUM_GO][MAX_NUM_P_GO_FROM_MF_TO_GO] = {0};
-	int *numpGOfromGOtoGR[NUM_GO] = {0};
-	int *pGOfromGOtoGR[NUM_GO][MAX_NUM_P_GO_FROM_GO_TO_GR] = {0};
-	int *numpGOfromGRtoGO[NUM_GO] = {0};
-	int *pGOfromGRtoGO[NUM_GO][MAX_NUM_P_GO_FROM_GR_TO_GO] = {0};
+	int *numpGOfromGLtoGO;
+	int **pGOfromGLtoGO;
+	int *numpGOfromGOtoGL;
+	int **pGOfromGOtoGL;
+	int *numpGOfromMFtoGO;
+	int **pGOfromMFtoGO;
+	int *numpGOfromGOtoGR;
+	int **pGOfromGOtoGR;
+	int *numpGOfromGRtoGO;
+	int **pGOfromGRtoGO;
 
 	// coincidentally, numcongotogo == maxnumpgogabaingogo
-	int *numpGOGABAInGOGO[NUM_GO] = {0};
-	int *pGOGABAInGOGO[NUM_GO][NUM_CON_GO_TO_GO] = {0};
-	int *numpGOGABAOutGOGO[NUM_GO] = {0};			
-	int *pGOGABAOutGOGO[NUM_GO][NUM_CON_GO_TO_GO] = {0};			
+	int *numpGOGABAInGOGO;
+	int **pGOGABAInGOGO;
+	int *numpGOGABAOutGOGO;			
+	int **pGOGABAOutGOGO;			
 
 	// go <-> go gap junctions
-	int *numpGOCoupInGOGO[NUM_GO] = {0};
-	int *pGOCoupInGOGO[NUM_GO][NUM_P_GO_TO_GO_GJ] = {0};
-	int *numpGOCoupOutGOGO[NUM_GO] = {0};
-	int *pGOCoupOutGOGO[NUM_GO][NUM_P_GO_TO_GO_GJ] = {0};
-	float *pGOCoupOutGOGOCCoeff[NUM_GO][NUM_P_GO_TO_GO_GJ] = {0};
-	float *pGOCoupInGOGOCCoeff[NUM_GO][NUM_P_GO_TO_GO_GJ] = {0};
+	int *numpGOCoupInGOGO;
+	int **pGOCoupInGOGO;
+	int *numpGOCoupOutGOGO;
+	int **pGOCoupOutGOGO;
+	float **pGOCoupOutGOGOCCoeff;
+	float **pGOCoupInGOGOCCoeff;
 
 	//granule
-	ct_uint32_t *pGRDelayMaskfromGRtoBSP[NUM_GR] = {0};
-	int *numpGRfromGLtoGR[NUM_GR] = {0};
-	int *pGRfromGLtoGR[NUM_GR][MAX_NUM_P_GR_FROM_GL_TO_GR] = {0};
-	int *numpGRfromGRtoGO[NUM_GR] = {0};
-	int *pGRfromGRtoGO[NUM_GR][MAX_NUM_P_GR_FROM_GR_TO_GO] = {0};
-	int *pGRDelayMaskfromGRtoGO[NUM_GR][MAX_NUM_P_GR_FROM_GR_TO_GO] = {0};
-	int *numpGRfromGOtoGR[NUM_GR] = {0};
-	int *pGRfromGOtoGR[NUM_GR][MAX_NUM_P_GR_FROM_GO_TO_GR] = {0};
-	int *numpGRfromMFtoGR[NUM_GR] = {0};
-	int *pGRfromMFtoGR[NUM_GR][MAX_NUM_P_GR_FROM_MF_TO_GR] = {0};
+	ct_uint32_t *pGRDelayMaskfromGRtoBSP;
+	int *numpGRfromGLtoGR;
+	int **pGRfromGLtoGR;
+	int *numpGRfromGRtoGO;
+	int **pGRfromGRtoGO;
+	int **pGRDelayMaskfromGRtoGO;
+	int *numpGRfromGOtoGR;
+	int **pGRfromGOtoGR;
+	int *numpGRfromMFtoGR;
+	int **pGRfromMFtoGR;
 
 protected:
 	void allocateMemory();
 	void initializeVals();
+	void deallocMem();
 	void stateRW(bool read, std::fstream &file);
 
 	void connectMFGL_noUBC(CRandomSFMT &randGen);
