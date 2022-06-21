@@ -9,6 +9,9 @@
 
 MZoneConnectivityState::MZoneConnectivityState(int randSeed)
 {
+	std::cout << "[INFO]: Allocating and initializing mzone connectivity arrays..." << std::endl;
+	allocateMemory();
+	initializeVals();
 	std::cout << "[INFO]: Initializing mzone connections..." << std::endl;
 	std::cout << "[INFO]: Connecting BC to PC" << std::endl;
 	connectBCtoPC();
@@ -78,7 +81,71 @@ void MZoneConnectivityState::writeState(std::fstream &outfile)
 
 void MZoneConnectivityState::allocateMemory()
 {
+	//basket cells
+	pBCfromBCtoPC  = allocate2DArray<ct_uint32_t>(NUM_BC, NUM_P_BC_FROM_BC_TO_PC);
+	pBCfromPCtoBC  = allocate2DArray<ct_uint32_t>(NUM_BC, NUM_P_BC_FROM_PC_TO_BC);
 
+	//stellate cells
+	pSCfromSCtoPC = allocate2DArray<ct_uint32_t>(NUM_SC, NUM_P_SC_FROM_SC_TO_PC);
+
+	//purkinje cells
+	pPCfromBCtoPC = allocate2DArray<ct_uint32_t>(NUM_PC, NUM_P_PC_FROM_BC_TO_PC);
+	pPCfromPCtoBC = allocate2DArray<ct_uint32_t>(NUM_PC, NUM_P_PC_FROM_PC_TO_BC);
+	pPCfromSCtoPC = allocate2DArray<ct_uint32_t>(NUM_PC, NUM_P_PC_FROM_SC_TO_PC);
+	pPCfromPCtoNC = allocate2DArray<ct_uint32_t>(NUM_PC, NUM_P_PC_FROM_PC_TO_NC);
+	pPCfromIOtoPC = new ct_uint32_t[NUM_PC]();
+
+	//nucleus cells
+	pNCfromPCtoNC = allocate2DArray<ct_uint32_t>(NUM_NC, NUM_P_NC_FROM_PC_TO_NC);
+	pNCfromNCtoIO = allocate2DArray<ct_uint32_t>(NUM_NC, NUM_P_NC_FROM_NC_TO_IO);
+	pNCfromMFtoNC = allocate2DArray<ct_uint32_t>(NUM_NC, NUM_P_NC_FROM_MF_TO_NC);
+
+	//inferior olivary cells
+	pIOfromIOtoPC = allocate2DArray<ct_uint32_t>(NUM_IO, NUM_P_IO_FROM_IO_TO_PC);
+	pIOfromNCtoIO = allocate2DArray<ct_uint32_t>(NUM_IO, NUM_P_IO_FROM_NC_TO_IO);
+	pIOInIOIO = allocate2DArray<ct_uint32_t>(NUM_IO, NUM_P_IO_IN_IO_TO_IO);
+	pIOOutIOIO = allocate2DArray<ct_uint32_t>(NUM_IO, NUM_P_IO_OUT_IO_TO_IO);
+}
+
+void MZoneConnectivityState::initializeVals()
+{
+	// basket cells
+	std::fill(pBCfromBCtoPC[0], pBCfromBCtoPC[0]
+			+ sizeof(pBCfromBCtoPC) / sizeof(pBCfromBCtoPC[0][0]), 0);
+	std::fill(pBCfromPCtoBC[0], pBCfromPCtoBC[0]
+			+ sizeof(pBCfromPCtoBC) / sizeof(pBCfromPCtoBC[0][0]), 0);
+
+	// stellate cells
+	std::fill(pSCfromSCtoPC[0], pSCfromSCtoPC[0]
+			+ sizeof(pSCfromSCtoPC) / sizeof(pSCfromSCtoPC[0][0]), 0);
+
+	// purkinje cells
+	std::fill(pPCfromBCtoPC[0], pPCfromBCtoPC[0]
+			+ sizeof(pPCfromBCtoPC) / sizeof(pPCfromBCtoPC[0][0]), 0);
+	std::fill(pPCfromPCtoBC[0], pPCfromPCtoBC[0]
+			+ sizeof(pPCfromPCtoBC) / sizeof(pPCfromPCtoBC[0][0]), 0);
+	std::fill(pPCfromSCtoPC[0], pPCfromSCtoPC[0]
+			+ sizeof(pPCfromSCtoPC) / sizeof(pPCfromSCtoPC[0][0]), 0);
+	std::fill(pPCfromPCtoNC[0], pPCfromPCtoNC[0]
+			+ sizeof(pPCfromPCtoNC) / sizeof(pPCfromPCtoNC[0][0]), 0);
+
+	// nucleus cells
+	std::fill(pNCfromPCtoNC[0], pNCfromPCtoNC[0]
+			+ sizeof(pNCfromPCtoNC) / sizeof(pNCfromPCtoNC[0][0]), 0);
+	std::fill(pNCfromNCtoIO[0], pNCfromNCtoIO[0]
+			+ sizeof(pNCfromNCtoIO) / sizeof(pNCfromNCtoIO[0][0]), 0);
+	std::fill(pNCfromMFtoNC[0], pNCfromMFtoNC[0]
+			+ sizeof(pNCfromMFtoNC) / sizeof(pNCfromMFtoNC[0][0]), 0);
+
+	// inferior olivary cells
+	std::fill(pIOfromIOtoPC[0], pIOfromIOtoPC[0]
+			+ sizeof(pIOfromIOtoPC) / sizeof(pIOfromIOtoPC[0][0]), 0);
+	std::fill(pIOfromNCtoIO[0], pIOfromNCtoIO[0]
+			+ sizeof(pIOfromNCtoIO) / sizeof(pIOfromNCtoIO[0][0]), 0);
+	std::fill(pIOInIOIO[0], pIOInIOIO[0]
+			+ sizeof(pIOInIOIO) / sizeof(pIOInIOIO[0][0]), 0);
+	std::fill(pIOOutIOIO[0], pIOOutIOIO[0]
+			+ sizeof(pIOOutIOIO) / sizeof(pIOOutIOIO[0][0]), 0);
 }
 
 void MZoneConnectivityState::stateRW(bool read, std::fstream &file)
