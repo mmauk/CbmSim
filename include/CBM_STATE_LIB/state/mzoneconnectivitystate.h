@@ -34,29 +34,29 @@ public:
 	void writeState(std::fstream &outfile);
 
 	//basket cells
-	ct_uint32_t pBCfromBCtoPC[NUM_BC][NUM_P_BC_FROM_BC_TO_PC] = {0};
-	ct_uint32_t pBCfromPCtoBC[NUM_BC][NUM_P_BC_FROM_PC_TO_BC] = {0};
+	ct_uint32_t **pBCfromBCtoPC;
+	ct_uint32_t **pBCfromPCtoBC;
 
 	//stellate cells
-	ct_uint32_t pSCfromSCtoPC[NUM_SC][NUM_P_SC_FROM_SC_TO_PC] = {0};
+	ct_uint32_t **pSCfromSCtoPC;
 
 	//purkinje cells
-	ct_uint32_t pPCfromBCtoPC[NUM_PC][NUM_P_PC_FROM_BC_TO_PC] = {0};
-	ct_uint32_t pPCfromPCtoBC[NUM_PC][NUM_P_PC_FROM_PC_TO_BC] = {0};
-	ct_uint32_t pPCfromSCtoPC[NUM_PC][NUM_P_PC_FROM_SC_TO_PC] = {0};
-	ct_uint32_t pPCfromPCtoNC[NUM_PC][NUM_P_PC_FROM_PC_TO_NC] = {0};
-	ct_uint32_t pPCfromIOtoPC[NUM_PC] = {0};
+	ct_uint32_t **pPCfromBCtoPC;
+	ct_uint32_t **pPCfromPCtoBC;
+	ct_uint32_t **pPCfromSCtoPC;
+	ct_uint32_t **pPCfromPCtoNC;
+	ct_uint32_t *pPCfromIOtoPC;
 
 	//nucleus cells
-	ct_uint32_t pNCfromPCtoNC[NUM_NC][NUM_P_NC_FROM_PC_TO_NC] = {0};
-	ct_uint32_t pNCfromNCtoIO[NUM_NC][NUM_P_NC_FROM_NC_TO_IO] = {0};
-	ct_uint32_t pNCfromMFtoNC[NUM_NC][NUM_P_NC_FROM_MF_TO_NC] = {0};
+	ct_uint32_t **pNCfromPCtoNC;
+	ct_uint32_t **pNCfromNCtoIO;
+	ct_uint32_t **pNCfromMFtoNC;
 
 	//inferior olivary cells
-	ct_uint32_t pIOfromIOtoPC[NUM_IO][NUM_P_IO_FROM_IO_TO_PC] = {0};
-	ct_uint32_t pIOfromNCtoIO[NUM_IO][NUM_P_IO_FROM_NC_TO_IO] = {0};
-	ct_uint32_t pIOInIOIO[NUM_IO][NUM_P_IO_IN_IO_TO_IO] = {0};
-	ct_uint32_t pIOOutIOIO[NUM_IO][NUM_P_IO_OUT_IO_TO_IO] = {0};
+	ct_uint32_t **pIOfromIOtoPC;
+	ct_uint32_t **pIOfromNCtoIO;
+	ct_uint32_t **pIOInIOIO;
+	ct_uint32_t **pIOOutIOIO;
 
 private:
 	void allocateMemory();

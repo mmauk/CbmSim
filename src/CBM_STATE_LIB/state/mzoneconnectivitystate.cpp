@@ -72,7 +72,7 @@ MZoneConnectivityState::MZoneConnectivityState(std::fstream &infile)
 //			numIO * numpIOOutIOIO);
 //}
 
-MZoneConnectivityState::~MZoneConnectivityState() {}
+MZoneConnectivityState::~MZoneConnectivityState() { deallocMemory(); }
 
 void MZoneConnectivityState::writeState(std::fstream &outfile)
 {
@@ -146,6 +146,33 @@ void MZoneConnectivityState::initializeVals()
 			+ sizeof(pIOInIOIO) / sizeof(pIOInIOIO[0][0]), 0);
 	std::fill(pIOOutIOIO[0], pIOOutIOIO[0]
 			+ sizeof(pIOOutIOIO) / sizeof(pIOOutIOIO[0][0]), 0);
+}
+
+void MZoneConnectivityState::deallocMemory()
+{
+	// basket cells
+	delete2DArray<ct_uint32_t>(pBCfromBCtoPC);
+	delete2DArray<ct_uint32_t>(pBCfromPCtoBC);
+
+	// stellate cells
+	delete2DArray<ct_uint32_t>(pSCfromSCtoPC);
+
+	// purkinje cells
+	delete2DArray<ct_uint32_t>(pPCfromBCtoPC);
+	delete2DArray<ct_uint32_t>(pPCfromPCtoBC);
+	delete2DArray<ct_uint32_t>(pPCfromSCtoPC);
+	delete2DArray<ct_uint32_t>(pPCfromPCtoNC);
+
+	// nucleus cells
+	delete2DArray<ct_uint32_t>(pNCfromPCtoNC);
+	delete2DArray<ct_uint32_t>(pNCfromNCtoIO);
+	delete2DArray<ct_uint32_t>(pNCfromMFtoNC);
+
+	// inferior olivary cells
+	delete2DArray<ct_uint32_t>(pIOfromIOtoPC);
+	delete2DArray<ct_uint32_t>(pIOfromNCtoIO);
+	delete2DArray<ct_uint32_t>(pIOInIOIO);
+	delete2DArray<ct_uint32_t>(pIOOutIOIO);
 }
 
 void MZoneConnectivityState::stateRW(bool read, std::fstream &file)

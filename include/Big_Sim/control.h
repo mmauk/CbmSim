@@ -112,17 +112,16 @@ class Control
 		//float **grGOgPSTH; 
 
 		//ct_uint8_t **allMFPSTH;
-		ct_uint8_t **allGOPSTH;
 		//ct_uint8_t **allGRPSTH;
 		//ct_uint8_t **activeGRPSTH;
 
 		//ct_uint8_t **allGORaster;
 		ct_uint8_t **allPCRaster;
 		ct_uint8_t **allNCRaster;
-		ct_uint8_t **allBCRaster;
 		ct_uint8_t **allSCRaster;
+		ct_uint8_t **allBCRaster;
 		//ct_uint8_t **allIORaster;
-
+		ct_uint8_t **allGOPSTH;
 		//float **allGORaster_gogoG; 
 		//float **eyelidPos;
 		//float **activeGRgISum;

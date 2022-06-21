@@ -942,14 +942,13 @@ void InNetConnectivityState::connectGOGODecayP(CRandomSFMT &randGen)
 	int yCoorsGOGOsyn[NUM_P_GO_TO_GO] = {0};
 	float Pcon[NUM_P_GO_TO_GO] = {0}; 				
 
-	bool conGOGOBoolOut[NUM_GO][NUM_GO] = {false};
+	bool **conGOGOBoolOut = allocate2DArray<bool>(NUM_GO, NUM_GO);
 
 	// pre fill the golgi arrays with INT_MAX
 	std::fill(&pGOGABAInGOGO[0][0], &pGOGABAInGOGO[0][0]
 		+ sizeof(pGOGABAInGOGO) / sizeof(pGOGABAInGOGO[0][0]), INT_MAX);
 	std::fill(&pGOGABAOutGOGO[0][0], &pGOGABAOutGOGO[0][0]
 		+ sizeof(pGOGABAOutGOGO) / sizeof(pGOGABAOutGOGO[0][0]), INT_MAX);
-
 
 	for (int i = 0; i < SPAN_GO_TO_GO_X + 1; i++)
    	{
@@ -1019,7 +1018,7 @@ void InNetConnectivityState::connectGOGODecayP(CRandomSFMT &randGen)
 					
 					conGOGOBoolOut[i][destIndex] = true;
 							
-					if (randGen.Random() >= 1 - P_RECIP_GO_GO 
+					if (randGen.Random() <= P_RECIP_GO_GO 
 							&& !conGOGOBoolOut[destIndex][i]
 							&& numpGOGABAOutGOGO[destIndex] < NUM_CON_GO_TO_GO 
 							&& numpGOGABAInGOGO[i] < NUM_CON_GO_TO_GO) 
@@ -1037,7 +1036,7 @@ void InNetConnectivityState::connectGOGODecayP(CRandomSFMT &randGen)
 				if (GO_GO_RECIP_CONS && REDUCE_BASE_RECIP_GO_GO
 						&& randGen.Random() >= 1 - Pcon[rGOGOSpanInd[j]]
 						&& !conGOGOBoolOut[i][destIndex] && (!conGOGOBoolOut[destIndex][i] ||
-							randGen.Random() >= 1 - P_RECIP_LOWER_BASE_GO_GO)
+							randGen.Random() <= P_RECIP_LOWER_BASE_GO_GO)
 						&& numpGOGABAOutGOGO[i] < NUM_CON_GO_TO_GO 
 						&& numpGOGABAInGOGO[destIndex] < NUM_CON_GO_TO_GO) 
 				{	
@@ -1098,6 +1097,7 @@ void InNetConnectivityState::connectGOGODecayP(CRandomSFMT &randGen)
 
 	float fracRecip = (float)recipCounter / (float)totalGOGOcons;
 	std::cout << "FracRecip: " << fracRecip << std::endl;
+	delete2DArray<bool>(conGOGOBoolOut);
 }
 
 void InNetConnectivityState::connectGOGO_GJ(CRandomSFMT &randGen)
@@ -1113,7 +1113,7 @@ void InNetConnectivityState::connectGOGO_GJ(CRandomSFMT &randGen)
 	float gjPCon[NUM_P_GO_TO_GO_GJ] = {0.0};
 	float gjCC[NUM_P_GO_TO_GO_GJ] = {0.0};
 
-	bool gjConBool[NUM_GO][NUM_GO] = {false};
+	bool **gjConBool = allocate2DArray<bool>(NUM_GO, NUM_GO);
 
 	for (int i = 0; i < SPAN_GO_TO_GO_GJ_X + 1; i++)
 	{
@@ -1189,6 +1189,7 @@ void InNetConnectivityState::connectGOGO_GJ(CRandomSFMT &randGen)
 			}
 		}
 	}
+	delete2DArray<bool>(gjConBool);
 }
 
 void InNetConnectivityState::translateMFGL()

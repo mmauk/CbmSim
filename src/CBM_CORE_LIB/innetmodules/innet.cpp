@@ -1331,7 +1331,7 @@ void InNet::initGRCUDA()
 	{
 		for (int j = 0; j < NUM_GR; j++)
 		{
-			gGOGRT[i][j] = as->gGOGR[j * NUM_GR + i];
+			gGOGRT[i][j] = as->gGOGR[j * MAX_NUM_P_GR_FROM_GO_TO_GR + i];
 			pGRfromGOtoGRT[i][j] = cs->pGRfromGOtoGR[j][i];
 		}
 	}
@@ -1340,7 +1340,7 @@ void InNet::initGRCUDA()
 	{
 		for (int j = 0; j < NUM_GR; j++)
 		{
-			gMFGRT[i][j] 		 = as->gMFGR[j * NUM_GR + i];
+			gMFGRT[i][j] 		 = as->gMFGR[j * MAX_NUM_P_GR_FROM_MF_TO_GR + i];
 			pGRfromMFtoGRT[i][j] = cs->pGRfromMFtoGR[j][i];
 		}
 	}
