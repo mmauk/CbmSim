@@ -19,17 +19,17 @@ BUILD_PATH	  = $(ROOT)build/
 
 # NOTE using update alternatives: to switch back to ver11, use update-alternatives --config g++
 CXX              = g++
-# CXXFLAGS         = -m64 -pipe -std=c++11 -O3 -g -Wall 
-CXXFLAGS         = -m64 -std=c++14 -g -Wall
-# MODULE_CXX_FLAGS = -m64 -pipe -std=c++11 -O2 -g -Wall -fPIC 
-MODULE_CXX_FLAGS = -m64 -std=c++14 -g -Wall
+# CXXFLAGS         = -m64 -std=c++11 -g -Wall 
+CXXFLAGS         = -m64 -pipe -std=c++14 -O3 -g
+# MODULE_CXX_FLAGS = -m64 -std=c++11 -g -Wall  
+MODULE_CXX_FLAGS = -m64 -pipe -std=c++14 -O2 -g -fPIC
 INCPATH          = -I. -Iinclude/Big_Sim -I/usr/local/cuda/include -I$(ROOT)include/CBM_CORE_LIB -I$(ROOT)include/CBM_DATA_LIB \
 			       -I$(ROOT)include/CBM_STATE_LIB -I$(ROOT)include/CBM_TOOLS_LIB -I$(ROOT)include/CXX_TOOLS_LIB 
 LIBS             = -L/usr/local/cuda/lib64 -L/usr/lib64 -L/opt/cuda/lib64 -lcudart
 LINK             = g++
 LFLAGS           = -m64 
 # MODULE_LFLAGS    = -m64 -Wl, -O1 -shared
-MODULE_LFLAGS    = -m64
+MODULE_LFLAGS    = -m64 -O1
 
 CHK_DIR_EXISTS   = test -d
 MKDIR            = mkdir -p

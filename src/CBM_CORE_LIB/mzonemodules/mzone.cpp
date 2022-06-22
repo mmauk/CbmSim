@@ -99,7 +99,8 @@ void MZone::initCUDA()
 	{
 		for (int j = 0; j < NUM_P_PC_FROM_GR_TO_PC; j++)
 		{
-			pfSynWeightPCLinear[i * NUM_P_PC_FROM_GR_TO_PC + j] = as->pfSynWeightPC[i][j];
+			// TODO: get rid of pfSynWeightLinear and use our linearized version directly
+			pfSynWeightPCLinear[i * NUM_P_PC_FROM_GR_TO_PC + j] = as->pfSynWeightPC[i * NUM_P_PC_FROM_GR_TO_PC + j];
 		}
 	}
 
@@ -163,7 +164,7 @@ void MZone::cpyPFPCSynWCUDA()
 	{
 		for (int j = 0; j < NUM_P_PC_FROM_GR_TO_PC; j++)
 		{
-			as->pfSynWeightPC[i][j] = pfSynWeightPCLinear[i * NUM_P_PC_FROM_GR_TO_PC + j];
+			as->pfSynWeightPC[i * NUM_P_PC_FROM_GR_TO_PC + j] = pfSynWeightPCLinear[i * NUM_P_PC_FROM_GR_TO_PC + j];
 		}
 	}
 }
@@ -211,9 +212,12 @@ void MZone::calcPCActivities()
 
 			for (int j = 0; j < NUM_P_PC_FROM_SC_TO_PC; j++)
 			{
-				as->gSCPC[i][j] = as->gSCPC[i][j] + ap.gIncSCtoPC *(1 - as->gSCPC[i][j]) * as->inputSCPC[i][j];
-				as->gSCPC[i][j] = as->gSCPC[i][j] * ap.gDecSCtoPC;//GSCDECAYPC;
-				gSCPCSum += as->gSCPC[i][j];
+				as->gSCPC[i * NUM_P_PC_FROM_SC_TO_PC + j] = as->gSCPC[i * NUM_P_PC_FROM_SC_TO_PC + j]
+				   + ap.gIncSCtoPC * (1 - as->gSCPC[i * NUM_P_PC_FROM_SC_TO_PC + j])
+				   * as->inputSCPC[i * NUM_P_PC_FROM_SC_TO_PC + j];
+				as->gSCPC[i * NUM_P_PC_FROM_SC_TO_PC + j] = as->gSCPC[i * NUM_P_PC_FROM_SC_TO_PC + j]
+				   * ap.gDecSCtoPC; //GSCDECAYPC;
+				gSCPCSum += as->gSCPC[i * NUM_P_PC_FROM_SC_TO_PC + j];
 			}
 
 			as->vPC[i] = as->vPC[i] +
@@ -283,13 +287,16 @@ void MZone::calcIOActivities()
 
 		for (int j = 0; j < NUM_P_IO_FROM_NC_TO_IO; j++)
 		{
-			as->gNCIO[i][j] = as->gNCIO[i][j] * exp(-ap.msPerTimeStep /
-				(-ap.gDecTSofNCtoIO * exp(-as->gNCIO[i][j] / ap.gDecTTofNCtoIO) + ap.gDecT0ofNCtoIO));
-			as->gNCIO[i][j] = as->gNCIO[i][j] + as->inputNCIO[i][j]
-				* ap.gIncNCtoIO * exp(-as->gNCIO[i][j] / ap.gIncTauNCtoIO);
-			gNCSum += as->gNCIO[i][j];
+			as->gNCIO[i * NUM_P_IO_FROM_NC_TO_IO + j] = as->gNCIO[i * NUM_P_IO_FROM_NC_TO_IO + j]
+			   * exp(-ap.msPerTimeStep /
+				(-ap.gDecTSofNCtoIO * exp(-as->gNCIO[i * NUM_P_IO_FROM_NC_TO_IO + j] / ap.gDecTTofNCtoIO)
+				 + ap.gDecT0ofNCtoIO));
+			as->gNCIO[i * NUM_P_IO_FROM_NC_TO_IO + j] = as->gNCIO[i * NUM_P_IO_FROM_NC_TO_IO + j]
+			   + as->inputNCIO[i * NUM_P_IO_FROM_NC_TO_IO + j]
+			   * ap.gIncNCtoIO * exp(-as->gNCIO[i * NUM_P_IO_FROM_NC_TO_IO + j] / ap.gIncTauNCtoIO);
+			gNCSum += as->gNCIO[i * NUM_P_IO_FROM_NC_TO_IO + j];
 
-			as->inputNCIO[i][j] = 0;
+			as->inputNCIO[i * NUM_P_IO_FROM_NC_TO_IO + j] = 0;
 		}
 
 		gNCSum = 1.5 * gNCSum / 3.1;
@@ -331,11 +338,12 @@ float gDecay = exp(-1.0 / 20.0);
 
 			for (int j = 0; j < NUM_P_NC_FROM_MF_TO_NC; j++)
 			{
-				inputMFNCSum += as->inputMFNC[i][j];
+				inputMFNCSum += as->inputMFNC[i * NUM_P_NC_FROM_MF_TO_NC + j];
 
-				as->gMFAMPANC[i][j] = as->gMFAMPANC[i][j] * gDecay + 
-					(ap.gAMPAIncMFtoNC * as->inputMFNC[i][j] * as->mfSynWeightNC[i][j]);
-				gMFAMPASum += as->gMFAMPANC[i][j];
+				as->gMFAMPANC[i * NUM_P_NC_FROM_MF_TO_NC + j] = as->gMFAMPANC[i * NUM_P_NC_FROM_MF_TO_NC + j]
+				   * gDecay + (ap.gAMPAIncMFtoNC * as->inputMFNC[i * NUM_P_NC_FROM_MF_TO_NC + j]
+					 * as->mfSynWeightNC[i * NUM_P_NC_FROM_MF_TO_NC + j]);
+				gMFAMPASum += as->gMFAMPANC[i * NUM_P_NC_FROM_MF_TO_NC + j];
 			}
 
 			gMFNMDASum = gMFNMDASum * ap.msPerTimeStep / ((float)NUM_P_NC_FROM_MF_TO_NC);
@@ -347,11 +355,12 @@ float gDecay = exp(-1.0 / 20.0);
 
 			for (int j = 0; j < NUM_P_NC_FROM_PC_TO_NC; j++)
 			{
-				inputPCNCSum += as->inputPCNC[i][j];
+				inputPCNCSum += as->inputPCNC[i * NUM_P_NC_FROM_PC_TO_NC + j];
 
-				as->gPCNC[i][j] = as->gPCNC[i][j] * ap.gDecPCtoNC + 
-					as->inputPCNC[i][j] * ap.gIncAvgPCtoNC*(1 - as->gPCNC[i][j]);
-				gPCNCSum += as->gPCNC[i][j];
+				as->gPCNC[i * NUM_P_NC_FROM_PC_TO_NC + j] = as->gPCNC[i * NUM_P_NC_FROM_PC_TO_NC + j] * ap.gDecPCtoNC + 
+					as->inputPCNC[i * NUM_P_NC_FROM_PC_TO_NC + j] * ap.gIncAvgPCtoNC
+					* (1 - as->gPCNC[i * NUM_P_NC_FROM_PC_TO_NC + j]);
+				gPCNCSum += as->gPCNC[i * NUM_P_NC_FROM_PC_TO_NC + j];
 
 			}
 			gPCNCSum = gPCNCSum * ap.msPerTimeStep / ((float)NUM_P_NC_FROM_PC_TO_NC);
@@ -401,7 +410,7 @@ void MZone::updatePCOut()
 			std::cout << "i: " << i << " j: " << j <<
 				"cs->pNCfromPCtoNC[i][j]: " << cs->pNCfromPCtoNC[i][j] << std::endl;
 #endif
-			as->inputPCNC[i][j] = as->apPC[cs->pNCfromPCtoNC[i][j]];
+			as->inputPCNC[i * NUM_P_NC_FROM_PC_TO_NC + j] = as->apPC[cs->pNCfromPCtoNC[i][j]];
 		}
 	}
 #ifdef DEBUGOUT
@@ -432,7 +441,7 @@ void MZone::updateSCPCOut()
 	{
 		for (int j = 0; j < NUM_P_PC_FROM_SC_TO_PC; j++)
 		{
-			as->inputSCPC[i][j] = apSCInput[cs->pPCfromSCtoPC[i][j]];
+			as->inputSCPC[i * NUM_P_PC_FROM_SC_TO_PC + j] = apSCInput[cs->pPCfromSCtoPC[i][j]];
 		}
 	}
 }
@@ -465,7 +474,7 @@ void MZone::updateNCOut()
 	{
 		for (int j = 0; j < NUM_P_IO_FROM_NC_TO_IO; j++)
 		{
-			as->inputNCIO[i][j] = (randGen->Random() < as->synIOPReleaseNC[cs->pIOfromNCtoIO[i][j]]);
+			as->inputNCIO[i * NUM_P_IO_FROM_NC_TO_IO + j] = (randGen->Random() < as->synIOPReleaseNC[cs->pIOfromNCtoIO[i][j]]);
 		}
 	}
 }
@@ -476,7 +485,7 @@ void MZone::updateMFNCOut()
 	{
 		for (int j = 0; j < NUM_P_NC_FROM_MF_TO_NC; j++)
 		{
-			as->inputMFNC[i][j] = apMFInput[cs->pNCfromMFtoNC[i][j]];
+			as->inputMFNC[i * NUM_P_NC_FROM_MF_TO_NC + j] = apMFInput[cs->pNCfromMFtoNC[i][j]];
 		}
 	}
 }
@@ -672,72 +681,72 @@ const float* MZone::exportPFPCWeights()
 // Why not write one export function which takes in the weight you want to export?
 const ct_uint8_t* MZone::exportAPNC()
 {
-	return (const ct_uint8_t *)as->apNC;
+	return (const ct_uint8_t *)as->apNC.get();
 }
 
 const ct_uint8_t* MZone::exportAPBC()
 {
-	return (const ct_uint8_t *)as->apBC;
+	return (const ct_uint8_t *)as->apBC.get();
 }
 
 const ct_uint8_t* MZone::exportAPPC()
 {
-	return (const ct_uint8_t *)as->apPC;
+	return (const ct_uint8_t *)as->apPC.get();
 }
 
 const ct_uint8_t* MZone::exportAPIO()
 {
-	return (const ct_uint8_t *)as->apIO;
+	return (const ct_uint8_t *)as->apIO.get();
 }
 
 const float* MZone::exportgBCPC()
 {
-	return (const float *)as->gBCPC;
+	return (const float *)as->gBCPC.get();
 }
 
 const float* MZone::exportgPFPC()
 {
-	return (const float *)as->gPFPC;
+	return (const float *)as->gPFPC.get();
 }
 
 const float* MZone::exportVmBC()
 {
-	return (const float *)as->vBC;
+	return (const float *)as->vBC.get();
 }
 
 const float* MZone::exportVmPC()
 {
-	return (const float *)as->vPC;
+	return (const float *)as->vPC.get();
 }
 
 const float* MZone::exportVmNC()
 {
-	return (const float *)as->vNC;
+	return (const float *)as->vNC.get();
 }
 
 const float* MZone::exportVmIO()
 {
-	return (const float *)as->vIO;
+	return (const float *)as->vIO.get();
 }
 
 const unsigned int* MZone::exportAPBufBC()
 {
-	return (const unsigned int *)as->apBufBC;
+	return (const unsigned int *)as->apBufBC.get();
 }
 
 const ct_uint32_t* MZone::exportAPBufPC()
 {
-	return (const ct_uint32_t *)as->apBufPC;
+	return (const ct_uint32_t *)as->apBufPC.get();
 }
 
 const ct_uint32_t* MZone::exportAPBufIO()
 {
-	return (const ct_uint32_t *)as->apBufIO;
+	return (const ct_uint32_t *)as->apBufIO.get();
 }
 
 const ct_uint32_t* MZone::exportAPBufNC()
 {
-	return (const ct_uint32_t *)as->apBufNC;
+	return (const ct_uint32_t *)as->apBufNC.get();
 }
 
 void MZone::testReduction()
