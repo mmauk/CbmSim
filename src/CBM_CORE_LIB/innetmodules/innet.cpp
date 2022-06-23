@@ -44,111 +44,41 @@ InNet::~InNet()
 {
 	std::cout << "**********************************************CUDA DESTRUCTOR ENTERED**********************************************" << std::endl;
 
-	//gpu related host variables
-	cudaFreeHost(outputGRH);
-	cudaFreeHost(inputSumPFBCH);
-	cudaFreeHost(inputSumPFSCH);
+	//gr external to initCUDA
+	delete2DArray<float>(gGOGRT);
+	delete2DArray<float>(gMFGRT);
 
-	//gpu variables
-	std::cout << "numGPUs: " << numGPUs << std::endl;
+	delete2DArray<ct_uint32_t>(pGRDelayfromGRtoGOT);
+	delete2DArray<ct_uint32_t>(pGRfromMFtoGRT);
+	delete2DArray<ct_uint32_t>(pGRfromGOtoGRT);
+
+	delete2DArray<ct_uint32_t>(pGRfromGRtoGOT);
+
+	// go, external to initCUDA
+	delete[] sumGRInputGO;
+	delete[] sumInputGOGABASynDepGO;
+
+	// MF CUDA	
+	delete[] apMFGPU;
+	delete[] apMFH;
+	delete[] depAmpMFH;
+	delete[] depAmpMFGPU;
 
 	for (int i = 0; i < numGPUs; i++)
 	{
 		cout << i+gpuIndStart << endl;
 		cudaSetDevice(i+gpuIndStart);
-		
-		cudaDeviceSynchronize();
-	
+
 		//mf variables
-		cudaFreeHost(apMFH[i]);
-		cudaFreeHost(depAmpMFH[i]);
 		cudaFree(apMFGPU[i]);
+		cudaFreeHost(apMFH[i]);
 		cudaFree(depAmpMFGPU[i]);
-		//GR variables
-		cudaFree(outputGRGPU[i]);
-		cudaFree(vGRGPU[i]);
-		cudaFree(gKCaGRGPU[i]);
-		cudaFree(depAmpMFGRGPU[i]);
-		cudaFree(gLeakGRGPU[i]);
-		cudaFree(gNMDAGRGPU[i]);
-		cudaFree(gNMDAIncGRGPU[i]);
-		cudaFree(gEGRGPU[i]);
-		cudaFree(gEGRSumGPU[i]);
-		cudaFree(gEDirectGPU[i]);
-		cudaFree(gESpilloverGPU[i]);
-		cudaFree(apMFtoGRGPU[i]);
-		cudaFree(numMFperGR[i]);
-		cudaFree(gIGRGPU[i]);
-		cudaFree(gIGRSumGPU[i]);
-		cudaFree(gIDirectGPU[i]);
-		cudaFree(gISpilloverGPU[i]);
-		cudaFree(apBufGRGPU[i]);
-		cudaFree(apGRGPU[i]);
-		cudaFree(threshGRGPU[i]);
-		cudaFree(delayGOMasksGRGPU[i]);
-		cudaFree(delayBCPCSCMaskGRGPU[i]);
-		
-		cudaFree(delayBCMasksGRGPU[i]);
-		cudaFree(grConGROutBCGPU[i]);
-		cudaFree(numBCOutPerGRGPU[i]);
-		
-		cudaFree(numGOOutPerGRGPU[i]);
-		cudaFree(grConGROutGOGPU[i]);
-		cudaFree(numGOInPerGRGPU[i]);
-		cudaFree(grConGOOutGRGPU[i]);
-		cudaFree(numMFInPerGRGPU[i]);
-		
-		cudaFree(grConMFOutGRGPU[i]);
-		
-		cudaFree(historyGRGPU[i]);
-
-		//GO variables
-		cudaFreeHost(apGOH[i]);
-		cudaFree(apGOGPU[i]);
-		cudaFree(grInputGOGPU[i]);
-		cudaFree(grInputGOSumGPU[i]);
-		cudaFreeHost(grInputGOSumH[i]);
-		cudaFreeHost(depAmpGOH[i]);
-		cudaFree(depAmpGOGPU[i]);
-		cudaFree(depAmpGOGRGPU[i]);
-		cudaFreeHost(dynamicAmpGOH[i]);
-		cudaFree(dynamicAmpGOGPU[i]);
-		cudaFree(dynamicAmpGOGRGPU[i]); 
-
-		//BC variables
-		cudaFree(grInputBCGPU[i]);
-		cudaFree(grInputBCSumGPU[i]);
-		cudaFreeHost(grInputBCSumH[i]);
-		
-		cudaFree(inputPFBCGPU[i]);
-		cudaFree(inputSumPFBCGPU[i]);
-
-		//SC variables
-		cudaFree(inputPFSCGPU[i]);
-		cudaFree(inputSumPFSCGPU[i]);
-		//end gpu variables
+		cudaFreeHost(depAmpMFH[i]);
 
 		cudaDeviceSynchronize();
-
-	cout << "***************GPU DELETED************" << endl;
-	
 	}
 
-	//mf
-	delete[] apMFH;
-	delete[] apMFGPU;
-	delete[] depAmpMFH;
-	delete[] depAmpMFGPU;
-	delete[] depAmpMFGRGPU;
-	
-	//gr
-	delete2DArray<float>(gMFGRT);
-	delete2DArray<float>(gGOGRT);
-	delete2DArray<ct_uint32_t>(pGRDelayfromGRtoGOT);
-	delete2DArray<ct_uint32_t>(pGRfromMFtoGRT);
-	delete2DArray<ct_uint32_t>(pGRfromGOtoGRT);
-	delete2DArray<ct_uint32_t>(pGRfromGRtoGOT);
-	
+	// GR CUDA
 	delete[] gEGRGPU;
 	delete[] gEGRGPUP;
 	delete[] gEGRSumGPU;
@@ -156,7 +86,9 @@ InNet::~InNet()
 	delete[] gESpilloverGPU;
 	delete[] apMFtoGRGPU;
 	delete[] numMFperGR;
-	
+	delete[] depAmpMFGRGPU;
+	delete[] depAmpGOGRGPU;
+	delete[] dynamicAmpGOGRGPU;
 
 	delete[] gIGRGPU;
 	delete[] gIGRGPUP;
@@ -198,43 +130,139 @@ InNet::~InNet()
 	delete[] grConMFOutGRGPU;
 	delete[] grConMFOutGRGPUP;
 
-	delete[] grInputGOSumH;
-	delete[] grInputBCSumH;
+	delete[] outputGRH;
+	//cudaFreeHost(outputGRH);
 
-	//go
+	for (int i = 0; i < numGPUs; i++)
+	{
+		cout << i+gpuIndStart << endl;
+		cudaSetDevice(i+gpuIndStart);
+
+		cudaFree(outputGRGPU[i]);
+		cudaFree(apGRGPU[i]);
+		cudaFree(vGRGPU[i]);
+		cudaFree(gKCaGRGPU[i]);
+		cudaFree(gLeakGRGPU[i]);
+		cudaFree(gNMDAGRGPU[i]);
+		cudaFree(gNMDAIncGRGPU[i]);
+		cudaFree(gEGRGPU[i]);
+		cudaFree(gEGRSumGPU[i]);
+		cudaFree(gEDirectGPU[i]);
+		cudaFree(gESpilloverGPU[i]);
+		cudaFree(apMFtoGRGPU[i]);
+		cudaFree(numMFperGR[i]);
+		cudaFree(depAmpMFGRGPU[i]);
+		cudaFree(depAmpGOGRGPU[i]);
+		cudaFree(dynamicAmpGOGRGPU[i]); 
+		cudaFree(gIGRGPU[i]);
+		cudaFree(gIGRSumGPU[i]);
+		cudaFree(gIDirectGPU[i]);
+		cudaFree(gISpilloverGPU[i]);
+		cudaFree(apBufGRGPU[i]);
+		cudaFree(threshGRGPU[i]);
+		cudaFree(delayBCPCSCMaskGRGPU[i]);
+		cudaFree(delayGOMasksGRGPU[i]);
+		
+		cudaFree(grConGROutBCGPU[i]);
+		cudaFree(delayBCMasksGRGPU[i]);
+		cudaFree(numBCOutPerGRGPU[i]);
+		cudaFree(grConGROutGOGPU[i]);
+		cudaFree(numGOOutPerGRGPU[i]);
+		cudaFree(grConGOOutGRGPU[i]);
+		cudaFree(numGOInPerGRGPU[i]);
+		cudaFree(grConMFOutGRGPU[i]);
+		cudaFree(numMFInPerGRGPU[i]);
+		cudaFree(historyGRGPU[i]);
+
+		cudaDeviceSynchronize();
+	}
+
+	// GO CUDA
+	delete[] grInputGOSumH;
+
 	delete[] apGOH;
 	delete[] apGOGPU;
 	delete[] grInputGOGPU;
 	delete[] grInputGOGPUP;
 	delete[] grInputGOSumGPU;
-	delete[] sumGRInputGO;
-	delete[] sumInputGOGABASynDepGO;
 	delete[] depAmpGOH;
 	delete[] depAmpGOGPU;
-	delete[] depAmpGOGRGPU;
 	delete[] dynamicAmpGOH;
 	delete[] dynamicAmpGOGPU;
-	delete[] dynamicAmpGOGRGPU;
-
-	//bc
-	delete[] grInputBCGPU;
-	delete[] grInputBCGPUP;
-	delete[] grInputBCSumGPU;
-	
-	delete[] inputPFBCGPU;
-	delete[] inputPFBCGPUP;
-	delete[] inputSumPFBCGPU;
-
-	//sc
-	delete[] inputPFSCGPU;
-	delete[] inputPFSCGPUP;
-	delete[] inputSumPFSCGPU;
 
 	delete[] plasScalerEx;
 	delete[] plasScalerInh;
 	delete2DArray<float>(goExScaler);	
 	delete2DArray<float>(goInhScaler);	
 	delete2DArray<float>(goFRArray);	
+
+	for (int i = 0; i < numGPUs; i++)
+	{
+		cout << i+gpuIndStart << endl;
+		cudaSetDevice(i+gpuIndStart);
+
+		cudaFreeHost(grInputGOSumH[i]);
+		cudaFreeHost(apGOH[i]);
+		cudaFreeHost(depAmpGOH[i]);
+		cudaFreeHost(dynamicAmpGOH[i]);
+
+		cudaFree(apGOGPU[i]);
+		cudaFree(depAmpGOGPU[i]);
+		cudaFree(dynamicAmpGOGPU[i]);
+		cudaFree(grInputGOGPU[i]);
+		cudaFree(grInputGOSumGPU[i]);
+
+		cudaDeviceSynchronize();
+	}
+
+	//bc
+	delete[] grInputBCGPU;
+	delete[] grInputBCGPUP;
+	delete[] grInputBCSumGPU;
+	delete[] grInputBCSumH;
+	
+	delete[] inputPFBCGPU;
+	delete[] inputPFBCGPUP;
+	delete[] inputSumPFBCGPU;
+
+	cudaSetDevice(gpuIndStart);
+	cudaFreeHost(inputSumPFBCH);
+
+	for (int i = 0; i < numGPUs; i++)
+	{
+		cout << i+gpuIndStart << endl;
+		cudaSetDevice(i+gpuIndStart);
+
+		cudaFreeHost(grInputBCSumH[i]);
+		cudaFree(grInputBCGPU[i]);
+		cudaFree(grInputBCSumGPU[i]);
+		
+		cudaFree(inputPFBCGPU[i]);
+		cudaFree(inputSumPFBCGPU[i]);
+
+		cudaDeviceSynchronize();
+	}
+
+	//sc
+	delete[] inputPFSCGPU;
+	delete[] inputPFSCGPUP;
+	delete[] inputSumPFSCGPU;
+
+	cudaFreeHost(inputSumPFSCH);
+
+	for (int i = 0; i < numGPUs; i++)
+	{
+		cout << i+gpuIndStart << endl;
+		cudaSetDevice(i+gpuIndStart);
+
+		//SC variables
+		cudaFree(inputPFSCGPU[i]);
+		cudaFree(inputSumPFSCGPU[i]);
+
+		cudaDeviceSynchronize();
+	}
+
+	std::cout << "***************GPU DELETED************" << std::endl;
 }
 
 void InNet::writeToState()
@@ -1167,14 +1195,9 @@ void InNet::initGRCUDA()
 	gESpilloverGPU=new float*[numGPUs];
 	apMFtoGRGPU=new int*[numGPUs];
 	numMFperGR=new int*[numGPUs];	
-	numUBCperGR=new int*[numGPUs];	
 	depAmpMFGRGPU=new float*[numGPUs];
 	depAmpGOGRGPU=new float*[numGPUs];
 	dynamicAmpGOGRGPU=new float*[numGPUs];
-	gUBC_EGRGPU=new float*[numGPUs];
-	gUBC_EGRGPUP=new size_t[numGPUs];
-	gUBC_EDirectGPU=new float*[numGPUs];
-	gUBC_ESpilloverGPU=new float*[numGPUs];
 
 	gIGRGPU=new float*[numGPUs];
 	gIGRGPUP=new size_t[numGPUs];
@@ -1215,12 +1238,8 @@ void InNet::initGRCUDA()
 	grConGOOutGRGPUP=new size_t[numGPUs];
 
 	numMFInPerGRGPU=new ct_int32_t*[numGPUs];
-	numUBCInPerGRGPU=new ct_int32_t*[numGPUs];
 	grConMFOutGRGPU=new ct_uint32_t*[numGPUs];
-	grConUBCOutGRGPU=new ct_uint32_t*[numGPUs];
 	grConMFOutGRGPUP=new size_t[numGPUs];
-	grConUBCOutGRGPUP=new size_t[numGPUs];
-
 
 	outputGRH=new ct_uint8_t[NUM_GR];
 	std::fill(outputGRH, outputGRH + NUM_GR, 0);
@@ -1259,9 +1278,6 @@ void InNet::initGRCUDA()
 		cerr<<"allocating apMFtoGRGPU for device "<<i<<": "<<cudaGetErrorString(error)<<endl;
 		error=cudaMalloc((void **)&numMFperGR[i], numGRPerGPU*sizeof(int));
 		cerr<<"allocating numMFperGR for device "<<i<<": "<<cudaGetErrorString(error)<<endl;	
-		
-		error=cudaMallocPitch((void **)&gUBC_EGRGPU[i], (size_t *)&gUBC_EGRGPUP[i],
-				numGRPerGPU*sizeof(float), MAX_NUM_P_GR_FROM_MF_TO_GR);
 		
 		error=cudaMalloc((void **)&depAmpMFGRGPU[i], numGRPerGPU*sizeof(float));
 		cerr<<"allocating depAmpMFGRGPU for device "<<i<<": "<<cudaGetErrorString(error)<<endl;
@@ -1545,6 +1561,7 @@ void InNet::initGOCUDA()
 		cudaMemset(grInputGOSumGPU[i], 0, NUM_GO*sizeof(ct_uint32_t));
 		cudaDeviceSynchronize();
 	}
+	delete[] counter;
 }
 void InNet::initBCCUDA()
 {

@@ -30,6 +30,12 @@ CBMSimCore::CBMSimCore(ActivityParams &ap, CBMState *state,
 
 CBMSimCore::~CBMSimCore()
 {
+	for (int i = 0; i < numZones; i++)
+	{
+		delete zones[i];
+	}
+
+	delete[] zones;
 	delete inputNet;
 
 	for (int i = 0; i < numGPUs; i++)
@@ -46,11 +52,6 @@ CBMSimCore::~CBMSimCore()
 	}
 
 	delete[] streams;
-
-	for (int i = 0; i < numGPUs; i++)
-	{
-		cudaSetDevice(i + gpuIndStart);
-	}
 }
 
 void CBMSimCore::writeToState()

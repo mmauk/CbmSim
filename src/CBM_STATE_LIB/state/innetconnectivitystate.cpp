@@ -270,13 +270,6 @@ void InNetConnectivityState::deallocMemory()
 	delete[] numpMFfromMFtoGO;
 	delete2DArray<int>(pMFfromMFtoGO);
 
-	delete[] numpGOfromGLtoGO;
-	delete2DArray<int>(pGOfromGLtoGO);
-	delete[] numpGOfromGOtoGL;
-	delete2DArray<int>(pGOfromGOtoGL);
-	delete[] numpGOfromMFtoGO;
-	delete2DArray<int>(pGOfromMFtoGO);
-
 	// golgi
 	delete[] numpGOfromGLtoGO;
 	delete2DArray<int>(pGOfromGLtoGO);
