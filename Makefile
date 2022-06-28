@@ -19,17 +19,15 @@ BUILD_PATH	  = $(ROOT)build/
 
 # NOTE using update alternatives: to switch back to ver11, use update-alternatives --config g++
 CXX              = g++
-# CXXFLAGS         = -m64 -std=c++11 -g -Wall 
-CXXFLAGS         = -m64 -pipe -std=c++14 -O3 -g
-# MODULE_CXX_FLAGS = -m64 -std=c++11 -g -Wall  
-MODULE_CXX_FLAGS = -m64 -pipe -std=c++14 -O2 -g -fPIC
+# CXXFLAGS         = -m64 -pipe -std=c++14 -g 
+CXXFLAGS         = -m64 -pipe -std=c++14 -O3 
+# MODULE_CXX_FLAGS = -m64 -pipe -std=c++14 -g -fPIC
+MODULE_CXX_FLAGS = -m64 -pipe -std=c++14 -O2 -fPIC
 INCPATH          = -I. -Iinclude/Big_Sim -I/usr/local/cuda/include -I$(ROOT)include/CBM_CORE_LIB -I$(ROOT)include/CBM_DATA_LIB \
 			       -I$(ROOT)include/CBM_STATE_LIB -I$(ROOT)include/CBM_TOOLS_LIB -I$(ROOT)include/CXX_TOOLS_LIB 
 LIBS             = -L/usr/local/cuda/lib64 -L/usr/lib64 -L/opt/cuda/lib64 -lcudart
 LINK             = g++
 LFLAGS           = -m64 
-# MODULE_LFLAGS    = -m64 -Wl, -O1 -shared
-MODULE_LFLAGS    = -m64 -O1
 
 CHK_DIR_EXISTS   = test -d
 MKDIR            = mkdir -p
@@ -821,7 +819,7 @@ $(CBM_STATE_OBJ_PATH)mzoneconnectivitystate.o: $(CBM_STATE_SRC_PATH)state/mzonec
 
 ####### CBM Tools Compiler Options
 
-CBM_TOOLS_INCLUDES = -I. -I$(CBM_CORE_INCLUDE_PATH) -I$(CBM_TOOLS_INCLUDE_PATH) -I$(CXX_TOOLS_INCLUDE_PATH)
+CBM_TOOLS_INCLUDES = -I. -I$(CBM_STATE_INCLUDE_PATH) -I$(CUDA_INCLUDE_PATH) -I$(CBM_CORE_INCLUDE_PATH) -I$(CBM_TOOLS_INCLUDE_PATH) -I$(CXX_TOOLS_INCLUDE_PATH)
 
 ####### CBM Tools Build Rules
 

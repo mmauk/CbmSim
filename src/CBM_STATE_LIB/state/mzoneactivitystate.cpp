@@ -11,8 +11,10 @@ MZoneActivityState::MZoneActivityState() {}
 
 MZoneActivityState::MZoneActivityState(ActivityParams &ap, int randSeed)
 {
+	std::cout << "[INFO]: Initializing mzone activity state..." << std::endl;
 	allocateMemory(ap.numPopHistBinsPC);
 	initializeVals(ap, randSeed);
+	std::cout << "[INFO]: Finished initializing mzone activity state." << std::endl;
 }
 
 MZoneActivityState::MZoneActivityState(ActivityParams &ap, std::fstream &infile)

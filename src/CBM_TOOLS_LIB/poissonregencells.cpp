@@ -54,6 +54,7 @@ PoissonRegenCells::PoissonRegenCells(unsigned int numCells, int randSeed, float 
 PoissonRegenCells::~PoissonRegenCells()
 {
 	delete randSeedGen;
+	delete noiseRandGen;	
 	for(unsigned int i=0; i<nThreads; i++)
 	{
 		delete randGens[i];
@@ -96,7 +97,7 @@ void PoissonRegenCells::prepCollaterals(int rSeed)
 	delete tempMZs;
 	
 }
-const ct_uint8_t* PoissonRegenCells::calcThreshActivity(const float *frequencies, MZoneInterface **mZoneList)
+const ct_uint8_t* PoissonRegenCells::calcThreshActivity(const float *frequencies, MZone **mZoneList)
 {
 	int countColls = 0;
 	const ct_uint8_t *holdNCs;
@@ -120,14 +121,11 @@ const ct_uint8_t* PoissonRegenCells::calcThreshActivity(const float *frequencies
 	return (const ct_uint8_t *)aps;
 }
 
-const ct_uint8_t* PoissonRegenCells::calcPoissActivity(const float *frequencies, MZoneInterface **mZoneList, int ispikei)
+const ct_uint8_t* PoissonRegenCells::calcPoissActivity(const float *frequencies, MZone **mZoneList, int ispikei)
 {
 	int countColls = 0;
 	const ct_uint8_t *holdNCs;
-
-    //std::mt19937 gen(randSeedGen->Random());
 	float noise;
-	//std::normal_distribution<float> normDist(0, sigma);
 	spikeTimer++;
 	for (unsigned int i = 0; i < nCells; i++)
 	{

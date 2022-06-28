@@ -54,6 +54,7 @@ ActivityParams::ActivityParams(std::string actParamFile)
 	}
 	std::cout << "[INFO]: activity parameter file opened, params loaded in param map..." << std::endl;
 	updateParams();
+	paramFileBuffer.close();
 }
 
 ActivityParams::ActivityParams(const ActivityParams &copyFrom) : paramMap(copyFrom.paramMap)

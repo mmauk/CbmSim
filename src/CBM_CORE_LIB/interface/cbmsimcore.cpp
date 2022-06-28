@@ -443,14 +443,14 @@ void CBMSimCore::updateErrDrive(unsigned int zoneN, float errDriveRelative)
 	zones[zoneN]->setErrDrive(errDriveRelative);
 }
 
-InNetInterface* CBMSimCore::getInputNet()
+InNet* CBMSimCore::getInputNet()
 {
-	return (InNetInterface *)inputNet;
+	return (InNet *)inputNet;
 }
 
-MZoneInterface** CBMSimCore::getMZoneList()
+MZone** CBMSimCore::getMZoneList()
 {
-	return (MZoneInterface **)zones;
+	return (MZone **)zones;
 }
 
 void CBMSimCore::construct(ActivityParams &ap, CBMState *state,

@@ -92,9 +92,9 @@ protected:
 	void deallocMemory();
 	void stateRW(bool read, std::fstream &file);
 
-	void connectMFGL_noUBC(CRandomSFMT &randGen);
+	void connectMFGL_noUBC();
 	void connectGLGR(CRandomSFMT &randGen);
-	void connectGRGO(CRandomSFMT &randGen);
+	void connectGRGO();
 	void connectGOGL(CRandomSFMT &randGen);
 	void connectGOGODecayP(CRandomSFMT &randGen);
 	void connectGOGO_GJ(CRandomSFMT &randGen);

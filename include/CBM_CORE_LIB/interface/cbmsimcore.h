@@ -45,8 +45,8 @@ public:
 	void writeToState();
 	void writeState(ActivityParams &ap, std::fstream& outfile);
 
-	InNetInterface* getInputNet();
-	MZoneInterface** getMZoneList();
+	InNet* getInputNet();
+	MZone** getMZoneList();
 
 protected:
 	void initCUDAStreams();

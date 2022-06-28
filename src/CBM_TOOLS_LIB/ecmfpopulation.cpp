@@ -8,13 +8,13 @@
 #include "ecmfpopulation.h"
 #include <random>
 
-ECMFPopulation::ECMFPopulation(
-		int numMF, int randSeed, float fracCSTMF, float fracCSPMF, float fracCtxtMF, float fracCollNC,
-		float bgFreqMin, float csBGFreqMin, float ctxtFreqMin, float csTFreqMin, float csPFreqMin,
-		float bgFreqMax, float csBGFreqMax, float ctxtFreqMax, float csTFreqMax, float csPFreqMax,
-		bool turnOffColls,  float fracImportMF, bool secondCS, float fracOverlap)
+ECMFPopulation::ECMFPopulation(int numMF, int randSeed, float fracCSTMF, float fracCSPMF,
+	float fracCtxtMF, float fracCollNC, float bgFreqMin, float csBGFreqMin, float ctxtFreqMin,
+	float csTFreqMin, float csPFreqMin, float bgFreqMax, float csBGFreqMax, float ctxtFreqMax,
+	float csTFreqMax, float csPFreqMax, bool turnOffColls,  float fracImportMF, bool secondCS,
+	float fracOverlap)
 {
-	CRandomSFMT0 *randGen;
+	CRandomSFMT0 randGen(randSeed);
 
     int numCSTMF;
     int numCSTMFA;
@@ -25,9 +25,6 @@ ECMFPopulation::ECMFPopulation(
 	int numImportMF;
 
 	this->turnOffColls = turnOffColls;
-
-	randGen = new CRandomSFMT0(randSeed);
-
 	this->numMF = numMF;
 
 	mfFreqBG 		 = new float[numMF];
@@ -45,7 +42,7 @@ ECMFPopulation::ECMFPopulation(
 
 	for (int i = 0; i < numMF; i++)
 	{
-		mfFreqBG[i] = randGen->Random()*(bgFreqMax - bgFreqMin) + bgFreqMin;
+		mfFreqBG[i] = randGen.Random() * (bgFreqMax - bgFreqMin) + bgFreqMin;
 		
 		mfFreqInCSTonicA[i] = mfFreqBG[i];
 		mfFreqInCSTonicB[i] = mfFreqBG[i];
@@ -66,10 +63,10 @@ ECMFPopulation::ECMFPopulation(
 	if (secondCS) numCSTMFB = numCSTMF; 
 	else numCSTMFB = 0;	
     	
-	numCSPMF    = fracCSPMF*numMF;
-	numCtxtMF   = fracCtxtMF*numMF;
-	numCollNC   = fracCollNC*numMF;
-	numImportMF = fracImportMF*numMF;
+	numCSPMF    = fracCSPMF * numMF;
+	numCtxtMF   = fracCtxtMF * numMF;
+	numCollNC   = fracCollNC * numMF;
+	numImportMF = fracImportMF * numMF;
 
 	//Set up Mossy Fibers. Order is important for Rand num generation.
 	setMFs(numCollNC, numMF, randGen, isAny, isCollateral);
@@ -84,8 +81,6 @@ ECMFPopulation::ECMFPopulation(
 	setMFs(numCSTMFA, numMF, randGen, isAny, isAny);
 
 	//Pick Tonic B MFs
-	//setMFs(numCSTMFB, numMF, randGen, isAny, isCSTonicB);
-	//setMFsOverlap(numCSTMFB, numMF, randGen, isAny, isCSTonicA, isCSTonicB, fracOverlap);
 	// Ensure remaining MFs that would have been in full Tonic A are not picked
 	setMFs(numCSTMFB, numMF, randGen, isAny, isAny);
 
@@ -112,23 +107,23 @@ ECMFPopulation::ECMFPopulation(
     {
         if (isContext[i])
         {
-        	mfFreqBG[i] = randGen->Random() * (ctxtFreqMax - ctxtFreqMin) + 
+        	mfFreqBG[i] = randGen.Random() * (ctxtFreqMax - ctxtFreqMin) + 
 				ctxtFreqMin;
 
 			mfFreqInCSTonicA[i] = mfFreqBG[i];
 			mfFreqInCSTonicB[i] = mfFreqBG[i];
 			mfFreqInCSPhasic[i] = mfFreqBG[i];
 
-			randGen->Random();
+			randGen.Random();
         }
 		else if (isCSPhasic[i])
         {
-			mfFreqBG[i] = randGen->Random() * (csBGFreqMax - csBGFreqMin) + csBGFreqMin;
+			mfFreqBG[i] = randGen.Random() * (csBGFreqMax - csBGFreqMin) + csBGFreqMin;
 
 			mfFreqInCSTonicA[i] = mfFreqBG[i];
 			mfFreqInCSTonicB[i] = mfFreqBG[i];
 
-			mfFreqInCSPhasic[i] = randGen->Random()*(csPFreqMax - csPFreqMin) + csPFreqMin;
+			mfFreqInCSPhasic[i] = randGen.Random()*(csPFreqMax - csPFreqMin) + csPFreqMin;
         }
 		else if (isCollateral[i] && !turnOffColls)
 		{
@@ -138,39 +133,38 @@ ECMFPopulation::ECMFPopulation(
 			mfFreqInCSPhasic[i] = -1;
 			// NOTE: that we were choosing random twice before.
 			// any reason why?
-			randGen->Random(); 
+			randGen.Random(); 
         } 
 		else if (isImport[i])
 		{
-			mfFreqBG[i] = randGen->Random() * (csBGFreqMax - csBGFreqMin) + csBGFreqMin;
+			mfFreqBG[i] = randGen.Random() * (csBGFreqMax - csBGFreqMin) + csBGFreqMin;
 			mfFreqInCSTonicA[i] = -2;
 			mfFreqInCSTonicB[i] = -2;
 			mfFreqInCSPhasic[i] = -2;
 
-			randGen->Random();
+			randGen.Random();
 		} 
 		else if (isCSTonicA[i])
 		{
-            mfFreqBG[i] = randGen->Random() * (csBGFreqMax - csBGFreqMin) + csBGFreqMin;
+            mfFreqBG[i] = randGen.Random() * (csBGFreqMax - csBGFreqMin) + csBGFreqMin;
 
-            mfFreqInCSTonicA[i] = randGen->Random() * (csTFreqMax - csTFreqMin) + csTFreqMin;
+            mfFreqInCSTonicA[i] = randGen.Random() * (csTFreqMax - csTFreqMin) + csTFreqMin;
             mfFreqInCSPhasic[i] = mfFreqInCSTonicA[i];
         } 
 		else if (isCSTonicB[i])
         {
-            mfFreqBG[i] = randGen->Random() * (csBGFreqMax - csBGFreqMin) + csBGFreqMin;
+            mfFreqBG[i] = randGen.Random() * (csBGFreqMax - csBGFreqMin) + csBGFreqMin;
 
-            mfFreqInCSTonicB[i] = randGen->Random() * (csTFreqMax - csTFreqMin) + csTFreqMin;
+            mfFreqInCSTonicB[i] = randGen.Random() * (csTFreqMax - csTFreqMin) + csTFreqMin;
             mfFreqInCSPhasic[i] = mfFreqInCSTonicB[i];
         } 
 		else
 		{
 			//NOTE: again, two random generations. 
 			//Note sure why.
-			randGen->Random(); 
+			randGen.Random(); 
 		}
     }
-	delete randGen;
 }
 
 ECMFPopulation::~ECMFPopulation()
@@ -189,13 +183,13 @@ ECMFPopulation::~ECMFPopulation()
 	delete[] isAny;
 }
 
-void ECMFPopulation::setMFs(int numTypeMF, int numMF, CRandomSFMT0 *randGen, bool *isAny, bool *isType)
+void ECMFPopulation::setMFs(int numTypeMF, int numMF, CRandomSFMT0 &randGen, bool *isAny, bool *isType)
 {
     for (int i = 0; i < numTypeMF; i++)
     {
         while(true)
         {
-            int mfInd = randGen->IRandom(0, numMF-1);
+            int mfInd = randGen.IRandom(0, numMF-1);
 
             if (!isAny[mfInd])
             {
@@ -207,7 +201,7 @@ void ECMFPopulation::setMFs(int numTypeMF, int numMF, CRandomSFMT0 *randGen, boo
     }
 }
 
-void ECMFPopulation::setMFsOverlap(int numTypeMF, int numMF, CRandomSFMT0 *randGen, bool *isAny, bool *isTypeA, bool *isTypeB, float fracOverlap)
+void ECMFPopulation::setMFsOverlap(int numTypeMF, int numMF, CRandomSFMT0 &randGen, bool *isAny, bool *isTypeA, bool *isTypeB, float fracOverlap)
 {
     
 	//Get population sizes
@@ -233,7 +227,7 @@ void ECMFPopulation::setMFsOverlap(int numTypeMF, int numMF, CRandomSFMT0 *randG
 	{
 		while(true)
 		{
-			int mfInd = randGen->IRandom(0, numMF-1);
+			int mfInd = randGen.IRandom(0, numMF-1);
 
 			if(isAny[mfInd]) continue;
 		

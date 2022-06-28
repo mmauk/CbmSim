@@ -42,8 +42,8 @@ public:
 	bool *getPhasicMFInd();
 	
 private:
-	void setMFs(int numTypeMF, int numMF, CRandomSFMT0 *randGen, bool *isAny, bool *isType);
-	void setMFsOverlap(int numTypeMF, int numMF, CRandomSFMT0 *randGen, bool *isAny,
+	void setMFs(int numTypeMF, int numMF, CRandomSFMT0 &randGen, bool *isAny, bool *isType);
+	void setMFsOverlap(int numTypeMF, int numMF, CRandomSFMT0 &randGen, bool *isAny,
 			bool *isTypeA, bool *isTypeB, float fracOverlap);
 
 	ct_uint32_t numMF;

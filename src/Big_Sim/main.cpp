@@ -18,12 +18,12 @@ int main(void)
 
 	std::cout << "[INFO]: Running all simulations..." << std::endl;
 	clock_t time = clock();
-	for (int goRecipParamNum = 0; goRecipParamNum < grWLength; goRecipParamNum++)
+	for (int goRecipParamNum = 0; goRecipParamNum < 1; goRecipParamNum++)
 	{
 		float GRGO = grW[goRecipParamNum] * ws; // scaled grgo weights
 	   	float MFGO = mfW * ws; // scaled mfgo weights
 	   	float GOGR = gogr; // gogr weights, unchanged
-	   	for (int simNum = 0; simNum < 10; simNum++)
+	   	for (int simNum = 0; simNum < 1; simNum++)
 	   	{
 			std::cout << "[INFO]: Running simulation #" << (simNum + 1) << std::endl;
 	   		Control control(ACT_PARAM_FILE);

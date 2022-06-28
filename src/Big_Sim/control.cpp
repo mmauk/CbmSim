@@ -35,7 +35,6 @@ Control::Control(std::string actParamFile) : ap(actParamFile)
 Control::~Control()
 {
 	// delete all dynamic objects
-	// TODO: implement as unique_ptrs	
 	delete simState;
 	delete simCore;
 	delete mfFreq;
@@ -141,24 +140,24 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 					// TODO: refactor so that we do not export vars, instead we calc sum inside inputNet
 					// e.g. simCore->updategGRGOSum(gGRGOSum); <- call by reference
 					// even better: simCore->updateGSum<Granule, Golgi>(gGRGOSum); <- granule and golgi are their own cell objs
-					//mfgoG  = simCore->getInputNet()->exportgSum_MFGO();
-					//grgoG  = simCore->getInputNet()->exportgSum_GRGO();
-					//goSpks = simCore->getInputNet()->exportAPGO();
+					mfgoG  = simCore->getInputNet()->exportgSum_MFGO();
+					grgoG  = simCore->getInputNet()->exportgSum_GRGO();
+					goSpks = simCore->getInputNet()->exportAPGO();
 				
 					for (int i = 0; i < NUM_GO; i++)
 					{
-							//goSpkCounter[i] += goSpks[i];
-							//gGRGO_sum 		+= grgoG[i];
-							//gMFGO_sum 		+= mfgoG[i];
+							goSpkCounter[i] += goSpks[i];
+							gGRGO_sum 		+= grgoG[i];
+							gMFGO_sum 		+= mfgoG[i];
 					}
 				}
 				// why is this case separate from the above	
 				if (tts == csStart + csLength)
 				{
-					//countGOSpikes(goSpkCounter, medTrials);	
-					//std::cout << "mean gGRGO   = " << gGRGO_sum / (NUM_GO * csLength) << std::endl;
-					//std::cout << "mean gMFGO   = " << gMFGO_sum / (NUM_GO * csLength) << std::endl;
-					//std::cout << "GR:MF ratio  = " << gGRGO_sum / gMFGO_sum << std::endl;
+					countGOSpikes(goSpkCounter, medTrials);	
+					std::cout << "mean gGRGO   = " << gGRGO_sum / (NUM_GO * csLength) << std::endl;
+					std::cout << "mean gMFGO   = " << gMFGO_sum / (NUM_GO * csLength) << std::endl;
+					std::cout << "GR:MF ratio  = " << gGRGO_sum / gMFGO_sum << std::endl;
 				}
 
 				if (trial >= preTrialNumber && tts >= csStart-msPreCS &&

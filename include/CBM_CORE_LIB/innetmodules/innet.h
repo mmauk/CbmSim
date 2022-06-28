@@ -22,7 +22,6 @@
 #include <omp.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
-#include <device_functions.h>
 #include "stdDefinitions/pstdint.h"
 #include "memoryMgmt/dynamic2darray.h"
 #include "params/connectivityparams.h" /* global const connectivity params */
@@ -30,82 +29,85 @@
 #include "state/innetconnectivitystate.h"
 #include "state/innetactivitystate.h"
 #include "cuda/kernels.h"
-#include "interface/innetinterface.h"
 
-class InNet : virtual public InNetInterface
+class InNet
 {
 public:
 	InNet();
 	InNet(ActivityParams &ap, InNetConnectivityState *cs, InNetActivityState *as,
 		int gpuIndStart, int numGPUs);
-	virtual ~InNet();
+	~InNet();
 
 	void writeToState();
 	void getnumGPUs();
 
-	virtual const ct_uint8_t* exportAPMF();
-	virtual const ct_uint8_t* exportAPSC();
-	virtual const ct_uint8_t* exportAPGR();
+	const ct_uint8_t* exportAPGO();
+	const ct_uint8_t* exportAPMF();
+	const ct_uint8_t* exportAPSC();
+	const ct_uint8_t* exportAPGR();
 
-	virtual const ct_uint32_t* exportSumGRInputGO();
-	virtual const float* 	   exportSumGOInputGO();
+	const ct_uint32_t* exportSumGRInputGO();
+	const float* 	   exportSumGOInputGO();
 
-	virtual const ct_uint32_t* exportPFBCSum();
+	const ct_uint32_t* exportPFBCSum();
 
-	virtual ct_uint32_t** getApBufGRGPUPointer();
-	virtual ct_uint32_t** getDelayBCPCSCMaskGPUPointer();
-	virtual ct_uint64_t** getHistGRGPUPointer();
+	ct_uint32_t** getApBufGRGPUPointer();
+	ct_uint32_t** getDelayBCPCSCMaskGPUPointer();
+	ct_uint64_t** getHistGRGPUPointer();
 
-	virtual ct_uint32_t** getGRInputGOSumHPointer();
-	virtual ct_uint32_t** getGRInputBCSumHPointer();
+	ct_uint32_t** getGRInputGOSumHPointer();
+	ct_uint32_t** getGRInputBCSumHPointer();
 
-	virtual void updateMFActivties(const ct_uint8_t *actInMF);
-	virtual void calcGOActivities(float goMin, int simNum, float GRGO, float MFGO, float GOGR, float gogoW);
-	virtual void calcSCActivities();
+	const float* exportgSum_MFGO();
+	const float* exportgSum_GRGO();
 
-	virtual void updateMFtoGROut();	
-	virtual void updateMFtoGOOut();
-	virtual void updateGOtoGROutParameters(float GOGR, float spillFrac);	
-	virtual void updateGOtoGOOut();
-	virtual void resetMFHist(unsigned long t);
+	void updateMFActivties(const ct_uint8_t *actInMF);
+	void calcGOActivities(float goMin, int simNum, float GRGO, float MFGO, float GOGR, float gogoW);
+	void calcSCActivities();
 
-	virtual void runGRActivitiesCUDA(cudaStream_t **sts, int streamN);
-	virtual void runSumPFBCCUDA(cudaStream_t **sts, int streamN);
-	virtual void runSumPFSCCUDA(cudaStream_t **sts, int streamN);
-	virtual void runSumGRGOOutCUDA(cudaStream_t **sts, int streamN);
-	virtual void runSumGRBCOutCUDA(cudaStream_t **sts, int streamN);
-	virtual void cpyDepAmpMFHosttoGPUCUDA(cudaStream_t **sts, int streamN);
-	virtual void cpyAPMFHosttoGPUCUDA(cudaStream_t **sts, int streamN);
+	void updateMFtoGROut();	
+	void updateMFtoGOOut();
+	void updateGOtoGROutParameters(float GOGR, float spillFrac);	
+	void updateGOtoGOOut();
+	void resetMFHist(unsigned long t);
+
+	void runGRActivitiesCUDA(cudaStream_t **sts, int streamN);
+	void runSumPFBCCUDA(cudaStream_t **sts, int streamN);
+	void runSumPFSCCUDA(cudaStream_t **sts, int streamN);
+	void runSumGRGOOutCUDA(cudaStream_t **sts, int streamN);
+	void runSumGRBCOutCUDA(cudaStream_t **sts, int streamN);
+	void cpyDepAmpMFHosttoGPUCUDA(cudaStream_t **sts, int streamN);
+	void cpyAPMFHosttoGPUCUDA(cudaStream_t **sts, int streamN);
 	
-	virtual void cpyDepAmpUBCHosttoGPUCUDA(cudaStream_t **sts, int streamN);
-	virtual void cpyAPUBCHosttoGPUCUDA(cudaStream_t **sts, int streamN);
+	void cpyDepAmpUBCHosttoGPUCUDA(cudaStream_t **sts, int streamN);
+	void cpyAPUBCHosttoGPUCUDA(cudaStream_t **sts, int streamN);
 	
-	virtual void cpyDepAmpGOGRHosttoGPUCUDA(cudaStream_t **sts, int streamN);	
-	virtual void cpyDynamicAmpGOGRHosttoGPUCUDA(cudaStream_t **sts, int streamN);	
-	virtual void cpyAPGOHosttoGPUCUDA(cudaStream_t **sts, int streamN);
-	virtual void runUpdateMFInGRCUDA(cudaStream_t **sts, int streamN);
-	virtual void runUpdateMFInGRDepressionCUDA(cudaStream_t **sts, int streamN);
+	void cpyDepAmpGOGRHosttoGPUCUDA(cudaStream_t **sts, int streamN);	
+	void cpyDynamicAmpGOGRHosttoGPUCUDA(cudaStream_t **sts, int streamN);	
+	void cpyAPGOHosttoGPUCUDA(cudaStream_t **sts, int streamN);
+	void runUpdateMFInGRCUDA(cudaStream_t **sts, int streamN);
+	void runUpdateMFInGRDepressionCUDA(cudaStream_t **sts, int streamN);
 	
-	virtual void runUpdateUBCInGRDepressionCUDA(cudaStream_t **sts, int streamN);
-	virtual void runUpdateUBCInGRCUDA(cudaStream_t **sts, int streamN);
-		
-	virtual void runUpdateGOInGRCUDA(cudaStream_t **sts, int streamN, float GOGR);
-	virtual void runUpdateGOInGRDepressionCUDA(cudaStream_t **sts, int streamN);
-	virtual void runUpdateGOInGRDynamicSpillCUDA(cudaStream_t **sts, int streamN);	
-	virtual void runUpdatePFBCSCOutCUDA(cudaStream_t **sts, int streamN);
+	void runUpdateUBCInGRDepressionCUDA(cudaStream_t **sts, int streamN);
+	void runUpdateUBCInGRCUDA(cudaStream_t **sts, int streamN);
 	
-	virtual void runUpdateGROutGOCUDA(cudaStream_t **sts, int streamN);
-	virtual void runUpdateGROutBCCUDA(cudaStream_t **sts, int streamN);
+	void runUpdateGOInGRCUDA(cudaStream_t **sts, int streamN, float GOGR);
+	void runUpdateGOInGRDepressionCUDA(cudaStream_t **sts, int streamN);
+	void runUpdateGOInGRDynamicSpillCUDA(cudaStream_t **sts, int streamN);	
+	void runUpdatePFBCSCOutCUDA(cudaStream_t **sts, int streamN);
 	
-	virtual void cpyPFBCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN);
-	virtual void cpyPFSCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN);
-	virtual void cpyGRBCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN);
-	virtual void cpyGRGOSumGPUtoHostCUDA(cudaStream_t **sts, int streamN);
-	virtual void cpyGRGOSumGPUtoHostCUDA(cudaStream_t **sts, int streamN,
+	void runUpdateGROutGOCUDA(cudaStream_t **sts, int streamN);
+	void runUpdateGROutBCCUDA(cudaStream_t **sts, int streamN);
+	
+	void cpyPFBCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN);
+	void cpyPFSCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN);
+	void cpyGRBCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN);
+	void cpyGRGOSumGPUtoHostCUDA(cudaStream_t **sts, int streamN);
+	void cpyGRGOSumGPUtoHostCUDA(cudaStream_t **sts, int streamN,
 		ct_uint32_t **grInputGOSumHost);
-	virtual void cpyGRBCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN,
+	void cpyGRBCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN,
 		ct_uint32_t **grInputBCSumHost);
-	virtual void runUpdateGRHistoryCUDA(cudaStream_t **sts, int streamN, unsigned long t);
+	void runUpdateGRHistoryCUDA(cudaStream_t **sts, int streamN, unsigned long t);
 
 protected:
 	ActivityParams 	 ap;
@@ -158,7 +160,7 @@ protected:
 
 	//mossy fibers
 	const ct_uint8_t *apMFOut;
-	//
+
 	//gpu related variables
 	ct_uint32_t **apMFH;
 	ct_uint32_t **apMFGPU;
@@ -268,14 +270,6 @@ protected:
 	size_t 		*delayBCMasksGRGPUP;
 
 	//connectivity
-	float *plasScalerEx;
-	float *plasScalerInh;
-	
-	float **goExScaler;
-	float **goInhScaler;
-	float **goFRArray;
-	int   counterGOweight;	
-	
 	int contVar 	  = 1;
 	int contVarOther  = 1;
 	float sumGOFR	  = 0;
@@ -336,7 +330,6 @@ protected:
 	//-----------end basket cell variables
 
 	virtual void initCUDA();
-	virtual void initUBCCUDA();
 	virtual void initMFCUDA();
 	virtual void initGRCUDA();
 	virtual void initGOCUDA();

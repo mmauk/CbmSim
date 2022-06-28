@@ -22,7 +22,6 @@
 #include <memory>
 #include <cuda.h>
 #include <cuda_runtime.h>
-#include <device_functions.h>
 #include "stdDefinitions/pstdint.h"
 #include "randGenerators/sfmt.h"
 #include "memoryMgmt/dynamic2darray.h"
@@ -31,9 +30,8 @@
 #include "state/mzoneconnectivitystate.h"
 #include "state/mzoneactivitystate.h"
 #include "cuda/kernels.h"
-#include "interface/mzoneinterface.h"
 
-class MZone : virtual public MZoneInterface
+class MZone
 {
 public:
 	MZone();

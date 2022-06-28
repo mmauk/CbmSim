@@ -162,6 +162,7 @@ void MZoneConnectivityState::deallocMemory()
 	delete2DArray<ct_uint32_t>(pPCfromPCtoBC);
 	delete2DArray<ct_uint32_t>(pPCfromSCtoPC);
 	delete2DArray<ct_uint32_t>(pPCfromPCtoNC);
+	delete[] pPCfromIOtoPC;
 
 	// nucleus cells
 	delete2DArray<ct_uint32_t>(pNCfromPCtoNC);

@@ -11,8 +11,10 @@
 
 InNetActivityState::InNetActivityState(ActivityParams &ap)
 {
+	std::cout << "[INFO]: Allocating and initializing innet activity state..." << std::endl;
 	allocateArrMem(ap);
 	initializeVals(ap);
+	std::cout << "[INFO]: Finished allocating and initializing innet activity state." << std::endl;
 }
 
 InNetActivityState::InNetActivityState(std::fstream &infile)

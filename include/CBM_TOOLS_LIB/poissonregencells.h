@@ -17,7 +17,7 @@
 
 #include <stdDefinitions/pstdint.h>
 #include <randGenerators/sfmt.h>
-#include <interface/mzoneinterface.h>
+#include <mzonemodules/mzone.h>
 
 class PoissonRegenCells
 {
@@ -26,8 +26,8 @@ public:
 		unsigned int numZones, unsigned int numNC, float sigma=0);
 	~PoissonRegenCells();
 
-	const ct_uint8_t* calcThreshActivity(const float *freqencies, MZoneInterface **mZoneList); 
-	const ct_uint8_t* calcPoissActivity(const float *freqencies, MZoneInterface **mZoneList, int ispikei = 18); 
+	const ct_uint8_t* calcThreshActivity(const float *freqencies, MZone **mZoneList); 
+	const ct_uint8_t* calcPoissActivity(const float *freqencies, MZone **mZoneList, int ispikei = 18); 
 	bool* calcTrueMFs(const float *freqencies);
 private:
 	PoissonRegenCells();

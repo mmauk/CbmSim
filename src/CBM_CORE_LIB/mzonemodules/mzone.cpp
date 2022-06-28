@@ -157,7 +157,7 @@ void MZone::cpyPFPCSynWCUDA()
 	{
 		cudaSetDevice(i + gpuIndStart);
 		cudaMemcpy((void *)&pfSynWeightPCLinear[i*numGRPerGPU], pfSynWeightPCGPU[i],
-				numGRPerGPU * sizeof(float), cudaMemcpyDeviceToHost);
+			numGRPerGPU * sizeof(float), cudaMemcpyDeviceToHost);
 	}
 
 	for (int i = 0; i < NUM_PC; i++)
@@ -810,23 +810,23 @@ void MZone::testReduction()
 
 		for (int j = 0; j < NUM_PC / numGPUs; j++)
 		{
-			cudaMemcpy(((char *)gpuPCTestData[i] + j * gpuPCP[i]),
-					&hostTestData[i * numGRPerGPU + j * NUM_P_PC_FROM_GR_TO_PC],
-					NUM_P_PC_FROM_GR_TO_PC * sizeof(float), cudaMemcpyHostToDevice);
+		   cudaMemcpy(((char *)gpuPCTestData[i] + j * gpuPCP[i]),
+				 &hostTestData[i * numGRPerGPU + j * NUM_P_PC_FROM_GR_TO_PC],
+				 NUM_P_PC_FROM_GR_TO_PC * sizeof(float), cudaMemcpyHostToDevice);
 		}
 
 		for (int j = 0; j < NUM_BC / numGPUs; j++)
 		{
-			cudaMemcpy(((char *)gpuBCTestData[i] + j * gpuBCP[i]),
-					&hostTestData[i * numGRPerGPU + j * NUM_P_BC_FROM_GR_TO_BC],
-					NUM_P_BC_FROM_GR_TO_BC * sizeof(float), cudaMemcpyHostToDevice);
+		   cudaMemcpy(((char *)gpuBCTestData[i] + j * gpuBCP[i]),
+				 &hostTestData[i * numGRPerGPU + j * NUM_P_BC_FROM_GR_TO_BC],
+				 NUM_P_BC_FROM_GR_TO_BC * sizeof(float), cudaMemcpyHostToDevice);
 		}
 
 		for (int j = 0; j < NUM_SC / numGPUs; j++)
 		{
-			cudaMemcpy(((char *)gpuSCTestData[i] + j * gpuSCP[i]),
-					&hostTestData[i * numGRPerGPU + j * NUM_P_SC_FROM_GR_TO_SC],
-					NUM_P_SC_FROM_GR_TO_SC * sizeof(float), cudaMemcpyHostToDevice);
+		   cudaMemcpy(((char *)gpuSCTestData[i] + j * gpuSCP[i]),
+				 &hostTestData[i * numGRPerGPU + j * NUM_P_SC_FROM_GR_TO_SC],
+				 NUM_P_SC_FROM_GR_TO_SC * sizeof(float), cudaMemcpyHostToDevice);
 		}
 
 		error = cudaGetLastError();
@@ -888,11 +888,11 @@ void MZone::testReduction()
 		cudaSetDevice(i + gpuIndStart);
 
 		cudaMemcpy(&gpuToHostPCSum[i * NUM_PC / numGPUs], gpuPCSum[i],
-				32 * sizeof(float), cudaMemcpyDeviceToHost);
+			NUM_PC / numGPUs * sizeof(float), cudaMemcpyDeviceToHost);
 		cudaMemcpy(&gpuToHostBCSum[i * NUM_BC / numGPUs], gpuBCSum[i],
-				NUM_BC / numGPUs * sizeof(float), cudaMemcpyDeviceToHost);
+			NUM_BC / numGPUs * sizeof(float), cudaMemcpyDeviceToHost);
 		cudaMemcpy(&gpuToHostSCSum[i * NUM_SC / numGPUs], gpuSCSum[i],
-				NUM_SC / numGPUs * sizeof(float), cudaMemcpyDeviceToHost);
+			NUM_SC / numGPUs * sizeof(float), cudaMemcpyDeviceToHost);
 
 		cudaDeviceSynchronize();
 	}
