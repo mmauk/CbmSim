@@ -1,3 +1,4 @@
+#include <getopt.h>
 #include <time.h>
 #include <iostream>
 #include <fstream>
@@ -5,10 +6,48 @@
 
 const std::string INPUT_DATA_PATH = "../data/inputs/";
 const std::string OUTPUT_DATA_PATH = "../data/outputs/";
-const std::string ACT_PARAM_FILE = INPUT_DATA_PATH + "actParams.txt";
 
-int main(void) 
+int main(int argc, char** argv) 
 {
+	if (argc == 1) 
+	{
+		std::cerr << "[ERROR]: No file arguments specified. Exiting." << std::endl;
+		exit(1);
+	}
+
+	std::string actParamFile = "";
+	std::ifstream fileBuf;
+	int option;
+	while ((option = getopt(argc, argv, "f:")) != -1)
+	{
+		switch (option)
+		{
+			case 'f':
+				actParamFile = INPUT_DATA_PATH + std::string(optarg);
+				fileBuf.open(actParamFile.c_str());
+				if (!fileBuf)
+				{
+					fileBuf.close();
+					std::cerr << "[ERROR] File " << "'" << std::string(optarg) << "'" 
+					   		  << " does not exist. Exiting." << std::endl;
+					exit(2);
+				}
+				break;
+			case ':':
+				std::cerr << "[ERROR] Option needs a value. Exiting." << std::endl;
+				exit(3);
+				break;
+			case '?':
+				std::cerr << "[ERROR] Unknown option: " << char(optopt) << ". Exiting." << std::endl;
+				exit(4);
+				break;
+			case -1:
+				std::cerr << "[ERROR]: No parameter file given. Exiting." << std::endl;
+				exit(5);
+				break;
+		}
+	}
+
 	float mfW = 0.0035; // mf weights (to what?)
 	float ws = 0.3275; // weight scale
 	float gogr = 0.0105; // gogr weights
@@ -26,7 +65,7 @@ int main(void)
 	   	for (int simNum = 0; simNum < 1; simNum++)
 	   	{
 			std::cout << "[INFO]: Running simulation #" << (simNum + 1) << std::endl;
-	   		Control control(ACT_PARAM_FILE);
+	   		Control control(actParamFile);
 			control.runTrials(simNum, GOGR, GRGO, MFGO);
 			// TODO: put in output file dir to save to!
 			control.saveOutputArraysToFile(goRecipParamNum, simNum);
