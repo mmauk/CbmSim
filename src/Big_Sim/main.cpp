@@ -3,11 +3,17 @@
 #include <iostream>
 #include <fstream>
 #include "control.h"
+#include "gui.h"
 
 const std::string INPUT_DATA_PATH = "../data/inputs/";
 const std::string OUTPUT_DATA_PATH = "../data/outputs/";
 
-int main(int argc, char** argv) 
+int main(int argc, char **argv)
+{
+	return gui_init_and_run(&argc, &argv);
+}
+
+int main2(int argc, char **argv) 
 {
 	if (argc == 1) 
 	{
