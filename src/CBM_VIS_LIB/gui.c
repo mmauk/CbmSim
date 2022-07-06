@@ -1,4 +1,5 @@
 #include "array_util.h"
+#include "control.h"
 #include "gui.h"
 
 static bool assert(bool expr, const char *error_string, const char *func = "assert")
@@ -13,7 +14,33 @@ static bool assert(bool expr, const char *error_string, const char *func = "asse
 
 static bool on_run(GtkWidget *widget, gpointer data)
 {
-	return assert(false, "Not implemented", __func__);
+	float mfW = 0.0035; // mf weights (to what?)
+	float ws = 0.3275; // weight scale
+	float gogr = 0.0105; // gogr weights
+
+	float grW[8] = { 0.00056, 0.0007, 0.000933, 0.0014, 0.0028, 0.0056, 0.0112, 0.0224 };
+	int grWLength = sizeof(grW) / sizeof(grW[0]);
+
+	std::cout << "[INFO]: Running all simulations..." << std::endl;
+	clock_t time = clock();
+	for (int goRecipParamNum = 0; goRecipParamNum < 1; goRecipParamNum++)
+	{
+		float GRGO = grW[goRecipParamNum] * ws; // scaled grgo weights
+		float MFGO = mfW * ws; // scaled mfgo weights
+		float GOGR = gogr; // gogr weights, unchanged
+		for (int simNum = 0; simNum < 1; simNum++)
+		{
+			std::cout << "[INFO]: Running simulation #" << (simNum + 1) << std::endl;
+			Control control(actParamFile);
+			control.runTrials(simNum, GOGR, GRGO, MFGO);
+			// TODO: put in output file dir to save to!
+			control.saveOutputArraysToFile(goRecipParamNum, simNum);
+		}
+	}
+	time = clock() - time;
+	std::cout << "[INFO] All simulations finished in "
+	          << (float) time / CLOCKS_PER_SEC << "s." << std::endl;
+	return true;
 }
 
 static bool on_pause(GtkWidget *widget, gpointer data)
