@@ -56,7 +56,7 @@ static bool on_radio(GtkWidget *widget, gpointer data)
 static void set_gui_window_attribs(struct gui *gui)
 {
 	gtk_window_set_title(GTK_WINDOW(gui->window), "Main Window");
-	gtk_window_set_default_size(GTK_WINDOW(gui->window), 1920, );
+	gtk_window_set_default_size(GTK_WINDOW(gui->window), 1280, 720);
 }
 
 static void set_gui_grid_attribs(struct gui *gui)
@@ -70,6 +70,8 @@ static void set_gui_normal_button_attribs(struct gui *gui)
 	FOREACH(gui->normal_buttons, b)
 	{
 		gtk_button_set_label(GTK_BUTTON(b->widget), b->label);
+		gtk_widget_set_hexpand(b->widget, true);
+		gtk_widget_set_vexpand(b->widget, true);
 		gtk_grid_attach(GTK_GRID(gui->grid), b->widget, b->col, b->row, 1, 1);
 		g_signal_connect(b->widget, "clicked", G_CALLBACK(b->handler), NULL);
 	}
@@ -78,6 +80,8 @@ static void set_gui_normal_button_attribs(struct gui *gui)
 static void set_gui_dcn_plast_button_attribs(struct gui *gui)
 {
 	gtk_button_set_label(GTK_BUTTON(gui->dcn_plast_button.widget), gui->dcn_plast_button.label);
+	gtk_widget_set_hexpand(gui->dcn_plast_button.widget, true);
+	gtk_widget_set_vexpand(gui->dcn_plast_button.widget, true);
 	gtk_grid_attach(GTK_GRID(gui->grid),
 		  			gui->dcn_plast_button.widget,
 		  			gui->dcn_plast_button.col, 
@@ -97,10 +101,12 @@ static void set_gui_radio_button_attribs(struct gui *gui)
 	gint radio_mask = 0;
 	FOREACH(gui->plasticity_radios, r)
 	{
-		gtk_grid_attach(GTK_GRID(gui->grid), r->widget, r->col, r->row, 1, 1);
 		gtk_button_set_label(GTK_BUTTON(r->widget), r->label);
+		gtk_widget_set_hexpand(r->widget, true);
+		gtk_widget_set_vexpand(r->widget, true);
 		gtk_radio_button_join_group(GTK_RADIO_BUTTON(r->widget), GTK_RADIO_BUTTON(group));
 		if (r->label == "Graded") group = r->widget; /* hack to ensure first radio group NULL, rest are first radio */
+		gtk_grid_attach(GTK_GRID(gui->grid), r->widget, r->col, r->row, 1, 1);
 		g_signal_connect(r->widget, "toggled", r->handler, (gpointer) &radio_mask); // IFFY!
 		radio_mask++;
 	}
