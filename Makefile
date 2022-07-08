@@ -133,12 +133,12 @@ CBM_STATE_OBJECTS  = $(CBM_STATE_OBJ_PATH)cbmstate.o \
 ####### CBM Vis Directories
 
 CBM_VIS_SRC_PATH     = $(ROOT)src/CBM_VIS_LIB/
-CBM_VIS_INCLUDE_PATH = $(ROOT)include/CBM_VIS_LIB/
+CBM_VIS_INCLUDE_PATH = $(ROOT)include/CBM_VIS_LIB/ 
 CBM_VIS_OBJ_PATH     = $(BUILD_PATH)CBM_VIS_LIB/
 
 ####### CBM Vis Files
 
-CBM_VIS_SOURCES = $(CBM_VIS_SRC_PATH)gui.c
+CBM_VIS_SOURCES = $(CBM_VIS_SRC_PATH)gui.cpp
 
 CBM_VIS_OBJECTS = $(CBM_VIS_OBJ_PATH)gui.o
 
@@ -855,7 +855,9 @@ $(CBM_TOOLS_OBJ_PATH)poissonregencells.o: $(CBM_TOOLS_SRC_PATH)poissonregencells
 ####### CBM Vis Compiler Options
 
 # FIXME: the invocation of pkg-config is redundant
-CBM_VIS_INCLUDES = -I. -I$(CBM_VIS_INCLUDE_PATH) -I$(CXX_TOOLS_INCLUDE_PATH) $(shell pkg-config --cflags gtk+-3.0)
+CBM_VIS_INCLUDES = -I. -I$(CBM_VIS_INCLUDE_PATH) -I$(CXX_TOOLS_INCLUDE_PATH) -I$(BIG_SIM_INCLUDE_PATH) \
+				   -I$(CBM_STATE_INCLUDE_PATH) -I$(CBM_CORE_INCLUDE_PATH) -I$(CUDA_INCLUDE_PATH) \
+				   -I$(CBM_TOOLS_INCLUDE_PATH) -I$(CBM_DATA_INCLUDE_PATH) $(shell pkg-config --cflags gtk+-3.0)
 
 ####### CBM Vis Build Rules
 
@@ -864,8 +866,8 @@ $(CBM_VIS_OBJ_PATH):
 
 ####### Compile CBM Vis Sources
 
-$(CBM_VIS_OBJ_PATH)gui.o: $(CBM_VIS_SRC_PATH)gui.c $(CBM_VIS_INCLUDE_PATH)gui.h
-	$(CXX) -c $(MODULE_CXX_FLAGS) $(CBM_VIS_INCLUDES) -o $(CBM_VIS_OBJ_PATH)gui.o $(CBM_VIS_SRC_PATH)gui.c
+$(CBM_VIS_OBJ_PATH)gui.o: $(CBM_VIS_SRC_PATH)gui.cpp
+	$(CXX) -c $(MODULE_CXX_FLAGS) $(CBM_VIS_INCLUDES) -o $(CBM_VIS_OBJ_PATH)gui.o $(CBM_VIS_SRC_PATH)gui.cpp
 
 ####### CXX Tools Compiler Options
 
