@@ -26,7 +26,9 @@ struct signal
 {
 	const gchar *signal;
 	GCallback handler;
-	GdkEventMask mask;
+	gpointer data;
+	bool swapped;
+	//GdkEventMask mask;
 };
 
 struct button
@@ -47,8 +49,9 @@ struct menu
 struct menu_item
 {
 	const gchar *label;
-	GCallback handler;
+	//GCallback handler;
 	GtkWidget *menu_item;
+	struct signal signal;
 	struct menu sub_menu; /* single sub menu for every menu item */
 };
 

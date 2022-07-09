@@ -2,6 +2,7 @@
 #include "control.h"
 #include "gui.h"
 
+// temp function so gtk doesn't whine abt NULL callbacks
 static void null_callback(GtkWidget *widget, gpointer data) {}
 
 static bool assert(bool expr, const char *error_string, const char *func = "assert")
@@ -21,7 +22,7 @@ static void load_activity_file(GtkWidget *widget, gpointer data)
 	GtkWidget *dialog = gtk_file_chooser_dialog_new
 		(
 		  "Open File",
-		  NULL, /* not sure how we will receive this */
+		  NULL, /* no parent window is fine for now */
 		  GTK_FILE_CHOOSER_ACTION_OPEN,
 		  "Cancel",
 		  GTK_RESPONSE_CANCEL,
@@ -37,7 +38,7 @@ static void load_activity_file(GtkWidget *widget, gpointer data)
 		char *activity_file;
 		GtkFileChooser *chooser = GTK_FILE_CHOOSER(dialog);
 		activity_file = gtk_file_chooser_get_filename(chooser);
-		// TODO: process
+		//*data = (gpointer) activity_file;
 		g_free(activity_file);
 	}
 
@@ -187,7 +188,14 @@ static void set_gui_menu_attribs(struct gui *gui)
 			if (smi->label != "")
 			{
 				gtk_menu_item_set_label(GTK_MENU_ITEM(smi->menu_item), smi->label);
-				g_signal_connect(smi->menu_item, "activate", smi->handler, NULL);
+				if (smi->signal.swapped)
+				{
+					g_signal_connect_swapped(smi->menu_item, smi->signal.signal, smi->signal.handler, smi->signal.data);
+				}
+				else
+				{
+					g_signal_connect(smi->menu_item, smi->signal.signal, smi->signal.handler, smi->signal.data);
+				}
 			}
 			gtk_menu_shell_append(GTK_MENU_SHELL(mi->sub_menu.menu), smi->menu_item);
 		}
@@ -243,44 +251,171 @@ int gui_init_and_run(int *argc, char ***argv)
 			.menu = gtk_menu_bar_new(),
 			.menu_items = new menu_item[NUM_SUB_MENUS]
 			{
-				{"File", G_CALLBACK(null_callback), gtk_menu_item_new(), 
+				{"File", gtk_menu_item_new(), {},
 					{gtk_menu_new(), new menu_item[NUM_FILE_MENU_ITEMS]
 						{
-							{"Load Activity File", G_CALLBACK(load_activity_file), gtk_menu_item_new(), {}},
-							{"Save Simulation", G_CALLBACK(null_callback), gtk_menu_item_new(), {}},
-							{"",         G_CALLBACK(null_callback), gtk_separator_menu_item_new(), {}},
-							{"Quit",     G_CALLBACK(gtk_main_quit), gtk_menu_item_new(), {}},
+							{"Load Activity File", gtk_menu_item_new(),
+								{
+									"activate",
+									G_CALLBACK(load_activity_file),
+									NULL,
+									true
+								},
+								{}
+							},
+							{"Save Simulation", gtk_menu_item_new(),
+								{
+									"activate",
+									G_CALLBACK(null_callback),
+									NULL,
+									false
+								},
+								{}
+							},
+							{"", gtk_separator_menu_item_new(), {}, {}},
+							{"Quit", gtk_menu_item_new(),
+								{
+									"activate",
+									G_CALLBACK(gtk_main_quit),
+									NULL,
+									false
+								},  
+								{}
+							},
 						}
 					}
 				},
-				{"Weights", G_CALLBACK(null_callback), gtk_menu_item_new(),
+				{"Weights", gtk_menu_item_new(), {},
 					{gtk_menu_new(), new menu_item[NUM_WEIGHTS_MENU_ITEMS]
 						{
-							{"Save Weights", G_CALLBACK(null_callback), gtk_menu_item_new(), {}},
-							{"Load Weights", G_CALLBACK(null_callback), gtk_menu_item_new(), {}},
-							{"Save MF-DN",   G_CALLBACK(null_callback), gtk_menu_item_new(), {}},
-							{"Load MF-DN",   G_CALLBACK(null_callback), gtk_menu_item_new(), {}}
+							{"Save Weights", gtk_menu_item_new(),
+								{
+									"activate",
+									G_CALLBACK(null_callback),
+									NULL,
+									false
+								},
+								{}
+							},
+							{"Load Weights", gtk_menu_item_new(),
+								{
+									"activate",
+									G_CALLBACK(null_callback),
+									NULL,
+									false
+								},
+								{}
+							},
+							{"Save MF-DN", gtk_menu_item_new(),
+								{
+									"activate",
+									G_CALLBACK(null_callback),
+									NULL,
+									false
+								},
+								{}
+							},
+							{"Load MF-DN", gtk_menu_item_new(),
+								{
+									"activate",
+									G_CALLBACK(null_callback),
+									NULL,
+									false
+								},
+								{}
+							},
 						}
 					}
 				},
-				{"PSTH", G_CALLBACK(null_callback), gtk_menu_item_new(),
+				{"PSTH", gtk_menu_item_new(), {},
 					{gtk_menu_new(), new menu_item[NUM_PSTH_MENU_ITEMS]
 						{
-							{"Save GR", G_CALLBACK(null_callback), gtk_menu_item_new(), {}},
-							{"Save GO", G_CALLBACK(null_callback), gtk_menu_item_new(), {}},
-							{"Save PC", G_CALLBACK(null_callback), gtk_menu_item_new(), {}},
-							{"Save DN", G_CALLBACK(null_callback), gtk_menu_item_new(), {}},
-							{"Save CF", G_CALLBACK(null_callback), gtk_menu_item_new(), {}},
-							{"Save BC", G_CALLBACK(null_callback), gtk_menu_item_new(), {}},
-							{"Save SC", G_CALLBACK(null_callback), gtk_menu_item_new(), {}},
-							{"Save MF", G_CALLBACK(null_callback), gtk_menu_item_new(), {}}
+							{"Save GR", gtk_menu_item_new(),
+								{
+									"activate",
+									G_CALLBACK(null_callback),
+									NULL,
+								},
+								{}
+							},
+							{"Save GO", gtk_menu_item_new(),
+								{
+									"activate",
+									G_CALLBACK(null_callback),
+									NULL,
+									false
+								},
+								{}
+							},
+							{"Save PC", gtk_menu_item_new(),
+								{
+									"activate",
+									G_CALLBACK(null_callback),
+									NULL,
+									false
+								},
+								{}
+							},
+							{"Save DN", gtk_menu_item_new(),
+								{
+									"activate",
+									G_CALLBACK(null_callback),
+									NULL,
+									false
+								},
+								{}
+							},
+							{"Save CF", gtk_menu_item_new(),
+								{
+									"activate",
+									G_CALLBACK(null_callback),
+									NULL,
+									false
+								},
+								{}
+							},
+							{"Save BC", gtk_menu_item_new(),
+								{
+									"activate",
+									G_CALLBACK(null_callback),
+									NULL,
+									false
+								},
+								{}
+							},
+							{"Save SC", gtk_menu_item_new(),
+								{
+									"activate",
+									G_CALLBACK(null_callback),
+									NULL,
+									false
+								},
+								{}
+							},
+							{"Save MF", gtk_menu_item_new(),
+								{
+									"activate",
+									G_CALLBACK(null_callback),
+									NULL,
+									false
+								},
+								{}
+							},
 						}
 					}
 				},
-				{"Analysis", G_CALLBACK(null_callback), gtk_menu_item_new(),
+				{"Analysis", gtk_menu_item_new(), {},
 					{gtk_menu_new(), new menu_item[NUM_ANALYSIS_MENU_ITEMS]
 						{
-							{"Analysis", G_CALLBACK(null_callback), gtk_menu_item_new(), {}}
+							{"Analysis", gtk_menu_item_new(),
+								{
+									"activate",
+									G_CALLBACK(null_callback),
+									NULL,
+									false
+								},
+								{}
+							},
 						}
 					}
 				}

@@ -23,12 +23,12 @@ class Control
 {
 	public:
 		// TODO: create training parameter files
-		Control();	
+		Control();
 		Control(std::string actParamFile);
 		~Control();
 
 		// Objects
-		ActivityParams ap;	
+		ActivityParams ap;
 
 		// TODO: make these guys non pointers, somehow!
 		CBMState *simState;
@@ -41,17 +41,17 @@ class Control
 
 		// params that I do not know how to categorize
 		float goMin = 0.26;
-		float spillFrac	= 0.15;	
+		float spillFrac = 0.15;
 		float gogoW = 0.0125;
 		float inputStrength = 0.0;
 
 		// sim params
 		int gpuIndex = 0;
-	   	int gpuP2	 = 2;	
+		int gpuP2    = 2;
 
 		// Training Parameters
-		int numTrainingTrials 	   = 10;
-		int homeoTuningTrials 	   = 0;
+		int numTrainingTrials      = 10;
+		int homeoTuningTrials      = 0;
 		int granuleActDetectTrials = 0;
 
 		int msPreCS = 400;
@@ -71,7 +71,7 @@ class Control
 
 		float nucCollFrac = 0.02;
 		float csMinRate = 100.0; // uh look at tonic lol
- 		float csMaxRate = 110.0;		
+ 		float csMaxRate = 110.0;
 
 		float CSTonicMFFrac = 0.05;
 		float tonicFreqMin  = 100.0;
@@ -91,7 +91,7 @@ class Control
 		float csbgFreqMax = 30.0;
 
 		bool collaterals_off = false;
-		bool secondCS 		 = true;
+		bool secondCS        = true;
 
 		float fracImport  = 0.0;
 		float fracOverlap = 0.2;
@@ -143,7 +143,7 @@ class Control
 		//ct_uint8_t **allGORaster_Trial;
 		//ct_uint8_t *goSpkCount_Trial;
 		const ct_uint8_t* goSpks; 
-
+		
 		void initializeOutputArrays(int csLength, int numTrainingTrials);
 
 		void runTrials(int simNum, float GOGR, float GRGO, float MFGO);
