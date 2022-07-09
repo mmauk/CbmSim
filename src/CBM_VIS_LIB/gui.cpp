@@ -15,8 +15,7 @@ static bool assert(bool expr, const char *error_string, const char *func = "asse
 	return true;
 }
 
-// for now, we are going to load our simulation while opening an act file
-// TODO: make activity file automatic
+// for now we load in the activity params file and init the sim with a separate button
 static void load_activity_params_from_file(GtkWidget *widget, Control *control)
 {
 	GtkWidget *dialog = gtk_file_chooser_dialog_new
@@ -48,7 +47,12 @@ static void load_activity_params_from_file(GtkWidget *widget, Control *control)
 // NOTE: Assumes that activity params have been loaded!!!!
 static void on_init_sim(GtkWidget *widget, Control *control)
 {
-	control->construct_control();
+	if (control->ap) control->construct_control();
+	else 
+	{
+		fprintf(stderr, "[ERROR] trying to initialize a simulation without loading a file.\n");
+		fprintf(stderr, "[ERROR] (Hint: Load an activity parameter file first then initialize the simulation.)\n");
+	}
 }
 
 static bool on_run(GtkWidget *widget, Control *control)
