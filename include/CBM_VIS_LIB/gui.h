@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <gtk/gtk.h>
 
-#define NUM_NORMAL_BUTTONS 6
+#define NUM_NORMAL_BUTTONS 7
 #define NUM_PLASTICITY_RADIOS 4
 #define NUM_SUB_MENU_ITEMS 4
 
@@ -35,9 +35,9 @@ struct button
 {
 	const gchar *label;
 	GtkWidget *widget;
-	GCallback handler;
 	gint col;
 	gint row;
+	struct signal signal;
 };
 
 struct menu

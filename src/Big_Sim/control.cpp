@@ -289,3 +289,31 @@ void Control::deleteOutputArrays()
 	delete2DArray<ct_uint8_t>(allGOPSTH);
 }
 
+void Control::construct_control()
+{
+	std::cout << "[INFO]: Initializing state..." << std::endl;
+	simState = new CBMState(ap, numMZones);
+	std::cout << "[INFO]: Finished initializing state..." << std::endl;
+	
+	std::cout << "[INFO]: Initializing simulation core..." << std::endl;
+	simCore = new CBMSimCore(ap, simState, gpuIndex, gpuP2);
+	std::cout << "[INFO]: Finished initializing simulation core." << std::endl;
+
+	std::cout << "[INFO]: Initializing MF Frequencies..." << std::endl;
+	mfFreq = new ECMFPopulation(NUM_MF, mfRandSeed, CSTonicMFFrac, CSPhasicMFFrac,
+		  contextMFFrac, nucCollFrac, bgFreqMin, csbgFreqMin, contextFreqMin, 
+		  tonicFreqMin, phasicFreqMin, bgFreqMax, csbgFreqMax, contextFreqMax, 
+		  tonicFreqMax, phasicFreqMax, collaterals_off, fracImport, secondCS, fracOverlap);
+	std::cout << "[INFO]: Finished initializing MF Frequencies." << std::endl;
+
+	std::cout << "[INFO]: Initializing Poisson MF Population..." << std::endl;
+	mfs = new PoissonRegenCells(NUM_MF, mfRandSeed, threshDecayTau, ap->msPerTimeStep,
+		  	numMZones, NUM_NC);
+	std::cout << "[INFO]: Finished initializing Poisson MF Population." << std::endl;
+
+	// allocate and initialize output arrays
+	std::cout << "[INFO]: Initializing output arrays..." << std::endl;
+	initializeOutputArrays(csLength, numTrainingTrials);
+	std::cout << "[INFO]: Finished initializing output arrays." << std::endl;
+}
+

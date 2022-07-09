@@ -66,12 +66,6 @@ int main(int argc, char **argv)
 		}
 	}
 
-	float mfW = 0.0035; // mf weights (to what?)
-	float ws = 0.3275; // weight scale
-	float gogr = 0.0105; // gogr weights
-
-	float grW[8] = { 0.00056, 0.0007, 0.000933, 0.0014, 0.0028, 0.0056, 0.0112, 0.0224 };
-	int grWLength = sizeof(grW) / sizeof(grW[0]);
 	int exit_status = -1;
 
 	switch (sim_mode)
@@ -83,6 +77,13 @@ int main(int argc, char **argv)
 		}
 		case TUI:
 		{
+			float mfW = 0.0035; // mf weights (to what?)
+			float ws = 0.3275; // weight scale
+			float gogr = 0.0105; // gogr weights
+
+			float grW[8] = { 0.00056, 0.0007, 0.000933, 0.0014, 0.0028, 0.0056, 0.0112, 0.0224 };
+			int grWLength = sizeof(grW) / sizeof(grW[0]);
+
 			std::cout << "[INFO]: Running all simulations..." << std::endl;
 			clock_t time = clock();
 			for (int goRecipParamNum = 0; goRecipParamNum < 1; goRecipParamNum++)

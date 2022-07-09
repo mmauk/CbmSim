@@ -38,15 +38,20 @@ static void load_activity_params_from_file(GtkWidget *widget, Control *control)
 		char *activity_file;
 		GtkFileChooser *chooser = GTK_FILE_CHOOSER(dialog);
 		activity_file = gtk_file_chooser_get_filename(chooser);
-		control = new Control(std::string(activity_file));
-		//control->init_activity_params(std::string(activity_file));
+		control->init_activity_params(std::string(activity_file));
 		g_free(activity_file);
 	}
 
 	gtk_widget_destroy(dialog);
 }
 
-static bool on_run(GtkWidget *widget, gpointer data)
+// NOTE: Assumes that activity params have been loaded!!!!
+static void on_init_sim(GtkWidget *widget, Control *control)
+{
+	control->construct_control();
+}
+
+static bool on_run(GtkWidget *widget, Control *control)
 {
 	float mfW = 0.0035; // mf weights (to what?)
 	float ws = 0.3275; // weight scale
@@ -57,20 +62,19 @@ static bool on_run(GtkWidget *widget, gpointer data)
 
 	std::cout << "[INFO]: Running all simulations..." << std::endl;
 	clock_t time = clock();
-	//for (int goRecipParamNum = 0; goRecipParamNum < 1; goRecipParamNum++)
-	//{
-	//	float GRGO = grW[goRecipParamNum] * ws; // scaled grgo weights
-	//	float MFGO = mfW * ws; // scaled mfgo weights
-	//	float GOGR = gogr; // gogr weights, unchanged
-	//	for (int simNum = 0; simNum < 1; simNum++)
-	//	{
-	//		std::cout << "[INFO]: Running simulation #" << (simNum + 1) << std::endl;
-	//		Control control(actParamFile);
-	//		control.runTrials(simNum, GOGR, GRGO, MFGO);
-	//		// TODO: put in output file dir to save to!
-	//		control.saveOutputArraysToFile(goRecipParamNum, simNum);
-	//	}
-	//}
+	for (int goRecipParamNum = 0; goRecipParamNum < 1; goRecipParamNum++)
+	{
+		float GRGO = grW[goRecipParamNum] * ws; // scaled grgo weights
+		float MFGO = mfW * ws; // scaled mfgo weights
+		float GOGR = gogr; // gogr weights, unchanged
+		for (int simNum = 0; simNum < 1; simNum++)
+		{
+			std::cout << "[INFO]: Running simulation #" << (simNum + 1) << std::endl;
+			control->runTrials(simNum, GOGR, GRGO, MFGO);
+			// TODO: put in output file dir to save to!
+			//control.saveOutputArraysToFile(goRecipParamNum, simNum);
+		}
+	}
 	time = clock() - time;
 	std::cout << "[INFO] All simulations finished in "
 	          << (float) time / CLOCKS_PER_SEC << "s." << std::endl;
@@ -135,7 +139,7 @@ static void set_gui_normal_button_attribs(struct gui *gui)
 		gtk_widget_set_hexpand(b->widget, true);
 		gtk_widget_set_vexpand(b->widget, true);
 		gtk_grid_attach(GTK_GRID(gui->grid), b->widget, b->col, b->row, 1, 1);
-		g_signal_connect(b->widget, "clicked", G_CALLBACK(b->handler), NULL);
+		g_signal_connect(b->widget, b->signal.signal, b->signal.handler, b->signal.data);
 	}
 }
 
@@ -151,9 +155,9 @@ static void set_gui_dcn_plast_button_attribs(struct gui *gui)
 		  			1,
 		  			1);
 	g_signal_connect(gui->dcn_plast_button.widget,
-					 "clicked",
-					 gui->dcn_plast_button.handler,
-					 NULL);
+					 gui->dcn_plast_button.signal.signal,
+					 gui->dcn_plast_button.signal.handler,
+					 gui->dcn_plast_button.signal.data);
 }
 
 static void set_gui_radio_button_attribs(struct gui *gui)
@@ -169,7 +173,7 @@ static void set_gui_radio_button_attribs(struct gui *gui)
 		gtk_radio_button_join_group(GTK_RADIO_BUTTON(r->widget), GTK_RADIO_BUTTON(group));
 		if (r->label == "Graded") group = r->widget; /* hack to ensure first radio group NULL, rest are first radio */
 		gtk_grid_attach(GTK_GRID(gui->grid), r->widget, r->col, r->row, 1, 1);
-		g_signal_connect(r->widget, "toggled", r->handler, (gpointer) &radio_mask); // IFFY!
+		//g_signal_connect(r->widget, "toggled", r->handler, (gpointer) &radio_mask); // IFFY!
 		radio_mask++;
 	}
 }
@@ -240,32 +244,87 @@ int gui_init_and_run(int *argc, char ***argv)
 		return 1;
 	}
 
-	Control *control; /* experimental: will segfault on exit */
+	Control *control = new Control(); 
 
 	struct gui gui = {
 		.window = gtk_window_new(GTK_WINDOW_TOPLEVEL),
 		.grid = gtk_grid_new(),
 		.normal_buttons = {
-			{"Run"       , gtk_button_new(), G_CALLBACK(on_run), 0, 0},
-			{"Pause"     , gtk_button_new(), G_CALLBACK(on_pause), 1, 0},
-			{"GR Raster" , gtk_button_new(), G_CALLBACK(on_gr_raster), 3, 0},
-			{"GO Raster" , gtk_button_new(), G_CALLBACK(on_go_raster), 3, 1},
-			{"PC Window" , gtk_button_new(), G_CALLBACK(on_pc_window), 3, 2},
-			{"Parameters", gtk_button_new(), G_CALLBACK(on_parameters), 3, 3}
+			{"Initialize Sim", gtk_button_new(), 0, 0,
+				{
+					"clicked",
+					G_CALLBACK(on_init_sim),
+					control,
+					false
+				}
+			},
+			{"Run", gtk_button_new(), 1, 0,
+				{
+					"clicked",
+					G_CALLBACK(on_run),
+					control,
+					false
+				}
+			},
+			{"Pause", gtk_button_new(), 2, 0,
+				{
+					"clicked",
+					G_CALLBACK(on_pause),
+					NULL,
+					false
+				}
+			},
+			{"GR Raster", gtk_button_new(), 3, 0,
+				{
+				   "clicked",
+				   G_CALLBACK(on_gr_raster),
+				   NULL,
+				   false
+				}
+			},
+			{"GO Raster", gtk_button_new(), 3, 1,
+				{
+				   "clicked",
+				   G_CALLBACK(on_go_raster),
+				   NULL,
+				   false
+				}
+			},
+			{"PC Window", gtk_button_new(), 3, 2,
+				{
+				   "clicked",
+				   G_CALLBACK(on_pc_window),
+				   NULL,
+				   false
+				}
+			},
+			{"Parameters", gtk_button_new(), 3, 3,
+				{
+				   "clicked",
+				   G_CALLBACK(on_parameters),
+				   NULL,
+				   false
+				}
+			},
 		},
 		.dcn_plast_button = {
 			"DCN Plasticity",
 			gtk_check_button_new(),
-			G_CALLBACK(on_dcn_plast),
 			1,
-			4
+			4,
+			{
+				"clicked",
+				G_CALLBACK(on_dcn_plast),
+				NULL,
+				false
+			}
 		},
 		.plast_radio_label = gtk_label_new("Plasticity"),
 		.plasticity_radios = {
-			{"Graded" , gtk_radio_button_new(NULL), G_CALLBACK(on_radio), 0, 3},
-			{"Binary" , gtk_radio_button_new(NULL), G_CALLBACK(on_radio), 0, 4}, 
-			{"Cascade", gtk_radio_button_new(NULL), G_CALLBACK(on_radio), 0, 5},
-			{"Off"    , gtk_radio_button_new(NULL), G_CALLBACK(on_radio), 0, 6}
+			{"Graded" , gtk_radio_button_new(NULL), 0, 3, {}},
+			{"Binary" , gtk_radio_button_new(NULL), 0, 4, {}}, 
+			{"Cascade", gtk_radio_button_new(NULL), 0, 5, {}},
+			{"Off"    , gtk_radio_button_new(NULL), 0, 6, {}}
 		},
 		.menu_bar = {
 			.menu = gtk_menu_bar_new(),
@@ -477,7 +536,11 @@ int gui_init_and_run(int *argc, char ***argv)
 	// show, run, and free
 	gtk_widget_show_all(gui.window);
 	gtk_main();
+
+	// manually delete objects we created
 	free_gui_menus(&gui);
+	delete control;
+
 	return 0;
 }
 

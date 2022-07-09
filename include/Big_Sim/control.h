@@ -28,13 +28,13 @@ class Control
 		~Control();
 
 		// Objects
-		ActivityParams *ap;
+		ActivityParams *ap = NULL;
 
 		// TODO: make these guys non pointers, somehow!
-		CBMState *simState;
-		CBMSimCore *simCore;
-		ECMFPopulation *mfFreq;
-		PoissonRegenCells *mfs;
+		CBMState *simState = NULL;
+		CBMSimCore *simCore = NULL;
+		ECMFPopulation *mfFreq = NULL;
+		PoissonRegenCells *mfs = NULL;
 
 		const float *grgoG, *mfgoG;
 		const ct_uint8_t *mfAP;
@@ -160,6 +160,8 @@ class Control
 		void write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
 			unsigned int numRow, unsigned int numCol);
 		void deleteOutputArrays();
+
+		void construct_control();
 };
 
 #endif /*_CONTROL_H*/
