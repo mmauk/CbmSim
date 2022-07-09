@@ -9,7 +9,7 @@
 
 CBMState::CBMState() {}
 
-CBMState::CBMState(ActivityParams &ap, unsigned int nZones) : numZones(nZones)
+CBMState::CBMState(ActivityParams *ap, unsigned int nZones) : numZones(nZones)
 {
 	CRandomSFMT randGen(time(0));
 
@@ -44,10 +44,10 @@ CBMState::~CBMState()
 	delete[] mzoneActStates;
 }
 
-void CBMState::newState(ActivityParams &ap, unsigned int nZones, int innetCRSeed,
+void CBMState::newState(ActivityParams *ap, unsigned int nZones, int innetCRSeed,
 	 int *mzoneCRSeed, int *mzoneARSeed)
 {
-	innetConState  = new InNetConnectivityState(ap.msPerTimeStep, innetCRSeed);
+	innetConState  = new InNetConnectivityState(ap->msPerTimeStep, innetCRSeed);
 	mzoneConStates = new MZoneConnectivityState*[nZones];
 	innetActState  = new InNetActivityState(ap);
 	mzoneActStates = new MZoneActivityState*[nZones];
@@ -59,7 +59,7 @@ void CBMState::newState(ActivityParams &ap, unsigned int nZones, int innetCRSeed
 	}
 }
 
-void CBMState::writeState(ActivityParams &ap, std::fstream &outfile)
+void CBMState::writeState(ActivityParams *ap, std::fstream &outfile)
 {
 	// Debatable whether to write std::endl to file. Yes it flushes the output
 	// after sending a newline, but doing this too often can lead to poor disk

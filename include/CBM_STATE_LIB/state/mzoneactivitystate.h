@@ -22,12 +22,12 @@ class MZoneActivityState
 {
 public:
 	MZoneActivityState();
-	MZoneActivityState(ActivityParams &ap, int randSeed);
-	MZoneActivityState(ActivityParams &ap, std::fstream &infile);
+	MZoneActivityState(ActivityParams *ap, int randSeed);
+	MZoneActivityState(ActivityParams *ap, std::fstream &infile);
 
 	~MZoneActivityState();
 
-	void writeState(ActivityParams &ap, std::fstream &outfile);
+	void writeState(ActivityParams *ap, std::fstream &outfile);
 
 	//basket cells
 	std::unique_ptr<ct_uint8_t[]> apBC{nullptr};	
@@ -85,7 +85,7 @@ public:
 
 private:
 	void allocateMemory(ct_uint32_t numPopHistBinsPC);
-	void initializeVals(ActivityParams &ap, int randSeed);
+	void initializeVals(ActivityParams *ap, int randSeed);
 	void stateRW(ct_uint32_t numPopHistBinsPC, bool read, std::fstream &file);
 };
 

@@ -3,15 +3,16 @@
 
 Control::Control() {}
 
-Control::Control(std::string actParamFile) : ap(actParamFile)
+Control::Control(std::string actParamFile)
 {
+	ap = new ActivityParams(actParamFile);
 	// TODO: remove simState construction from here, construct within simCore!
-	std::cout << "[INFO]: Initializing state..." << std::endl;	
+	std::cout << "[INFO]: Initializing state..." << std::endl;
 	simState = new CBMState(ap, numMZones);
 	std::cout << "[INFO]: Finished initializing state..." << std::endl;
 	
 	std::cout << "[INFO]: Initializing simulation core..." << std::endl;
-	simCore = new CBMSimCore(ap, simState, gpuIndex, gpuP2);	
+	simCore = new CBMSimCore(ap, simState, gpuIndex, gpuP2);
 	std::cout << "[INFO]: Finished initializing simulation core." << std::endl;
 
 	std::cout << "[INFO]: Initializing MF Frequencies..." << std::endl;
@@ -22,18 +23,19 @@ Control::Control(std::string actParamFile) : ap(actParamFile)
 	std::cout << "[INFO]: Finished initializing MF Frequencies." << std::endl;
 
 	std::cout << "[INFO]: Initializing Poisson MF Population..." << std::endl;
-	mfs = new PoissonRegenCells(NUM_MF, mfRandSeed, threshDecayTau, ap.msPerTimeStep,
+	mfs = new PoissonRegenCells(NUM_MF, mfRandSeed, threshDecayTau, ap->msPerTimeStep,
 		  	numMZones, NUM_NC);
 	std::cout << "[INFO]: Finished initializing Poisson MF Population." << std::endl;
 
 	// allocate and initialize output arrays
 	std::cout << "[INFO]: Initializing output arrays..." << std::endl;
-	initializeOutputArrays(csLength, numTrainingTrials);	
+	initializeOutputArrays(csLength, numTrainingTrials);
 	std::cout << "[INFO]: Finished initializing output arrays." << std::endl;
 }
 
 Control::~Control()
 {
+	delete ap;
 	// delete all dynamic objects
 	delete simState;
 	delete simCore;
@@ -44,29 +46,32 @@ Control::~Control()
 	deleteOutputArrays();
 }
 
+// TODO: implement
+void Control::init_activity_params(std::string actParamFile) {}
+
 void Control::initializeOutputArrays(int csLength, int numTrainingTrials)
 {
 	int allGOPSTHColSize = csLength + msPreCS + msPostCS;
-	int rasterColumnSize = allGOPSTHColSize * numTrainingTrials;	
+	int rasterColumnSize = allGOPSTHColSize * numTrainingTrials;
 
 	// Allocate and Initialize PSTH and Raster arrays
-	allPCRaster = allocate2DArray<ct_uint8_t>(NUM_PC, rasterColumnSize);	
+	allPCRaster = allocate2DArray<ct_uint8_t>(NUM_PC, rasterColumnSize);
 	std::fill(allPCRaster[0], allPCRaster[0] +
 			NUM_PC * rasterColumnSize, 0);
 	
-	allNCRaster = allocate2DArray<ct_uint8_t>(NUM_NC, rasterColumnSize);	
+	allNCRaster = allocate2DArray<ct_uint8_t>(NUM_NC, rasterColumnSize);
 	std::fill(allNCRaster[0], allNCRaster[0] +
 			NUM_NC * rasterColumnSize, 0);
 
-	allSCRaster = allocate2DArray<ct_uint8_t>(NUM_SC, rasterColumnSize);	
+	allSCRaster = allocate2DArray<ct_uint8_t>(NUM_SC, rasterColumnSize);
 	std::fill(allSCRaster[0], allSCRaster[0] +
 			NUM_SC * rasterColumnSize, 0);
 
-	allBCRaster = allocate2DArray<ct_uint8_t>(NUM_BC, rasterColumnSize);	
+	allBCRaster = allocate2DArray<ct_uint8_t>(NUM_BC, rasterColumnSize);
 	std::fill(allBCRaster[0], allBCRaster[0] +
 			NUM_BC * rasterColumnSize, 0);
 	
-	allGOPSTH = allocate2DArray<ct_uint8_t>(NUM_GO, allGOPSTHColSize);	
+	allGOPSTH = allocate2DArray<ct_uint8_t>(NUM_GO, allGOPSTHColSize);
 	std::fill(allGOPSTH[0], allGOPSTH[0] + NUM_GO * allGOPSTHColSize, 0);
 }
 

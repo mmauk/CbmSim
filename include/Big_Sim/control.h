@@ -28,7 +28,7 @@ class Control
 		~Control();
 
 		// Objects
-		ActivityParams ap;
+		ActivityParams *ap;
 
 		// TODO: make these guys non pointers, somehow!
 		CBMState *simState;
@@ -143,7 +143,9 @@ class Control
 		//ct_uint8_t **allGORaster_Trial;
 		//ct_uint8_t *goSpkCount_Trial;
 		const ct_uint8_t* goSpks; 
-		
+	
+		void init_activity_params(std::string actParamFile);
+
 		void initializeOutputArrays(int csLength, int numTrainingTrials);
 
 		void runTrials(int simNum, float GOGR, float GRGO, float MFGO);

@@ -9,25 +9,25 @@
 
 MZoneActivityState::MZoneActivityState() {}
 
-MZoneActivityState::MZoneActivityState(ActivityParams &ap, int randSeed)
+MZoneActivityState::MZoneActivityState(ActivityParams *ap, int randSeed)
 {
 	std::cout << "[INFO]: Initializing mzone activity state..." << std::endl;
-	allocateMemory(ap.numPopHistBinsPC);
+	allocateMemory(ap->numPopHistBinsPC);
 	initializeVals(ap, randSeed);
 	std::cout << "[INFO]: Finished initializing mzone activity state." << std::endl;
 }
 
-MZoneActivityState::MZoneActivityState(ActivityParams &ap, std::fstream &infile)
+MZoneActivityState::MZoneActivityState(ActivityParams *ap, std::fstream &infile)
 {
-	allocateMemory(ap.numPopHistBinsPC);
-	stateRW(ap.numPopHistBinsPC, true, infile);
+	allocateMemory(ap->numPopHistBinsPC);
+	stateRW(ap->numPopHistBinsPC, true, infile);
 }
 
 MZoneActivityState::~MZoneActivityState() {}
 
-void MZoneActivityState::writeState(ActivityParams &ap, std::fstream &outfile)
+void MZoneActivityState::writeState(ActivityParams *ap, std::fstream &outfile)
 {
-	stateRW(ap.numPopHistBinsPC, false, outfile);
+	stateRW(ap->numPopHistBinsPC, false, outfile);
 }
 
 void MZoneActivityState::allocateMemory(ct_uint32_t numPopHistBinsPC)
@@ -77,31 +77,31 @@ void MZoneActivityState::allocateMemory(ct_uint32_t numPopHistBinsPC)
 	synIOPReleaseNC = std::make_unique<float[]>(NUM_NC);
 }
 
-void MZoneActivityState::initializeVals(ActivityParams &ap, int randSeed)
+void MZoneActivityState::initializeVals(ActivityParams *ap, int randSeed)
 {
 	//uncomment for actual runs 	
 	//CRandomSFMT0 randGen(randSeed);
 
 	// bc
-	std::fill(threshBC.get(), threshBC.get() + NUM_BC, ap.threshRestBC);
-	std::fill(vBC.get(), vBC.get() + NUM_BC, ap.eLeakBC);
+	std::fill(threshBC.get(), threshBC.get() + NUM_BC, ap->threshRestBC);
+	std::fill(vBC.get(), vBC.get() + NUM_BC, ap->eLeakBC);
 
 	// pc
-	std::fill(vPC.get(), vPC.get() + NUM_PC, ap.eLeakPC);
-	std::fill(threshPC.get(), threshPC.get() + NUM_PC, ap.threshRestPC);	
+	std::fill(vPC.get(), vPC.get() + NUM_PC, ap->eLeakPC);
+	std::fill(threshPC.get(), threshPC.get() + NUM_PC, ap->threshRestPC);
 
 	std::fill(pfSynWeightPC.get(), pfSynWeightPC.get()
-		+ NUM_PC * NUM_P_PC_FROM_GR_TO_PC, ap.initSynWofGRtoPC);
+		+ NUM_PC * NUM_P_PC_FROM_GR_TO_PC, ap->initSynWofGRtoPC);
 
-	std::fill(histPCPopAct.get(), histPCPopAct.get() + ap.numPopHistBinsPC, 0);	
+	std::fill(histPCPopAct.get(), histPCPopAct.get() + ap->numPopHistBinsPC, 0);
 
 	histPCPopActSum		= 0;
 	histPCPopActCurBinN = 0;
 	pcPopAct			= 0;
 
 	// IO
-	std::fill(threshIO.get(), threshIO.get() + NUM_IO, ap.threshRestIO);
-	std::fill(vIO.get(), vIO.get() + NUM_IO, ap.eLeakIO);
+	std::fill(threshIO.get(), threshIO.get() + NUM_IO, ap->threshRestIO);
+	std::fill(vIO.get(), vIO.get() + NUM_IO, ap->eLeakIO);
 
 	errDrive = 0;
 	
@@ -109,11 +109,11 @@ void MZoneActivityState::initializeVals(ActivityParams &ap, int randSeed)
 	noLTPMFNC = 0;
 	noLTDMFNC = 0;
 
-	std::fill(threshNC.get(), threshNC.get() + NUM_NC, ap.threshRestNC);
-	std::fill(vNC.get(), vNC.get() + NUM_NC, ap.eLeakNC);
+	std::fill(threshNC.get(), threshNC.get() + NUM_NC, ap->threshRestNC);
+	std::fill(vNC.get(), vNC.get() + NUM_NC, ap->eLeakNC);
 
 	std::fill(mfSynWeightNC.get(), mfSynWeightNC.get()
-		+ NUM_NC * NUM_P_NC_FROM_MF_TO_NC, ap.initSynWofMFtoNC);
+		+ NUM_NC * NUM_P_NC_FROM_MF_TO_NC, ap->initSynWofMFtoNC);
 }
 
 void MZoneActivityState::stateRW(ct_uint32_t numPopHistBinsPC, bool read, std::fstream &file)

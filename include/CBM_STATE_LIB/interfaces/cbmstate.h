@@ -25,11 +25,11 @@ class CBMState
 {
 	public:
 		CBMState();
-		CBMState(ActivityParams &ap, unsigned int nZones);
+		CBMState(ActivityParams *ap, unsigned int nZones);
 
-		~CBMState();	
+		~CBMState();
 
-		void writeState(ActivityParams &ap, std::fstream &outfile);
+		void writeState(ActivityParams *ap, std::fstream &outfile);
 
 		ct_uint32_t getNumZones();
 
@@ -50,7 +50,7 @@ class CBMState
 		InNetActivityState *innetActState;
 		MZoneActivityState **mzoneActStates;
 
-		void newState(ActivityParams &ap, unsigned int nZones,
+		void newState(ActivityParams *ap, unsigned int nZones,
 			int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed);
 	
 };

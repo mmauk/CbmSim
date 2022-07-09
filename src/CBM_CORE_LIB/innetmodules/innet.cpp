@@ -11,29 +11,29 @@ using namespace std;
 
 InNet::InNet() {}
 
-InNet::InNet(ActivityParams &ap, InNetConnectivityState *cs, InNetActivityState *as,
+InNet::InNet(ActivityParams *ap, InNetConnectivityState *cs, InNetActivityState *as,
 		int gpuIndStart, int numGPUs)
 {
-   	this->ap = ap; /* thas a deep copy! */
+	this->ap = *ap; /* deep copying what input points to, for now */
 	// TODO: deep copy below?
 	this->cs = cs; /* this is a shallow copy *yikes* */
 	this->as = as; /* as is this :/ */
 
 	this->gpuIndStart = gpuIndStart;
-	this->numGPUs	  = numGPUs;
+	this->numGPUs     = numGPUs;
 
 	// why do we allocate these here???
 	gGOGRT = allocate2DArray<float>(MAX_NUM_P_GR_FROM_GO_TO_GR, NUM_GR);
 	gMFGRT = allocate2DArray<float>(MAX_NUM_P_GR_FROM_MF_TO_GR, NUM_GR);
 
 	pGRDelayfromGRtoGOT = allocate2DArray<ct_uint32_t>(MAX_NUM_P_GR_FROM_GR_TO_GO, NUM_GR);
-	pGRfromMFtoGRT		= allocate2DArray<ct_uint32_t>(MAX_NUM_P_GR_FROM_MF_TO_GR, NUM_GR);
-	pGRfromGOtoGRT		= allocate2DArray<ct_uint32_t>(MAX_NUM_P_GR_FROM_GO_TO_GR, NUM_GR);
+	pGRfromMFtoGRT      = allocate2DArray<ct_uint32_t>(MAX_NUM_P_GR_FROM_MF_TO_GR, NUM_GR);
+	pGRfromGOtoGRT      = allocate2DArray<ct_uint32_t>(MAX_NUM_P_GR_FROM_GO_TO_GR, NUM_GR);
 	pGRfromGRtoGOT      = allocate2DArray<ct_uint32_t>(MAX_NUM_P_GR_FROM_GR_TO_GO, NUM_GR);
 	
-	apBufGRHistMask = (1 << ap.tsPerHistBinGR) - 1;
+	apBufGRHistMask = (1 << ap->tsPerHistBinGR) - 1;
 
-	sumGRInputGO 		   = new ct_uint32_t[NUM_GO];
+	sumGRInputGO           = new ct_uint32_t[NUM_GO];
 	sumInputGOGABASynDepGO = new float[NUM_GO];
 
 	initCUDA();

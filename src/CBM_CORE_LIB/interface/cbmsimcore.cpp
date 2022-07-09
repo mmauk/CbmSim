@@ -12,7 +12,7 @@
 
 CBMSimCore::CBMSimCore() {}
 
-CBMSimCore::CBMSimCore(ActivityParams &ap, CBMState *state,
+CBMSimCore::CBMSimCore(ActivityParams *ap, CBMState *state,
 	int gpuIndStart, int numGPUP2)
 {
 	CRandomSFMT0 randGen(time(0));
@@ -64,7 +64,7 @@ void CBMSimCore::writeToState()
 	}
 }
 
-void CBMSimCore::writeState(ActivityParams &ap, std::fstream& outfile)
+void CBMSimCore::writeState(ActivityParams *ap, std::fstream& outfile)
 {	
 	writeToState();
 	simState->writeState(ap, outfile);
@@ -453,7 +453,7 @@ MZone** CBMSimCore::getMZoneList()
 	return (MZone **)zones;
 }
 
-void CBMSimCore::construct(ActivityParams &ap, CBMState *state,
+void CBMSimCore::construct(ActivityParams *ap, CBMState *state,
 	int *mzoneRSeed, int gpuIndStart, int numGPUP2)
 {
 	int maxNumGPUs;

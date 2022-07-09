@@ -17,7 +17,7 @@ static bool assert(bool expr, const char *error_string, const char *func = "asse
 
 // for now, we are going to load our simulation while opening an act file
 // TODO: make activity file automatic
-static void load_activity_file(GtkWidget *widget, gpointer data)
+static void load_activity_file(GtkWidget *widget, Control *control)
 {
 	GtkWidget *dialog = gtk_file_chooser_dialog_new
 		(
@@ -38,7 +38,7 @@ static void load_activity_file(GtkWidget *widget, gpointer data)
 		char *activity_file;
 		GtkFileChooser *chooser = GTK_FILE_CHOOSER(dialog);
 		activity_file = gtk_file_chooser_get_filename(chooser);
-		//*data = (gpointer) activity_file;
+		control->init_activity_params(std::string(activity_file));
 		g_free(activity_file);
 	}
 
@@ -222,6 +222,8 @@ int gui_init_and_run(int *argc, char ***argv)
 		return 1;
 	}
 
+	Control control; /* experimental: will segfault on exit */
+
 	struct gui gui = {
 		.window = gtk_window_new(GTK_WINDOW_TOPLEVEL),
 		.grid = gtk_grid_new(),
@@ -258,8 +260,8 @@ int gui_init_and_run(int *argc, char ***argv)
 								{
 									"activate",
 									G_CALLBACK(load_activity_file),
-									NULL,
-									true
+									&control,
+									false
 								},
 								{}
 							},

@@ -20,13 +20,13 @@ class InNetActivityState
 {
 public:
 	InNetActivityState();
-	InNetActivityState(ActivityParams &ap);
+	InNetActivityState(ActivityParams *ap);
 	InNetActivityState(std::fstream &infile);
 
 	virtual ~InNetActivityState();
 
 	void writeState(std::fstream &outfile);
-	void resetState(ActivityParams &ap);
+	void resetState(ActivityParams *ap);
 
 	//mossy fiber
 	std::unique_ptr<ct_uint8_t[]> histMF{nullptr};
@@ -95,8 +95,8 @@ public:
 
 private:
 	void stateRW(bool read, std::fstream &file);
-	void allocateArrMem(ActivityParams &ap);
-	void initializeVals(ActivityParams &ap);
+	void allocateMemory();
+	void initializeVals(ActivityParams *ap);
 };
 
 #endif /* INNETACTIVITYSTATE_H_ */
