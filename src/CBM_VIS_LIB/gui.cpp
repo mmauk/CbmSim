@@ -2,6 +2,8 @@
 #include "control.h"
 #include "gui.h"
 
+static void null_callback(GtkWidget *widget, gpointer data) {}
+
 static bool assert(bool expr, const char *error_string, const char *func = "assert")
 {
 	if (!expr)
@@ -10,6 +12,36 @@ static bool assert(bool expr, const char *error_string, const char *func = "asse
 		return false;
 	}
 	return true;
+}
+
+// for now, we are going to load our simulation while opening an act file
+// TODO: make activity file automatic
+static void load_activity_file(GtkWidget *widget, gpointer data)
+{
+	GtkWidget *dialog = gtk_file_chooser_dialog_new
+		(
+		  "Open File",
+		  NULL, /* not sure how we will receive this */
+		  GTK_FILE_CHOOSER_ACTION_OPEN,
+		  "Cancel",
+		  GTK_RESPONSE_CANCEL,
+		  "Open",
+		  GTK_RESPONSE_ACCEPT,
+		  NULL
+		);
+
+	gint response = gtk_dialog_run(GTK_DIALOG(dialog));
+
+	if (response == GTK_RESPONSE_ACCEPT)
+	{
+		char *activity_file;
+		GtkFileChooser *chooser = GTK_FILE_CHOOSER(dialog);
+		activity_file = gtk_file_chooser_get_filename(chooser);
+		// TODO: process
+		g_free(activity_file);
+	}
+
+	gtk_widget_destroy(dialog);
 }
 
 static bool on_run(GtkWidget *widget, gpointer data)
@@ -78,12 +110,11 @@ static bool on_radio(GtkWidget *widget, gpointer data)
 	return assert(false, "Not implemented", __func__);
 }
 
-
 // TODO: make width and height params to this functn
 static void set_gui_window_attribs(struct gui *gui)
 {
 	gtk_window_set_title(GTK_WINDOW(gui->window), "Main Window");
-	gtk_window_set_default_size(GTK_WINDOW(gui->window), 1280, 720);
+	gtk_window_set_default_size(GTK_WINDOW(gui->window), 600, 400);
 
 	gtk_widget_add_events(gui->window, GDK_DELETE);
 	g_signal_connect(gui->window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
@@ -118,7 +149,7 @@ static void set_gui_dcn_plast_button_attribs(struct gui *gui)
 		  			1,
 		  			1);
 	g_signal_connect(gui->dcn_plast_button.widget,
-		  			 "clicked",
+					 "clicked",
 					 gui->dcn_plast_button.handler,
 					 NULL);
 }
@@ -152,7 +183,12 @@ static void set_gui_menu_attribs(struct gui *gui)
 		gtk_menu_item_set_submenu(GTK_MENU_ITEM(mi->menu_item), mi->sub_menu.menu);
 		FOREACH_NELEM(mi->sub_menu.menu_items, *sm_num_ptr, smi)
 		{
-			gtk_menu_item_set_label(GTK_MENU_ITEM(smi->menu_item), smi->label);
+			// for now using empty label as a sign that this is a different kind of menu item
+			if (smi->label != "")
+			{
+				gtk_menu_item_set_label(GTK_MENU_ITEM(smi->menu_item), smi->label);
+				g_signal_connect(smi->menu_item, "activate", smi->handler, NULL);
+			}
 			gtk_menu_shell_append(GTK_MENU_SHELL(mi->sub_menu.menu), smi->menu_item);
 		}
 		gtk_menu_shell_append(GTK_MENU_SHELL(gui->menu_bar.menu), mi->menu_item); /* add each menu item to the menu_bar */
@@ -163,7 +199,7 @@ static void set_gui_menu_attribs(struct gui *gui)
 // TODO: make recursive
 static void free_gui_objs(struct gui *gui)
 {
-	FOREACH(gui->menu_bar.menu_items, mi)
+	FOREACH_NELEM(gui->menu_bar.menu_items, NUM_SUB_MENUS, mi)
 	{
 		delete[] mi->sub_menu.menu_items;
 	}
@@ -207,42 +243,44 @@ int gui_init_and_run(int *argc, char ***argv)
 			.menu = gtk_menu_bar_new(),
 			.menu_items = new menu_item[NUM_SUB_MENUS]
 			{
-				{"File", gtk_menu_item_new(), 
+				{"File", G_CALLBACK(null_callback), gtk_menu_item_new(), 
 					{gtk_menu_new(), new menu_item[NUM_FILE_MENU_ITEMS]
 						{
-							{"Save Sim", gtk_menu_item_new(), {}},
-							{"Load Sim", gtk_menu_item_new(), {}},
+							{"Load Activity File", G_CALLBACK(load_activity_file), gtk_menu_item_new(), {}},
+							{"Save Simulation", G_CALLBACK(null_callback), gtk_menu_item_new(), {}},
+							{"",         G_CALLBACK(null_callback), gtk_separator_menu_item_new(), {}},
+							{"Quit",     G_CALLBACK(gtk_main_quit), gtk_menu_item_new(), {}},
 						}
 					}
 				},
-				{"Weights", gtk_menu_item_new(),
+				{"Weights", G_CALLBACK(null_callback), gtk_menu_item_new(),
 					{gtk_menu_new(), new menu_item[NUM_WEIGHTS_MENU_ITEMS]
 						{
-							{"Save Weights", gtk_menu_item_new(), {}},
-							{"Load Weights", gtk_menu_item_new(), {}},
-							{"Save MF-DN",   gtk_menu_item_new(), {}},
-							{"Load MF-DN",   gtk_menu_item_new(), {}}
+							{"Save Weights", G_CALLBACK(null_callback), gtk_menu_item_new(), {}},
+							{"Load Weights", G_CALLBACK(null_callback), gtk_menu_item_new(), {}},
+							{"Save MF-DN",   G_CALLBACK(null_callback), gtk_menu_item_new(), {}},
+							{"Load MF-DN",   G_CALLBACK(null_callback), gtk_menu_item_new(), {}}
 						}
 					}
 				},
-				{"PSTH", gtk_menu_item_new(),
+				{"PSTH", G_CALLBACK(null_callback), gtk_menu_item_new(),
 					{gtk_menu_new(), new menu_item[NUM_PSTH_MENU_ITEMS]
 						{
-							{"Save GR", gtk_menu_item_new(), {}},
-							{"Save GO", gtk_menu_item_new(), {}},
-							{"Save PC", gtk_menu_item_new(), {}},
-							{"Save DN", gtk_menu_item_new(), {}},
-							{"Save CF", gtk_menu_item_new(), {}},
-							{"Save BC", gtk_menu_item_new(), {}},
-							{"Save SC", gtk_menu_item_new(), {}},
-							{"Save MF", gtk_menu_item_new(), {}}
+							{"Save GR", G_CALLBACK(null_callback), gtk_menu_item_new(), {}},
+							{"Save GO", G_CALLBACK(null_callback), gtk_menu_item_new(), {}},
+							{"Save PC", G_CALLBACK(null_callback), gtk_menu_item_new(), {}},
+							{"Save DN", G_CALLBACK(null_callback), gtk_menu_item_new(), {}},
+							{"Save CF", G_CALLBACK(null_callback), gtk_menu_item_new(), {}},
+							{"Save BC", G_CALLBACK(null_callback), gtk_menu_item_new(), {}},
+							{"Save SC", G_CALLBACK(null_callback), gtk_menu_item_new(), {}},
+							{"Save MF", G_CALLBACK(null_callback), gtk_menu_item_new(), {}}
 						}
 					}
 				},
-				{"Analysis", gtk_menu_item_new(),
+				{"Analysis", G_CALLBACK(null_callback), gtk_menu_item_new(),
 					{gtk_menu_new(), new menu_item[NUM_ANALYSIS_MENU_ITEMS]
 						{
-							{"Analysis", gtk_menu_item_new(), {}}
+							{"Analysis", G_CALLBACK(null_callback), gtk_menu_item_new(), {}}
 						}
 					}
 				}
@@ -252,79 +290,22 @@ int gui_init_and_run(int *argc, char ***argv)
 
 	// set all attribs
 	set_gui_window_attribs(&gui);
-	
-	GtkWidget *v_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-	gtk_container_add(GTK_CONTAINER(gui.window), v_box);
-
 	set_gui_grid_attribs(&gui);
 	set_gui_normal_button_attribs(&gui);
 	set_gui_dcn_plast_button_attribs(&gui);
 	set_gui_radio_button_attribs(&gui);
 	set_gui_menu_attribs(&gui);
 
+	// organize menu bar and grid vertically
+	GtkWidget *v_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+	gtk_container_add(GTK_CONTAINER(gui.window), v_box);
 	gtk_box_pack_start(GTK_BOX(v_box), gui.menu_bar.menu, FALSE, TRUE, 0);
 	gtk_box_pack_start(GTK_BOX(v_box), gui.grid, FALSE, TRUE, 0);
-	
 
-// ========================== purely declarative below =================================
-
-	//GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-
-	//GtkWidget *v_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-
-	//GtkWidget *menu_bar = gtk_menu_bar_new();
-
-	//// file menu init
-	//GtkWidget *file_menu_item = gtk_menu_item_new();
-	//GtkWidget *file_menu = gtk_menu_new();
-
-	//GtkWidget *open_file_menu_item = gtk_menu_item_new();
-	//GtkWidget *open_file_menu = gtk_menu_new();
-
-	//GtkWidget *save_file_menu_item = gtk_menu_item_new();
-	//GtkWidget *save_file_menu = gtk_menu_new();
-
-	//// weights menu init
-	//GtkWidget *weights_menu_item = gtk_menu_item_new();
-	//GtkWidget *weights_menu = gtk_menu_new();
-
-	//GtkWidget *open_weights_menu_item = gtk_menu_item_new();
-	//GtkWidget *open_weights_file_menu = gtk_menu_new();
-
-	//GtkWidget *save_weights_menu_item = gtk_menu_item_new();
-	//GtkWidget *save_weights_menu = gtk_menu_new();
-	//
-	//gtk_container_add(GTK_CONTAINER(window), v_box);
-
-	//// set file menu relations
-	//gtk_menu_item_set_label(GTK_MENU_ITEM(file_menu_item), "File");
-	//gtk_menu_item_set_submenu(GTK_MENU_ITEM(file_menu_item), file_menu);
-
-	//gtk_menu_item_set_label(GTK_MENU_ITEM(open_file_menu_item), "Open File");
-	//gtk_menu_shell_append(GTK_MENU_SHELL(file_menu), open_file_menu_item);
-
-	//gtk_menu_item_set_label(GTK_MENU_ITEM(save_file_menu_item), "Save File");
-	//gtk_menu_shell_append(GTK_MENU_SHELL(file_menu), save_file_menu_item);
-
-	//gtk_menu_shell_append(GTK_MENU_SHELL(menu_bar), file_menu_item);
-
-	//// set weight menu relations
-	//gtk_menu_item_set_label(GTK_MENU_ITEM(weights_menu_item), "Weights");
-	//gtk_menu_item_set_submenu(GTK_MENU_ITEM(weights_menu_item), weights_menu);
-
-	//gtk_menu_item_set_label(GTK_MENU_ITEM(open_weights_menu_item), "Open weights");
-	//gtk_menu_shell_append(GTK_MENU_SHELL(weights_menu), open_weights_menu_item);
-
-	//gtk_menu_item_set_label(GTK_MENU_ITEM(save_weights_menu_item), "Save weights");
-	//gtk_menu_shell_append(GTK_MENU_SHELL(weights_menu), save_weights_menu_item);
-
-	//gtk_menu_shell_append(GTK_MENU_SHELL(menu_bar), weights_menu_item);
-
-	//gtk_box_pack_start(GTK_BOX(v_box), menu_bar, FALSE, FALSE, 0);
-
+	// show, run, and free
 	gtk_widget_show_all(gui.window);
 	gtk_main();
-	//free_gui_objs(&gui);
+	free_gui_objs(&gui);
 	return 0;
 }
 

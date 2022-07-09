@@ -8,11 +8,13 @@
 #define NUM_PLASTICITY_RADIOS 4
 #define NUM_SUB_MENUS 4
 
-#define NUM_FILE_MENU_ITEMS 2
+#define NUM_FILE_MENU_ITEMS 4
 #define NUM_WEIGHTS_MENU_ITEMS 4
 #define NUM_PSTH_MENU_ITEMS 8
 #define NUM_ANALYSIS_MENU_ITEMS 1
 
+// This is here because dynamic arrays cannot be used
+// with sizeof :<
 const int num_item_per_sub_menu[NUM_SUB_MENUS] = {
 	NUM_FILE_MENU_ITEMS,
 	NUM_WEIGHTS_MENU_ITEMS,
@@ -45,6 +47,7 @@ struct menu
 struct menu_item
 {
 	const gchar *label;
+	GCallback handler;
 	GtkWidget *menu_item;
 	struct menu sub_menu; /* single sub menu for every menu item */
 };
