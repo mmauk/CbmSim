@@ -47,7 +47,13 @@ Control::~Control()
 }
 
 // TODO: implement
-void Control::init_activity_params(std::string actParamFile) {}
+void Control::init_activity_params(std::string actParamFile)
+{
+	if (!ap)
+	{
+		ap = new ActivityParams(actParamFile);
+	}
+}
 
 void Control::initializeOutputArrays(int csLength, int numTrainingTrials)
 {

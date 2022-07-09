@@ -17,7 +17,7 @@ static bool assert(bool expr, const char *error_string, const char *func = "asse
 
 // for now, we are going to load our simulation while opening an act file
 // TODO: make activity file automatic
-static void load_activity_file(GtkWidget *widget, Control *control)
+static void load_activity_params_from_file(GtkWidget *widget, Control *control)
 {
 	GtkWidget *dialog = gtk_file_chooser_dialog_new
 		(
@@ -38,7 +38,8 @@ static void load_activity_file(GtkWidget *widget, Control *control)
 		char *activity_file;
 		GtkFileChooser *chooser = GTK_FILE_CHOOSER(dialog);
 		activity_file = gtk_file_chooser_get_filename(chooser);
-		control->init_activity_params(std::string(activity_file));
+		control = new Control(std::string(activity_file));
+		//control->init_activity_params(std::string(activity_file));
 		g_free(activity_file);
 	}
 
@@ -173,45 +174,62 @@ static void set_gui_radio_button_attribs(struct gui *gui)
 	}
 }
 
-// TODO: make recursive
-static void set_gui_menu_attribs(struct gui *gui)
+static void set_gui_menu_item_helper(struct menu_item *menu_item); /* forward declare */
+
+// TODO: debug
+static void set_gui_menu_helper(struct menu *menu)
 {
-	/* iterate through each sub menu and append all menu items to given sub menu */
-	const int *sm_num_ptr = num_item_per_sub_menu;
-	FOREACH_NELEM(gui->menu_bar.menu_items, NUM_SUB_MENUS, mi)
-	{
-		gtk_menu_item_set_label(GTK_MENU_ITEM(mi->menu_item), mi->label);
-		gtk_menu_item_set_submenu(GTK_MENU_ITEM(mi->menu_item), mi->sub_menu.menu);
-		FOREACH_NELEM(mi->sub_menu.menu_items, *sm_num_ptr, smi)
+   FOREACH_NELEM(menu->menu_items, menu->num_menu_items, mi)
+   {
+		if (mi) /* recursion always terminates on sub_menus, so somewhat unnecessary */
 		{
-			// for now using empty label as a sign that this is a different kind of menu item
-			if (smi->label != "")
+			if (mi->label != "") /* by extension, every menu_item has a label */
 			{
-				gtk_menu_item_set_label(GTK_MENU_ITEM(smi->menu_item), smi->label);
-				if (smi->signal.swapped)
+				gtk_menu_item_set_label(GTK_MENU_ITEM(mi->menu_item), mi->label);
+				// careful: when mi->sub_menu.menu is NULL, removes this mi's submenu,
+				// though since we are initializing, this should effectively do nothing
+				gtk_menu_item_set_submenu(GTK_MENU_ITEM(mi->menu_item), mi->sub_menu.menu); 
+			}
+			if (mi->signal.signal) /* little hack for checking whether mi->signal was non empty initialized */
+			{
+				if (mi->signal.swapped)
 				{
-					g_signal_connect_swapped(smi->menu_item, smi->signal.signal, smi->signal.handler, smi->signal.data);
+					g_signal_connect_swapped(mi->menu_item, mi->signal.signal, mi->signal.handler, mi->signal.data);
 				}
 				else
 				{
-					g_signal_connect(smi->menu_item, smi->signal.signal, smi->signal.handler, smi->signal.data);
+					g_signal_connect(mi->menu_item, mi->signal.signal, mi->signal.handler, mi->signal.data);
 				}
 			}
-			gtk_menu_shell_append(GTK_MENU_SHELL(mi->sub_menu.menu), smi->menu_item);
+			gtk_menu_shell_append(GTK_MENU_SHELL(menu->menu), mi->menu_item);
+			set_gui_menu_item_helper(mi);
 		}
-		gtk_menu_shell_append(GTK_MENU_SHELL(gui->menu_bar.menu), mi->menu_item); /* add each menu item to the menu_bar */
-		sm_num_ptr++;
-	}
+   }
 }
 
-// TODO: make recursive
-static void free_gui_objs(struct gui *gui)
+static void set_gui_menu_item_helper(struct menu_item *menu_item)
 {
-	FOREACH_NELEM(gui->menu_bar.menu_items, NUM_SUB_MENUS, mi)
+	if (!menu_item->sub_menu.menu) return; // little hack for checking whether sub_menu was empty initialized
+	set_gui_menu_helper(&menu_item->sub_menu);
+}
+
+static void set_gui_menu_attribs(struct gui *gui)
+{
+	set_gui_menu_helper(&gui->menu_bar);
+}
+
+static void free_gui_menu_helper(struct menu *menu)
+{
+	FOREACH_NELEM(menu->menu_items, menu->num_menu_items, mi)
 	{
-		delete[] mi->sub_menu.menu_items;
+		if (mi->sub_menu.menu) free_gui_menu_helper(&mi->sub_menu);
 	}
-	delete[] gui->menu_bar.menu_items;
+	delete[] menu->menu_items;
+}
+
+static void free_gui_menus(struct gui *gui)
+{
+	free_gui_menu_helper(&gui->menu_bar);
 } 
 
 int gui_init_and_run(int *argc, char ***argv)
@@ -222,7 +240,7 @@ int gui_init_and_run(int *argc, char ***argv)
 		return 1;
 	}
 
-	Control control; /* experimental: will segfault on exit */
+	Control *control; /* experimental: will segfault on exit */
 
 	struct gui gui = {
 		.window = gtk_window_new(GTK_WINDOW_TOPLEVEL),
@@ -251,21 +269,37 @@ int gui_init_and_run(int *argc, char ***argv)
 		},
 		.menu_bar = {
 			.menu = gtk_menu_bar_new(),
-			.menu_items = new menu_item[NUM_SUB_MENUS]
+			.num_menu_items = NUM_SUB_MENU_ITEMS,
+			.menu_items = new menu_item[NUM_SUB_MENU_ITEMS]
 			{
 				{"File", gtk_menu_item_new(), {},
-					{gtk_menu_new(), new menu_item[NUM_FILE_MENU_ITEMS]
+					{gtk_menu_new(), NUM_FILE_MENU_ITEMS, new menu_item[NUM_FILE_MENU_ITEMS]
 						{
-							{"Load Activity File", gtk_menu_item_new(),
-								{
-									"activate",
-									G_CALLBACK(load_activity_file),
-									&control,
-									false
-								},
-								{}
+							{"Load...", gtk_menu_item_new(), {},
+								{gtk_menu_new(), NUM_FILE_SUB_MENU_ITEMS, new menu_item[NUM_FILE_SUB_MENU_ITEMS]
+									{
+										{"Activity Parameter File", gtk_menu_item_new(),
+											{
+												"activate",
+												G_CALLBACK(load_activity_params_from_file),
+												control,
+												false
+											},
+											{}
+										},
+										{"Connectivity Parameter File", gtk_menu_item_new(),
+											{
+												"activate",
+												G_CALLBACK(null_callback),
+												NULL,
+												false
+											},
+											{}
+										}
+									}
+								}
 							},
-							{"Save Simulation", gtk_menu_item_new(),
+							{"Save Simulation...", gtk_menu_item_new(),
 								{
 									"activate",
 									G_CALLBACK(null_callback),
@@ -288,7 +322,7 @@ int gui_init_and_run(int *argc, char ***argv)
 					}
 				},
 				{"Weights", gtk_menu_item_new(), {},
-					{gtk_menu_new(), new menu_item[NUM_WEIGHTS_MENU_ITEMS]
+					{gtk_menu_new(), NUM_WEIGHTS_MENU_ITEMS, new menu_item[NUM_WEIGHTS_MENU_ITEMS]
 						{
 							{"Save Weights", gtk_menu_item_new(),
 								{
@@ -325,18 +359,19 @@ int gui_init_and_run(int *argc, char ***argv)
 									false
 								},
 								{}
-							},
+							}
 						}
 					}
 				},
 				{"PSTH", gtk_menu_item_new(), {},
-					{gtk_menu_new(), new menu_item[NUM_PSTH_MENU_ITEMS]
+					{gtk_menu_new(), NUM_PSTH_MENU_ITEMS, new menu_item[NUM_PSTH_MENU_ITEMS]
 						{
 							{"Save GR", gtk_menu_item_new(),
 								{
 									"activate",
 									G_CALLBACK(null_callback),
 									NULL,
+									false
 								},
 								{}
 							},
@@ -407,7 +442,7 @@ int gui_init_and_run(int *argc, char ***argv)
 					}
 				},
 				{"Analysis", gtk_menu_item_new(), {},
-					{gtk_menu_new(), new menu_item[NUM_ANALYSIS_MENU_ITEMS]
+					{gtk_menu_new(), NUM_ANALYSIS_MENU_ITEMS, new menu_item[NUM_ANALYSIS_MENU_ITEMS]
 						{
 							{"Analysis", gtk_menu_item_new(),
 								{
@@ -442,7 +477,7 @@ int gui_init_and_run(int *argc, char ***argv)
 	// show, run, and free
 	gtk_widget_show_all(gui.window);
 	gtk_main();
-	free_gui_objs(&gui);
+	free_gui_menus(&gui);
 	return 0;
 }
 
