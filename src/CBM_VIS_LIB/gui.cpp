@@ -50,44 +50,57 @@ static void on_init_sim(GtkWidget *widget, Control *control)
 	if (control->ap) control->construct_control();
 	else 
 	{
-		fprintf(stderr, "[ERROR] trying to initialize a simulation without loading a file.\n");
-		fprintf(stderr, "[ERROR] (Hint: Load an activity parameter file first then initialize the simulation.)\n");
+		fprintf(stderr, "[ERROR]: trying to initialize a simulation without loading a file.\n");
+		fprintf(stderr, "[ERROR]: (Hint: Load an activity parameter file first then initialize the simulation.)\n");
 	}
 }
 
-static bool on_run(GtkWidget *widget, Control *control)
+static void on_run(GtkWidget *widget, Control *control)
 {
-	float mfW = 0.0035; // mf weights (to what?)
-	float ws = 0.3275; // weight scale
-	float gogr = 0.0105; // gogr weights
-
-	float grW[8] = { 0.00056, 0.0007, 0.000933, 0.0014, 0.0028, 0.0056, 0.0112, 0.0224 };
-	int grWLength = sizeof(grW) / sizeof(grW[0]);
-
-	std::cout << "[INFO]: Running all simulations..." << std::endl;
-	clock_t time = clock();
-	for (int goRecipParamNum = 0; goRecipParamNum < 1; goRecipParamNum++)
+	if (control->simState && control->simCore && control->mfFreq && control->mfs)
 	{
-		float GRGO = grW[goRecipParamNum] * ws; // scaled grgo weights
-		float MFGO = mfW * ws; // scaled mfgo weights
-		float GOGR = gogr; // gogr weights, unchanged
-		for (int simNum = 0; simNum < 1; simNum++)
+
+		float mfW = 0.0035; // mf weights (to what?)
+		float ws = 0.3275; // weight scale
+		float gogr = 0.0105; // gogr weights
+
+		float grW[8] = { 0.00056, 0.0007, 0.000933, 0.0014, 0.0028, 0.0056, 0.0112, 0.0224 };
+		int grWLength = sizeof(grW) / sizeof(grW[0]);
+
+		std::cout << "[INFO]: Running all simulations..." << std::endl;
+		clock_t time = clock();
+		for (int goRecipParamNum = 0; goRecipParamNum < 1; goRecipParamNum++)
 		{
-			std::cout << "[INFO]: Running simulation #" << (simNum + 1) << std::endl;
-			control->runTrials(simNum, GOGR, GRGO, MFGO);
-			// TODO: put in output file dir to save to!
-			//control.saveOutputArraysToFile(goRecipParamNum, simNum);
+			float GRGO = grW[goRecipParamNum] * ws; // scaled grgo weights
+			float MFGO = mfW * ws; // scaled mfgo weights
+			float GOGR = gogr; // gogr weights, unchanged
+			for (int simNum = 0; simNum < 1; simNum++)
+			{
+				std::cout << "[INFO]: Running simulation #" << (simNum + 1) << std::endl;
+				control->runTrials(simNum, GOGR, GRGO, MFGO);
+				// TODO: put in output file dir to save to!
+				//control.saveOutputArraysToFile(goRecipParamNum, simNum);
+			}
 		}
+		time = clock() - time;
+		std::cout << "[INFO] All simulations finished in "
+		          << (float) time / CLOCKS_PER_SEC << "s." << std::endl;
 	}
-	time = clock() - time;
-	std::cout << "[INFO] All simulations finished in "
-	          << (float) time / CLOCKS_PER_SEC << "s." << std::endl;
-	return true;
+	else
+	{
+		fprintf(stderr, "[ERROR]: trying to run an uninitialized simulation.\n");
+		fprintf(stderr, "[ERROR]: (Hint: initialize the simulation before running it.)\n");
+	}
 }
 
-static bool on_pause(GtkWidget *widget, gpointer data)
+static void on_pause(GtkWidget *widget, Control *control)
 {
-	return assert(false, "Not implemented", __func__);
+	control->sim_is_paused = true;
+}
+
+static void on_continue(GtkWidget *widget, Control *control)
+{
+	control->sim_is_paused = false;
 }
 
 static bool on_gr_raster(GtkWidget *widget, gpointer data)
@@ -270,11 +283,19 @@ int gui_init_and_run(int *argc, char ***argv)
 					false
 				}
 			},
-			{"Pause", gtk_button_new(), 2, 0,
+			{"Pause", gtk_button_new(), 0, 1,
 				{
 					"clicked",
 					G_CALLBACK(on_pause),
-					NULL,
+					control,
+					false
+				}
+			},
+			{"Continue", gtk_button_new(), 1, 1,
+				{
+					"clicked",
+					G_CALLBACK(on_continue),
+					control,
 					false
 				}
 			},

@@ -1,4 +1,5 @@
 #include <time.h>
+#include <gtk/gtk.h>
 #include "control.h"
 
 Control::Control() {}
@@ -88,7 +89,7 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 
 	float medTrials;
 	clock_t timer;
-
+	clock_t paused_time; /* is this okay??? */
 	int rasterCounter = 0;
 	int goSpkCounter[NUM_GO] = {0};
 
@@ -96,8 +97,8 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 	{
 		timer = clock();
 		
-		// re-initialize spike counter vector	
-		std::fill(goSpkCounter, goSpkCounter + NUM_GO, 0);	
+		// re-initialize spike counter vector
+		std::fill(goSpkCounter, goSpkCounter + NUM_GO, 0);
 
 		int PSTHCounter = 0;	
 		float gGRGO_sum = 0;
@@ -109,15 +110,14 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 		
 		// Homeostatic plasticity trials
 		if (trial >= homeoTuningTrials)
-		{	
-		
+		{
 			for (int tts = 0; tts < trialTime; tts++)
 			{			
 				// TODO: get the model for these periods, update accordingly
 				if (tts == csStart + csLength)
 				{
-		   		   // Deliver US 
-				   // why zoneN and errDriveRelative set manually???
+					// Deliver US 
+					// why zoneN and errDriveRelative set manually???
 					simCore->updateErrDrive(0, 0.0);
 				}
 				
@@ -144,7 +144,7 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 				bool *isTrueMF = mfs->calcTrueMFs(mfFreq->getMFBG());
 				simCore->updateTrueMFs(isTrueMF);
 				simCore->updateMFInput(mfAP);
-				simCore->calcActivity(goMin, simNum, GOGR, GRGO, MFGO, gogoW, spillFrac);	
+				simCore->calcActivity(goMin, simNum, GOGR, GRGO, MFGO, gogoW, spillFrac);
 				
 				if (tts >= csStart && tts < csStart + csLength)
 				{
@@ -162,10 +162,10 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 							gMFGO_sum 		+= mfgoG[i];
 					}
 				}
-				// why is this case separate from the above	
+				// why is this case separate from the above
 				if (tts == csStart + csLength)
 				{
-					countGOSpikes(goSpkCounter, medTrials);	
+					countGOSpikes(goSpkCounter, medTrials);
 					std::cout << "mean gGRGO   = " << gGRGO_sum / (NUM_GO * csLength) << std::endl;
 					std::cout << "mean gMFGO   = " << gMFGO_sum / (NUM_GO * csLength) << std::endl;
 					std::cout << "GR:MF ratio  = " << gGRGO_sum / gMFGO_sum << std::endl;
@@ -178,6 +178,30 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 
 					PSTHCounter++;
 					rasterCounter++;
+				}
+
+				// check the event queue after every iteration
+				// TODO: put this inside a preprocessor conditional so we do this for gui and process_events for tui
+				while (gtk_events_pending()) gtk_main_iteration();
+
+				if (sim_is_paused)
+				{
+					// FIXME: timer is busted
+					paused_time = clock() - timer;
+					std::cout << "[INFO]: Simulation is paused at time step "
+							  << tts << " of trial " << trial << "." << std::endl;
+					while(true)
+					{
+						// Weird edge case not taken into account: if there are events pending after user hits continue...
+						if (gtk_events_pending() || sim_is_paused) gtk_main_iteration();
+						else
+						{
+							std::cout << "[INFO]: Continuing..." << std::endl;
+							break;
+						}
+					}
+					paused_time = clock() - paused_time;
+					timer -= paused_time;
 				}
 			}
 		}

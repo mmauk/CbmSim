@@ -36,6 +36,8 @@ class Control
 		ECMFPopulation *mfFreq = NULL;
 		PoissonRegenCells *mfs = NULL;
 
+		bool sim_is_paused = false;
+
 		const float *grgoG, *mfgoG;
 		const ct_uint8_t *mfAP;
 
