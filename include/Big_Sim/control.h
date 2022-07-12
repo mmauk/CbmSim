@@ -36,6 +36,7 @@ class Control
 		ECMFPopulation *mfFreq = NULL;
 		PoissonRegenCells *mfs = NULL;
 
+		bool output_arrays_initialized = false; /* temporary, going to refactor soon */
 		bool sim_is_paused = false;
 
 		const float *grgoG, *mfgoG;
@@ -147,6 +148,10 @@ class Control
 		const ct_uint8_t* goSpks; 
 	
 		void init_activity_params(std::string actParamFile);
+
+		void init_sim_state(std::string stateFile);
+	
+		void save_sim_state(std::string stateFile);
 
 		void initializeOutputArrays(int csLength, int numTrainingTrials);
 

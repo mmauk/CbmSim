@@ -9,6 +9,35 @@
 
 CBMState::CBMState() {}
 
+CBMState::CBMState(ActivityParams *ap, unsigned int nZones, std::string inFile) : numZones(nZones)
+{
+	std::fstream inStateFileBuffer(inFile.c_str(), std::ios::in | std::ios::binary);
+	std::cout << "[INFO]: Allocating and initializing innet connectivity state from file..." << std::endl;
+	innetConState  = new InNetConnectivityState(inStateFileBuffer);
+	std::cout << "[INFO]: Finished allocating and initializing innet connectivity state from file." << std::endl;
+	std::cout << "[INFO]: Allocating and initializing innet activity state from file..." << std::endl;
+	innetActState  = new InNetActivityState(inStateFileBuffer);
+	std::cout << "[INFO]: Finished allocating and initializing innet activity state from file." << std::endl;
+
+	mzoneConStates = new MZoneConnectivityState*[nZones];
+	mzoneActStates = new MZoneActivityState*[nZones];
+
+	for (int i = 0; i < nZones; i++)
+	{
+		std::cout << "[INFO]: Allocating and initializing mzone "
+				  << i << " connectivity state from file..." << std::endl;
+		mzoneConStates[i] = new MZoneConnectivityState(inStateFileBuffer);
+		std::cout << "[INFO]: Finished allocating and initializing mzone "
+				  << i << " connectivity state from file." << std::endl;
+		std::cout << "[INFO]: Allocating and initializing mzone "
+				  << i << " activity state from file..." << std::endl;
+		mzoneActStates[i] = new MZoneActivityState(ap, inStateFileBuffer);
+		std::cout << "[INFO]: Finished allocating and initializing mzone "
+				  << i << " activity state from file." << std::endl;
+	}
+	inStateFileBuffer.close();
+}
+
 CBMState::CBMState(ActivityParams *ap, unsigned int nZones) : numZones(nZones)
 {
 	CRandomSFMT randGen(time(0));
@@ -59,24 +88,39 @@ void CBMState::newState(ActivityParams *ap, unsigned int nZones, int innetCRSeed
 	}
 }
 
+void CBMState::readState(ActivityParams *ap, std::fstream &infile)
+{
+	innetConState->readState(infile);
+	innetActState->readState(infile);
+
+	for (int i = 0; i < numZones; i++)
+	{
+		mzoneConStates[i]->readState(infile);
+		mzoneActStates[i]->readState(ap, infile);
+	}
+}
+
 void CBMState::writeState(ActivityParams *ap, std::fstream &outfile)
 {
-	// Debatable whether to write std::endl to file. Yes it flushes the output
-	// after sending a newline, but doing this too often can lead to poor disk
-	// access performance. Whatever that means.
-	//outfile << numZones << std::endl;
-
-	// have to comment these out for now: no methods for cp
-	//cp.writeParams(outfile);
-	//ap->writeParams(outfile);
-	
+	std::cout << "[INFO]: Writing innet connectivity state to file..." << std::endl;   
 	innetConState->writeState(outfile);
+	std::cout << "[INFO]: Finished writing innet connectivity state to file." << std::endl;
+	std::cout << "[INFO]: Writing innet activity state to file..." << std::endl;   
 	innetActState->writeState(outfile);
+	std::cout << "[INFO]: Finished writing innet activity state to file." << std::endl;
 	
-	for (int i=0; i < numZones; i++)
+	for (int i = 0; i < numZones; i++)
 	{
+		std::cout << "[INFO]: Writing mzone "
+				  << i << " connectivity state to file..." << std::endl;   
 		mzoneConStates[i]->writeState(outfile);
+		std::cout << "[INFO]: Finished writing mzone "
+				  << i << " connectivity state to file..." << std::endl;   
+		std::cout << "[INFO]: Writing mzone "
+				  << i << " activity state to file..." << std::endl;   
 		mzoneActStates[i]->writeState(ap, outfile);
+		std::cout << "[INFO]: Finished writing mzone "
+				  << i << " activity state to file..." << std::endl;   
 	}
 }
 

@@ -15,6 +15,8 @@
 
 #define NUM_FILE_SUB_MENU_ITEMS 2
 
+#define DEFAULT_STATE_FILE_NAME "connectivity_state"
+
 //const int num_item_per_sub_menu[NUM_SUB_MENUS] = {
 //	NUM_FILE_MENU_ITEMS,
 //	NUM_WEIGHTS_MENU_ITEMS,

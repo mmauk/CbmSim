@@ -85,7 +85,7 @@ public:
 
 	const ct_uint32_t* exportAPBufBC();
 	const ct_uint32_t* exportAPBufPC();
-	const ct_uint32_t* exportAPBufIO();
+	const ct_uint8_t* exportAPBufIO();
 	const ct_uint32_t* exportAPBufNC();
 
 private:

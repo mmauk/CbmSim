@@ -19,7 +19,7 @@ BUILD_PATH	  = $(ROOT)build/
 
 # NOTE using update alternatives: to switch back to ver11, use update-alternatives --config g++
 CXX              = g++
-# CXXFLAGS         = -m64 -pipe -std=c++14 -g 
+# CXXFLAGS         = -m64 -pipe -std=c++14 -g
 CXXFLAGS         = -m64 -pipe -std=c++14 -O3
 # MODULE_CXX_FLAGS = -m64 -pipe -std=c++14 -g -fPIC
 MODULE_CXX_FLAGS = -m64 -pipe -std=c++14 -O2 -fPIC
@@ -909,6 +909,7 @@ clean:
 	$(RM) $(CBM_STATE_OBJ_PATH)  
 	$(RM) $(CBM_TOOLS_OBJ_PATH)  
 	$(RM) $(CXX_TOOLS_OBJ_PATH)  
+	$(RM) $(CBM_VIS_OBJ_PATH)
 	$(RM) $(BIG_SIM_OBJ_PATH)      
 	$(RM) $(TARGET)
 

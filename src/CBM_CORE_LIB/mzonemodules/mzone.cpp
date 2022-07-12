@@ -739,9 +739,9 @@ const ct_uint32_t* MZone::exportAPBufPC()
 	return (const ct_uint32_t *)as->apBufPC.get();
 }
 
-const ct_uint32_t* MZone::exportAPBufIO()
+const ct_uint8_t* MZone::exportAPBufIO()
 {
-	return (const ct_uint32_t *)as->apBufIO.get();
+	return (const ct_uint8_t *)as->apBufIO.get();
 }
 
 const ct_uint32_t* MZone::exportAPBufNC()

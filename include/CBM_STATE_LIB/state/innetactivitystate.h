@@ -25,6 +25,7 @@ public:
 
 	virtual ~InNetActivityState();
 
+	void readState(std::fstream &infile);
 	void writeState(std::fstream &outfile);
 	void resetState(ActivityParams *ap);
 
@@ -44,12 +45,11 @@ public:
 	std::unique_ptr<float[]> depAmpMFGO{nullptr};
 	std::unique_ptr<float[]> gi_MFtoGO{nullptr};
 	std::unique_ptr<float[]> gSum_MFGO{nullptr};
-
 	std::unique_ptr<ct_uint32_t[]> inputGOGO{nullptr};
+
 	std::unique_ptr<float[]> gi_GOtoGO{nullptr};
 	std::unique_ptr<float[]> depAmpGOGO{nullptr};
 	std::unique_ptr<float[]> gSum_GOGO{nullptr};
-
 	std::unique_ptr<float[]> depAmpGOGR{nullptr};
 	std::unique_ptr<float[]> dynamicAmpGOGR{nullptr};
 
@@ -58,7 +58,6 @@ public:
 	std::unique_ptr<float[]> gNMDAIncMFGO{nullptr};
 	std::unique_ptr<float[]> gGRGO{nullptr};
 	std::unique_ptr<float[]> gGRGO_NMDA{nullptr};
-	std::unique_ptr<float[]> gGOGO{nullptr};
 
 	//granule cells
 	std::unique_ptr<float[]> depAmpMFGR{nullptr};
@@ -81,12 +80,12 @@ public:
 	std::unique_ptr<float[]> gGOSumGR{nullptr};
 	std::unique_ptr<float[]> threshGR{nullptr};
 	std::unique_ptr<float[]> vGR{nullptr};
-	std::unique_ptr<float[]> gKCaGR{nullptr};	   
+	std::unique_ptr<float[]> gKCaGR{nullptr};
 	std::unique_ptr<ct_uint64_t[]> historyGR{nullptr};
 
 	// TODO: MOVE SC CELLS to mzoneactivitystate.... :pogO:
 	//stellate cells
-	std::unique_ptr<ct_uint8_t[]> apSC{nullptr};	
+	std::unique_ptr<ct_uint8_t[]> apSC{nullptr};
 	std::unique_ptr<ct_uint32_t[]> apBufSC{nullptr};
 	std::unique_ptr<float[]> gPFSC{nullptr};
 	std::unique_ptr<float[]> threshSC{nullptr};

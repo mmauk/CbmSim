@@ -26,10 +26,11 @@ class InNetConnectivityState
 public:
 	InNetConnectivityState();
 	InNetConnectivityState(unsigned int msPerStep, int randSeed);
-	//InNetConnectivityState(ConnectivityParams *parameters, std::fstream &infile);
+	InNetConnectivityState(std::fstream &infile);
 	//InNetConnectivityState(const InNetConnectivityState &state);
 	~InNetConnectivityState();
-	
+
+	void readState(std::fstream &infile);
 	void writeState(std::fstream &outfile);
 
 	//glomerulus
@@ -63,8 +64,8 @@ public:
 	// coincidentally, numcongotogo == maxnumpgogabaingogo
 	int *numpGOGABAInGOGO;
 	int **pGOGABAInGOGO;
-	int *numpGOGABAOutGOGO;			
-	int **pGOGABAOutGOGO;			
+	int *numpGOGABAOutGOGO;
+	int **pGOGABAOutGOGO;
 
 	// go <-> go gap junctions
 	int *numpGOCoupInGOGO;

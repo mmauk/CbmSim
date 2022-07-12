@@ -16,7 +16,7 @@ static bool assert(bool expr, const char *error_string, const char *func = "asse
 }
 
 // for now we load in the activity params file and init the sim with a separate button
-static void load_activity_params_from_file(GtkWidget *widget, Control *control)
+static void on_load_activity_param_file(GtkWidget *widget, Control *control)
 {
 	GtkWidget *dialog = gtk_file_chooser_dialog_new
 		(
@@ -34,14 +34,76 @@ static void load_activity_params_from_file(GtkWidget *widget, Control *control)
 
 	if (response == GTK_RESPONSE_ACCEPT)
 	{
-		char *activity_file;
 		GtkFileChooser *chooser = GTK_FILE_CHOOSER(dialog);
-		activity_file = gtk_file_chooser_get_filename(chooser);
+		char *activity_file = gtk_file_chooser_get_filename(chooser);
+		// TODO: pop-up warning for invalid file
 		control->init_activity_params(std::string(activity_file));
 		g_free(activity_file);
 	}
 
 	gtk_widget_destroy(dialog);
+}
+
+static void on_load_connectivity_state_file(GtkWidget *widget, Control *control)
+{
+	GtkWidget *dialog = gtk_file_chooser_dialog_new
+		(
+		  "Open File",
+		  NULL, /* no parent window is fine for now */
+		  GTK_FILE_CHOOSER_ACTION_OPEN,
+		  "Cancel",
+		  GTK_RESPONSE_CANCEL,
+		  "Open",
+		  GTK_RESPONSE_ACCEPT,
+		  NULL
+		);
+
+	gint response = gtk_dialog_run(GTK_DIALOG(dialog));
+
+	if (response == GTK_RESPONSE_ACCEPT)
+	{
+		GtkFileChooser *chooser = GTK_FILE_CHOOSER(dialog);
+		char *sim_state_file = gtk_file_chooser_get_filename(chooser);
+		// TODO: pop-up warning for invalid file
+		control->init_sim_state(std::string(sim_state_file));
+		g_free(sim_state_file);
+	}
+
+	gtk_widget_destroy(dialog);
+
+}
+
+static void on_save_state(GtkWidget *widget, Control *control)
+{
+	GtkWidget *dialog = gtk_file_chooser_dialog_new
+		(
+		  "Save File",
+		  NULL, /* no parent window is fine for now */
+		  GTK_FILE_CHOOSER_ACTION_SAVE,
+		  "Cancel",
+		  GTK_RESPONSE_CANCEL,
+		  "Save",
+		  GTK_RESPONSE_ACCEPT,
+		  NULL
+		);
+
+	GtkFileChooser *chooser = GTK_FILE_CHOOSER(dialog);
+	gtk_file_chooser_set_do_overwrite_confirmation(chooser, TRUE); /* huh? */
+
+	gtk_file_chooser_set_current_name(chooser, DEFAULT_STATE_FILE_NAME);
+
+	gint response = gtk_dialog_run(GTK_DIALOG(dialog));
+
+	if (response == GTK_RESPONSE_ACCEPT)
+	{
+		char *sim_state_file = gtk_file_chooser_get_filename(chooser);
+		// TODO: pop-up warning for invalid file
+		control->save_sim_state(std::string(sim_state_file));
+		g_free(sim_state_file);
+	}
+
+	gtk_widget_destroy(dialog);
+
 }
 
 // NOTE: Assumes that activity params have been loaded!!!!
@@ -50,7 +112,7 @@ static void on_init_sim(GtkWidget *widget, Control *control)
 	if (control->ap) control->construct_control();
 	else 
 	{
-		fprintf(stderr, "[ERROR]: trying to initialize a simulation without loading a file.\n");
+		fprintf(stderr, "[ERROR]: Trying to initialize a simulation without loading a file.\n");
 		fprintf(stderr, "[ERROR]: (Hint: Load an activity parameter file first then initialize the simulation.)\n");
 	}
 }
@@ -365,17 +427,17 @@ int gui_init_and_run(int *argc, char ***argv)
 										{"Activity Parameter File", gtk_menu_item_new(),
 											{
 												"activate",
-												G_CALLBACK(load_activity_params_from_file),
+												G_CALLBACK(on_load_activity_param_file),
 												control,
 												false
 											},
 											{}
 										},
-										{"Connectivity Parameter File", gtk_menu_item_new(),
+										{"Connectivity State File", gtk_menu_item_new(),
 											{
 												"activate",
-												G_CALLBACK(null_callback),
-												NULL,
+												G_CALLBACK(on_load_connectivity_state_file),
+												control,
 												false
 											},
 											{}
@@ -383,11 +445,11 @@ int gui_init_and_run(int *argc, char ***argv)
 									}
 								}
 							},
-							{"Save Simulation...", gtk_menu_item_new(),
+							{"Save State", gtk_menu_item_new(),
 								{
 									"activate",
-									G_CALLBACK(null_callback),
-									NULL,
+									G_CALLBACK(on_save_state),
+									control,
 									false
 								},
 								{}

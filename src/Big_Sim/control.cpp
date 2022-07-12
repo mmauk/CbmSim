@@ -6,38 +6,54 @@ Control::Control() {}
 
 Control::Control(std::string actParamFile)
 {
-	ap = new ActivityParams(actParamFile);
+	if (!ap) ap = new ActivityParams(actParamFile);
 	// TODO: remove simState construction from here, construct within simCore!
-	std::cout << "[INFO]: Initializing state..." << std::endl;
-	simState = new CBMState(ap, numMZones);
-	std::cout << "[INFO]: Finished initializing state..." << std::endl;
+	if (!simState)
+	{
+		std::cout << "[INFO]: Initializing state..." << std::endl;
+		simState = new CBMState(ap, numMZones);
+		std::cout << "[INFO]: Finished initializing state..." << std::endl;
+	}
 	
-	std::cout << "[INFO]: Initializing simulation core..." << std::endl;
-	simCore = new CBMSimCore(ap, simState, gpuIndex, gpuP2);
-	std::cout << "[INFO]: Finished initializing simulation core." << std::endl;
+	if (!simCore)
+	{
+		std::cout << "[INFO]: Initializing simulation core..." << std::endl;
+		simCore = new CBMSimCore(ap, simState, gpuIndex, gpuP2);
+		std::cout << "[INFO]: Finished initializing simulation core." << std::endl;
+	}
 
-	std::cout << "[INFO]: Initializing MF Frequencies..." << std::endl;
-	mfFreq = new ECMFPopulation(NUM_MF, mfRandSeed, CSTonicMFFrac, CSPhasicMFFrac,
-		  contextMFFrac, nucCollFrac, bgFreqMin, csbgFreqMin, contextFreqMin, 
-		  tonicFreqMin, phasicFreqMin, bgFreqMax, csbgFreqMax, contextFreqMax, 
-		  tonicFreqMax, phasicFreqMax, collaterals_off, fracImport, secondCS, fracOverlap);
-	std::cout << "[INFO]: Finished initializing MF Frequencies." << std::endl;
+	if (!mfFreq)
+	{
+		std::cout << "[INFO]: Initializing MF Frequencies..." << std::endl;
+		mfFreq = new ECMFPopulation(NUM_MF, mfRandSeed, CSTonicMFFrac, CSPhasicMFFrac,
+			  contextMFFrac, nucCollFrac, bgFreqMin, csbgFreqMin, contextFreqMin, 
+			  tonicFreqMin, phasicFreqMin, bgFreqMax, csbgFreqMax, contextFreqMax, 
+			  tonicFreqMax, phasicFreqMax, collaterals_off, fracImport, secondCS, fracOverlap);
+		std::cout << "[INFO]: Finished initializing MF Frequencies." << std::endl;
+	}
+	
+	if (!mfs)
+	{
+		std::cout << "[INFO]: Initializing Poisson MF Population..." << std::endl;
+		mfs = new PoissonRegenCells(NUM_MF, mfRandSeed, threshDecayTau, ap->msPerTimeStep,
+			  	numMZones, NUM_NC);
+		std::cout << "[INFO]: Finished initializing Poisson MF Population." << std::endl;
+	}
 
-	std::cout << "[INFO]: Initializing Poisson MF Population..." << std::endl;
-	mfs = new PoissonRegenCells(NUM_MF, mfRandSeed, threshDecayTau, ap->msPerTimeStep,
-		  	numMZones, NUM_NC);
-	std::cout << "[INFO]: Finished initializing Poisson MF Population." << std::endl;
-
-	// allocate and initialize output arrays
-	std::cout << "[INFO]: Initializing output arrays..." << std::endl;
-	initializeOutputArrays(csLength, numTrainingTrials);
-	std::cout << "[INFO]: Finished initializing output arrays." << std::endl;
+	if (!output_arrays_initialized)
+	{
+		// allocate and initialize output arrays
+		std::cout << "[INFO]: Initializing output arrays..." << std::endl;
+		initializeOutputArrays(csLength, numTrainingTrials);
+		std::cout << "[INFO]: Finished initializing output arrays." << std::endl;
+		output_arrays_initialized = true;
+	}
 }
 
 Control::~Control()
 {
-	delete ap;
 	// delete all dynamic objects
+	delete ap;
 	delete simState;
 	delete simCore;
 	delete mfFreq;
@@ -47,13 +63,43 @@ Control::~Control()
 	deleteOutputArrays();
 }
 
-// TODO: implement
 void Control::init_activity_params(std::string actParamFile)
 {
 	if (!ap)
 	{
 		ap = new ActivityParams(actParamFile);
 	}
+}
+
+void Control::init_sim_state(std::string stateFile)
+{
+	if (!ap)
+	{
+		fprintf(stderr, "[ERROR]: Trying to initialize state without first initializing activity params.\n");
+		fprintf(stderr, "[ERROR]: (Hint: Load an activity parameter file first then load the state.\n");
+		return;
+	}
+	if (!simState)
+	{
+		simState = new CBMState(ap, numMZones, stateFile);
+	}
+	else
+	{
+		fprintf(stderr, "[ERROR]: State already initialized.\n");
+	}
+}
+
+void Control::save_sim_state(std::string stateFile)
+{
+	if (!(ap && simState))
+	{
+		fprintf(stderr, "[ERROR]: Trying to write an uninitialized state to file.\n");
+		fprintf(stderr, "[ERROR]: (Hint: Try loading activity parameter file and initializing the state first.)\n");
+		return;
+	}
+	std::fstream outStateFileBuffer(stateFile.c_str(), std::ios::out | std::ios::binary);
+	simState->writeState(ap, outStateFileBuffer);
+	outStateFileBuffer.close();
 }
 
 void Control::initializeOutputArrays(int csLength, int numTrainingTrials)
@@ -291,7 +337,7 @@ void Control::write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
 		// NOTE: should throw an error, which would be caught in main
 		std::cerr << "couldn't open '" << outFileName << "' for writing." << std::endl;
 		return;
-	}	
+	}
 		
 	for (size_t i = 0; i < numRow; i++)
 	{
@@ -300,7 +346,6 @@ void Control::write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
 			outStream.write((char*) &inArr[i][j], sizeof(ct_uint8_t));
 		}
 	}
-
 	outStream.close();
 }
 
@@ -315,29 +360,46 @@ void Control::deleteOutputArrays()
 
 void Control::construct_control()
 {
-	std::cout << "[INFO]: Initializing state..." << std::endl;
-	simState = new CBMState(ap, numMZones);
-	std::cout << "[INFO]: Finished initializing state..." << std::endl;
+	// TODO: remove simState construction from here, construct within simCore!
+	if (!simState)
+	{
+		std::cout << "[INFO]: Initializing state..." << std::endl;
+		simState = new CBMState(ap, numMZones);
+		std::cout << "[INFO]: Finished initializing state..." << std::endl;
+	}
 	
-	std::cout << "[INFO]: Initializing simulation core..." << std::endl;
-	simCore = new CBMSimCore(ap, simState, gpuIndex, gpuP2);
-	std::cout << "[INFO]: Finished initializing simulation core." << std::endl;
+	if (!simCore)
+	{
+		std::cout << "[INFO]: Initializing simulation core..." << std::endl;
+		simCore = new CBMSimCore(ap, simState, gpuIndex, gpuP2);
+		std::cout << "[INFO]: Finished initializing simulation core." << std::endl;
+	}
 
-	std::cout << "[INFO]: Initializing MF Frequencies..." << std::endl;
-	mfFreq = new ECMFPopulation(NUM_MF, mfRandSeed, CSTonicMFFrac, CSPhasicMFFrac,
-		  contextMFFrac, nucCollFrac, bgFreqMin, csbgFreqMin, contextFreqMin, 
-		  tonicFreqMin, phasicFreqMin, bgFreqMax, csbgFreqMax, contextFreqMax, 
-		  tonicFreqMax, phasicFreqMax, collaterals_off, fracImport, secondCS, fracOverlap);
-	std::cout << "[INFO]: Finished initializing MF Frequencies." << std::endl;
+	if (!mfFreq)
+	{
+		std::cout << "[INFO]: Initializing MF Frequencies..." << std::endl;
+		mfFreq = new ECMFPopulation(NUM_MF, mfRandSeed, CSTonicMFFrac, CSPhasicMFFrac,
+			  contextMFFrac, nucCollFrac, bgFreqMin, csbgFreqMin, contextFreqMin, 
+			  tonicFreqMin, phasicFreqMin, bgFreqMax, csbgFreqMax, contextFreqMax, 
+			  tonicFreqMax, phasicFreqMax, collaterals_off, fracImport, secondCS, fracOverlap);
+		std::cout << "[INFO]: Finished initializing MF Frequencies." << std::endl;
+	}
+	
+	if (!mfs)
+	{
+		std::cout << "[INFO]: Initializing Poisson MF Population..." << std::endl;
+		mfs = new PoissonRegenCells(NUM_MF, mfRandSeed, threshDecayTau, ap->msPerTimeStep,
+			  	numMZones, NUM_NC);
+		std::cout << "[INFO]: Finished initializing Poisson MF Population." << std::endl;
+	}
 
-	std::cout << "[INFO]: Initializing Poisson MF Population..." << std::endl;
-	mfs = new PoissonRegenCells(NUM_MF, mfRandSeed, threshDecayTau, ap->msPerTimeStep,
-		  	numMZones, NUM_NC);
-	std::cout << "[INFO]: Finished initializing Poisson MF Population." << std::endl;
-
-	// allocate and initialize output arrays
-	std::cout << "[INFO]: Initializing output arrays..." << std::endl;
-	initializeOutputArrays(csLength, numTrainingTrials);
-	std::cout << "[INFO]: Finished initializing output arrays." << std::endl;
+	if (!output_arrays_initialized)
+	{
+		// allocate and initialize output arrays
+		std::cout << "[INFO]: Initializing output arrays..." << std::endl;
+		initializeOutputArrays(csLength, numTrainingTrials);
+		std::cout << "[INFO]: Finished initializing output arrays." << std::endl;
+		output_arrays_initialized = true;
+	}
 }
 
