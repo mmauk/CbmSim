@@ -91,14 +91,16 @@ void Control::init_sim_state(std::string stateFile)
 
 void Control::save_sim_state(std::string stateFile)
 {
-	if (!(ap && simState))
+	if (!(ap && simState && simCore))
 	{
 		fprintf(stderr, "[ERROR]: Trying to write an uninitialized state to file.\n");
 		fprintf(stderr, "[ERROR]: (Hint: Try loading activity parameter file and initializing the state first.)\n");
 		return;
 	}
 	std::fstream outStateFileBuffer(stateFile.c_str(), std::ios::out | std::ios::binary);
-	simState->writeState(ap, outStateFileBuffer);
+	// notice we are using simcore here: in order to be save the state we *should* have
+	// initialized not only activity params and state but also the sim core.
+	simCore->writeState(ap, outStateFileBuffer);
 	outStateFileBuffer.close();
 }
 
@@ -225,34 +227,28 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 					PSTHCounter++;
 					rasterCounter++;
 				}
-
-				// check the event queue after every iteration
-				// TODO: put this inside a preprocessor conditional so we do this for gui and process_events for tui
-				while (gtk_events_pending()) gtk_main_iteration();
-
-				if (sim_is_paused)
-				{
-					// FIXME: timer is busted
-					paused_time = clock() - timer;
-					std::cout << "[INFO]: Simulation is paused at time step "
-							  << tts << " of trial " << trial << "." << std::endl;
-					while(true)
-					{
-						// Weird edge case not taken into account: if there are events pending after user hits continue...
-						if (gtk_events_pending() || sim_is_paused) gtk_main_iteration();
-						else
-						{
-							std::cout << "[INFO]: Continuing..." << std::endl;
-							break;
-						}
-					}
-					paused_time = clock() - paused_time;
-					timer -= paused_time;
-				}
+				if (gtk_events_pending()) gtk_main_iteration(); // place this here?
 			}
 		}
 		timer = clock() - timer;
 		std::cout << "Trial time seconds: " << (float)timer / CLOCKS_PER_SEC << std::endl;
+		// check the event queue after every iteration
+		// TODO: put this inside a preprocessor conditional so we do this for gui and process_events for tui
+
+		if (sim_is_paused)
+		{
+			std::cout << "[INFO]: Simulation is paused at end of trial " << trial << "." << std::endl;
+			while(true)
+			{
+				// Weird edge case not taken into account: if there are events pending after user hits continue...
+				if (gtk_events_pending() || sim_is_paused) gtk_main_iteration();
+				else
+				{
+					std::cout << "[INFO]: Continuing..." << std::endl;
+					break;
+				}
+			}
+		}
 	}
 }
 

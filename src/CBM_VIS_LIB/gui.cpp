@@ -65,7 +65,12 @@ static void on_load_connectivity_state_file(GtkWidget *widget, Control *control)
 		GtkFileChooser *chooser = GTK_FILE_CHOOSER(dialog);
 		char *sim_state_file = gtk_file_chooser_get_filename(chooser);
 		// TODO: pop-up warning for invalid file
-		control->init_sim_state(std::string(sim_state_file));
+		std::string sim_state_file_std_str = std::string(sim_state_file);
+		//GThread *init_sim_worker = g_thread_new(
+		//	  "init_state",
+		//	  (* GThreadFunc)control->init_sim_state,
+		//	  (gpointer)&sim_state_file_std_str);
+		//control->init_sim_state(std::string(sim_state_file));
 		g_free(sim_state_file);
 	}
 
