@@ -1,4 +1,5 @@
 #include "array_util.h"
+#include "params/connectivityparams.h"
 #include "control.h"
 #include "gui.h"
 
@@ -44,7 +45,7 @@ static void on_load_activity_param_file(GtkWidget *widget, Control *control)
 	gtk_widget_destroy(dialog);
 }
 
-static void on_load_connectivity_state_file(GtkWidget *widget, Control *control)
+static void on_load_sim_state_file(GtkWidget *widget, Control *control)
 {
 	GtkWidget *dialog = gtk_file_chooser_dialog_new
 		(
@@ -66,11 +67,7 @@ static void on_load_connectivity_state_file(GtkWidget *widget, Control *control)
 		char *sim_state_file = gtk_file_chooser_get_filename(chooser);
 		// TODO: pop-up warning for invalid file
 		std::string sim_state_file_std_str = std::string(sim_state_file);
-		//GThread *init_sim_worker = g_thread_new(
-		//	  "init_state",
-		//	  (* GThreadFunc)control->init_sim_state,
-		//	  (gpointer)&sim_state_file_std_str);
-		//control->init_sim_state(std::string(sim_state_file));
+		control->init_sim_state(std::string(sim_state_file));
 		g_free(sim_state_file);
 	}
 
@@ -106,9 +103,7 @@ static void on_save_state(GtkWidget *widget, Control *control)
 		control->save_sim_state(std::string(sim_state_file));
 		g_free(sim_state_file);
 	}
-
 	gtk_widget_destroy(dialog);
-
 }
 
 // NOTE: Assumes that activity params have been loaded!!!!
@@ -160,6 +155,56 @@ static void on_run(GtkWidget *widget, Control *control)
 	}
 }
 
+static void draw_gr_raster(GtkDrawingArea *drawing_area, cairo_t *cr, Control *control)
+{
+	//// background color setup
+	//cairo_set_source_rgb(cr, 0, 0, 0);
+	//cairo_paint(cr);
+
+	//// point color
+	//cairo_set_source_rgb(cr, 0.42, 0.65, 0.80);
+	//cairo_set_line_width(cr, 3);
+	//
+	//for (int i = 0; i < NUM_GR; i++)
+	//{
+	//	for (int j = 0; j < control->rasterColumnSize; j++)
+	//	{
+	//		// this may not actually exist because we have so many...
+	//		if (control->allGRRaster[i][j])
+	//		{
+	//			// FIXME: this is definitely not the correct conversion to pixel space
+	//			int x = j * DEFAULT_RASTER_WINDOW_WIDTH / control->rasterColumnSize;
+	//			int y = control->allGRRaster[i][j] * DEFAULT_RASTER_WINDOW_HEIGHT / NUM_GR;
+	//			cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
+	//			cairo_move_to(cr, x, y);
+	//			cairo_line_to(cr, x, y);
+	//		}
+	//	}
+	//	cairo_stroke(cr);
+	//}
+}
+
+static void generate_raster_plot(GtkWidget *widget,
+	  void (* draw_func)(GtkDrawingArea *, cairo_t *, Control *))
+{
+	GtkWidget *child_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	
+	gtk_window_set_title(GTK_WINDOW(child_window), "Raster Plot");
+	gtk_window_set_default_size(GTK_WINDOW(child_window),
+								DEFAULT_RASTER_WINDOW_WIDTH,
+								DEFAULT_RASTER_WINDOW_HEIGHT);
+	gtk_window_set_resizable(GTK_WINDOW(child_window), FALSE);
+
+	GtkWidget *drawing_area = gtk_drawing_area_new();
+	gtk_widget_set_size_request(drawing_area,
+								DEFAULT_RASTER_WINDOW_WIDTH,
+								DEFAULT_RASTER_WINDOW_HEIGHT);
+	gtk_container_add(GTK_CONTAINER(child_window), drawing_area);
+	// FIXME: redraws at odd intervals when spawned widget moves, or similar
+	g_signal_connect(G_OBJECT(drawing_area), "draw", G_CALLBACK(draw_func), NULL);
+	gtk_widget_show_all(child_window);
+}
+
 static void on_pause(GtkWidget *widget, Control *control)
 {
 	control->sim_is_paused = true;
@@ -170,9 +215,9 @@ static void on_continue(GtkWidget *widget, Control *control)
 	control->sim_is_paused = false;
 }
 
-static bool on_gr_raster(GtkWidget *widget, gpointer data)
+static void on_gr_raster(GtkWidget *widget, Control *control)
 {
-	return assert(false, "Not implemented", __func__);
+	generate_raster_plot(widget, draw_gr_raster);
 }
 
 static bool on_go_raster(GtkWidget *widget, gpointer data)
@@ -205,6 +250,7 @@ static void set_gui_window_attribs(struct gui *gui)
 {
 	gtk_window_set_title(GTK_WINDOW(gui->window), "Main Window");
 	gtk_window_set_default_size(GTK_WINDOW(gui->window), 600, 400);
+	gtk_window_set_position(GTK_WINDOW(gui->window), GTK_WIN_POS_CENTER);
 
 	gtk_widget_add_events(gui->window, GDK_DELETE);
 	g_signal_connect(gui->window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
@@ -328,7 +374,7 @@ int gui_init_and_run(int *argc, char ***argv)
 		return 1;
 	}
 
-	Control *control = new Control(); 
+	Control *control = new Control();
 
 	struct gui gui = {
 		.window = gtk_window_new(GTK_WINDOW_TOPLEVEL),
@@ -370,7 +416,7 @@ int gui_init_and_run(int *argc, char ***argv)
 				{
 				   "clicked",
 				   G_CALLBACK(on_gr_raster),
-				   NULL,
+				   control,
 				   false
 				}
 			},
@@ -438,10 +484,10 @@ int gui_init_and_run(int *argc, char ***argv)
 											},
 											{}
 										},
-										{"Connectivity State File", gtk_menu_item_new(),
+										{"Simulation State File", gtk_menu_item_new(),
 											{
 												"activate",
-												G_CALLBACK(on_load_connectivity_state_file),
+												G_CALLBACK(on_load_sim_state_file),
 												control,
 												false
 											},
@@ -625,7 +671,7 @@ int gui_init_and_run(int *argc, char ***argv)
 	gtk_box_pack_start(GTK_BOX(v_box), gui.menu_bar.menu, FALSE, TRUE, 0);
 	gtk_box_pack_start(GTK_BOX(v_box), gui.grid, FALSE, TRUE, 0);
 
-	// show, run, and free
+	// show and run
 	gtk_widget_show_all(gui.window);
 	gtk_main();
 

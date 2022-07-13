@@ -44,7 +44,7 @@ Control::Control(std::string actParamFile)
 	{
 		// allocate and initialize output arrays
 		std::cout << "[INFO]: Initializing output arrays..." << std::endl;
-		initializeOutputArrays(csLength, numTrainingTrials);
+		initializeOutputArrays();
 		std::cout << "[INFO]: Finished initializing output arrays." << std::endl;
 		output_arrays_initialized = true;
 	}
@@ -53,14 +53,14 @@ Control::Control(std::string actParamFile)
 Control::~Control()
 {
 	// delete all dynamic objects
-	delete ap;
-	delete simState;
-	delete simCore;
-	delete mfFreq;
-	delete mfs;
+	if (ap) delete ap;
+	if (simState) delete simState;
+	if (simCore) delete simCore;
+	if (mfFreq) delete mfFreq;
+	if (mfs) delete mfs;
 
 	// deallocate output arrays
-	deleteOutputArrays();
+	if (output_arrays_initialized) deleteOutputArrays();
 }
 
 void Control::init_activity_params(std::string actParamFile)
@@ -104,11 +104,8 @@ void Control::save_sim_state(std::string stateFile)
 	outStateFileBuffer.close();
 }
 
-void Control::initializeOutputArrays(int csLength, int numTrainingTrials)
+void Control::initializeOutputArrays()
 {
-	int allGOPSTHColSize = csLength + msPreCS + msPostCS;
-	int rasterColumnSize = allGOPSTHColSize * numTrainingTrials;
-
 	// Allocate and Initialize PSTH and Raster arrays
 	allPCRaster = allocate2DArray<ct_uint8_t>(NUM_PC, rasterColumnSize);
 	std::fill(allPCRaster[0], allPCRaster[0] +
@@ -393,7 +390,7 @@ void Control::construct_control()
 	{
 		// allocate and initialize output arrays
 		std::cout << "[INFO]: Initializing output arrays..." << std::endl;
-		initializeOutputArrays(csLength, numTrainingTrials);
+		initializeOutputArrays();
 		std::cout << "[INFO]: Finished initializing output arrays." << std::endl;
 		output_arrays_initialized = true;
 	}

@@ -8,7 +8,8 @@
 const std::string INPUT_DATA_PATH = "../data/inputs/";
 const std::string OUTPUT_DATA_PATH = "../data/outputs/";
 
-enum mode {GUI, TUI, NONE};
+enum vis_mode {GUI, TUI, NONE};
+
 
 int main(int argc, char **argv) 
 {
@@ -18,7 +19,7 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	enum mode sim_mode = NONE;
+	enum vis_mode sim_vis_mode = NONE;
 	std::string actParamFile = "";
 	std::ifstream fileBuf;
 	int option;
@@ -41,8 +42,8 @@ int main(int argc, char **argv)
 			}
 			case 'm':
 			{
-				if (std::string(optarg) == "gui") sim_mode = GUI;
-				else sim_mode = TUI;
+				if (std::string(optarg) == "gui") sim_vis_mode = GUI;
+				else sim_vis_mode = TUI;
 				break;
 			}
 			case ':':
@@ -68,7 +69,7 @@ int main(int argc, char **argv)
 
 	int exit_status = -1;
 
-	switch (sim_mode)
+	switch (sim_vis_mode)
 	{
 		case GUI:
 		{
@@ -108,7 +109,7 @@ int main(int argc, char **argv)
 		}
 		case NONE:
 		{
-			std::cerr << "[INFO] must specify a a mode {GUI, TUI}. Exiting..." << std::endl;
+			std::cerr << "[INFO] must specify a mode {GUI, TUI}. Exiting..." << std::endl;
 			exit_status = 1;
 			break;
 		}

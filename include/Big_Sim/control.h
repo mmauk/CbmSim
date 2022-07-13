@@ -100,7 +100,11 @@ class Control
 		float fracOverlap = 0.2;
 
 		int trialTime = 5000; /* wild that this is here */
-			
+		
+		// raster stuff
+		int allGOPSTHColSize = csLength + msPreCS + msPostCS;
+		int rasterColumnSize = allGOPSTHColSize * numTrainingTrials;
+
 		//const ct_uint8_t* grSpks;
 		//const float *mfGO;
 		//const float *grGO;
@@ -153,7 +157,7 @@ class Control
 	
 		void save_sim_state(std::string stateFile);
 
-		void initializeOutputArrays(int csLength, int numTrainingTrials);
+		void initializeOutputArrays();
 
 		void runTrials(int simNum, float GOGR, float GRGO, float MFGO);
 

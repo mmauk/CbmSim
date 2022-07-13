@@ -16,6 +16,8 @@
 #define NUM_FILE_SUB_MENU_ITEMS 2
 
 #define DEFAULT_STATE_FILE_NAME "connectivity_state"
+#define DEFAULT_RASTER_WINDOW_WIDTH 600
+#define DEFAULT_RASTER_WINDOW_HEIGHT 600
 
 //const int num_item_per_sub_menu[NUM_SUB_MENUS] = {
 //	NUM_FILE_MENU_ITEMS,
@@ -23,6 +25,13 @@
 //	NUM_PSTH_MENU_ITEMS,
 //	NUM_ANALYSIS_MENU_ITEMS
 //};
+
+struct async_data
+{
+	GCancellable *cancellable;
+	GAsyncReadyCallback cb_func;
+	gpointer main_object;
+};
 
 struct signal
 {
