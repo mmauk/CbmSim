@@ -22,15 +22,16 @@ class MZoneActivityState
 {
 public:
 	MZoneActivityState();
-	MZoneActivityState(ActivityParams &ap, int randSeed);
-	MZoneActivityState(ActivityParams &ap, std::fstream &infile);
+	MZoneActivityState(ActivityParams *ap, int randSeed);
+	MZoneActivityState(ActivityParams *ap, std::fstream &infile);
 
 	~MZoneActivityState();
-
-	void writeState(ActivityParams &ap, std::fstream &outfile);
+	
+	void readState(ActivityParams *ap, std::fstream &infile);
+	void writeState(ActivityParams *ap, std::fstream &outfile);
 
 	//basket cells
-	std::unique_ptr<ct_uint8_t[]> apBC{nullptr};	
+	std::unique_ptr<ct_uint8_t[]> apBC{nullptr};
 	std::unique_ptr<ct_uint32_t[]> apBufBC{nullptr};
 	std::unique_ptr<ct_uint32_t[]> inputPCBC{nullptr};
 	std::unique_ptr<float[]> gPFBC{nullptr};
@@ -58,7 +59,7 @@ public:
 
 	//inferior olivary cells
 	std::unique_ptr<ct_uint8_t[]> apIO{nullptr};
-	std::unique_ptr<ct_uint8_t[]> apBufIO{nullptr};
+	std::unique_ptr<ct_uint8_t[]> apBufIO{nullptr}; /* should this be a byte array? */
 	std::unique_ptr<ct_uint8_t[]> inputNCIO{nullptr};
 	std::unique_ptr<float[]> gNCIO{nullptr};
 	std::unique_ptr<float[]> threshIO{nullptr};
@@ -85,7 +86,7 @@ public:
 
 private:
 	void allocateMemory(ct_uint32_t numPopHistBinsPC);
-	void initializeVals(ActivityParams &ap, int randSeed);
+	void initializeVals(ActivityParams *ap, int randSeed);
 	void stateRW(ct_uint32_t numPopHistBinsPC, bool read, std::fstream &file);
 };
 

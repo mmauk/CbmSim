@@ -34,7 +34,7 @@ class InNet
 {
 public:
 	InNet();
-	InNet(ActivityParams &ap, InNetConnectivityState *cs, InNetActivityState *as,
+	InNet(ActivityParams *ap, InNetConnectivityState *cs, InNetActivityState *as,
 		int gpuIndStart, int numGPUs);
 	~InNet();
 

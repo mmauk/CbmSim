@@ -6,6 +6,8 @@
  */
 #include "state/innetconnectivitystate.h"
 
+//InNetConnectivityState::InNetConnectivityState(unsigned int msPerStep, )
+
 InNetConnectivityState::InNetConnectivityState(unsigned int msPerStep, int randSeed)
 {
 	CRandomSFMT0 randGen(randSeed);
@@ -29,7 +31,7 @@ InNetConnectivityState::InNetConnectivityState(unsigned int msPerStep, int randS
 	connectGOGL(randGen);
 
 	std::cout << "[INFO]: Connecting GO to GO" << std::endl;
-	connectGOGODecayP(randGen);	
+	connectGOGODecayP(randGen);
 
 	std::cout << "[INFO]: Connecting GO to GO gap junctions" << std::endl;
 	connectGOGO_GJ(randGen);
@@ -46,12 +48,11 @@ InNetConnectivityState::InNetConnectivityState(unsigned int msPerStep, int randS
 	std::cout << "[INFO]: Finished making innet connections." << std::endl;
 }
 
-//InNetConnectivityState::InNetConnectivityState(ConnectivityParams *parameters, std::fstream &infile)
-//{
-//	allocateMemory();
-//
-//	stateRW(true, infile);
-//}
+InNetConnectivityState::InNetConnectivityState(std::fstream &infile)
+{
+	allocateMemory();
+	stateRW(true, infile);
+}
 
 //InNetConnectivityState::InNetConnectivityState(const InNetConnectivityState &state)
 //{
@@ -139,13 +140,16 @@ InNetConnectivityState::InNetConnectivityState(unsigned int msPerStep, int randS
 //			numGR*maxnumpGRfromMFtoGR);
 //}
 
-InNetConnectivityState::~InNetConnectivityState() { deallocMemory(); }
+InNetConnectivityState::~InNetConnectivityState() {deallocMemory();}
+
+void InNetConnectivityState::readState(std::fstream &infile)
+{
+	stateRW(true, infile);
+}
 
 void InNetConnectivityState::writeState(std::fstream &outfile)
 {
-	std::cout << "Writing input network connectivity state to disk..." << std::endl;
 	stateRW(false, outfile);
-	std::cout << "finished writing input network connectivity to disk." << std::endl;
 }
 
 void InNetConnectivityState::allocateMemory()
@@ -180,8 +184,8 @@ void InNetConnectivityState::allocateMemory()
 	// coincidentally, numcongotogo == maxnumpgogabaingogo
 	numpGOGABAInGOGO  = new int[NUM_GO];
 	pGOGABAInGOGO     = allocate2DArray<int>(NUM_GO, NUM_CON_GO_TO_GO);
-	numpGOGABAOutGOGO = new int[NUM_GO];			
-	pGOGABAOutGOGO    = allocate2DArray<int>(NUM_GO, NUM_CON_GO_TO_GO);			
+	numpGOGABAOutGOGO = new int[NUM_GO];
+	pGOGABAOutGOGO    = allocate2DArray<int>(NUM_GO, NUM_CON_GO_TO_GO);
 
 	// go <-> go gap junctions
 	numpGOCoupInGOGO     = new int[NUM_GO];
@@ -193,15 +197,15 @@ void InNetConnectivityState::allocateMemory()
 
 	//granule
 	pGRDelayMaskfromGRtoBSP = new ct_uint32_t[NUM_GR];
-	numpGRfromGLtoGR 		= new int[NUM_GR];
-	pGRfromGLtoGR 			= allocate2DArray<int>(NUM_GR, MAX_NUM_P_GR_FROM_GL_TO_GR);
-	numpGRfromGRtoGO 		= new int[NUM_GR];
-	pGRfromGRtoGO 			= allocate2DArray<int>(NUM_GR, MAX_NUM_P_GR_FROM_GR_TO_GO);
+	numpGRfromGLtoGR        = new int[NUM_GR];
+	pGRfromGLtoGR           = allocate2DArray<int>(NUM_GR, MAX_NUM_P_GR_FROM_GL_TO_GR);
+	numpGRfromGRtoGO        = new int[NUM_GR];
+	pGRfromGRtoGO           = allocate2DArray<int>(NUM_GR, MAX_NUM_P_GR_FROM_GR_TO_GO);
 	pGRDelayMaskfromGRtoGO  = allocate2DArray<int>(NUM_GR, MAX_NUM_P_GR_FROM_GR_TO_GO);
-	numpGRfromGOtoGR 		= new int[NUM_GR];
-	pGRfromGOtoGR 			= allocate2DArray<int>(NUM_GR, MAX_NUM_P_GR_FROM_GO_TO_GR);
-	numpGRfromMFtoGR 		= new int[NUM_GR];
-	pGRfromMFtoGR 			= allocate2DArray<int>(NUM_GR, MAX_NUM_P_GR_FROM_MF_TO_GR);
+	numpGRfromGOtoGR        = new int[NUM_GR];
+	pGRfromGOtoGR           = allocate2DArray<int>(NUM_GR, MAX_NUM_P_GR_FROM_GO_TO_GR);
+	numpGRfromMFtoGR        = new int[NUM_GR];
+	pGRfromMFtoGR           = allocate2DArray<int>(NUM_GR, MAX_NUM_P_GR_FROM_MF_TO_GR);
 }
 
 void InNetConnectivityState::initializeVals()
@@ -338,26 +342,19 @@ void InNetConnectivityState::deallocMemory()
 
 void InNetConnectivityState::stateRW(bool read, std::fstream &file)
 {
-	std::cout << "glomerulus" << std::endl;
 	//glomerulus
-	rawBytesRW((char *)haspGLfromMFtoGL, NUM_GL * sizeof(int), read, file);
-	std::cout << "glomerulus 1.1" << std::endl;
-	rawBytesRW((char *)pGLfromMFtoGL, NUM_GL * sizeof(int), read, file);
-
-	std::cout << "glomerulus 2" << std::endl;
+	rawBytesRW((char *)haspGLfromMFtoGL, NUM_GL * sizeof(bool), read, file);
 	rawBytesRW((char *)numpGLfromGLtoGO, NUM_GL * sizeof(int), read, file);
 	rawBytesRW((char *)pGLfromGLtoGO[0],
 		NUM_GL * MAX_NUM_P_GL_FROM_GL_TO_GO * sizeof(int), read, file);
-
-	std::cout << "glomerulus 3" << std::endl;
 	rawBytesRW((char *)numpGLfromGOtoGL, NUM_GL * sizeof(int), read, file);
-
-	std::cout << "glomerulus 4" << std::endl;
+	rawBytesRW((char *)pGLfromGOtoGL[0],
+		NUM_GL * MAX_NUM_P_GL_FROM_GO_TO_GL * sizeof(int), read, file);
 	rawBytesRW((char *)numpGLfromGLtoGR, NUM_GL * sizeof(int), read, file);
 	rawBytesRW((char *)pGLfromGLtoGR[0],
 		NUM_GL * MAX_NUM_P_GL_FROM_GL_TO_GR * sizeof(int), read, file);
+	rawBytesRW((char *)pGLfromMFtoGL, NUM_GL * sizeof(int), read, file);
 
-	std::cout << "mf" << std::endl;
 	//mossy fibers
 	rawBytesRW((char *)numpMFfromMFtoGL, NUM_MF * sizeof(int), read, file);
 	rawBytesRW((char *)pMFfromMFtoGL[0],
@@ -371,7 +368,6 @@ void InNetConnectivityState::stateRW(bool read, std::fstream &file)
 	rawBytesRW((char *)pMFfromMFtoGO[0],
 		NUM_MF * MAX_NUM_P_MF_FROM_MF_TO_GO * sizeof(int), read, file);
 
-	std::cout << "golgi" << std::endl;
 	//golgi
 	rawBytesRW((char *)numpGOfromGLtoGO, NUM_GO * sizeof(int), read, file);
 	rawBytesRW((char *)pGOfromGLtoGO[0],
@@ -409,7 +405,11 @@ void InNetConnectivityState::stateRW(bool read, std::fstream &file)
 	rawBytesRW((char *)pGOCoupOutGOGO[0],
 		NUM_GO * NUM_P_GO_TO_GO_GJ * sizeof(int), read, file);
 
-	std::cout << "granule" << std::endl;
+	rawBytesRW((char *)pGOCoupOutGOGOCCoeff[0],
+		NUM_GO * NUM_P_GO_TO_GO_GJ * sizeof(float), read, file);
+	rawBytesRW((char *)pGOCoupInGOGOCCoeff[0],
+		NUM_GO * NUM_P_GO_TO_GO_GJ * sizeof(float), read, file);
+
 	//granule
 	rawBytesRW((char *)pGRDelayMaskfromGRtoBSP, NUM_GR * sizeof(ct_uint32_t), read, file);
 

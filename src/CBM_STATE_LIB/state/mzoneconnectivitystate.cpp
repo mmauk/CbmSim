@@ -34,6 +34,7 @@ MZoneConnectivityState::MZoneConnectivityState(int randSeed)
 
 MZoneConnectivityState::MZoneConnectivityState(std::fstream &infile)
 {
+	allocateMemory();
 	stateRW(true, infile);
 }
 
@@ -72,7 +73,12 @@ MZoneConnectivityState::MZoneConnectivityState(std::fstream &infile)
 //			numIO * numpIOOutIOIO);
 //}
 
-MZoneConnectivityState::~MZoneConnectivityState() { deallocMemory(); }
+MZoneConnectivityState::~MZoneConnectivityState() {deallocMemory();}
+
+void MZoneConnectivityState::readState(std::fstream &infile)
+{
+	stateRW(true, infile);
+}
 
 void MZoneConnectivityState::writeState(std::fstream &outfile)
 {
@@ -111,41 +117,41 @@ void MZoneConnectivityState::initializeVals()
 {
 	// basket cells
 	std::fill(pBCfromBCtoPC[0], pBCfromBCtoPC[0]
-			+ sizeof(pBCfromBCtoPC) / sizeof(pBCfromBCtoPC[0][0]), 0);
+			+ NUM_BC * NUM_P_BC_FROM_BC_TO_PC, 0);
 	std::fill(pBCfromPCtoBC[0], pBCfromPCtoBC[0]
-			+ sizeof(pBCfromPCtoBC) / sizeof(pBCfromPCtoBC[0][0]), 0);
+			+ NUM_BC * NUM_P_BC_FROM_PC_TO_BC, 0);
 
 	// stellate cells
 	std::fill(pSCfromSCtoPC[0], pSCfromSCtoPC[0]
-			+ sizeof(pSCfromSCtoPC) / sizeof(pSCfromSCtoPC[0][0]), 0);
+			+ NUM_SC * NUM_P_SC_FROM_SC_TO_PC, 0);
 
 	// purkinje cells
 	std::fill(pPCfromBCtoPC[0], pPCfromBCtoPC[0]
-			+ sizeof(pPCfromBCtoPC) / sizeof(pPCfromBCtoPC[0][0]), 0);
+			+ NUM_PC * NUM_P_PC_FROM_BC_TO_PC, 0);
 	std::fill(pPCfromPCtoBC[0], pPCfromPCtoBC[0]
-			+ sizeof(pPCfromPCtoBC) / sizeof(pPCfromPCtoBC[0][0]), 0);
+			+ NUM_PC * NUM_P_PC_FROM_PC_TO_BC, 0);
 	std::fill(pPCfromSCtoPC[0], pPCfromSCtoPC[0]
-			+ sizeof(pPCfromSCtoPC) / sizeof(pPCfromSCtoPC[0][0]), 0);
+			+ NUM_PC * NUM_P_PC_FROM_SC_TO_PC, 0);
 	std::fill(pPCfromPCtoNC[0], pPCfromPCtoNC[0]
-			+ sizeof(pPCfromPCtoNC) / sizeof(pPCfromPCtoNC[0][0]), 0);
+			+ NUM_PC * NUM_P_PC_FROM_PC_TO_NC, 0);
 
 	// nucleus cells
 	std::fill(pNCfromPCtoNC[0], pNCfromPCtoNC[0]
-			+ sizeof(pNCfromPCtoNC) / sizeof(pNCfromPCtoNC[0][0]), 0);
+			+ NUM_NC * NUM_P_NC_FROM_PC_TO_NC, 0);
 	std::fill(pNCfromNCtoIO[0], pNCfromNCtoIO[0]
-			+ sizeof(pNCfromNCtoIO) / sizeof(pNCfromNCtoIO[0][0]), 0);
+			+ NUM_NC * NUM_P_NC_FROM_NC_TO_IO, 0);
 	std::fill(pNCfromMFtoNC[0], pNCfromMFtoNC[0]
-			+ sizeof(pNCfromMFtoNC) / sizeof(pNCfromMFtoNC[0][0]), 0);
+			+ NUM_NC * NUM_P_NC_FROM_MF_TO_NC, 0);
 
 	// inferior olivary cells
 	std::fill(pIOfromIOtoPC[0], pIOfromIOtoPC[0]
-			+ sizeof(pIOfromIOtoPC) / sizeof(pIOfromIOtoPC[0][0]), 0);
+			+ NUM_IO * NUM_P_IO_FROM_IO_TO_PC, 0);
 	std::fill(pIOfromNCtoIO[0], pIOfromNCtoIO[0]
-			+ sizeof(pIOfromNCtoIO) / sizeof(pIOfromNCtoIO[0][0]), 0);
+			+ NUM_IO * NUM_P_IO_FROM_NC_TO_IO, 0);
 	std::fill(pIOInIOIO[0], pIOInIOIO[0]
-			+ sizeof(pIOInIOIO) / sizeof(pIOInIOIO[0][0]), 0);
+			+ NUM_IO * NUM_P_IO_IN_IO_TO_IO, 0);
 	std::fill(pIOOutIOIO[0], pIOOutIOIO[0]
-			+ sizeof(pIOOutIOIO) / sizeof(pIOOutIOIO[0][0]), 0);
+			+ NUM_IO * NUM_P_IO_OUT_IO_TO_IO, 0);
 }
 
 void MZoneConnectivityState::deallocMemory()
@@ -178,21 +184,26 @@ void MZoneConnectivityState::deallocMemory()
 
 void MZoneConnectivityState::stateRW(bool read, std::fstream &file)
 {
+	// basket cells
 	rawBytesRW((char *)pBCfromBCtoPC[0], NUM_BC * NUM_P_BC_FROM_BC_TO_PC * sizeof(ct_uint32_t), read, file);
 	rawBytesRW((char *)pBCfromPCtoBC[0], NUM_BC * NUM_P_BC_FROM_PC_TO_BC * sizeof(ct_uint32_t), read, file);
 
+	// stellate cells
 	rawBytesRW((char *)pSCfromSCtoPC[0], NUM_SC * NUM_P_SC_FROM_SC_TO_PC * sizeof(ct_uint32_t), read, file);
 
+	// purkinje cells
 	rawBytesRW((char *)pPCfromBCtoPC[0], NUM_PC * NUM_P_PC_FROM_BC_TO_PC * sizeof(ct_uint32_t), read, file);
 	rawBytesRW((char *)pPCfromPCtoBC[0], NUM_PC * NUM_P_PC_FROM_PC_TO_BC * sizeof(ct_uint32_t), read, file);
 	rawBytesRW((char *)pPCfromSCtoPC[0], NUM_PC * NUM_P_PC_FROM_SC_TO_PC * sizeof(ct_uint32_t), read, file);
 	rawBytesRW((char *)pPCfromPCtoNC[0], NUM_PC * NUM_P_PC_FROM_PC_TO_NC * sizeof(ct_uint32_t), read, file);
 	rawBytesRW((char *)pPCfromIOtoPC, NUM_PC * sizeof(ct_uint32_t), read, file);
 
+	// nucleus cells
 	rawBytesRW((char *)pNCfromPCtoNC[0], NUM_NC * NUM_P_NC_FROM_PC_TO_NC * sizeof(ct_uint32_t), read, file);
 	rawBytesRW((char *)pNCfromNCtoIO[0], NUM_NC * NUM_P_NC_FROM_NC_TO_IO * sizeof(ct_uint32_t), read, file);
 	rawBytesRW((char *)pNCfromMFtoNC[0], NUM_NC * NUM_P_NC_FROM_MF_TO_NC * sizeof(ct_uint32_t), read, file);
 
+	// inferior olivary cells
 	rawBytesRW((char *)pIOfromIOtoPC[0], NUM_IO * NUM_P_IO_FROM_IO_TO_PC * sizeof(ct_uint32_t), read, file);
 	rawBytesRW((char *)pIOfromNCtoIO[0], NUM_IO * NUM_P_IO_FROM_NC_TO_IO * sizeof(ct_uint32_t), read, file);
 	rawBytesRW((char *)pIOInIOIO[0], NUM_IO * NUM_P_IO_IN_IO_TO_IO * sizeof(ct_uint32_t), read, file);

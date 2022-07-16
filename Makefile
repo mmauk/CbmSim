@@ -16,19 +16,24 @@ BUILD_PATH	  = $(ROOT)build/
 
 # NOTE using update alternatives: to switch back to ver11, use update-alternatives --config g++
 CXX              = g++
-# CXXFLAGS         = -m64 -pipe -std=c++14 -g 
-CXXFLAGS         = -m64 -pipe -std=c++14 -O3 
+# CXXFLAGS         = -m64 -pipe -std=c++14 -g
+CXXFLAGS         = -m64 -pipe -std=c++14 -O3
+
 # MODULE_CXX_FLAGS = -m64 -pipe -std=c++14 -g -fPIC
 MODULE_CXX_FLAGS = -m64 -pipe -std=c++14 -O2 -fPIC
 INCPATH          = -I. -Iinclude/Big_Sim -I/usr/local/cuda/include -I$(ROOT)include/CBM_CORE_LIB -I$(ROOT)include/CBM_DATA_LIB \
-			       -I$(ROOT)include/CBM_STATE_LIB -I$(ROOT)include/CBM_TOOLS_LIB -I$(ROOT)include/CXX_TOOLS_LIB 
+			       -I$(ROOT)include/CBM_STATE_LIB -I$(ROOT)include/CBM_TOOLS_LIB -I $(ROOT)include/CBM_VIS_LIB -I$(ROOT)include/CXX_TOOLS_LIB 
+INCPATH          += $(shell pkg-config --cflags gtk+-3.0)
 LIBS             = -L/usr/local/cuda/lib64 -L/usr/lib64 -L/opt/cuda/lib64 -lcudart
+LIBS            += $(shell pkg-config --libs gtk+-3.0)
 LINK             = g++
 LFLAGS           = -m64 
 
 CHK_DIR_EXISTS   = test -d
 MKDIR            = mkdir -p
 RMDIR            = rmdir
+
+RM               = rm -rf
 
 
 # ===================================== FILES AND DIRECTORIES =====================================
@@ -123,6 +128,17 @@ CBM_STATE_OBJECTS  = $(CBM_STATE_OBJ_PATH)cbmstate.o \
                      $(CBM_STATE_OBJ_PATH)mzoneactivitystate.o \
                      $(CBM_STATE_OBJ_PATH)mzoneconnectivitystate.o
 
+####### CBM Vis Directories
+
+CBM_VIS_SRC_PATH     = $(ROOT)src/CBM_VIS_LIB/
+CBM_VIS_INCLUDE_PATH = $(ROOT)include/CBM_VIS_LIB/ 
+CBM_VIS_OBJ_PATH     = $(BUILD_PATH)CBM_VIS_LIB/
+
+####### CBM Vis Files
+
+CBM_VIS_SOURCES = $(CBM_VIS_SRC_PATH)gui.cpp
+
+CBM_VIS_OBJECTS = $(CBM_VIS_OBJ_PATH)gui.o
 
 ####### CBM Tools Objects Directory
 
@@ -175,7 +191,7 @@ MODULE_OBJ_PATHS = $(CBM_CORE_OBJ_PATH) $(CBM_DATA_OBJ_PATH) $(CBM_STATE_OBJ_PAT
 ####### Module Object Files
 
 MODULE_OBJECTS = $(CBM_CORE_OBJECTS) $(CBM_DATA_OBJECTS) $(CBM_STATE_OBJECTS) \
-				 $(CBM_TOOLS_OBJECTS) $(CXX_TOOLS_OBJECTS)
+				 $(CBM_TOOLS_OBJECTS) $(CBM_VIS_OBJECTS) $(CXX_TOOLS_OBJECTS)
 
 
 # ================================= COMPILE AND LINK ALL =========================================
@@ -215,7 +231,7 @@ $(BIG_SIM_OBJ_PATH)main.o: $(BIG_SIM_SRC_PATH)main.cpp $(BIG_SIM_INCLUDE_PATH)co
 
 ####### CBM Core Compiler Options
 
-CUDA_INCLUDE_PATH = /usr/local/cuda-11.0/include/
+CUDA_INCLUDE_PATH = /usr/local/cuda-11.7/include/
 CBM_CORE_INCLUDES = -I. -I$(CUDA_INCLUDE_PATH) -I$(CBM_CORE_INCLUDE_PATH) \
 					-I$(CBM_STATE_INCLUDE_PATH) -I$(CXX_TOOLS_INCLUDE_PATH) 
 
@@ -837,6 +853,23 @@ $(CBM_TOOLS_OBJ_PATH)eyelidintegrator.o: $(CBM_TOOLS_SRC_PATH)eyelidintegrator.c
 $(CBM_TOOLS_OBJ_PATH)poissonregencells.o: $(CBM_TOOLS_SRC_PATH)poissonregencells.cpp $(CBM_TOOLS_INCLUDE_PATH)/poissonregencells.h
 	$(CXX) -c $(MODULE_CXX_FLAGS) $(CBM_TOOLS_INCLUDES) -o $(CBM_TOOLS_OBJ_PATH)poissonregencells.o $(CBM_TOOLS_SRC_PATH)poissonregencells.cpp
 
+####### CBM Vis Compiler Options
+
+# FIXME: the invocation of pkg-config is redundant
+CBM_VIS_INCLUDES = -I. -I$(CBM_VIS_INCLUDE_PATH) -I$(CXX_TOOLS_INCLUDE_PATH) -I$(BIG_SIM_INCLUDE_PATH) \
+				   -I$(CBM_STATE_INCLUDE_PATH) -I$(CBM_CORE_INCLUDE_PATH) -I$(CUDA_INCLUDE_PATH) \
+				   -I$(CBM_TOOLS_INCLUDE_PATH) -I$(CBM_DATA_INCLUDE_PATH) $(shell pkg-config --cflags gtk+-3.0)
+
+####### CBM Vis Build Rules
+
+$(CBM_VIS_OBJ_PATH):
+	@$(CHK_DIR_EXISTS) $(CBM_VIS_OBJ_PATH) || $(MKDIR) $(CBM_VIS_OBJ_PATH)
+
+####### Compile CBM Vis Sources
+
+$(CBM_VIS_OBJ_PATH)gui.o: $(CBM_VIS_SRC_PATH)gui.cpp
+	$(CXX) -c $(MODULE_CXX_FLAGS) $(CBM_VIS_INCLUDES) -o $(CBM_VIS_OBJ_PATH)gui.o $(CBM_VIS_SRC_PATH)gui.cpp
+
 ####### CXX Tools Compiler Options
 
 CXX_TOOLS_INCLUDES = -I. -I$(CXX_TOOLS_INCLUDE_PATH)
@@ -874,12 +907,14 @@ $(CXX_TOOLS_OBJ_PATH)tty.o: $(CXX_TOOLS_SRC_PATH)ttyManip/tty.cpp $(CXX_TOOLS_IN
 # ============================================ CLEAN UP ALL ======================================
 
 clean: 
-	rm -rf $(CBM_CORE_OBJ_PATH)  
-	rm -rf $(CBM_DATA_OBJ_PATH)  
-	rm -rf $(CBM_STATE_OBJ_PATH)  
-	rm -rf $(CBM_TOOLS_OBJ_PATH)  
-	rm -rf $(CXX_TOOLS_OBJ_PATH)  
-	rm -rf $(BIG_SIM_OBJ_PATH)      
+	$(RM) $(CBM_CORE_OBJ_PATH)  
+	$(RM) $(CBM_DATA_OBJ_PATH)  
+	$(RM) $(CBM_STATE_OBJ_PATH)  
+	$(RM) $(CBM_TOOLS_OBJ_PATH)  
+	$(RM) $(CXX_TOOLS_OBJ_PATH)  
+	$(RM) $(CBM_VIS_OBJ_PATH)
+	$(RM) $(BIG_SIM_OBJ_PATH)      
+	$(RM) $(TARGET)
 
 check: first
 

@@ -35,7 +35,7 @@ class MZone
 {
 public:
 	MZone();
-	MZone(ActivityParams &ap, MZoneConnectivityState *cs,
+	MZone(ActivityParams *ap, MZoneConnectivityState *cs,
 			MZoneActivityState *as, int randSeed, ct_uint32_t **actBufGRGPU,
 			ct_uint32_t **delayMaskGRGPU, ct_uint64_t **histGRGPU, int gpuIndStart, int numGPUs);
 	~MZone();
@@ -78,14 +78,14 @@ public:
 	const float* exportVmBC();
 	const float* exportVmPC();
 	const float* exportVmNC();
-	const float* exportVmIO();	
+	const float* exportVmIO();
 	const float* exportgBCPC();
 	const float* exportgPFPC();
 	const float* exportPFPCWeights();
 
 	const ct_uint32_t* exportAPBufBC();
 	const ct_uint32_t* exportAPBufPC();
-	const ct_uint32_t* exportAPBufIO();
+	const ct_uint8_t* exportAPBufIO();
 	const ct_uint32_t* exportAPBufNC();
 
 private:

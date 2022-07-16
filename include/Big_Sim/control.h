@@ -23,35 +23,38 @@ class Control
 {
 	public:
 		// TODO: create training parameter files
-		Control();	
+		Control();
 		Control(std::string actParamFile);
 		~Control();
 
 		// Objects
-		ActivityParams ap;	
+		ActivityParams *ap = NULL;
 
 		// TODO: make these guys non pointers, somehow!
-		CBMState *simState;
-		CBMSimCore *simCore;
-		ECMFPopulation *mfFreq;
-		PoissonRegenCells *mfs;
+		CBMState *simState = NULL;
+		CBMSimCore *simCore = NULL;
+		ECMFPopulation *mfFreq = NULL;
+		PoissonRegenCells *mfs = NULL;
+
+		bool output_arrays_initialized = false; /* temporary, going to refactor soon */
+		bool sim_is_paused = false;
 
 		const float *grgoG, *mfgoG;
 		const ct_uint8_t *mfAP;
 
 		// params that I do not know how to categorize
 		float goMin = 0.26;
-		float spillFrac	= 0.15;	
+		float spillFrac = 0.15;
 		float gogoW = 0.0125;
 		float inputStrength = 0.0;
 
 		// sim params
 		int gpuIndex = 0;
-	   	int gpuP2	 = 2;	
+		int gpuP2    = 2;
 
 		// Training Parameters
-		int numTrainingTrials 	   = 10;
-		int homeoTuningTrials 	   = 0;
+		int numTrainingTrials      = 10;
+		int homeoTuningTrials      = 0;
 		int granuleActDetectTrials = 0;
 
 		int msPreCS = 400;
@@ -71,7 +74,7 @@ class Control
 
 		float nucCollFrac = 0.02;
 		float csMinRate = 100.0; // uh look at tonic lol
- 		float csMaxRate = 110.0;		
+ 		float csMaxRate = 110.0;
 
 		float CSTonicMFFrac = 0.05;
 		float tonicFreqMin  = 100.0;
@@ -80,9 +83,10 @@ class Control
 		float CSPhasicMFFrac = 0.0;
 		float phasicFreqMin  = 200.0;
 		float phasicFreqMax  = 250.0;
-		
+	
+		// separate set of contextual MF due to position of rabbit
 		float contextMFFrac  = 0.0;
-		float contextFreqMin = 20.0;
+		float contextFreqMin = 20.0; 
 		float contextFreqMax = 50.0;
 
 		float bgFreqMin   = 10.0;
@@ -91,13 +95,17 @@ class Control
 		float csbgFreqMax = 30.0;
 
 		bool collaterals_off = false;
-		bool secondCS 		 = true;
+		bool secondCS        = true;
 
 		float fracImport  = 0.0;
 		float fracOverlap = 0.2;
 
 		int trialTime = 5000; /* wild that this is here */
-			
+		
+		// raster stuff
+		int allGOPSTHColSize = csLength + msPreCS + msPostCS;
+		int rasterColumnSize = allGOPSTHColSize * numTrainingTrials;
+
 		//const ct_uint8_t* grSpks;
 		//const float *mfGO;
 		//const float *grGO;
@@ -143,8 +151,14 @@ class Control
 		//ct_uint8_t **allGORaster_Trial;
 		//ct_uint8_t *goSpkCount_Trial;
 		const ct_uint8_t* goSpks; 
+	
+		void init_activity_params(std::string actParamFile);
 
-		void initializeOutputArrays(int csLength, int numTrainingTrials);
+		void init_sim_state(std::string stateFile);
+	
+		void save_sim_state(std::string stateFile);
+
+		void initializeOutputArrays();
 
 		void runTrials(int simNum, float GOGR, float GRGO, float MFGO);
 
@@ -158,6 +172,8 @@ class Control
 		void write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
 			unsigned int numRow, unsigned int numCol);
 		void deleteOutputArrays();
+
+		void construct_control();
 };
 
 #endif /*_CONTROL_H*/

@@ -9,14 +9,14 @@
 
 MZone::MZone() {}
 
-MZone::MZone(ActivityParams &ap, MZoneConnectivityState *cs,
+MZone::MZone(ActivityParams *ap, MZoneConnectivityState *cs,
 		MZoneActivityState *as, int randSeed, ct_uint32_t **actBufGRGPU,
 		ct_uint32_t **delayMaskGRGPU, ct_uint64_t **histGRGPU, int gpuIndStart, int numGPUs)
 {
 	// TODO: make this a non dynamic object wtf bro
 	randGen = new CRandomSFMT0(randSeed);
 
-	this->ap = ap; /* deep copy implemented biiiiiiitch */
+	this->ap = *ap; /* deep copy on what input ap points to, for now */
 	this->cs = cs; /* shallow copy (boo) */
 	this->as = as; /* also shallow copy */
 
@@ -24,17 +24,17 @@ MZone::MZone(ActivityParams &ap, MZoneConnectivityState *cs,
 	// consider ownership: who should own these guys? maybe they should be global to both
 	// innet and mzone (so within cbmsimcore) and fed in as const args to the respective
 	// functions that call update kernels (06/16/2022)
-	apBufGRGPU 			 = actBufGRGPU;
+	apBufGRGPU           = actBufGRGPU;
 	delayBCPCSCMaskGRGPU = delayMaskGRGPU;
-	historyGRGPU 		 = histGRGPU;
+	historyGRGPU         = histGRGPU;
 
 	pfSynWeightPCLinear = new float[NUM_GR];
 	pfPCPlastStepIO = new float[NUM_IO];
 
-	tempGRPCLTDStep = ap.synLTDStepSizeGRtoPC;
-	tempGRPCLTPStep = ap.synLTPStepSizeGRtoPC;
+	tempGRPCLTDStep = ap->synLTDStepSizeGRtoPC;
+	tempGRPCLTPStep = ap->synLTPStepSizeGRtoPC;
 
-	this->numGPUs 	  = numGPUs;
+	this->numGPUs     = numGPUs;
 	this->gpuIndStart = gpuIndStart;
 
 	std::cout << "Initializing CUDA..." << std::endl;
@@ -739,9 +739,9 @@ const ct_uint32_t* MZone::exportAPBufPC()
 	return (const ct_uint32_t *)as->apBufPC.get();
 }
 
-const ct_uint32_t* MZone::exportAPBufIO()
+const ct_uint8_t* MZone::exportAPBufIO()
 {
-	return (const ct_uint32_t *)as->apBufIO.get();
+	return (const ct_uint8_t *)as->apBufIO.get();
 }
 
 const ct_uint32_t* MZone::exportAPBufNC()

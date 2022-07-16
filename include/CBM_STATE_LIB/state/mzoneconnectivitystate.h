@@ -31,6 +31,7 @@ public:
 
 	~MZoneConnectivityState();
 
+	void readState(std::fstream &infile);
 	void writeState(std::fstream &outfile);
 
 	//basket cells
