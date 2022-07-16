@@ -9,15 +9,18 @@ const std::string INPUT_DATA_PATH = "../data/inputs/";
 const std::string OUTPUT_DATA_PATH = "../data/outputs/";
 
 enum vis_mode {GUI, TUI, NONE};
+enum run_mode {BUILD, RUN, NONE}
 
+void verify_vis_mode(int *argc, char ***argv);
+void assign_vis_mode(int *argc, char ***argv, enum vis_mode *sim_vis_mode);
+void verify_is_file(int arg_val, int ***argv, std::string error_msg);
+void verify_file_format(int arg_val, int ***argv, std::string first_line_test, std::string error_msg);
+void validate_args_and_set_modes(int *argc, int ***argv,
+	  enum vis_mode *sim_vis_mode, enum run_mode *sim_run_mode);
 
 int main(int argc, char **argv) 
 {
-	if (argc == 1) 
-	{
-		std::cerr << "[ERROR]: No file arguments specified. Exiting." << std::endl;
-		exit(1);
-	}
+// ==================================== PREVIOUS FILE HANDLING ====================================
 
 	enum vis_mode sim_vis_mode = NONE;
 	std::string actParamFile = "";
@@ -35,7 +38,7 @@ int main(int argc, char **argv)
 				{
 					fileBuf.close();
 					std::cerr << "[ERROR] File " << "'" << std::string(optarg) << "'" 
-					   		  << " does not exist. Exiting." << std::endl;
+					          << " does not exist. Exiting." << std::endl;
 					exit(2);
 				}
 				break;
@@ -118,3 +121,76 @@ int main(int argc, char **argv)
 	return exit_status;
 }
 
+void verify_vis_mode(int *argc, char ***argv)
+{
+	if (*argv[1] != "tui" && *argv[1] != "gui")
+	{
+		std::cerr << "[ERROR]: visualization mode {tui, gui} not specified. Exiting..." << std::endl;
+		exit(3);
+	}
+}
+
+void assign_vis_mode(int *argc, char ***argv, enum vis_mode *sim_vis_mode)
+{
+	if (*argv[1] == "tui") *sim_vis_mode = TUI;
+	else if (*argv[1] == "gui") *sim_vis_mode = GUI;
+}
+
+void verify_is_file(int arg_val, int ***argv, std::string error_msg)
+{
+	std::ifstream inFileBuf;
+	inFileBuf.open(*argv[arg_val]);
+	if (!inFileBuf.is_open())
+	{
+		std::cerr << error_msg << std::endl;
+		inFileBuf.close();
+		exit(4);
+	}
+	inFileBuf.close();
+}
+
+void verify_file_format(int arg_val, int ***argv, std::string first_line_test, std::string error_msg)
+{
+	std::ifstream inFileBuf;
+	inFileBuf.open(*argv[arg_val]);
+	std::string first_line = "";
+	getline(inFileBuf, first_line);
+	inFileBuf.close();
+	if (first_line != first_line_test)
+	{
+		std::cerr << error_msg << std::endl;
+		exit(5);
+	}
+}
+
+void validate_args_and_set_modes(int *argc, int ***argv,
+	  enum vis_mode *sim_vis_mode, enum run_mode *sim_run_mode)
+{
+	if (*argc >= 4) /* build mode */
+	{
+		verify_vis_mode(argc, argv);
+		assign_vis_mode(argc, argv, sim_vis_mode);
+
+		verify_is_file(2, argv, "[ERROR]: Could not open build file. Exiting...");
+		verify_file_format(2, argv, "# BUILD", "[ERROR]: Improper build file format. Exiting...");
+
+		*sim_run_mode = BUILD;
+	}
+	else if (*argc >= 5) /* run mode */
+	{
+		verify_vis_mode(argc, argv);
+		assign_vis_mode(argc, argv, sim_vis_mode);
+
+		verify_is_file(2, argv, "[ERROR]: Could not open Trials file. Exiting...");
+		verify_file_format(2, argv, "# BEGIN EXPERIMENT", "[ERROR] Improper trial file format. Exiting...");
+
+		verify_isfile(3, argv, "[ERROR]: Could not open input simulation file. Exiting...");
+
+		*sim_run_mode = RUN;
+	}
+	else
+	{
+		std::cerr << "[ERROR]: Could not parse args. Too few args. Exiting..." << std::endl;
+		exit(2);
+	}
+}

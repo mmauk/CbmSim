@@ -83,9 +83,10 @@ class Control
 		float CSPhasicMFFrac = 0.0;
 		float phasicFreqMin  = 200.0;
 		float phasicFreqMax  = 250.0;
-		
+	
+		// separate set of contextual MF due to position of rabbit
 		float contextMFFrac  = 0.0;
-		float contextFreqMin = 20.0;
+		float contextFreqMin = 20.0; 
 		float contextFreqMax = 50.0;
 
 		float bgFreqMin   = 10.0;
