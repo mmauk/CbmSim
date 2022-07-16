@@ -1,6 +1,7 @@
 #include <time.h>
 #include <gtk/gtk.h>
 #include "control.h"
+#include "ttyManip/tty.h"
 
 Control::Control() {}
 
@@ -138,8 +139,12 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 	int rasterCounter = 0;
 	int goSpkCounter[NUM_GO] = {0};
 
+	FILE *fp = NULL; /* use to get tty contents */
+	init_tty(&fp);
+
 	for (int trial = 0; trial < numTotalTrials; trial++)
 	{
+		// TODO: ensure we get time value before we pause!
 		timer = clock();
 		
 		// re-initialize spike counter vector
@@ -150,14 +155,18 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 		float gMFGO_sum = 0;
 
 		trial <= homeoTuningTrials ?
-			std::cout << "Pre-tuning trial number: " << trial << std::endl :
-			std::cout << "Post-tuning trial number: " << trial << std::endl;
+			std::cout << "Pre-tuning trial number: " << trial + 1 << std::endl :
+			std::cout << "Post-tuning trial number: " << trial + 1 << std::endl;
 		
 		// Homeostatic plasticity trials
 		if (trial >= homeoTuningTrials)
 		{
+
 			for (int tts = 0; tts < trialTime; tts++)
 			{			
+
+				process_input(&fp, tts, trial + 1); /* process user input from kb */
+
 				// TODO: get the model for these periods, update accordingly
 				if (tts == csStart + csLength)
 				{
@@ -247,6 +256,7 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 			}
 		}
 	}
+	reset_tty(&fp); /* reset the tty for later use */
 }
 
 void Control::saveOutputArraysToFile(int goRecipParam, int simNum)
