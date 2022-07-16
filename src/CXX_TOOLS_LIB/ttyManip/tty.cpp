@@ -4,7 +4,10 @@
  * CREATED: 07/01/2022
  *
  * IMPLEMENTATION NOTES: credit goes to PBS answer here:
- * and anon answer here: (TODO place urls) 
+ * https://stackoverflow.com/questions/29335758/using-kbhit-and-getch-on-linux 
+ * and anon answer here:
+ * https://stackoverflow.com/questions/421860/capture-characters-from-standard-input-without-waiting-for-enter-to-be-pressed
+ *
  */
 
 #include <sys/ioctl.h>
@@ -37,8 +40,8 @@ bool kbhit(FILE **fp)
 
 /*
  * IMPLEMENTATION NOTE: on call, the read could return nothing. This fnctn should 
- * 						only be called after a call to kbhit to ensure our tty has
- * 						something in it to actually read :>
+ *                      only be called after a call to kbhit to ensure our tty has
+ *                      something in it to actually read :>
  */
 char getchar(FILE **fp)
 {
