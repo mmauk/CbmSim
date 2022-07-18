@@ -1,6 +1,5 @@
 #include "array_util.h"
 #include "params/connectivityparams.h"
-#include "control.h"
 #include "gui.h"
 
 // temp function so gtk doesn't whine abt NULL callbacks
@@ -109,7 +108,7 @@ static void on_save_state(GtkWidget *widget, Control *control)
 // NOTE: Assumes that activity params have been loaded!!!!
 static void on_init_sim(GtkWidget *widget, Control *control)
 {
-	if (control->ap) control->construct_control();
+	if (control->ap) control->construct_control(GUI);
 	else 
 	{
 		fprintf(stderr, "[ERROR]: Trying to initialize a simulation without loading a file.\n");
@@ -366,15 +365,13 @@ static void free_gui_menus(struct gui *gui)
 	free_gui_menu_helper(&gui->menu_bar);
 } 
 
-int gui_init_and_run(int *argc, char ***argv)
+int gui_init_and_run(int *argc, char ***argv, Control *control)
 {
 	if (!gtk_init_check(argc, argv))
 	{
 		fprintf(stderr, "Could not initialize GTK\n");
 		return 1;
 	}
-
-	Control *control = new Control();
 
 	struct gui gui = {
 		.window = gtk_window_new(GTK_WINDOW_TOPLEVEL),
@@ -677,7 +674,6 @@ int gui_init_and_run(int *argc, char ***argv)
 
 	// manually delete objects we created
 	free_gui_menus(&gui);
-	delete control;
 
 	return 0;
 }

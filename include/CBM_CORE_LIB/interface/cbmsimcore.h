@@ -27,6 +27,12 @@
 #include "mzonemodules/mzone.h"
 #include "innetmodules/innet.h"
 
+/* TODO: consider altering this code so that CBMSimCore does not keep local copies
+ *       of the state classes. Consider whether transferring data between classes
+ *       by using classes as arguments would be just as fast as we have things now.
+ *       The advantage would be that we would use less memory and it would simplify the code.
+ */
+
 class CBMSimCore
 {
 public:
@@ -66,8 +72,8 @@ protected:
 	int numGPUs;
 
 private:
-	bool isGRStim  	 =  false;
-	int numGRStim  	 =  0;
+	bool isGRStim    =  false;
+	int numGRStim    =  0;
 	int startGRStim  =  0;
 
 	unsigned long curTime;
@@ -77,3 +83,4 @@ private:
 };
 
 #endif /* CBMSIMCORE_H_ */
+

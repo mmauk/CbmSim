@@ -8,7 +8,6 @@ Control::Control() {}
 Control::Control(std::string actParamFile)
 {
 	if (!ap) ap = new ActivityParams(actParamFile);
-	// TODO: remove simState construction from here, construct within simCore!
 	if (!simState)
 	{
 		std::cout << "[INFO]: Initializing state..." << std::endl;
@@ -43,7 +42,6 @@ Control::Control(std::string actParamFile)
 
 	if (!output_arrays_initialized)
 	{
-		// allocate and initialize output arrays
 		std::cout << "[INFO]: Initializing output arrays..." << std::endl;
 		initializeOutputArrays();
 		std::cout << "[INFO]: Finished initializing output arrays." << std::endl;
@@ -135,12 +133,14 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 
 	float medTrials;
 	clock_t timer;
-	clock_t paused_time; /* is this okay??? */
 	int rasterCounter = 0;
 	int goSpkCounter[NUM_GO] = {0};
 
-	FILE *fp = NULL; /* use to get tty contents */
-	init_tty(&fp);
+	FILE *fp = NULL;
+	if (sim_vis_mode == TUI)
+	{
+		init_tty(&fp);
+	}
 
 	for (int trial = 0; trial < numTotalTrials; trial++)
 	{
@@ -150,7 +150,7 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 		// re-initialize spike counter vector
 		std::fill(goSpkCounter, goSpkCounter + NUM_GO, 0);
 
-		int PSTHCounter = 0;	
+		int PSTHCounter = 0;
 		float gGRGO_sum = 0;
 		float gMFGO_sum = 0;
 
@@ -161,12 +161,8 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 		// Homeostatic plasticity trials
 		if (trial >= homeoTuningTrials)
 		{
-
 			for (int tts = 0; tts < trialTime; tts++)
-			{			
-
-				process_input(&fp, tts, trial + 1); /* process user input from kb */
-
+			{
 				// TODO: get the model for these periods, update accordingly
 				if (tts == csStart + csLength)
 				{
@@ -179,7 +175,7 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 				{
 					// Background MF activity in the Pre and Post CS period
 					mfAP = mfs->calcPoissActivity(mfFreq->getMFBG(),
-							simCore->getMZoneList());	
+							simCore->getMZoneList());
 				}
 				else if (tts >= csStart && tts < csStart + csPhasicSize) 
 				{
@@ -196,7 +192,7 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 				}
 
 				bool *isTrueMF = mfs->calcTrueMFs(mfFreq->getMFBG());
-				simCore->updateTrueMFs(isTrueMF);
+				simCore->updateTrueMFs(isTrueMF); /* two unnecessary fnctn calls: isTrueMF doesn't change its value! */
 				simCore->updateMFInput(mfAP);
 				simCore->calcActivity(goMin, simNum, GOGR, GRGO, MFGO, gogoW, spillFrac);
 				
@@ -212,8 +208,8 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 					for (int i = 0; i < NUM_GO; i++)
 					{
 							goSpkCounter[i] += goSpks[i];
-							gGRGO_sum 		+= grgoG[i];
-							gMFGO_sum 		+= mfgoG[i];
+							gGRGO_sum       += grgoG[i];
+							gMFGO_sum       += mfgoG[i];
 					}
 				}
 				// why is this case separate from the above
@@ -233,30 +229,35 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 					PSTHCounter++;
 					rasterCounter++;
 				}
-				if (gtk_events_pending()) gtk_main_iteration(); // place this here?
+				if (sim_vis_mode == GUI)
+				{
+					if (gtk_events_pending()) gtk_main_iteration(); // place this here?
+				}
+				else if (sim_vis_mode == TUI) process_input(&fp, tts, trial + 1); /* process user input from kb */
 			}
 		}
 		timer = clock() - timer;
 		std::cout << "Trial time seconds: " << (float)timer / CLOCKS_PER_SEC << std::endl;
 		// check the event queue after every iteration
-		// TODO: put this inside a preprocessor conditional so we do this for gui and process_events for tui
-
-		if (sim_is_paused)
+		if (sim_vis_mode == GUI)
 		{
-			std::cout << "[INFO]: Simulation is paused at end of trial " << trial << "." << std::endl;
-			while(true)
+			if (sim_is_paused)
 			{
-				// Weird edge case not taken into account: if there are events pending after user hits continue...
-				if (gtk_events_pending() || sim_is_paused) gtk_main_iteration();
-				else
+				std::cout << "[INFO]: Simulation is paused at end of trial " << trial << "." << std::endl;
+				while(true)
 				{
-					std::cout << "[INFO]: Continuing..." << std::endl;
-					break;
+					// Weird edge case not taken into account: if there are events pending after user hits continue...
+					if (gtk_events_pending() || sim_is_paused) gtk_main_iteration();
+					else
+					{
+						std::cout << "[INFO]: Continuing..." << std::endl;
+						break;
+					}
 				}
 			}
 		}
 	}
-	reset_tty(&fp); /* reset the tty for later use */
+	if (sim_vis_mode == TUI) reset_tty(&fp); /* reset the tty for later use */
 }
 
 void Control::saveOutputArraysToFile(int goRecipParam, int simNum)
@@ -361,9 +362,10 @@ void Control::deleteOutputArrays()
 	delete2DArray<ct_uint8_t>(allGOPSTH);
 }
 
-void Control::construct_control()
+// NOTE:assumes that we have initialized activity params
+void Control::construct_control(enum vis_mode sim_vis_mode)
 {
-	// TODO: remove simState construction from here, construct within simCore!
+	if (this->sim_vis_mode == NO_VIS) this->sim_vis_mode = sim_vis_mode;
 	if (!simState)
 	{
 		std::cout << "[INFO]: Initializing state..." << std::endl;

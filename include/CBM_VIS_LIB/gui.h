@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <gtk/gtk.h>
+#include "control.h"
 
 #define NUM_NORMAL_BUTTONS 8
 #define NUM_PLASTICITY_RADIOS 4
@@ -83,7 +84,7 @@ struct gui
 	struct menu menu_bar;
 };
 
-int gui_init_and_run(int *argc, char ***argv);
+int gui_init_and_run(int *argc, char ***argv, Control *control);
 
 #endif /* GUI_H_ */
 

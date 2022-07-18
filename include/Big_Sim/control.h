@@ -19,6 +19,8 @@
 #include "interfaces/ectrialsdata.h"
 #include "eyelidintegrator.h"
 
+enum vis_mode {GUI, TUI, NO_VIS};
+
 class Control 
 {
 	public:
@@ -36,6 +38,7 @@ class Control
 		ECMFPopulation *mfFreq = NULL;
 		PoissonRegenCells *mfs = NULL;
 
+		enum vis_mode sim_vis_mode = NO_VIS;
 		bool output_arrays_initialized = false; /* temporary, going to refactor soon */
 		bool sim_is_paused = false;
 
@@ -173,7 +176,7 @@ class Control
 			unsigned int numRow, unsigned int numCol);
 		void deleteOutputArrays();
 
-		void construct_control();
+		void construct_control(enum vis_mode sim_vis_mode);
 };
 
 #endif /*_CONTROL_H*/

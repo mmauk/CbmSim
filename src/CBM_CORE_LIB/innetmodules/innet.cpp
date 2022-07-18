@@ -510,7 +510,7 @@ void InNet::calcGOActivities(float goMin, int simNum, float GRGO, float MFGO, fl
 	{
 		for (int j = 0; j < numGPUs; j++)
 		{
-			apGOH[j][i] = as->apGO[i];		
+			apGOH[j][i] = as->apGO[i];
 		}
 	}
 }
@@ -545,17 +545,17 @@ void InNet::updateMFtoGROut()
 	{
 #pragma omp for
 		for (int i = 0; i < NUM_MF; i++)
-		{			
+		{
 			as->depAmpMFGR[i] = apMFH[0][i] * as->depAmpMFGR[i] * ap.fracDepMF
 			   + (!apMFH[0][i]) * (as->depAmpMFGR[i] + recoveryRate * (1 - as->depAmpMFGR[i])); 
 #pragma omp critical	
-			{	
+			{
 				for (int j = 0; j < numGPUs; j++)
 				{
 					depAmpMFH[j][i] = as->depAmpMFGR[i];
 				}
-			}	
-		}	
+			}
+		}
 	}
 }
 
@@ -567,7 +567,7 @@ void InNet::updateMFtoGOOut()
 	{
 #pragma omp for
 		for (int i = 0; i < NUM_MF; i++)
-		{			
+		{
 			as->gi_MFtoGO[i] = apMFH[0][i] * ap.gIncMFtoGO * as->depAmpMFGO[i]
 			   + as->gi_MFtoGO[i] * ap.gDecMFtoGO; 
 			as->depAmpMFGO[i] = apMFH[0][i] * as->depAmpMFGO[i] * ap.fracDepMF
@@ -579,14 +579,11 @@ void InNet::updateMFtoGOOut()
 				{
 					for (int j = 0; j < cs->numpMFfromMFtoGO[i]; j++)
 					{
-						as->inputMFGO[cs->pMFfromMFtoGO[i][j]]++;	
+						as->inputMFGO[cs->pMFfromMFtoGO[i][j]]++;
 					}
 				}
-			
 			}
-
 		}
-	
 	}
 }
 

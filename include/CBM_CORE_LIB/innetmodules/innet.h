@@ -47,7 +47,7 @@ public:
 	const ct_uint8_t* exportAPGR();
 
 	const ct_uint32_t* exportSumGRInputGO();
-	const float* 	   exportSumGOInputGO();
+	const float* exportSumGOInputGO();
 
 	const ct_uint32_t* exportPFBCSum();
 
@@ -65,9 +65,9 @@ public:
 	void calcGOActivities(float goMin, int simNum, float GRGO, float MFGO, float GOGR, float gogoW);
 	void calcSCActivities();
 
-	void updateMFtoGROut();	
+	void updateMFtoGROut();
 	void updateMFtoGOOut();
-	void updateGOtoGROutParameters(float GOGR, float spillFrac);	
+	void updateGOtoGROutParameters(float GOGR, float spillFrac);
 	void updateGOtoGOOut();
 	void resetMFHist(unsigned long t);
 
@@ -82,8 +82,8 @@ public:
 	void cpyDepAmpUBCHosttoGPUCUDA(cudaStream_t **sts, int streamN);
 	void cpyAPUBCHosttoGPUCUDA(cudaStream_t **sts, int streamN);
 	
-	void cpyDepAmpGOGRHosttoGPUCUDA(cudaStream_t **sts, int streamN);	
-	void cpyDynamicAmpGOGRHosttoGPUCUDA(cudaStream_t **sts, int streamN);	
+	void cpyDepAmpGOGRHosttoGPUCUDA(cudaStream_t **sts, int streamN);
+	void cpyDynamicAmpGOGRHosttoGPUCUDA(cudaStream_t **sts, int streamN);
 	void cpyAPGOHosttoGPUCUDA(cudaStream_t **sts, int streamN);
 	void runUpdateMFInGRCUDA(cudaStream_t **sts, int streamN);
 	void runUpdateMFInGRDepressionCUDA(cudaStream_t **sts, int streamN);
@@ -93,7 +93,7 @@ public:
 	
 	void runUpdateGOInGRCUDA(cudaStream_t **sts, int streamN, float GOGR);
 	void runUpdateGOInGRDepressionCUDA(cudaStream_t **sts, int streamN);
-	void runUpdateGOInGRDynamicSpillCUDA(cudaStream_t **sts, int streamN);	
+	void runUpdateGOInGRDynamicSpillCUDA(cudaStream_t **sts, int streamN);
 	void runUpdatePFBCSCOutCUDA(cudaStream_t **sts, int streamN);
 	
 	void runUpdateGROutGOCUDA(cudaStream_t **sts, int streamN);
@@ -110,10 +110,10 @@ public:
 	void runUpdateGRHistoryCUDA(cudaStream_t **sts, int streamN, unsigned long t);
 
 protected:
-	ActivityParams 	 ap;
+	ActivityParams ap;
 
 	InNetConnectivityState *cs;
-	InNetActivityState 	   *as;
+	InNetActivityState *as;
 
 	int gpuIndStart;
 	int numGPUs;
@@ -154,8 +154,8 @@ protected:
 	ct_uint32_t **apUBCGPU;
 
 	float **depAmpUBCH;
-	float **depAmpUBCGPU;	
-	float **depAmpUBCGRGPU;	
+	float **depAmpUBCGPU;
+	float **depAmpUBCGRGPU;
 	
 
 	//mossy fibers
@@ -256,7 +256,7 @@ protected:
 
 	float **threshGRGPU;
 	float **vGRGPU;
-	float **gLeakGRGPU;	
+	float **gLeakGRGPU;
 	float **gNMDAGRGPU;
 	float **gNMDAIncGRGPU;
 	float **gKCaGRGPU;
@@ -264,40 +264,40 @@ protected:
 
 	//conduction delays
 	ct_uint32_t **delayGOMasksGRGPU;
-	size_t 		*delayGOMasksGRGPUP;
+	size_t *delayGOMasksGRGPUP;
 	ct_uint32_t **delayBCPCSCMaskGRGPU;
 	ct_uint32_t **delayBCMasksGRGPU;
-	size_t 		*delayBCMasksGRGPUP;
+	size_t *delayBCMasksGRGPUP;
 
 	//connectivity
-	int contVar 	  = 1;
+	int contVar       = 1;
 	int contVarOther  = 1;
-	float sumGOFR	  = 0;
+	float sumGOFR     = 0;
 	float sumExScaler = 0;
-	int slowCounter	  = 0;
+	int slowCounter   = 0;
 	int timeStepPOne;
 	int thingCounter  = 0;
 
 	ct_int32_t  **numGOOutPerGRGPU;
 	ct_uint32_t **grConGROutGOGPU;
-	size_t 		*grConGROutGOGPUP;
+	size_t *grConGROutGOGPUP;
 	
 	ct_int32_t  **numBCOutPerGRGPU;
 	ct_uint32_t **grConGROutBCGPU;
-	size_t 		*grConGROutBCGPUP;
+	size_t *grConGROutBCGPUP;
 
 	ct_int32_t  **numGOInPerGRGPU;
 	ct_uint32_t **grConGOOutGRGPU;
-	size_t 		*grConGOOutGRGPUP;
+	size_t *grConGOOutGRGPUP;
 
 	ct_int32_t  **numMFInPerGRGPU;
 	ct_uint32_t **grConMFOutGRGPU;
-	size_t 		*grConMFOutGRGPUP;
+	size_t *grConMFOutGRGPUP;
 	
 	
-	ct_int32_t 	**numUBCInPerGRGPU;	
+	ct_int32_t **numUBCInPerGRGPU;
 	ct_uint32_t **grConUBCOutGRGPU;
-	size_t 		*grConUBCOutGRGPUP;
+	size_t *grConUBCOutGRGPUP;
 	
 	//end gpu variables
 
@@ -311,7 +311,7 @@ protected:
 	//end host variables
 
 	ct_uint32_t **inputPFSCGPU;
-	size_t 		*inputPFSCGPUP;
+	size_t *inputPFSCGPUP;
 	ct_uint32_t **inputSumPFSCGPU;
 	//end gpu related variables
 
@@ -324,7 +324,7 @@ protected:
 
 	//device variables
 	ct_uint32_t **inputPFBCGPU;
-	size_t 		*inputPFBCGPUP;
+	size_t *inputPFBCGPUP;
 	ct_uint32_t **inputSumPFBCGPU;
 	//end gpu related variables
 	//-----------end basket cell variables

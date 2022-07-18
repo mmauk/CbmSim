@@ -8,21 +8,20 @@
 const std::string INPUT_DATA_PATH = "../data/inputs/";
 const std::string OUTPUT_DATA_PATH = "../data/outputs/";
 
-enum vis_mode {GUI, TUI, NONE};
-enum run_mode {BUILD, RUN, NONE}
+enum run_mode {BUILD, RUN, NO_RUN};
 
 void verify_vis_mode(int *argc, char ***argv);
 void assign_vis_mode(int *argc, char ***argv, enum vis_mode *sim_vis_mode);
-void verify_is_file(int arg_val, int ***argv, std::string error_msg);
-void verify_file_format(int arg_val, int ***argv, std::string first_line_test, std::string error_msg);
-void validate_args_and_set_modes(int *argc, int ***argv,
+void verify_is_file(int arg_val, char ***argv, std::string error_msg);
+void verify_file_format(int arg_val, char ***argv, std::string first_line_test, std::string error_msg);
+void validate_args_and_set_modes(int *argc, char ***argv,
 	  enum vis_mode *sim_vis_mode, enum run_mode *sim_run_mode);
 
 int main(int argc, char **argv) 
 {
 // ==================================== PREVIOUS FILE HANDLING ====================================
 
-	enum vis_mode sim_vis_mode = NONE;
+	enum vis_mode sim_vis_mode = NO_VIS;
 	std::string actParamFile = "";
 	std::ifstream fileBuf;
 	int option;
@@ -45,8 +44,14 @@ int main(int argc, char **argv)
 			}
 			case 'm':
 			{
-				if (std::string(optarg) == "gui") sim_vis_mode = GUI;
-				else sim_vis_mode = TUI;
+				if (std::string(optarg) == "gui")
+				{
+				   sim_vis_mode = GUI;
+				} 
+				else if (std::string(optarg) == "tui")
+				{
+					sim_vis_mode = TUI;
+				} 
 				break;
 			}
 			case ':':
@@ -71,12 +76,12 @@ int main(int argc, char **argv)
 	}
 
 	int exit_status = -1;
-
+	Control *control = new Control(); // default destructor does nothing
 	switch (sim_vis_mode)
 	{
 		case GUI:
 		{
-			exit_status = gui_init_and_run(&argc, &argv);
+			exit_status = gui_init_and_run(&argc, &argv, control);
 			break;
 		}
 		case TUI:
@@ -88,36 +93,34 @@ int main(int argc, char **argv)
 			float grW[8] = { 0.00056, 0.0007, 0.000933, 0.0014, 0.0028, 0.0056, 0.0112, 0.0224 };
 			int grWLength = sizeof(grW) / sizeof(grW[0]);
 
-			std::cout << "[INFO]: Running all simulations..." << std::endl;
+			std::cout << "[INFO]: Running simulation..." << std::endl;
 			clock_t time = clock();
 			for (int goRecipParamNum = 0; goRecipParamNum < 1; goRecipParamNum++)
 			{
 				float GRGO = grW[goRecipParamNum] * ws; // scaled grgo weights
 			   	float MFGO = mfW * ws; // scaled mfgo weights
 			   	float GOGR = gogr; // gogr weights, unchanged
-			   	for (int simNum = 0; simNum < 1; simNum++)
-			   	{
-					std::cout << "[INFO]: Running simulation #" << (simNum + 1) << std::endl;
-			   		Control control(actParamFile);
-					control.runTrials(simNum, GOGR, GRGO, MFGO);
-					// TODO: put in output file dir to save to!
-					control.saveOutputArraysToFile(goRecipParamNum, simNum);
-			   	}
+				control->init_activity_params(actParamFile);
+				control->construct_control(TUI);
+				control->runTrials(0, GOGR, GRGO, MFGO);
+				// TODO: put in output file dir to save to!
+				//control->saveOutputArraysToFile(goRecipParamNum, simNum);
 			}
 			time = clock() - time;
-			std::cout << "[INFO] All simulations finished in "
+			std::cout << "[INFO] Simulation finished in "
 			   		  << (float) time / CLOCKS_PER_SEC << "s." << std::endl;
 			exit_status = 0;
 			break;
 		}
-		case NONE:
+		case NO_VIS:
 		{
 			std::cerr << "[INFO] must specify a mode {GUI, TUI}. Exiting..." << std::endl;
 			exit_status = 1;
 			break;
 		}
 	}
-
+	
+	delete control;
 	return exit_status;
 }
 
@@ -136,10 +139,10 @@ void assign_vis_mode(int *argc, char ***argv, enum vis_mode *sim_vis_mode)
 	else if (*argv[1] == "gui") *sim_vis_mode = GUI;
 }
 
-void verify_is_file(int arg_val, int ***argv, std::string error_msg)
+void verify_is_file(int arg_val, char ***argv, std::string error_msg)
 {
 	std::ifstream inFileBuf;
-	inFileBuf.open(*argv[arg_val]);
+	inFileBuf.open((*argv)[arg_val]);
 	if (!inFileBuf.is_open())
 	{
 		std::cerr << error_msg << std::endl;
@@ -149,10 +152,10 @@ void verify_is_file(int arg_val, int ***argv, std::string error_msg)
 	inFileBuf.close();
 }
 
-void verify_file_format(int arg_val, int ***argv, std::string first_line_test, std::string error_msg)
+void verify_file_format(int arg_val, char ***argv, std::string first_line_test, std::string error_msg)
 {
 	std::ifstream inFileBuf;
-	inFileBuf.open(*argv[arg_val]);
+	inFileBuf.open((*argv)[arg_val]);
 	std::string first_line = "";
 	getline(inFileBuf, first_line);
 	inFileBuf.close();
@@ -163,7 +166,7 @@ void verify_file_format(int arg_val, int ***argv, std::string first_line_test, s
 	}
 }
 
-void validate_args_and_set_modes(int *argc, int ***argv,
+void validate_args_and_set_modes(int *argc, char ***argv,
 	  enum vis_mode *sim_vis_mode, enum run_mode *sim_run_mode)
 {
 	if (*argc >= 4) /* build mode */
@@ -184,7 +187,7 @@ void validate_args_and_set_modes(int *argc, int ***argv,
 		verify_is_file(2, argv, "[ERROR]: Could not open Trials file. Exiting...");
 		verify_file_format(2, argv, "# BEGIN EXPERIMENT", "[ERROR] Improper trial file format. Exiting...");
 
-		verify_isfile(3, argv, "[ERROR]: Could not open input simulation file. Exiting...");
+		verify_is_file(3, argv, "[ERROR]: Could not open input simulation file. Exiting...");
 
 		*sim_run_mode = RUN;
 	}
