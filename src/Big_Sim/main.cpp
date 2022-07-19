@@ -5,9 +5,6 @@
 #include "control.h"
 #include "gui.h"
 
-const std::string INPUT_DATA_PATH = "../data/inputs/";
-const std::string OUTPUT_DATA_PATH = "../data/outputs/";
-
 enum run_mode {BUILD, RUN, NO_RUN};
 
 void verify_vis_mode(int *argc, char ***argv);

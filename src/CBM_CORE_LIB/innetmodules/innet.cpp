@@ -590,6 +590,7 @@ void InNet::updateMFtoGOOut()
 void InNet::updateGOtoGROutParameters(float GOGR, float spillFrac)
 {
 
+	// TODO: place these in the build file as well
 	float scalerGOGR = GOGR*ap.gIncFracSpilloverGOtoGR*1.4;
 	float halfShift = 12.0;//shift;
 	float steepness = 20.0;//steep; 

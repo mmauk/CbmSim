@@ -19,6 +19,10 @@
 #include "interfaces/ectrialsdata.h"
 #include "eyelidintegrator.h"
 
+// moved from main, should go somewhere better :/
+const std::string INPUT_DATA_PATH = "../data/inputs/";
+const std::string OUTPUT_DATA_PATH = "../data/outputs/";
+
 enum vis_mode {GUI, TUI, NO_VIS};
 
 class Control 
@@ -32,7 +36,6 @@ class Control
 		// Objects
 		ActivityParams *ap = NULL;
 
-		// TODO: make these guys non pointers, somehow!
 		CBMState *simState = NULL;
 		CBMSimCore *simCore = NULL;
 		ECMFPopulation *mfFreq = NULL;
@@ -41,14 +44,15 @@ class Control
 		enum vis_mode sim_vis_mode = NO_VIS;
 		bool output_arrays_initialized = false; /* temporary, going to refactor soon */
 		bool sim_is_paused = false;
+		std::string inStateFileName = "";
 
 		const float *grgoG, *mfgoG;
 		const ct_uint8_t *mfAP;
 
 		// params that I do not know how to categorize
-		float goMin = 0.26;
-		float spillFrac = 0.15;
-		float gogoW = 0.0125;
+		float goMin = 0.26; // TODO: remove
+		float spillFrac = 0.15; // go->gr synapse, part of build
+		float gogoW = 0.0125; // build input file
 		float inputStrength = 0.0;
 
 		// sim params
@@ -60,13 +64,13 @@ class Control
 		int homeoTuningTrials      = 0;
 		int granuleActDetectTrials = 0;
 
-		int msPreCS = 400;
-		int msPostCS = 400;
+		int msPreCS = 1500;
+		int msPostCS = 1000;
 
-		int csStart = 2000; // begin at 2s?
+		int csStart = 1500; // begin at 2s?
 		int csPhasicSize = 50;
 
-		int csLength = 2000; // with duration 2s?
+		int csLength = 500; // with duration 2s?
 							 
 		// mzone stuff
 		int numMZones = 1;
@@ -103,7 +107,7 @@ class Control
 		float fracImport  = 0.0;
 		float fracOverlap = 0.2;
 
-		int trialTime = 5000; /* wild that this is here */
+		int trialTime = 3000; /* wild that this is here */
 		
 		// raster stuff
 		int allGOPSTHColSize = csLength + msPreCS + msPostCS;

@@ -66,6 +66,8 @@ static void on_load_sim_state_file(GtkWidget *widget, Control *control)
 		char *sim_state_file = gtk_file_chooser_get_filename(chooser);
 		// TODO: pop-up warning for invalid file
 		std::string sim_state_file_std_str = std::string(sim_state_file);
+		// set input state file name for saving state after each trial
+		control->inStateFileName = sim_state_file_std_str;
 		control->init_sim_state(std::string(sim_state_file));
 		g_free(sim_state_file);
 	}

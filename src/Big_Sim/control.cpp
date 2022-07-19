@@ -1,7 +1,29 @@
+#include <iomanip>
 #include <time.h>
 #include <gtk/gtk.h>
 #include "control.h"
 #include "ttyManip/tty.h"
+
+const std::string BIN_EXT = "bin";
+
+// private utility function. Will move to a better place later
+std::string getFileBasename(std::string fullFilePath)
+{
+	size_t sep = fullFilePath.find_last_of("\\/");
+	if (sep != std::string::npos)
+	    fullFilePath = fullFilePath.substr(sep + 1, fullFilePath.size() - sep - 1);
+	
+	size_t dot = fullFilePath.find_last_of(".");
+	if (dot != std::string::npos)
+	{
+	    std::string name = fullFilePath.substr(0, dot);
+	}
+	else
+	{
+	    std::string name = fullFilePath;
+	}
+	return (dot != std::string::npos) ? fullFilePath.substr(0, dot) : fullFilePath;
+}
 
 Control::Control() {}
 
@@ -132,6 +154,8 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 	int numTotalTrials   = preTrialNumber + numTrainingTrials;  
 
 	float medTrials;
+	auto curr_time = std::time(nullptr);
+	auto local_time = *std::localtime(&curr_time);
 	clock_t timer;
 	int rasterCounter = 0;
 	int goSpkCounter[NUM_GO] = {0};
@@ -170,7 +194,6 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 					// why zoneN and errDriveRelative set manually???
 					simCore->updateErrDrive(0, 0.0);
 				}
-				
 				if (tts < csStart || tts >= csStart + csLength)
 				{
 					// Background MF activity in the Pre and Post CS period
@@ -238,6 +261,19 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 		}
 		timer = clock() - timer;
 		std::cout << "Trial time seconds: " << (float)timer / CLOCKS_PER_SEC << std::endl;
+		// automatic saving for Gelson and forgetting grant.
+		// format is: bunnyName_date_trialNum.bin
+		std::ostringstream outFileNameBuf;
+		outFileNameBuf << OUTPUT_DATA_PATH
+					   << getFileBasename(inStateFileName)
+					   << "_"
+					   << std::put_time(&local_time, "%d-%m-%Y")
+					   << "_"
+					   << std::to_string(trial + 1)
+					   << "."
+					   << BIN_EXT;
+		std::string outFileName = outFileNameBuf.str();
+		save_sim_state(outFileName);
 		// check the event queue after every iteration
 		if (sim_vis_mode == GUI)
 		{
