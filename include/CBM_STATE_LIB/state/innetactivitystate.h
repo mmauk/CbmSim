@@ -61,7 +61,7 @@ public:
 
 	//granule cells
 	std::unique_ptr<float[]> depAmpMFGR{nullptr};
-	std::unique_ptr<ct_uint8_t[]> apGR{nullptr}; // <- pulled via getGPUData	
+	std::unique_ptr<ct_uint8_t[]> apGR{nullptr}; // <- pulled via getGPUData
 	std::unique_ptr<ct_uint32_t[]> apBufGR{nullptr};
 	// NOTE: gMFGR was 2D array, now 1D for smart ptr
 	// access using indices 0 <= i < NUM_GR, 0 <= j < MAX_NUM_P_GR_FROM_MF_TO_GR like so:

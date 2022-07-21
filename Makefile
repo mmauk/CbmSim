@@ -166,15 +166,17 @@ CXX_TOOLS_OBJ_PATH     = $(BUILD_PATH)CXX_TOOLS_LIB/
 ####### CXX Tools Files
 
 CXX_TOOLS_SOURCES  = $(CXX_TOOLS_SRC_PATH)fileIO/rawbytesrw.cpp \
-			         $(CXX_TOOLS_SRC_PATH)memoryMgmt/arrayvalidate.cpp \
-			         $(CXX_TOOLS_SRC_PATH)memoryMgmt/dynamic2darray.cpp \
-			         $(CXX_TOOLS_SRC_PATH)randGenerators/mersenne.cpp \
-			         $(CXX_TOOLS_SRC_PATH)randGenerators/mother.cpp \
-			         $(CXX_TOOLS_SRC_PATH)randGenerators/sfmt.cpp \
+					 $(CXX_TOOLS_SRC_PATH)fileIO/build_file.cpp \
+					 $(CXX_TOOLS_SRC_PATH)memoryMgmt/arrayvalidate.cpp \
+					 $(CXX_TOOLS_SRC_PATH)memoryMgmt/dynamic2darray.cpp \
+					 $(CXX_TOOLS_SRC_PATH)randGenerators/mersenne.cpp \
+					 $(CXX_TOOLS_SRC_PATH)randGenerators/mother.cpp \
+					 $(CXX_TOOLS_SRC_PATH)randGenerators/sfmt.cpp \
 					 $(CXX_TOOLS_SRC_PATH)ttyManip/tty.cpp
 
 
 CXX_TOOLS_OBJECTS  = $(CXX_TOOLS_OBJ_PATH)rawbytesrw.o \
+                     $(CXX_TOOLS_OBJ_PATH)build_file.o \
                      $(CXX_TOOLS_OBJ_PATH)arrayvalidate.o \
                      $(CXX_TOOLS_OBJ_PATH)dynamic2darray.o \
                      $(CXX_TOOLS_OBJ_PATH)mersenne.o \
@@ -883,6 +885,9 @@ $(CXX_TOOLS_OBJ_PATH):
 
 $(CXX_TOOLS_OBJ_PATH)rawbytesrw.o: $(CXX_TOOLS_SRC_PATH)fileIO/rawbytesrw.cpp $(CXX_TOOLS_INCLUDE_PATH)fileIO/rawbytesrw.h
 	$(CXX) -c $(MODULE_CXX_FLAGS) $(CXX_TOOLS_INCLUDES) -o $(CXX_TOOLS_OBJ_PATH)rawbytesrw.o $(CXX_TOOLS_SRC_PATH)fileIO/rawbytesrw.cpp
+
+$(CXX_TOOLS_OBJ_PATH)build_file.o: $(CXX_TOOLS_SRC_PATH)fileIO/build_file.cpp $(CXX_TOOLS_INCLUDE_PATH)fileIO/build_file.h
+	$(CXX) -c $(MODULE_CXX_FLAGS) $(CXX_TOOLS_INCLUDES) -o $(CXX_TOOLS_OBJ_PATH)build_file.o $(CXX_TOOLS_SRC_PATH)fileIO/build_file.cpp
 
 $(CXX_TOOLS_OBJ_PATH)arrayvalidate.o: $(CXX_TOOLS_SRC_PATH)memoryMgmt/arrayvalidate.cpp $(CXX_TOOLS_INCLUDE_PATH)memoryMgmt/arrayvalidate.h
 	$(CXX) -c $(MODULE_CXX_FLAGS) $(CXX_TOOLS_INCLUDES) -o $(CXX_TOOLS_OBJ_PATH)arrayvalidate.o $(CXX_TOOLS_SRC_PATH)memoryMgmt/arrayvalidate.cpp

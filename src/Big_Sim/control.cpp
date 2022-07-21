@@ -84,6 +84,16 @@ Control::~Control()
 	if (output_arrays_initialized) deleteOutputArrays();
 }
 
+void save_gelsons_variables(int trial)
+{
+	if (trial % 50 == 0)
+	{
+		
+		// gr activity goes
+	}
+	// all other activity goes
+}
+
 void Control::init_activity_params(std::string actParamFile)
 {
 	if (!ap)
