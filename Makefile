@@ -166,6 +166,7 @@ CXX_TOOLS_OBJ_PATH     = $(BUILD_PATH)CXX_TOOLS_LIB/
 ####### CXX Tools Files
 
 CXX_TOOLS_SOURCES  = $(CXX_TOOLS_SRC_PATH)fileIO/rawbytesrw.cpp \
+					 $(CXX_TOOLS_SRC_PATH)fileIO/build_file.cpp \
 			         $(CXX_TOOLS_SRC_PATH)memoryMgmt/arrayvalidate.cpp \
 			         $(CXX_TOOLS_SRC_PATH)memoryMgmt/dynamic2darray.cpp \
 			         $(CXX_TOOLS_SRC_PATH)randGenerators/mersenne.cpp \
