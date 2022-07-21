@@ -158,7 +158,9 @@ class Control
 		//ct_uint8_t **allGORaster_Trial;
 		//ct_uint8_t *goSpkCount_Trial;
 		const ct_uint8_t* goSpks; 
-	
+
+		void save_gelsons_variables(int trial);
+
 		void init_activity_params(std::string actParamFile);
 
 		void init_sim_state(std::string stateFile);

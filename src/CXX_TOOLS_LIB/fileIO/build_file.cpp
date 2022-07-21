@@ -13,6 +13,43 @@
 #include <regex>
 #include "fileIO/build_file.h"
 
+// regex strings for matching variable identifiers and variable values
+const std::string var_id_regex_str = "[a-zA-Z_]{1}[a-zA-Z0-9_]*";
+const std::string var_val_regex_str = "[+-]?([0-9]*[.])?[0-9]*([e][+-]?[0-9]+)?";
+
+// look-up table for lexemes, is used for printing lexemes to whatever stream you want
+std::map<lexeme, std::string> lex_string_look_up = {
+
+		{ BEGIN_MARKER, "BEGIN_MARKER" },
+		{ END_MARKER, "END_MARKER"},
+		{ REGION, "REGION" },
+		{ REGION_TYPE, "REGION_TYPE" },
+		{ VAR_IDENTIFIER, "VAR_IDENTIFIER" },
+		{ VAR_VALUE, "VAR_VALUE" },
+		{ SINGLE_COMMENT, "SINGLE_COMMENT" },
+		{ DOUBLE_COMMENT_BEGIN, "DOUBLE_COMMENT_BEGIN" },
+		{ DOUBLE_COMMENT_END, "DOUBLE_COMMENT_END" },
+
+};
+
+// definitions of tokens via their lexemes
+std::map<std::string, lexeme> token_defs = {
+
+		{ "#begin", BEGIN_MARKER },
+		{ "#end", END_MARKER },
+		{ "filetype", REGION },
+		{ "section", REGION },
+		{ "build", REGION_TYPE },
+		{ "connectivity", REGION_TYPE },
+		{ "activity", REGION_TYPE },
+		{ "[a-zA-Z_]{1}[a-zA-Z0-9_]*", VAR_IDENTIFIER },
+		{ "[+-]?([0-9]*[.])?[0-9]*([e][+-]?[0-9]+)?", VAR_VALUE },
+		{ "//", SINGLE_COMMENT },
+		{ "/*", DOUBLE_COMMENT_BEGIN },
+		{ "*/", DOUBLE_COMMENT_END },
+
+};
+
 /*
  * Implementation Notes:
  *     this function uses an input file stream to basically loop over
