@@ -20,9 +20,9 @@ CXX              = g++
 CXXFLAGS         = -m64 -pipe -std=c++14 -O3
 
 # MODULE_CXX_FLAGS = -m64 -pipe -std=c++14 -g -fPIC
-MODULE_CXX_FLAGS = -m64 -pipe -std=c++14 -O2 -fPIC
-INCPATH          = -I. -Iinclude/Big_Sim -I/usr/local/cuda/include -I$(ROOT)include/CBM_CORE_LIB -I$(ROOT)include/CBM_DATA_LIB \
-			       -I$(ROOT)include/CBM_STATE_LIB -I$(ROOT)include/CBM_TOOLS_LIB -I $(ROOT)include/CBM_VIS_LIB -I$(ROOT)include/CXX_TOOLS_LIB 
+MODULE_CXX_FLAGS = -m64 -pipe -std=c++14 -O3 -fPIC
+INCPATH          = -I. -I$(ROOT)include/Big_Sim -I/usr/local/cuda/include -I$(ROOT)include/CBM_CORE_LIB -I$(ROOT)include/CBM_DATA_LIB \
+			       -I$(ROOT)include/CBM_STATE_LIB -I$(ROOT)include/CBM_TOOLS_LIB -I$(ROOT)include/CBM_VIS_LIB -I$(ROOT)include/CXX_TOOLS_LIB 
 INCPATH          += $(shell pkg-config --cflags gtk+-3.0)
 LIBS             = -L/usr/local/cuda/lib64 -L/usr/lib64 -L/opt/cuda/lib64 -lcudart
 LIBS            += $(shell pkg-config --libs gtk+-3.0)
@@ -168,7 +168,6 @@ CXX_TOOLS_OBJ_PATH     = $(BUILD_PATH)CXX_TOOLS_LIB/
 CXX_TOOLS_SOURCES  = $(CXX_TOOLS_SRC_PATH)fileIO/rawbytesrw.cpp \
 					 $(CXX_TOOLS_SRC_PATH)fileIO/build_file.cpp \
 					 $(CXX_TOOLS_SRC_PATH)memoryMgmt/arrayvalidate.cpp \
-					 $(CXX_TOOLS_SRC_PATH)memoryMgmt/dynamic2darray.cpp \
 					 $(CXX_TOOLS_SRC_PATH)randGenerators/mersenne.cpp \
 					 $(CXX_TOOLS_SRC_PATH)randGenerators/mother.cpp \
 					 $(CXX_TOOLS_SRC_PATH)randGenerators/sfmt.cpp \
@@ -178,7 +177,6 @@ CXX_TOOLS_SOURCES  = $(CXX_TOOLS_SRC_PATH)fileIO/rawbytesrw.cpp \
 CXX_TOOLS_OBJECTS  = $(CXX_TOOLS_OBJ_PATH)rawbytesrw.o \
                      $(CXX_TOOLS_OBJ_PATH)build_file.o \
                      $(CXX_TOOLS_OBJ_PATH)arrayvalidate.o \
-                     $(CXX_TOOLS_OBJ_PATH)dynamic2darray.o \
                      $(CXX_TOOLS_OBJ_PATH)mersenne.o \
                      $(CXX_TOOLS_OBJ_PATH)mother.o \
                      $(CXX_TOOLS_OBJ_PATH)sfmt.o \
@@ -188,7 +186,7 @@ CXX_TOOLS_OBJECTS  = $(CXX_TOOLS_OBJ_PATH)rawbytesrw.o \
 ####### All Module Include Paths
 
 MODULE_OBJ_PATHS = $(CBM_CORE_OBJ_PATH) $(CBM_DATA_OBJ_PATH) $(CBM_STATE_OBJ_PATH) \
-					   $(CBM_TOOLS_OBJ_PATH) $(CXX_TOOLS_OBJ_PATH)
+					   $(CBM_TOOLS_OBJ_PATH) $(CBM_VIS_OBJ_PATH) $(CXX_TOOLS_OBJ_PATH)
 
 ####### Module Object Files
 
@@ -217,7 +215,7 @@ $(BIG_SIM_OBJ_PATH):
 all: $(TARGET)
 
 $(TARGET):  $(MODULE_OBJECTS) $(BIG_SIM_OBJECTS) 	
-	$(LINK) $(LFLAGS) $(INCPATH) -o $(TARGET) $(MODULE_OBJECTS) $(BIG_SIM_OBJECTS) $(LIBS) 
+	$(LINK) $(LFLAGS) -o $(TARGET) $(MODULE_OBJECTS) $(BIG_SIM_OBJECTS) $(LIBS) 
 	
 ####### Compile Big Simulation
 
@@ -891,10 +889,6 @@ $(CXX_TOOLS_OBJ_PATH)build_file.o: $(CXX_TOOLS_SRC_PATH)fileIO/build_file.cpp $(
 
 $(CXX_TOOLS_OBJ_PATH)arrayvalidate.o: $(CXX_TOOLS_SRC_PATH)memoryMgmt/arrayvalidate.cpp $(CXX_TOOLS_INCLUDE_PATH)memoryMgmt/arrayvalidate.h
 	$(CXX) -c $(MODULE_CXX_FLAGS) $(CXX_TOOLS_INCLUDES) -o $(CXX_TOOLS_OBJ_PATH)arrayvalidate.o $(CXX_TOOLS_SRC_PATH)memoryMgmt/arrayvalidate.cpp
-
-$(CXX_TOOLS_OBJ_PATH)dynamic2darray.o: $(CXX_TOOLS_SRC_PATH)memoryMgmt/dynamic2darray.cpp $(CXX_TOOLS_INCLUDE_PATH)memoryMgmt/dynamic2darray.h \
-		                               $(CXX_TOOLS_INCLUDE_PATH)memoryMgmt/arrayvalidate.h
-	$(CXX) -c $(MODULE_CXX_FLAGS) $(CXX_TOOLS_INCLUDES) -o $(CXX_TOOLS_OBJ_PATH)dynamic2darray.o $(CXX_TOOLS_SRC_PATH)memoryMgmt/dynamic2darray.cpp
 
 $(CXX_TOOLS_OBJ_PATH)mersenne.o: $(CXX_TOOLS_SRC_PATH)randGenerators/mersenne.cpp $(CXX_TOOLS_INCLUDE_PATH)randGenerators/randomc.h
 	$(CXX) -c $(MODULE_CXX_FLAGS) $(CXX_TOOLS_INCLUDES) -o $(CXX_TOOLS_OBJ_PATH)mersenne.o $(CXX_TOOLS_SRC_PATH)randGenerators/mersenne.cpp

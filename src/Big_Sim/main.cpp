@@ -15,21 +15,21 @@ void verify_file_format(int arg_val, char ***argv, std::string first_line_test, 
 void validate_args_and_set_modes(int *argc, char ***argv,
 	  enum vis_mode *sim_vis_mode, enum run_mode *sim_run_mode);
 
-int main(int argc, char **argv)
-{
-	tokenized_file t_file;
-	lexed_file l_file;
-	parsed_file p_file;
-	std::cout << argv[1] << std::endl;
-	tokenize_build_file(std::string(argv[1]), t_file);
-	lex_tokenized_build_file(t_file, l_file);
-	parse_lexed_build_file(l_file, p_file);
+//int main(int argc, char **argv)
+//{
+//	tokenized_file t_file;
+//	lexed_file l_file;
+//	parsed_file p_file;
+//	std::cout << argv[1] << std::endl;
+//	tokenize_build_file(std::string(argv[1]), t_file);
+//	lex_tokenized_build_file(t_file, l_file);
+//	parse_lexed_build_file(l_file, p_file);
+//
+//	print_parsed_build_file(p_file);
+//	return 0;
+//}
 
-	print_parsed_build_file(p_file);
-	return 0;
-}
-
-int main2(int argc, char **argv) 
+int main(int argc, char **argv) 
 {
 // ==================================== PREVIOUS FILE HANDLING ====================================
 
