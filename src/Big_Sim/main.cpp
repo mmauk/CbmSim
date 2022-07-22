@@ -20,12 +20,17 @@ int main(int argc, char **argv)
 	tokenized_file t_file;
 	lexed_file l_file;
 	parsed_file p_file;
-	std::cout << argv[1] << std::endl;
+
 	tokenize_build_file(std::string(argv[1]), t_file);
 	lex_tokenized_build_file(t_file, l_file);
 	parse_lexed_build_file(l_file, p_file);
 
-	print_parsed_build_file(p_file);
+	ConnectivityParams cp(p_file);
+	ActivityParams ap(p_file);
+	std::cout << cp << std::endl;
+	std::cout << ap << std::endl;
+	//print_lexed_build_file(l_file);
+	//print_parsed_build_file(p_file);
 	return 0;
 }
 

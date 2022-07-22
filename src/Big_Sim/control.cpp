@@ -4,8 +4,6 @@
 #include "control.h"
 #include "ttyManip/tty.h"
 
-const std::string BIN_EXT = "bin";
-
 // private utility function. Will move to a better place later
 std::string getFileBasename(std::string fullFilePath)
 {
@@ -271,19 +269,6 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 		}
 		timer = clock() - timer;
 		std::cout << "Trial time seconds: " << (float)timer / CLOCKS_PER_SEC << std::endl;
-		// automatic saving for Gelson and forgetting grant.
-		// format is: bunnyName_date_trialNum.bin
-		std::ostringstream outFileNameBuf;
-		outFileNameBuf << OUTPUT_DATA_PATH
-					   << getFileBasename(inStateFileName)
-					   << "_"
-					   << std::put_time(&local_time, "%d-%m-%Y")
-					   << "_"
-					   << std::to_string(trial + 1)
-					   << "."
-					   << BIN_EXT;
-		std::string outFileName = outFileNameBuf.str();
-		save_sim_state(outFileName);
 		// check the event queue after every iteration
 		if (sim_vis_mode == GUI)
 		{

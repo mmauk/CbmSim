@@ -24,6 +24,7 @@ enum lexeme {
 	BEGIN_MARKER, END_MARKER,
 	REGION,
 	REGION_TYPE,
+	TYPE_NAME,
 	VAR_IDENTIFIER, VAR_VALUE,
 	SINGLE_COMMENT,
 	DOUBLE_COMMENT_BEGIN, DOUBLE_COMMENT_END
@@ -40,6 +41,15 @@ struct lexed_token
 
 typedef struct lexed_token lexed_token;
 
+struct variable
+{
+	std::string type_name;
+	std::string identifier;
+	std::string value;
+};
+
+typedef struct variable variable;
+
 /* 
  * a section within the build file that includes the label of the section
  * and the dictionary of parameters in that section
@@ -48,7 +58,7 @@ typedef struct lexed_token lexed_token;
 struct parsed_section
 {
 	std::string section_label;
-	std::map<std::string, std::string> param_map;
+	std::map<std::string, variable> param_map;
 };
 
 typedef struct parsed_section parsed_section;
@@ -81,7 +91,7 @@ typedef struct lexed_file lexed_file;
 struct parsed_file
 {
 	std::string file_type_label;
-	std::vector<parsed_section> parsed_sections;
+	std::map<std::string, parsed_section> parsed_sections;
 };
 
 typedef parsed_file parsed_file;

@@ -10,15 +10,7 @@
 
 ActivityParams::ActivityParams() {}
 
-ActivityParams::ActivityParams(parsed_file &p_file)
-{
-	for (auto iter = p_file.parsed_sections["activity"].param_map.begin();
-			  iter != p_file.parsed_sections["activity"].param_map.end();
-			  iter++)
-	{
-		paramMap[iter->first] = std::stof(iter->second.value);
-	}
-}
+ActivityParams::ActivityParams(parsed_file &p_file);
 
 // TODO: CHANGE THIS ALGORITHM IN THE FUTURE TO ONE IN CONPARAM.cpp
 ActivityParams::ActivityParams(std::string actParamFile)
@@ -112,15 +104,13 @@ bool ActivityParams::setParam(std::string paramName, float value)
 // representation of the activity parameters. *deep sigh*
 std::string ActivityParams::toString()
 {
-	std::string out_string = "[\n";
-	for (auto iter = paramMap.begin(); iter != paramMap.end(); iter++)
+	std::string outString = "";
+	for (auto i = paramMap.begin(); i != paramMap.end(); i++)
 	{
-		out_string += "[ '" + iter->first + "', '"
-							+ std::to_string(iter->second)
-							+ "' ]\n";
+		// for now, have to use std::to_string: in future, make map<str, str>
+		outString += i->first + " " + std::to_string(i->second) + "\n";
 	}
-	out_string += "]";
-	return out_string;
+	return outString;
 }
 
 std::ostream &operator<<(std::ostream &os, ActivityParams &ap)

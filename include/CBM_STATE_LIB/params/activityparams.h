@@ -14,13 +14,14 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include "fileIO/build_file.h"
 #include <stdDefinitions/pstdint.h>
-//#include "interfaces/iactivityparams.h"
 
 class ActivityParams
 {
 public:
 	ActivityParams();
+	ActivityParams(parsed_file &p_file);
 	ActivityParams(std::string actParamFile);
 	ActivityParams(const ActivityParams &copyFrom);
 	~ActivityParams(); /*here to serve the Rule of Three: map deallocates itself bwahaha*/
@@ -238,5 +239,7 @@ private:
 	std::map<std::string, float> paramMap;
 
 };
+
+std::ostream &operator<<(std::ostream &os, ActivityParams &ap);
 
 #endif /* ACTIVITYPARAMS_H_ */
