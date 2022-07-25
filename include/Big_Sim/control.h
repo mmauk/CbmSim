@@ -30,10 +30,11 @@ class Control
 	public:
 		// TODO: create training parameter files
 		Control();
-		Control(std::string actParamFile);
+		Control(parsed_file &p_file);
 		~Control();
 
 		// Objects
+		ConnectivityParams *cp = NULL;
 		ActivityParams *ap = NULL;
 
 		CBMState *simState = NULL;
@@ -160,7 +161,7 @@ class Control
 		const ct_uint8_t* goSpks; 
 
 		void save_gelsons_variables(int trial);
-
+		
 		void init_activity_params(std::string actParamFile);
 
 		void init_sim_state(std::string stateFile);

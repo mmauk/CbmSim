@@ -2,9 +2,10 @@
 #include <time.h>
 #include <gtk/gtk.h>
 #include "control.h"
+#include "fileIO/build_file.h"
 #include "ttyManip/tty.h"
 
-// private utility function. Will move to a better place later
+// private utility function. TODO: move to a better place
 std::string getFileBasename(std::string fullFilePath)
 {
 	size_t sep = fullFilePath.find_last_of("\\/");
@@ -25,13 +26,14 @@ std::string getFileBasename(std::string fullFilePath)
 
 Control::Control() {}
 
-Control::Control(std::string actParamFile)
+Control::Control(parsed_file &p_file)
 {
-	if (!ap) ap = new ActivityParams(actParamFile);
+	if (!cp) cp = new ConnectivityParams(p_file);
+	if (!ap) ap = new ActivityParams(p_file);
 	if (!simState)
 	{
 		std::cout << "[INFO]: Initializing state..." << std::endl;
-		simState = new CBMState(ap, numMZones);
+		simState = new CBMState(cp, ap, numMZones);
 		std::cout << "[INFO]: Finished initializing state..." << std::endl;
 	}
 	
@@ -72,6 +74,7 @@ Control::Control(std::string actParamFile)
 Control::~Control()
 {
 	// delete all dynamic objects
+	if (cp) delete cp;
 	if (ap) delete ap;
 	if (simState) delete simState;
 	if (simCore) delete simCore;
@@ -102,6 +105,12 @@ void Control::init_activity_params(std::string actParamFile)
 
 void Control::init_sim_state(std::string stateFile)
 {
+	if (!cp)
+	{
+		fprintf(stderr, "[ERROR]: Trying to initialize state without first connectivity params.\n");
+		fprintf(stderr, "[ERROR]: (Hint: Load a connectivity parameter file first then load the state.\n");
+		return;
+	}
 	if (!ap)
 	{
 		fprintf(stderr, "[ERROR]: Trying to initialize state without first initializing activity params.\n");
@@ -110,7 +119,7 @@ void Control::init_sim_state(std::string stateFile)
 	}
 	if (!simState)
 	{
-		simState = new CBMState(ap, numMZones, stateFile);
+		simState = new CBMState(cp, ap, numMZones, stateFile);
 	}
 	else
 	{
@@ -120,7 +129,7 @@ void Control::init_sim_state(std::string stateFile)
 
 void Control::save_sim_state(std::string stateFile)
 {
-	if (!(ap && simState && simCore))
+	if (!(cp && ap && simState && simCore))
 	{
 		fprintf(stderr, "[ERROR]: Trying to write an uninitialized state to file.\n");
 		fprintf(stderr, "[ERROR]: (Hint: Try loading activity parameter file and initializing the state first.)\n");
@@ -129,7 +138,7 @@ void Control::save_sim_state(std::string stateFile)
 	std::fstream outStateFileBuffer(stateFile.c_str(), std::ios::out | std::ios::binary);
 	// notice we are using simcore here: in order to be save the state we *should* have
 	// initialized not only activity params and state but also the sim core.
-	simCore->writeState(ap, outStateFileBuffer);
+	simCore->writeState(cp, ap, outStateFileBuffer);
 	outStateFileBuffer.close();
 }
 
@@ -400,7 +409,7 @@ void Control::construct_control(enum vis_mode sim_vis_mode)
 	if (!simState)
 	{
 		std::cout << "[INFO]: Initializing state..." << std::endl;
-		simState = new CBMState(ap, numMZones);
+		simState = new CBMState(cp, ap, numMZones);
 		std::cout << "[INFO]: Finished initializing state..." << std::endl;
 	}
 	

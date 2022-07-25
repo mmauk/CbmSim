@@ -25,13 +25,17 @@ class InNetConnectivityState
 {
 public:
 	InNetConnectivityState();
-	InNetConnectivityState(unsigned int msPerStep, int randSeed);
-	InNetConnectivityState(std::fstream &infile);
+	InNetConnectivityState(
+		ConnectivityParams *cp,
+		unsigned int msPerStep,
+		int randSeed
+		);
+	InNetConnectivityState(ConnectivityParams *cp, std::fstream &infile);
 	//InNetConnectivityState(const InNetConnectivityState &state);
 	~InNetConnectivityState();
 
-	void readState(std::fstream &infile);
-	void writeState(std::fstream &outfile);
+	void readState(ConnectivityParams *cp, std::fstream &infile);
+	void writeState(ConnectivityParams *cp, std::fstream &outfile);
 
 	//glomerulus
 	bool *haspGLfromMFtoGL;
@@ -88,20 +92,20 @@ public:
 	int **pGRfromMFtoGR;
 
 protected:
-	void allocateMemory();
-	void initializeVals();
+	void allocateMemory(ConnectivityParams *cp);
+	void initializeVals(ConnectivityParams *cp);
 	void deallocMemory();
-	void stateRW(bool read, std::fstream &file);
+	void stateRW(ConnectivityParams *cp, bool read, std::fstream &file);
 
-	void connectMFGL_noUBC();
-	void connectGLGR(CRandomSFMT &randGen);
-	void connectGRGO();
-	void connectGOGL(CRandomSFMT &randGen);
-	void connectGOGODecayP(CRandomSFMT &randGen);
-	void connectGOGO_GJ(CRandomSFMT &randGen);
-	void translateMFGL();
-	void translateGOGL();
-	void assignGRDelays(unsigned int msPerStep);
+	void connectMFGL_noUBC(ConnectivityParams *cp);
+	void connectGLGR(ConnectivityParams *cp, CRandomSFMT &randGen);
+	void connectGRGO(ConnectivityParams *cp);
+	void connectGOGL(ConnectivityParams *cp, CRandomSFMT &randGen);
+	void connectGOGODecayP(ConnectivityParams *cp, CRandomSFMT &randGen);
+	void connectGOGO_GJ(ConnectivityParams *cp, CRandomSFMT &randGen);
+	void translateMFGL(ConnectivityParams *cp);
+	void translateGOGL(ConnectivityParams *cp);
+	void assignGRDelays(ConnectivityParams *cp, unsigned int msPerStep);
 };
 
 #endif /* INNETCONNECTIVITYSTATE_H_ */

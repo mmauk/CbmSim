@@ -49,7 +49,7 @@ public:
 	void updateErrDrive(unsigned int zoneN, float errDriveRelative);
 
 	void writeToState();
-	void writeState(ActivityParams *ap, std::fstream& outfile);
+	void writeState(ConnectivityParams *cp, ActivityParams *ap, std::fstream& outfile);
 
 	InNet* getInputNet();
 	MZone** getMZoneList();

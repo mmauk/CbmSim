@@ -64,10 +64,10 @@ void CBMSimCore::writeToState()
 	}
 }
 
-void CBMSimCore::writeState(ActivityParams *ap, std::fstream& outfile)
+void CBMSimCore::writeState(ConnectivityParams *cp, ActivityParams *ap, std::fstream& outfile)
 {	
 	writeToState();
-	simState->writeState(ap, outfile);
+	simState->writeState(cp, ap, outfile);
 }
 
 void CBMSimCore::initCUDAStreams()

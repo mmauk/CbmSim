@@ -23,7 +23,7 @@ public:
 	InNetActivityState(ActivityParams *ap);
 	InNetActivityState(std::fstream &infile);
 
-	virtual ~InNetActivityState();
+	~InNetActivityState();
 
 	void readState(std::fstream &infile);
 	void writeState(std::fstream &outfile);
