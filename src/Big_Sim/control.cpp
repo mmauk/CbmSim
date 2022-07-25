@@ -40,7 +40,7 @@ Control::Control(parsed_file &p_file)
 	if (!simCore)
 	{
 		std::cout << "[INFO]: Initializing simulation core..." << std::endl;
-		simCore = new CBMSimCore(ap, simState, gpuIndex, gpuP2);
+		simCore = new CBMSimCore(cp, ap, simState, gpuIndex, gpuP2);
 		std::cout << "[INFO]: Finished initializing simulation core." << std::endl;
 	}
 
@@ -402,7 +402,8 @@ void Control::deleteOutputArrays()
 	delete2DArray<ct_uint8_t>(allGOPSTH);
 }
 
-// NOTE:assumes that we have initialized activity params
+// NOTE: assumes that we have initialized activity params
+// TODO: find a better design than this: why else would we have a constructor???
 void Control::construct_control(enum vis_mode sim_vis_mode)
 {
 	if (this->sim_vis_mode == NO_VIS) this->sim_vis_mode = sim_vis_mode;
@@ -416,7 +417,7 @@ void Control::construct_control(enum vis_mode sim_vis_mode)
 	if (!simCore)
 	{
 		std::cout << "[INFO]: Initializing simulation core..." << std::endl;
-		simCore = new CBMSimCore(ap, simState, gpuIndex, gpuP2);
+		simCore = new CBMSimCore(cp, ap, simState, gpuIndex, gpuP2);
 		std::cout << "[INFO]: Finished initializing simulation core." << std::endl;
 	}
 

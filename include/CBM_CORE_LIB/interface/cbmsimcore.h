@@ -37,7 +37,7 @@ class CBMSimCore
 {
 public:
 	CBMSimCore();
-	CBMSimCore(ActivityParams *ap, CBMState *state, int gpuIndStart = -1, int numGPUP2 = -1);
+	CBMSimCore(ConnectivityParams *cp, ActivityParams *ap, CBMState *state, int gpuIndStart = -1, int numGPUP2 = -1);
 	~CBMSimCore();
 
 	void calcActivity(float goMin, int simNum, float GOGR, float GRGO, float MFGO,
@@ -78,7 +78,7 @@ private:
 
 	unsigned long curTime;
 
-	void construct(ActivityParams *ap, CBMState *state, int *mzoneRSeed,
+	void construct(ConnectivityParams *cp, ActivityParams *ap, CBMState *state, int *mzoneRSeed,
 		int gpuIndStart, int numGPUP2);
 };
 

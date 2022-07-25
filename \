@@ -1,0 +1,17 @@
+reverted innetcon to use conparams from file rather than global
+constants
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# On branch seang/gui
+# Changes to be committed:
+#	modified:   include/Big_Sim/control.h
+#	modified:   include/CBM_CORE_LIB/interface/cbmsimcore.h
+#	modified:   include/CBM_STATE_LIB/interfaces/cbmstate.h
+#	modified:   include/CBM_STATE_LIB/state/innetactivitystate.h
+#	modified:   include/CBM_STATE_LIB/state/innetconnectivitystate.h
+#	modified:   src/Big_Sim/control.cpp
+#	modified:   src/CBM_CORE_LIB/interface/cbmsimcore.cpp
+#	modified:   src/CBM_STATE_LIB/interfaces/cbmstate.cpp
+#	modified:   src/CBM_STATE_LIB/state/innetconnectivitystate.cpp
+#
