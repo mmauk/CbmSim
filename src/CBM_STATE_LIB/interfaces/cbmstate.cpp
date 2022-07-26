@@ -17,7 +17,7 @@ CBMState::CBMState(ConnectivityParams *cp, ActivityParams *ap,
 	innetConState  = new InNetConnectivityState(cp, inStateFileBuffer);
 	std::cout << "[INFO]: Finished allocating and initializing innet connectivity state from file." << std::endl;
 	std::cout << "[INFO]: Allocating and initializing innet activity state from file..." << std::endl;
-	innetActState  = new InNetActivityState(inStateFileBuffer);
+	innetActState  = new InNetActivityState(cp, inStateFileBuffer);
 	std::cout << "[INFO]: Finished allocating and initializing innet activity state from file." << std::endl;
 
 	mzoneConStates = new MZoneConnectivityState*[nZones];
@@ -27,12 +27,12 @@ CBMState::CBMState(ConnectivityParams *cp, ActivityParams *ap,
 	{
 		std::cout << "[INFO]: Allocating and initializing mzone "
 				  << i << " connectivity state from file..." << std::endl;
-		mzoneConStates[i] = new MZoneConnectivityState(inStateFileBuffer);
+		mzoneConStates[i] = new MZoneConnectivityState(cp, inStateFileBuffer);
 		std::cout << "[INFO]: Finished allocating and initializing mzone "
 				  << i << " connectivity state from file." << std::endl;
 		std::cout << "[INFO]: Allocating and initializing mzone "
 				  << i << " activity state from file..." << std::endl;
-		mzoneActStates[i] = new MZoneActivityState(ap, inStateFileBuffer);
+		mzoneActStates[i] = new MZoneActivityState(cp, ap, inStateFileBuffer);
 		std::cout << "[INFO]: Finished allocating and initializing mzone "
 				  << i << " activity state from file." << std::endl;
 	}
@@ -80,25 +80,25 @@ void CBMState::newState(ConnectivityParams *cp, ActivityParams *ap,
 {
 	innetConState  = new InNetConnectivityState(cp, ap->msPerTimeStep, innetCRSeed);
 	mzoneConStates = new MZoneConnectivityState*[nZones];
-	innetActState  = new InNetActivityState(ap);
+	innetActState  = new InNetActivityState(cp, ap);
 	mzoneActStates = new MZoneActivityState*[nZones];
 
 	for (int i = 0; i < nZones; i++)
 	{
-		mzoneConStates[i] = new MZoneConnectivityState(mzoneCRSeed[i]);
-		mzoneActStates[i] = new MZoneActivityState(ap, mzoneARSeed[i]);
+		mzoneConStates[i] = new MZoneConnectivityState(cp, mzoneCRSeed[i]);
+		mzoneActStates[i] = new MZoneActivityState(cp, ap, mzoneARSeed[i]);
 	}
 }
 
 void CBMState::readState(ConnectivityParams *cp, ActivityParams *ap, std::fstream &infile)
 {
 	innetConState->readState(cp, infile);
-	innetActState->readState(infile);
+	innetActState->readState(cp, infile);
 
 	for (int i = 0; i < numZones; i++)
 	{
-		mzoneConStates[i]->readState(infile);
-		mzoneActStates[i]->readState(ap, infile);
+		mzoneConStates[i]->readState(cp, infile);
+		mzoneActStates[i]->readState(cp, ap, infile);
 	}
 }
 
@@ -108,19 +108,19 @@ void CBMState::writeState(ConnectivityParams *cp, ActivityParams *ap, std::fstre
 	innetConState->writeState(cp, outfile);
 	std::cout << "[INFO]: Finished writing innet connectivity state to file." << std::endl;
 	std::cout << "[INFO]: Writing innet activity state to file..." << std::endl;   
-	innetActState->writeState(outfile);
+	innetActState->writeState(cp, outfile);
 	std::cout << "[INFO]: Finished writing innet activity state to file." << std::endl;
 	
 	for (int i = 0; i < numZones; i++)
 	{
 		std::cout << "[INFO]: Writing mzone "
 				  << i << " connectivity state to file..." << std::endl;   
-		mzoneConStates[i]->writeState(outfile);
+		mzoneConStates[i]->writeState(cp, outfile);
 		std::cout << "[INFO]: Finished writing mzone "
 				  << i << " connectivity state to file..." << std::endl;   
 		std::cout << "[INFO]: Writing mzone "
 				  << i << " activity state to file..." << std::endl;   
-		mzoneActStates[i]->writeState(ap, outfile);
+		mzoneActStates[i]->writeState(cp, ap, outfile);
 		std::cout << "[INFO]: Finished writing mzone "
 				  << i << " activity state to file..." << std::endl;   
 	}

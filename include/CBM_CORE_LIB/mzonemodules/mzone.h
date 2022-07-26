@@ -35,7 +35,7 @@ class MZone
 {
 public:
 	MZone();
-	MZone(ActivityParams *ap, MZoneConnectivityState *cs,
+	MZone(ConnectivityParams *cp, ActivityParams *ap, MZoneConnectivityState *cs,
 			MZoneActivityState *as, int randSeed, ct_uint32_t **actBufGRGPU,
 			ct_uint32_t **delayMaskGRGPU, ct_uint64_t **histGRGPU, int gpuIndStart, int numGPUs);
 	~MZone();
@@ -89,7 +89,8 @@ public:
 	const ct_uint32_t* exportAPBufNC();
 
 private:
-	ActivityParams ap;
+	ConnectivityParams *cp;
+	ActivityParams *ap;
 	MZoneConnectivityState *cs;
 	MZoneActivityState *as;
 
@@ -138,3 +139,4 @@ private:
 };
 
 #endif /* MZONE_H_ */
+

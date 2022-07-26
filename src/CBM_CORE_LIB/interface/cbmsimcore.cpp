@@ -505,8 +505,8 @@ void CBMSimCore::construct(ConnectivityParams *cp, ActivityParams *ap, CBMState 
 
 	for (int i = 0; i < numZones; i++)
 	{
-		// same thing for zones as with innet	
-		zones[i] = new MZone(ap, state->getMZoneConStateInternal(i),
+		// same thing for zones as with innet
+		zones[i] = new MZone(cp, ap, state->getMZoneConStateInternal(i),
 			state->getMZoneActStateInternal(i), mzoneRSeed[i], inputNet->getApBufGRGPUPointer(),
 			inputNet->getDelayBCPCSCMaskGPUPointer(), inputNet->getHistGRGPUPointer(),
 			this->gpuIndStart, numGPUs);

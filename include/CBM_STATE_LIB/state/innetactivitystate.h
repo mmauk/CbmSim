@@ -20,14 +20,14 @@ class InNetActivityState
 {
 public:
 	InNetActivityState();
-	InNetActivityState(ActivityParams *ap);
-	InNetActivityState(std::fstream &infile);
+	InNetActivityState(ConnectivityParams *cp, ActivityParams *ap);
+	InNetActivityState(ConnectivityParams *cp, std::fstream &infile);
 
 	~InNetActivityState();
 
-	void readState(std::fstream &infile);
-	void writeState(std::fstream &outfile);
-	void resetState(ActivityParams *ap);
+	void readState(ConnectivityParams *cp, std::fstream &infile);
+	void writeState(ConnectivityParams *cp, std::fstream &outfile);
+	void resetState(ConnectivityParams *cp, ActivityParams *ap);
 
 	//mossy fiber
 	std::unique_ptr<ct_uint8_t[]> histMF{nullptr};
@@ -93,9 +93,9 @@ public:
 	//std::unique_ptr<ct_uint32_t[]> inputSumPFSC{nullptr};
 
 private:
-	void stateRW(bool read, std::fstream &file);
-	void allocateMemory();
-	void initializeVals(ActivityParams *ap);
+	void stateRW(ConnectivityParams *cp, bool read, std::fstream &file);
+	void allocateMemory(ConnectivityParams *cp);
+	void initializeVals(ConnectivityParams *cp, ActivityParams *ap);
 };
 
 #endif /* INNETACTIVITYSTATE_H_ */

@@ -25,14 +25,14 @@ class MZoneConnectivityState
 {
 public:
 	MZoneConnectivityState();
-	MZoneConnectivityState(int randSeed);
-	MZoneConnectivityState(std::fstream &infile);
+	MZoneConnectivityState(ConnectivityParams *cp, int randSeed);
+	MZoneConnectivityState(ConnectivityParams *cp, std::fstream &infile);
 	//MZoneConnectivityState(const MZoneConnectivityState &state);
 
 	~MZoneConnectivityState();
 
-	void readState(std::fstream &infile);
-	void writeState(std::fstream &outfile);
+	void readState(ConnectivityParams *cp, std::fstream &infile);
+	void writeState(ConnectivityParams *cp, std::fstream &outfile);
 
 	//basket cells
 	ct_uint32_t **pBCfromBCtoPC;
@@ -60,19 +60,19 @@ public:
 	ct_uint32_t **pIOOutIOIO;
 
 private:
-	void allocateMemory();
-	void initializeVals();
+	void allocateMemory(ConnectivityParams *cp);
+	void initializeVals(ConnectivityParams *cp);
 	void deallocMemory();
-	void stateRW(bool read, std::fstream &file);
+	void stateRW(ConnectivityParams *cp, bool read, std::fstream &file);
 	
-	void connectBCtoPC();
-	void connectPCtoBC();
-	void connectSCtoPC();
-	void connectPCtoNC(int randSeed);
-	void connectNCtoIO();
-	void connectMFtoNC();
-	void connectIOtoPC();
-	void connectIOtoIO();
+	void connectBCtoPC(ConnectivityParams *cp);
+	void connectPCtoBC(ConnectivityParams *cp);
+	void connectSCtoPC(ConnectivityParams *cp);
+	void connectPCtoNC(ConnectivityParams *cp, int randSeed);
+	void connectNCtoIO(ConnectivityParams *cp);
+	void connectMFtoNC(ConnectivityParams *cp);
+	void connectIOtoPC(ConnectivityParams *cp);
+	void connectIOtoIO(ConnectivityParams *cp);
 };
 
 #endif /* MZONECONNECTIVITYSTATE_H_ */
