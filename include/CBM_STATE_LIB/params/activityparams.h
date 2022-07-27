@@ -26,7 +26,8 @@ public:
 	ActivityParams(const ActivityParams &copyFrom);
 	~ActivityParams(); /*here to serve the Rule of Three: map deallocates itself bwahaha*/
 
-	void writeParams(std::fstream &outfile);
+	void readParams(std::fstream &inParamBuf);
+	void writeParams(std::fstream &outParamBuf);
 	unsigned int getMSPerTimeStep();
 	float getParam(std::string paramName);
 	bool setParam(std::string paramName, float value);

@@ -23,7 +23,8 @@ class ConnectivityParams
 		ConnectivityParams();
 		ConnectivityParams(parsed_file &p_file);
 		
-		void writeParams(std::string o_file);
+		void readParams(std::fstream &inParamBuf);
+		void writeParams(std::fstream &outParamBuf);
 		std::string toString();
 		
 		// cannot overload 'operator[]' because we have both int and float params.

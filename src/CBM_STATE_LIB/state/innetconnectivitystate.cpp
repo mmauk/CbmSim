@@ -192,7 +192,7 @@ void InNetConnectivityState::allocateMemory(ConnectivityParams *cp)
 	pMFfromMFtoGR    = allocate2DArray<int>
 	(
 		cp->int_params["num_mf"],
-		cp->int_params["max_num_p_mf_from_mf_to_gl"]
+		cp->int_params["max_num_p_mf_from_mf_to_gr"]
 	);
 
 	numpMFfromMFtoGO = new int[cp->int_params["num_mf"]];
@@ -320,22 +320,29 @@ void InNetConnectivityState::allocateMemory(ConnectivityParams *cp)
 void InNetConnectivityState::initializeVals(ConnectivityParams *cp)
 {
 	std::fill(haspGLfromMFtoGL, haspGLfromMFtoGL + cp->int_params["num_gl"], false);
+
 	std::fill(numpGLfromGLtoGO, numpGLfromGLtoGO + cp->int_params["num_gl"], 0);
 	std::fill(pGLfromGLtoGO[0], pGLfromGLtoGO[0]
 		+ cp->int_params["num_gl"] * cp->int_params["max_num_p_gl_from_gl_to_go"], 0);
+
 	std::fill(numpGLfromGOtoGL, numpGLfromGOtoGL + cp->int_params["num_gl"], 0);
 	std::fill(pGLfromGOtoGL[0], pGLfromGOtoGL[0]
 		+ cp->int_params["num_gl"] * cp->int_params["max_num_p_gl_from_go_to_gl"], 0);
+
 	std::fill(numpGLfromGLtoGR, numpGLfromGLtoGR + cp->int_params["num_gl"], 0);
 	std::fill(pGLfromGLtoGR[0], pGLfromGLtoGR[0]
 		+ cp->int_params["num_gl"] * cp->int_params["max_num_p_gl_from_gl_to_gr"], 0);
+
 	std::fill(pGLfromMFtoGL, pGLfromMFtoGL + cp->int_params["num_gl"], 0);
+
 	std::fill(numpMFfromMFtoGL, numpMFfromMFtoGL + cp->int_params["num_mf"], 0);
 	std::fill(pMFfromMFtoGL[0], pMFfromMFtoGL[0]
 		+ cp->int_params["num_mf"] * cp->int_params["max_num_p_mf_from_mf_to_gl"], 0);
+
 	std::fill(numpMFfromMFtoGR, numpMFfromMFtoGR + cp->int_params["num_mf"], 0);
 	std::fill(pMFfromMFtoGR[0], pMFfromMFtoGR[0]
-		+ cp->int_params["num_mf"] * MAX_NUM_P_MF_FROM_MF_TO_GR, 0);
+		+ cp->int_params["num_mf"] * cp->int_params["max_num_p_mf_from_mf_to_gr"], 0);
+
 	std::fill(numpMFfromMFtoGO, numpMFfromMFtoGO + cp->int_params["num_mf"], 0);
 	std::fill(pMFfromMFtoGO[0], pMFfromMFtoGO[0]
 		+ cp->int_params["num_mf"] * cp->int_params["max_num_p_mf_from_mf_to_go"], 0);
@@ -343,6 +350,7 @@ void InNetConnectivityState::initializeVals(ConnectivityParams *cp)
 	std::fill(numpGOfromGLtoGO, numpGOfromGLtoGO + cp->int_params["num_go"], 0);
 	std::fill(pGOfromGLtoGO[0], pGOfromGLtoGO[0]
 		+ cp->int_params["num_go"] * cp->int_params["max_num_p_go_from_gl_to_go"], 0);
+
 	std::fill(numpGOfromGOtoGL, numpGOfromGOtoGL + cp->int_params["num_go"], 0);
 	std::fill(pGOfromGOtoGL[0], pGOfromGOtoGL[0]
 		+ cp->int_params["num_go"] * cp->int_params["max_num_p_go_from_go_to_gl"], 0);
@@ -350,9 +358,11 @@ void InNetConnectivityState::initializeVals(ConnectivityParams *cp)
 	std::fill(numpGOfromMFtoGO, numpGOfromMFtoGO + cp->int_params["num_go"], 0);
 	std::fill(pGOfromMFtoGO[0], pGOfromMFtoGO[0]
 		+ cp->int_params["num_go"] * cp->int_params["max_num_p_go_from_mf_to_go"], 0);
+
 	std::fill(numpGOfromGOtoGR, numpGOfromGOtoGR + cp->int_params["num_go"], 0);
 	std::fill(pGOfromGOtoGR[0], pGOfromGOtoGR[0]
 		+ cp->int_params["num_go"] * cp->int_params["max_num_p_go_from_go_to_gr"], 0);
+
 	std::fill(numpGOfromGRtoGO, numpGOfromGRtoGO + cp->int_params["num_go"], 0);
 	std::fill(pGOfromGRtoGO[0], pGOfromGRtoGO[0]
 		+ cp->int_params["num_go"] * cp->int_params["max_num_p_go_from_gr_to_go"], 0);
@@ -360,6 +370,7 @@ void InNetConnectivityState::initializeVals(ConnectivityParams *cp)
 	std::fill(numpGOGABAInGOGO, numpGOGABAInGOGO + cp->int_params["num_go"], 0);
 	std::fill(pGOGABAInGOGO[0], pGOGABAInGOGO[0]
 		+ cp->int_params["num_go"] * cp->int_params["num_con_go_to_go"], INT_MAX);
+
 	std::fill(numpGOGABAOutGOGO, numpGOGABAOutGOGO + cp->int_params["num_go"], 0);
 	std::fill(pGOGABAOutGOGO[0], pGOGABAOutGOGO[0]
 		+ cp->int_params["num_go"] * cp->int_params["num_con_go_to_go"], INT_MAX);
@@ -367,26 +378,34 @@ void InNetConnectivityState::initializeVals(ConnectivityParams *cp)
 	std::fill(numpGOCoupInGOGO, numpGOCoupInGOGO + cp->int_params["num_go"], 0);
 	std::fill(pGOCoupInGOGO[0], pGOCoupInGOGO[0]
 		+ cp->int_params["num_go"] * cp->int_params["num_p_go_to_go_gj"], 0);
+
 	std::fill(numpGOCoupOutGOGO, numpGOCoupOutGOGO + cp->int_params["num_go"], 0);
 	std::fill(pGOCoupOutGOGO[0], pGOCoupOutGOGO[0]
 		+ cp->int_params["num_go"] * cp->int_params["num_p_go_to_go_gj"], 0);
+
 	std::fill(pGOCoupOutGOGOCCoeff[0], pGOCoupOutGOGOCCoeff[0]
-		+ cp->int_params["num_go"] * cp->int_params["num_p_go_to_go_gj"], 0);
+		+ cp->int_params["num_go"] * cp->int_params["num_p_go_to_go_gj"], 0.0);
+
 	std::fill(pGOCoupInGOGOCCoeff[0], pGOCoupInGOGOCCoeff[0]
-		+ cp->int_params["num_go"] * cp->int_params["num_p_go_to_go_gj"], 0);
+		+ cp->int_params["num_go"] * cp->int_params["num_p_go_to_go_gj"], 0.0);
 
 	std::fill(pGRDelayMaskfromGRtoBSP, pGRDelayMaskfromGRtoBSP + cp->int_params["num_gr"], 0);
+
 	std::fill(numpGRfromGLtoGR, numpGRfromGLtoGR + cp->int_params["num_gr"], 0);
 	std::fill(pGRfromGLtoGR[0], pGRfromGLtoGR[0]
 		+ cp->int_params["num_gr"] * cp->int_params["max_num_p_gr_from_gl_to_gr"], 0);
+
 	std::fill(numpGRfromGRtoGO, numpGRfromGRtoGO + cp->int_params["num_gr"], 0);
 	std::fill(pGRfromGRtoGO[0], pGRfromGRtoGO[0]
 		+ cp->int_params["num_gr"] * cp->int_params["max_num_p_gr_from_gr_to_go"], 0);
+
 	std::fill(pGRDelayMaskfromGRtoGO[0], pGRDelayMaskfromGRtoGO[0]
 		+ cp->int_params["num_gr"] * cp->int_params["max_num_p_gr_from_gr_to_go"], 0);
+
 	std::fill(numpGRfromGOtoGR, numpGRfromGOtoGR + cp->int_params["num_gr"], 0);
 	std::fill(pGRfromGOtoGR[0], pGRfromGOtoGR[0]
 		+ cp->int_params["num_gr"] * cp->int_params["max_num_p_gr_from_go_to_gr"], 0);
+
 	std::fill(numpGRfromMFtoGR, numpGRfromMFtoGR + cp->int_params["num_gr"], 0);
 	std::fill(pGRfromMFtoGR[0], pGRfromMFtoGR[0]
 		+ cp->int_params["num_gr"] * cp->int_params["max_num_p_gr_from_mf_to_gr"], 0);
@@ -471,7 +490,7 @@ void InNetConnectivityState::stateRW(ConnectivityParams *cp, bool read, std::fst
 
 	rawBytesRW((char *)numpMFfromMFtoGR, cp->int_params["num_mf"] * sizeof(int), read, file);
 	rawBytesRW((char *)pMFfromMFtoGR[0],
-		cp->int_params["num_mf"] * MAX_NUM_P_MF_FROM_MF_TO_GR * sizeof(int), read, file);
+		cp->int_params["num_mf"] * cp->int_params["max_num_p_mf_from_mf_to_gr"] * sizeof(int), read, file);
 
 	rawBytesRW((char *)numpMFfromMFtoGO, cp->int_params["num_mf"] * sizeof(int), read, file);
 	rawBytesRW((char *)pMFfromMFtoGO[0],

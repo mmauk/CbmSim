@@ -16,11 +16,11 @@ BUILD_PATH	  = $(ROOT)build/
 
 # NOTE using update alternatives: to switch back to ver11, use update-alternatives --config g++
 CXX              = g++
-# CXXFLAGS         = -m64 -pipe -std=c++14 -g
-CXXFLAGS         = -m64 -pipe -std=c++14 -O3
+# CXXFLAGS         = -m64 -pipe -std=c++14 -O3
+CXXFLAGS         = -m64 -pipe -std=c++14 -g
 
-# MODULE_CXX_FLAGS = -m64 -pipe -std=c++14 -g -fPIC
-MODULE_CXX_FLAGS = -m64 -pipe -std=c++14 -O2 -fPIC
+# MODULE_CXX_FLAGS = -m64 -pipe -std=c++14 -O2 -fPIC
+MODULE_CXX_FLAGS = -m64 -pipe -std=c++14 -g -fPIC
 INCPATH          = -I. -Iinclude/Big_Sim -I/usr/local/cuda/include -I$(ROOT)include/CBM_CORE_LIB -I$(ROOT)include/CBM_DATA_LIB \
 			       -I$(ROOT)include/CBM_STATE_LIB -I$(ROOT)include/CBM_TOOLS_LIB -I $(ROOT)include/CBM_VIS_LIB -I$(ROOT)include/CXX_TOOLS_LIB 
 INCPATH          += $(shell pkg-config --cflags gtk+-3.0)

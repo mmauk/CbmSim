@@ -85,14 +85,22 @@ Control::~Control()
 	if (output_arrays_initialized) deleteOutputArrays();
 }
 
-void save_gelsons_variables(int trial)
+void Control::build_sim(parsed_file &p_file)
 {
-	if (trial % 50 == 0)
+	// not sure if we want to save mfFreq and mfs in the simulation file
+	if (!(cp && ap && simState))
 	{
-		
-		// gr activity goes
+		std::cout << "[INFO]: Initializing connectivity and activity params from build file..."
+				  << std::endl;
+		cp = new ConnectivityParams(p_file);
+		ap = new ActivityParams(p_file);
+		std::cout << "[INFO]: Finished initializing connectivity and activity params from build file."
+				  << std::endl;
+
+		std::cout << "[INFO]: Initializing state from build file..." << std::endl;
+		simState = new CBMState(cp, ap, numMZones);
+		std::cout << "[INFO]: Finished initializing state from build file..." << std::endl;
 	}
-	// all other activity goes
 }
 
 void Control::init_activity_params(std::string actParamFile)
@@ -127,19 +135,63 @@ void Control::init_sim_state(std::string stateFile)
 	}
 }
 
-void Control::save_sim_state(std::string stateFile)
+void Control::save_params_to_file(std::string outFile)
 {
-	if (!(cp && ap && simState && simCore))
+	if (!(cp && ap))
+	{
+		fprintf(stderr, "[ERROR]: Trying to write uninitialized parameters to file.\n");
+		fprintf(stderr, "[ERROR]: (Hint: Try initializing activity parameters and connectivity parameters first.\n");
+		return;
+	}
+	// NOTE: saving as binary for now, will make stream mode an arg in future
+	std::fstream outFileBuffer(outFile.c_str(), std::ios::out | std::ios::binary);
+}
+
+void Control::save_sim_state_to_file(std::string outStateFile)
+{
+	if (!(cp && ap && simState))
 	{
 		fprintf(stderr, "[ERROR]: Trying to write an uninitialized state to file.\n");
 		fprintf(stderr, "[ERROR]: (Hint: Try loading activity parameter file and initializing the state first.)\n");
 		return;
 	}
-	std::fstream outStateFileBuffer(stateFile.c_str(), std::ios::out | std::ios::binary);
-	// notice we are using simcore here: in order to be save the state we *should* have
-	// initialized not only activity params and state but also the sim core.
-	simCore->writeState(cp, ap, outStateFileBuffer);
+	std::fstream outStateFileBuffer(outStateFile.c_str(), std::ios::out | std::ios::binary);
+	if (simCore)
+	{
+		// if we have simCore, save from simcore else save from state.
+		// this covers both edge case scenarios of if the user wants to save to
+		// file an initialized bunny or if the user is using the gui and forgot 
+		// to save to file after initializing state, but wants to do so after 
+		// initializing simcore.
+		simCore->writeState(cp, ap, outStateFileBuffer);
+	}
+	else
+	{
+		simState->writeState(cp, ap, outStateFileBuffer); 
+	}
 	outStateFileBuffer.close();
+}
+
+void Control::save_sim_to_file(std::string outSimFile)
+{
+	if (!(cp && ap && simState))
+	{
+		fprintf(stderr, "[ERROR]: Trying to write an uninitialized simulation to file.\n");
+		fprintf(stderr, "[ERROR]: (Hint: Try loading a build file first.)\n");
+		return;
+	}
+	std::fstream outSimFileBuffer(outSimFile.c_str(), std::ios::out | std::ios::binary);
+	cp->writeParams(outSimFileBuffer);
+	ap->writeParams(outSimFileBuffer);
+	if (simCore)
+	{
+		simCore->writeState(cp, ap, outSimFileBuffer);
+	}
+	else
+	{
+		simState->writeState(cp, ap, outSimFileBuffer); 
+	}
+	outSimFileBuffer.close();
 }
 
 void Control::initializeOutputArrays()
