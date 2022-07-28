@@ -33,6 +33,7 @@ class Control
 		// TODO: create training parameter files
 		Control();
 		Control(parsed_file &p_file);
+		Control(std::string sim_file_name);
 		~Control();
 
 		// Objects

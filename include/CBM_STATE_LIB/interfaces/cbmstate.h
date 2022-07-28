@@ -25,8 +25,13 @@ class CBMState
 {
 	public:
 		CBMState();
-		CBMState(ConnectivityParams *cp, ActivityParams *ap, unsigned int nZones, std::string inFile);
-		CBMState(ConnectivityParams *cp, ActivityParams *ap, unsigned int nZones);
+		CBMState(ConnectivityParams *cp, ActivityParams *ap,
+			unsigned int nZones);
+		// TODO: make a choice which of two below constructors want to keep
+		CBMState(ConnectivityParams *cp, ActivityParams *ap, 
+			unsigned int nZones, std::fstream & sim_file_buf);
+		CBMState(ConnectivityParams *cp, ActivityParams *ap,
+			unsigned int nZones, std::string inFile);
 		~CBMState();
 
 		void readState(ConnectivityParams *cp, ActivityParams *ap, std::fstream &infile);

@@ -17,7 +17,7 @@ void validate_args_and_set_modes(int *argc, char ***argv,
 void parse_build_args(int *argc, char ***argv, parsed_file &p_file);
 void get_out_sim_file(int arg_index, int *argc, char ***argv, std::string &out_file);
 
-int main(int argc, char **argv)
+int main1(int argc, char **argv)
 {
 	tokenized_file t_file;
 	lexed_file l_file;
@@ -51,10 +51,8 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-int main1(int argc, char **argv) 
+int main(int argc, char **argv) 
 {
-// ==================================== PREVIOUS FILE HANDLING ====================================
-
 	enum vis_mode sim_vis_mode = NO_VIS;
 	enum run_mode sim_run_mode = NO_RUN;
 	
@@ -93,50 +91,6 @@ int main1(int argc, char **argv)
 			break;
 	}
 
-	//Control *control = new Control(); // default destructor does nothing
-	//switch (sim_vis_mode)
-	//{
-	//	case GUI:
-	//	{
-	//		exit_status = gui_init_and_run(&argc, &argv, control);
-	//		break;
-	//	}
-	//	case TUI:
-	//	{
-	//		float mfW = 0.0035; // mf weights (to what?)
-	//		float ws = 0.3275; // weight scale
-	//		float gogr = 0.0105; // gogr weights
-
-	//		float grW[8] = { 0.00056, 0.0007, 0.000933, 0.0014, 0.0028, 0.0056, 0.0112, 0.0224 };
-	//		int grWLength = sizeof(grW) / sizeof(grW[0]);
-
-	//		std::cout << "[INFO]: Running simulation..." << std::endl;
-	//		clock_t time = clock();
-	//		for (int goRecipParamNum = 0; goRecipParamNum < 1; goRecipParamNum++)
-	//		{
-	//			float GRGO = grW[goRecipParamNum] * ws; // scaled grgo weights
-	//		   	float MFGO = mfW * ws; // scaled mfgo weights
-	//		   	float GOGR = gogr; // gogr weights, unchanged
-	//			control->init_activity_params(actParamFile);
-	//			control->construct_control(TUI);
-	//			control->runTrials(0, GOGR, GRGO, MFGO);
-	//			// TODO: put in output file dir to save to!
-	//			//control->saveOutputArraysToFile(goRecipParamNum, simNum);
-	//		}
-	//		time = clock() - time;
-	//		std::cout << "[INFO] Simulation finished in "
-	//		   		  << (float) time / CLOCKS_PER_SEC << "s." << std::endl;
-	//		exit_status = 0;
-	//		break;
-	//	}
-	//	case NO_VIS:
-	//	{
-	//		std::cerr << "[INFO] must specify a mode {GUI, TUI}. Exiting..." << std::endl;
-	//		exit_status = 1;
-	//		break;
-	//	}
-	//}
-	
 	delete control;
 	return exit_status;
 }

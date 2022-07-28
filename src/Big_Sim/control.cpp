@@ -71,6 +71,55 @@ Control::Control(parsed_file &p_file)
 	}
 }
 
+Control::Control(std::string sim_file_name)
+{
+	std::fstream sim_file_buf(sim_file_name.c_str(), std::ios::in | std::ios::binary);
+	std::cout << "[INFO]: Initializing simulation from sim file..." << std::endl;
+	if (!cp) 
+	{
+		std::cout << "[INFO]: Initializing connectivity parameters..." << std::endl;
+		cp = new ConnectivityParams(sim_file_buf);
+		std::cout << "[INFO]: Finished initializing connectivity parameters." << std::endl;
+	}
+	if (!ap)
+	{
+		std::cout << "[INFO]: Initializing activity parameters..." << std::endl;
+		ap = new ActivityParams(sim_file_buf);
+		std::cout << "[INFO]: Finished initializing activity parameters." << std::endl;
+	} 
+	if (!simState) 
+	{
+		std::cout << "[INFO]: Initializing state..." << std::endl;
+		simState = new CBMState(cp, ap, numMZones, sim_file_buf);
+		std::cout << "[INFO]: Finished initializing state..." << std::endl;
+	}
+	if (!simCore)
+	{
+		std::cout << "[INFO]: Initializing simulation core..." << std::endl;
+		simCore = new CBMSimCore(cp, ap, simState, gpuIndex, gpuP2);
+		std::cout << "[INFO]: Finished initializing simulation core." << std::endl;
+	}
+	if (!mfFreq)
+	{
+		std::cout << "[INFO]: Initializing Poisson MF Population..." << std::endl;
+		mfFreq = new ECMFPopulation(cp->int_params["num_mf"], mfRandSeed,
+			  CSTonicMFFrac, CSPhasicMFFrac, contextMFFrac, nucCollFrac,
+			  bgFreqMin, csbgFreqMin, contextFreqMin, tonicFreqMin, phasicFreqMin, bgFreqMax,
+			  csbgFreqMax, contextFreqMax, tonicFreqMax, phasicFreqMax, collaterals_off,
+			  fracImport, secondCS, fracOverlap);
+		std::cout << "[INFO]: Finished initializing Poisson MF Population." << std::endl;
+	}
+	if (!mfs)
+	{
+		std::cout << "[INFO]: Initializing Poisson MF Population..." << std::endl;
+		mfs = new PoissonRegenCells(cp->int_params["num_mf"], mfRandSeed,
+				threshDecayTau, ap->msPerTimeStep, numMZones, cp->int_params["num_nc"]);
+		std::cout << "[INFO]: Finished initializing Poisson MF Population." << std::endl;
+	}
+	std::cout << "[INFO]: Finished initializing simulation from sim file." << std::endl;
+	sim_file_buf.close();
+}
+
 Control::~Control()
 {
 	// delete all dynamic objects

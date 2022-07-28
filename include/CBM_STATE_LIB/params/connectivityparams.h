@@ -23,7 +23,7 @@ class ConnectivityParams
 	public:
 		ConnectivityParams();
 		ConnectivityParams(parsed_file &p_file);
-		
+		ConnectivityParams(std::fstream &sim_file_buf);
 		void readParams(std::fstream &inParamBuf);
 		void writeParams(std::fstream &outParamBuf);
 		std::string toString();

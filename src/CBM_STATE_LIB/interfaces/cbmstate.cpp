@@ -9,6 +9,55 @@
 
 CBMState::CBMState() {}
 
+CBMState::CBMState(ConnectivityParams *cp, ActivityParams *ap,
+	unsigned int nZones) : numZones(nZones)
+{
+	CRandomSFMT randGen(time(0));
+
+	int *mzoneCRSeed = new int[nZones];
+	int *mzoneARSeed = new int[nZones];
+
+	int innetCRSeed = randGen.IRandom(0, INT_MAX);
+	for (int i = 0; i < nZones; i++)
+	{
+		mzoneCRSeed[i] = randGen.IRandom(0, INT_MAX);
+		mzoneARSeed[i] = randGen.IRandom(0, INT_MAX);
+	}
+
+	newState(cp, ap, nZones, innetCRSeed, mzoneCRSeed, mzoneARSeed);
+
+	delete[] mzoneCRSeed;
+	delete[] mzoneARSeed;
+}
+
+CBMState::CBMState(ConnectivityParams *cp, ActivityParams *ap, 
+	unsigned int nZones, std::fstream & sim_file_buf) : numZones(nZones)
+{
+	std::cout << "[INFO]: Allocating and initializing innet connectivity state from file..." << std::endl;
+	innetConState  = new InNetConnectivityState(cp, sim_file_buf);
+	std::cout << "[INFO]: Finished allocating and initializing innet connectivity state from file." << std::endl;
+	std::cout << "[INFO]: Allocating and initializing innet activity state from file..." << std::endl;
+	innetActState  = new InNetActivityState(cp, sim_file_buf);
+	std::cout << "[INFO]: Finished allocating and initializing innet activity state from file." << std::endl;
+
+	mzoneConStates = new MZoneConnectivityState*[nZones];
+	mzoneActStates = new MZoneActivityState*[nZones];
+
+	for (int i = 0; i < nZones; i++)
+	{
+		std::cout << "[INFO]: Allocating and initializing mzone "
+				  << i << " connectivity state from file..." << std::endl;
+		mzoneConStates[i] = new MZoneConnectivityState(cp, sim_file_buf);
+		std::cout << "[INFO]: Finished allocating and initializing mzone "
+				  << i << " connectivity state from file." << std::endl;
+		std::cout << "[INFO]: Allocating and initializing mzone "
+				  << i << " activity state from file..." << std::endl;
+		mzoneActStates[i] = new MZoneActivityState(cp, ap, sim_file_buf);
+		std::cout << "[INFO]: Finished allocating and initializing mzone "
+				  << i << " activity state from file." << std::endl;
+	}
+}
+
 CBMState::CBMState(ConnectivityParams *cp, ActivityParams *ap, 
 	unsigned int nZones, std::string inFile) : numZones(nZones)
 {
@@ -37,27 +86,6 @@ CBMState::CBMState(ConnectivityParams *cp, ActivityParams *ap,
 				  << i << " activity state from file." << std::endl;
 	}
 	inStateFileBuffer.close();
-}
-
-CBMState::CBMState(ConnectivityParams *cp, ActivityParams *ap,
-	unsigned int nZones) : numZones(nZones)
-{
-	CRandomSFMT randGen(time(0));
-
-	int *mzoneCRSeed = new int[nZones];
-	int *mzoneARSeed = new int[nZones];
-
-	int innetCRSeed = randGen.IRandom(0, INT_MAX);
-	for (int i = 0; i < nZones; i++)
-	{
-		mzoneCRSeed[i] = randGen.IRandom(0, INT_MAX);
-		mzoneARSeed[i] = randGen.IRandom(0, INT_MAX);
-	}
-
-	newState(cp, ap, nZones, innetCRSeed, mzoneCRSeed, mzoneARSeed);
-
-	delete[] mzoneCRSeed;
-	delete[] mzoneARSeed;
 }
 
 CBMState::~CBMState()

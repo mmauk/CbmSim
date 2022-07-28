@@ -71,6 +71,12 @@ ActivityParams::ActivityParams(std::string actParamFile)
 	paramFileBuffer.close();
 }
 
+ActivityParams::ActivityParams(std::fstream &sim_file_buf)
+{
+	readParams(sim_file_buf);
+	updateParams(); 
+}
+
 ActivityParams::ActivityParams(const ActivityParams &copyFrom) : paramMap(copyFrom.paramMap)
 {
 	updateParams();
@@ -88,7 +94,6 @@ void ActivityParams::readParams(std::fstream &inParamBuf)
 	std::cout << "[INFO]: Reading activity params from file..." << std::endl;
 	unserialize_map_from_file<std::string, float>(paramMap, inParamBuf);
 	std::cout << "[INFO]: Finished reading activity params from file." << std::endl;
-	updateParams(); 
 }
 
 void ActivityParams::writeParams(std::fstream &outParamBuf)

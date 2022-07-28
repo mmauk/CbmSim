@@ -23,6 +23,7 @@ public:
 	ActivityParams();
 	ActivityParams(parsed_file &p_file);
 	ActivityParams(std::string actParamFile);
+	ActivityParams(std::fstream &sim_file_buf);
 	ActivityParams(const ActivityParams &copyFrom);
 	~ActivityParams(); /*here to serve the Rule of Three: map deallocates itself bwahaha*/
 

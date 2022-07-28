@@ -27,6 +27,11 @@ ConnectivityParams::ConnectivityParams(parsed_file &p_file)
 	}
 }
 
+ConnectivityParams::ConnectivityParams(std::fstream &sim_file_buf)
+{
+	readParams(sim_file_buf);
+}
+
 std::string ConnectivityParams::toString()
 {
 	std::string out_string = "[\n";
