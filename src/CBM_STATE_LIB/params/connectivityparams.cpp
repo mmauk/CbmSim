@@ -5,27 +5,8 @@
  *      Author: varicella
  */
 
-#include <fstream>
-#include <cstring>
+#include "fileIO/serialize.h"
 #include "params/connectivityparams.h"
-
-// FIXME: these constants and serial struct are in two places: should change location
-
-const size_t key_int_val_size = sizeof(std::string) + sizeof(int);
-const size_t key_float_val_size = sizeof(std::string) + sizeof(float);
-
-template<size_t N, typename val_type>
-struct serial
-{
-	char bin_arr[N];
-	serial(std::string key, val_type val)
-	{
-		memcpy(bin_arr, &key, sizeof(std::string));
-		memcpy(bin_arr + sizeof(std::string), &val, sizeof(val_type));
-	}
-	void read(std::fstream &in_param_buf) {in_param_buf.read(bin_arr, N);}
-	void write(std::fstream &out_param_buf) {out_param_buf.write(bin_arr, N);}
-};
 
 ConnectivityParams::ConnectivityParams() {}
 
@@ -68,22 +49,23 @@ std::string ConnectivityParams::toString()
 
 void ConnectivityParams::readParams(std::fstream &inParamBuf)
 {
-	// TODO: finish writing
+	// TODO: need addtl checks on whether param maps are initialized or not
+	if (!(int_params.size() == 0 && float_params.size() == 0))
+	{
+		int_params.clear();
+		float_params.clear();
+	}
+	std::cout << "[INFO]: Reading connectivity params from file..." << std::endl;
+	unserialize_map_from_file<std::string, int>(int_params, inParamBuf);
+	unserialize_map_from_file<std::string, float>(float_params, inParamBuf);
+	std::cout << "[INFO]: Finished reading connectivity params from file." << std::endl;
 }
 
 void ConnectivityParams::writeParams(std::fstream &outParamBuf)
 {
 	std::cout << "[INFO]: Writing connectivity params to file..." << std::endl;
-	for (auto iter = int_params.begin(); iter != int_params.end(); iter++)
-	{
-		serial<key_int_val_size, int> data(iter->first, iter->second);
-		data.write(outParamBuf);
-	}
-	for (auto iter = float_params.begin(); iter != float_params.end(); iter++)
-	{
-		serial<key_float_val_size, float>data(iter->first, iter->second);
-		data.write(outParamBuf);
-	}
+	serialize_map_to_file<std::string, float>(float_params, outParamBuf);
+	serialize_map_to_file<std::string, int>(int_params, outParamBuf);
 	std::cout << "[INFO]: Finished writing connectivity params to file." << std::endl;
 }
 

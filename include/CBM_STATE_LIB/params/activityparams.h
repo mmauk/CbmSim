@@ -35,6 +35,8 @@ public:
 	friend std::ostream &operator<<(std::ostream &os, ActivityParams &ap);
 	ActivityParams &operator=(const ActivityParams &copyFrom);
 
+	std::map<std::string, float> paramMap;
+
 	//universtal parameters
 	float msPerTimeStep;
 
@@ -236,11 +238,9 @@ private:
 	void updateParams();
 	void updateParamsOriginal();
 	void updateParamsV1();
-
-	std::map<std::string, float> paramMap;
-
 };
 
 std::ostream &operator<<(std::ostream &os, ActivityParams &ap);
 
 #endif /* ACTIVITYPARAMS_H_ */
+

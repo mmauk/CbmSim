@@ -12,6 +12,7 @@
 #define CONNECTIVITYPARAMS_H_
 
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <map>
 #include "fileIO/build_file.h"

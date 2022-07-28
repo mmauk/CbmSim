@@ -8,24 +8,8 @@
 #include <fstream>
 #include <cstring>
 #include <assert.h>
+#include "fileIO/serialize.h"
 #include "params/activityparams.h"
-
-// FIXME: these constants and serial struct are in two places: should change location
-
-const size_t key_float_val_size = sizeof(std::string) + sizeof(float);
-
-template<size_t N, typename val_type>
-struct serial
-{
-	char bin_arr[N];
-	serial(std::string key, val_type val)
-	{
-		memcpy(bin_arr, &key, sizeof(std::string));
-		memcpy(bin_arr + sizeof(std::string), &val, sizeof(val_type));
-	}
-	void read(std::fstream &in_param_buf) {in_param_buf.read(bin_arr, N);}
-	void write(std::fstream &out_param_buf) {out_param_buf.write(bin_arr, N);}
-};
 
 ActivityParams::ActivityParams() {}
 
@@ -96,17 +80,21 @@ ActivityParams::~ActivityParams() {}
 
 void ActivityParams::readParams(std::fstream &inParamBuf)
 {
-	// TODO: finish writing
+	// TODO: need addtl checks on whether param maps are initialized or not
+	if (paramMap.size() != 0)
+	{
+		paramMap.clear();
+	}
+	std::cout << "[INFO]: Reading activity params from file..." << std::endl;
+	unserialize_map_from_file<std::string, float>(paramMap, inParamBuf);
+	std::cout << "[INFO]: Finished reading activity params from file." << std::endl;
+	updateParams(); 
 }
 
 void ActivityParams::writeParams(std::fstream &outParamBuf)
 {
 	std::cout << "[INFO]: Writing activity params to file..." << std::endl;
-	for (auto iter = paramMap.begin(); iter != paramMap.end(); iter++)
-	{
-		serial<key_float_val_size, float>data(iter->first, iter->second);
-		data.write(outParamBuf);
-	}
+	serialize_map_to_file<std::string, float>(paramMap, outParamBuf);
 	std::cout << "[INFO]: Finished writing activity params to file..." << std::endl;
 }
 

@@ -17,7 +17,7 @@ void validate_args_and_set_modes(int *argc, char ***argv,
 void parse_build_args(int *argc, char ***argv, parsed_file &p_file);
 void get_out_sim_file(int arg_index, int *argc, char ***argv, std::string &out_file);
 
-int main1(int argc, char **argv)
+int main(int argc, char **argv)
 {
 	tokenized_file t_file;
 	lexed_file l_file;
@@ -27,16 +27,31 @@ int main1(int argc, char **argv)
 	lex_tokenized_build_file(t_file, l_file);
 	parse_lexed_build_file(l_file, p_file);
 
-	ConnectivityParams cp(p_file);
-	ActivityParams ap(p_file);
-	std::cout << cp << std::endl;
-	std::cout << ap << std::endl;
-	//print_lexed_build_file(l_file);
-	//print_parsed_build_file(p_file);
+	ConnectivityParams cp_out(p_file);
+	ActivityParams ap_out(p_file);
+
+	std::fstream out_param_file_buf("all_params.bin", std::ios::out | std::ios::binary);
+	cp_out.writeParams(out_param_file_buf);
+	ap_out.writeParams(out_param_file_buf);
+	out_param_file_buf.close();
+
+	ConnectivityParams cp_in;
+	ActivityParams ap_in;
+
+	std::fstream in_param_file_buf("all_params.bin", std::ios::in | std::ios::binary);
+	cp_in.readParams(in_param_file_buf);
+	ap_in.readParams(in_param_file_buf);
+	in_param_file_buf.close();
+
+	std::cout << std::endl;
+
+	std::cout << cp_in << std::endl;
+	std::cout << std::endl;
+	std::cout << ap_in << std::endl;
 	return 0;
 }
 
-int main(int argc, char **argv) 
+int main1(int argc, char **argv) 
 {
 // ==================================== PREVIOUS FILE HANDLING ====================================
 
