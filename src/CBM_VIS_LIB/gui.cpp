@@ -101,7 +101,7 @@ static void on_save_state(GtkWidget *widget, Control *control)
 	{
 		char *sim_state_file = gtk_file_chooser_get_filename(chooser);
 		// TODO: pop-up warning for invalid file
-		control->save_sim_state(std::string(sim_state_file));
+		control->save_sim_state_to_file(std::string(sim_state_file));
 		g_free(sim_state_file);
 	}
 	gtk_widget_destroy(dialog);

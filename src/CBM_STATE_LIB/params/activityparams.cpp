@@ -5,10 +5,24 @@
  *      Author: varicella
  */
 
+#include <fstream>
+#include <cstring>
 #include <assert.h>
+#include "fileIO/serialize.h"
 #include "params/activityparams.h"
 
 ActivityParams::ActivityParams() {}
+
+ActivityParams::ActivityParams(parsed_file &p_file)
+{
+	for (auto iter = p_file.parsed_sections["activity"].param_map.begin();
+			  iter != p_file.parsed_sections["activity"].param_map.end();
+			  iter++)
+	{
+		paramMap[iter->first] = std::stof(iter->second.value);
+	}
+	updateParams();
+}
 
 // TODO: CHANGE THIS ALGORITHM IN THE FUTURE TO ONE IN CONPARAM.cpp
 ActivityParams::ActivityParams(std::string actParamFile)
@@ -57,6 +71,12 @@ ActivityParams::ActivityParams(std::string actParamFile)
 	paramFileBuffer.close();
 }
 
+ActivityParams::ActivityParams(std::fstream &sim_file_buf)
+{
+	readParams(sim_file_buf);
+	updateParams(); 
+}
+
 ActivityParams::ActivityParams(const ActivityParams &copyFrom) : paramMap(copyFrom.paramMap)
 {
 	updateParams();
@@ -64,14 +84,23 @@ ActivityParams::ActivityParams(const ActivityParams &copyFrom) : paramMap(copyFr
 
 ActivityParams::~ActivityParams() {}
 
-void ActivityParams::writeParams(std::fstream &outfile)
+void ActivityParams::readParams(std::fstream &inParamBuf)
 {
-	for (auto i = paramMap.begin(); i != paramMap.end(); i++)
+	// TODO: need addtl checks on whether param maps are initialized or not
+	if (paramMap.size() != 0)
 	{
-		outfile << i->first << " " << i->second << std::endl;
+		paramMap.clear();
 	}
+	std::cout << "[INFO]: Reading activity params from file..." << std::endl;
+	unserialize_map_from_file<std::string, float>(paramMap, inParamBuf);
+	std::cout << "[INFO]: Finished reading activity params from file." << std::endl;
+}
 
-	outfile << "activityParamEnd 1" << std::endl;
+void ActivityParams::writeParams(std::fstream &outParamBuf)
+{
+	std::cout << "[INFO]: Writing activity params to file..." << std::endl;
+	serialize_map_to_file<std::string, float>(paramMap, outParamBuf);
+	std::cout << "[INFO]: Finished writing activity params to file..." << std::endl;
 }
 
 unsigned int ActivityParams::getMSPerTimeStep()
@@ -102,13 +131,15 @@ bool ActivityParams::setParam(std::string paramName, float value)
 // representation of the activity parameters. *deep sigh*
 std::string ActivityParams::toString()
 {
-	std::string outString = "";
-	for (auto i = paramMap.begin(); i != paramMap.end(); i++)
+	std::string out_string = "[\n";
+	for (auto iter = paramMap.begin(); iter != paramMap.end(); iter++)
 	{
-		// for now, have to use std::to_string: in future, make map<str, str>
-		outString += i->first + " " + std::to_string(i->second) + "\n";
+		out_string += "[ '" + iter->first + "', '"
+							+ std::to_string(iter->second)
+							+ "' ]\n";
 	}
-	return outString;
+	out_string += "]";
+	return out_string;
 }
 
 std::ostream &operator<<(std::ostream &os, ActivityParams &ap)

@@ -24,6 +24,7 @@ std::map<lexeme, std::string> lex_string_look_up = {
 		{ END_MARKER, "END_MARKER"},
 		{ REGION, "REGION" },
 		{ REGION_TYPE, "REGION_TYPE" },
+		{ TYPE_NAME, "TYPE_NAME" },
 		{ VAR_IDENTIFIER, "VAR_IDENTIFIER" },
 		{ VAR_VALUE, "VAR_VALUE" },
 		{ SINGLE_COMMENT, "SINGLE_COMMENT" },
@@ -42,6 +43,8 @@ std::map<std::string, lexeme> token_defs = {
 		{ "build", REGION_TYPE },
 		{ "connectivity", REGION_TYPE },
 		{ "activity", REGION_TYPE },
+		{ "int", TYPE_NAME },
+		{ "float", TYPE_NAME },
 		{ "[a-zA-Z_]{1}[a-zA-Z0-9_]*", VAR_IDENTIFIER },
 		{ "[+-]?([0-9]*[.])?[0-9]*([e][+-]?[0-9]+)?", VAR_VALUE },
 		{ "//", SINGLE_COMMENT },
@@ -148,6 +151,7 @@ void lex_tokenized_build_file(tokenized_file &t_file, lexed_file &l_file)
 void parse_lexed_build_file(lexed_file &l_file, parsed_file &p_file)
 {
 	parsed_section curr_section = {};
+	variable curr_variable = {};
 	auto line = l_file.tokens.begin();
 	while (line != l_file.tokens.end())
 	{
@@ -172,15 +176,24 @@ void parse_lexed_build_file(lexed_file &l_file, parsed_file &p_file)
 					}
 					lexed_token++;
 					break;
+				case TYPE_NAME:
+					curr_variable.type_name = lexed_token->raw_token;
+					lexed_token++;
+					break;
 				case VAR_IDENTIFIER:
-					// TODO: check whether next token is indeed a VAR_VALUE
-					curr_section.param_map[lexed_token->raw_token] = (lexed_token + 1)->raw_token;
-					lexed_token += 2;
+					curr_variable.identifier = lexed_token->raw_token;
+					lexed_token++;
+					break;
+				case VAR_VALUE:
+					curr_variable.value = lexed_token->raw_token;
+					curr_section.param_map[curr_variable.identifier] = curr_variable;
+					curr_variable = {};
+					lexed_token++;
 					break;
 				case END_MARKER:
 					if (curr_section.section_label != "")
 					{
-						p_file.parsed_sections.push_back(curr_section);
+						p_file.parsed_sections[curr_section.section_label] = curr_section;
 						curr_section.section_label = "";
 						curr_section.param_map.clear();
 					}
@@ -229,12 +242,16 @@ void print_lexed_build_file(lexed_file &l_file)
 void print_parsed_build_file(parsed_file &p_file)
 {
 	std::cout << "[ 'filetype', " << "'" << p_file.file_type_label << "'" << "]" << std::endl;
-	for (auto p_section : p_file.parsed_sections)
+	for (auto p_section = p_file.parsed_sections.begin();
+			 p_section != p_file.parsed_sections.end();
+			 p_section++)
 	{
-		std::cout << "[ 'section', " << "'" << p_section.section_label << "'" << "]" << std::endl;
-		for (auto iter = p_section.param_map.begin(); iter != p_section.param_map.end(); iter++)
+		std::cout << "[ 'section', " << "'" << p_section->first << "'" << "]" << std::endl;
+		for (auto iter = p_section->second.param_map.begin();
+				 iter != p_section->second.param_map.end();
+				 iter++)
 		{
-			std::cout << "[ '" << iter->first << "', '" << iter->second << "' ]" << std::endl;
+			std::cout << "[ '" << iter->second.type_name << "', '" << iter->second.identifier << "', '" << iter->second.value << "' ]" << std::endl;
 		}
 	}
 }

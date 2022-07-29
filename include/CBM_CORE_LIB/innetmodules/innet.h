@@ -24,7 +24,7 @@
 #include <cuda_runtime.h>
 #include "stdDefinitions/pstdint.h"
 #include "memoryMgmt/dynamic2darray.h"
-#include "params/connectivityparams.h" /* global const connectivity params */
+#include "params/connectivityparams.h" /* reverted back to read-in conparams 07/25/2022 */
 #include "params/activityparams.h"
 #include "state/innetconnectivitystate.h"
 #include "state/innetactivitystate.h"
@@ -34,8 +34,9 @@ class InNet
 {
 public:
 	InNet();
-	InNet(ActivityParams *ap, InNetConnectivityState *cs, InNetActivityState *as,
-		int gpuIndStart, int numGPUs);
+	InNet(ConnectivityParams *cp, ActivityParams *ap,
+		  InNetConnectivityState *cs, InNetActivityState *as,
+		  int gpuIndStart, int numGPUs);
 	~InNet();
 
 	void writeToState();
@@ -110,7 +111,8 @@ public:
 	void runUpdateGRHistoryCUDA(cudaStream_t **sts, int streamN, unsigned long t);
 
 protected:
-	ActivityParams ap;
+	ConnectivityParams *cp;
+	ActivityParams *ap;
 
 	InNetConnectivityState *cs;
 	InNetActivityState *as;
@@ -329,12 +331,12 @@ protected:
 	//end gpu related variables
 	//-----------end basket cell variables
 
-	virtual void initCUDA();
-	virtual void initMFCUDA();
-	virtual void initGRCUDA();
-	virtual void initGOCUDA();
-	virtual void initBCCUDA();
-	virtual void initSCCUDA();
+	virtual void initCUDA(ConnectivityParams *cp);
+	virtual void initMFCUDA(ConnectivityParams *cp);
+	virtual void initGRCUDA(ConnectivityParams *cp);
+	virtual void initGOCUDA(ConnectivityParams *cp);
+	virtual void initBCCUDA(ConnectivityParams *cp);
+	virtual void initSCCUDA(ConnectivityParams *cp);
 
 private:
 	template<typename Type>
@@ -342,3 +344,4 @@ private:
 };
 
 #endif /* INNET_H_ */
+

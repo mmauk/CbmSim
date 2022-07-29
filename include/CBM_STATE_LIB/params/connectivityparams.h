@@ -11,13 +11,32 @@
 #ifndef CONNECTIVITYPARAMS_H_
 #define CONNECTIVITYPARAMS_H_
 
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <map>
+#include "fileIO/build_file.h"
 #include "stdDefinitions/pstdint.h"
 
-/*
- * a couple notes:
- * 		- NUM_CELL type variables are not in original conParams_binChoice2_1.txt
- * 		- NUM_P_CELLA_TO_CELLB type variables not in original conParams_binChoice2_t.txt
- */
+class ConnectivityParams
+{
+	public:
+		ConnectivityParams();
+		ConnectivityParams(parsed_file &p_file);
+		ConnectivityParams(std::fstream &sim_file_buf);
+		void readParams(std::fstream &inParamBuf);
+		void writeParams(std::fstream &outParamBuf);
+		std::string toString();
+		
+		// cannot overload 'operator[]' because we have both int and float params.
+
+		friend std::ostream &operator<<(std::ostream &os, ConnectivityParams &cp);
+
+		std::map<std::string, int> int_params;
+		std::map<std::string, float> float_params;
+};
+
+std::ostream &operator<<(std::ostream &os, ConnectivityParams &cp);
 
 // cell numbers
 const int MF_X = 128;

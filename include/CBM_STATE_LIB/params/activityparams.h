@@ -14,24 +14,29 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include "fileIO/build_file.h"
 #include <stdDefinitions/pstdint.h>
-//#include "interfaces/iactivityparams.h"
 
 class ActivityParams
 {
 public:
 	ActivityParams();
+	ActivityParams(parsed_file &p_file);
 	ActivityParams(std::string actParamFile);
+	ActivityParams(std::fstream &sim_file_buf);
 	ActivityParams(const ActivityParams &copyFrom);
 	~ActivityParams(); /*here to serve the Rule of Three: map deallocates itself bwahaha*/
 
-	void writeParams(std::fstream &outfile);
+	void readParams(std::fstream &inParamBuf);
+	void writeParams(std::fstream &outParamBuf);
 	unsigned int getMSPerTimeStep();
 	float getParam(std::string paramName);
 	bool setParam(std::string paramName, float value);
 	std::string toString();
 	friend std::ostream &operator<<(std::ostream &os, ActivityParams &ap);
 	ActivityParams &operator=(const ActivityParams &copyFrom);
+
+	std::map<std::string, float> paramMap;
 
 	//universtal parameters
 	float msPerTimeStep;
@@ -234,9 +239,9 @@ private:
 	void updateParams();
 	void updateParamsOriginal();
 	void updateParamsV1();
-
-	std::map<std::string, float> paramMap;
-
 };
 
+std::ostream &operator<<(std::ostream &os, ActivityParams &ap);
+
 #endif /* ACTIVITYPARAMS_H_ */
+

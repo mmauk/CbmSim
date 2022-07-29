@@ -1,11 +1,10 @@
 #include <iomanip>
 #include <gtk/gtk.h>
 #include "control.h"
+#include "fileIO/build_file.h"
 #include "ttyManip/tty.h"
 
-const std::string BIN_EXT = "bin";
-
-// private utility function. Will move to a better place later
+// private utility function. TODO: move to a better place
 std::string getFileBasename(std::string fullFilePath)
 {
 	size_t sep = fullFilePath.find_last_of("\\/");
@@ -26,20 +25,21 @@ std::string getFileBasename(std::string fullFilePath)
 
 Control::Control() {}
 
-Control::Control(std::string actParamFile)
+Control::Control(parsed_file &p_file)
 {
-	if (!ap) ap = new ActivityParams(actParamFile);
+	if (!cp) cp = new ConnectivityParams(p_file);
+	if (!ap) ap = new ActivityParams(p_file);
 	if (!simState)
 	{
 		std::cout << "[INFO]: Initializing state..." << std::endl;
-		simState = new CBMState(ap, numMZones);
+		simState = new CBMState(cp, ap, numMZones);
 		std::cout << "[INFO]: Finished initializing state..." << std::endl;
 	}
 	
 	if (!simCore)
 	{
 		std::cout << "[INFO]: Initializing simulation core..." << std::endl;
-		simCore = new CBMSimCore(ap, simState, gpuIndex, gpuP2);
+		simCore = new CBMSimCore(cp, ap, simState, gpuIndex, gpuP2);
 		std::cout << "[INFO]: Finished initializing simulation core." << std::endl;
 	}
 
@@ -70,9 +70,59 @@ Control::Control(std::string actParamFile)
 	}
 }
 
+Control::Control(std::string sim_file_name)
+{
+	std::fstream sim_file_buf(sim_file_name.c_str(), std::ios::in | std::ios::binary);
+	std::cout << "[INFO]: Initializing simulation from sim file..." << std::endl;
+	if (!cp) 
+	{
+		std::cout << "[INFO]: Initializing connectivity parameters..." << std::endl;
+		cp = new ConnectivityParams(sim_file_buf);
+		std::cout << "[INFO]: Finished initializing connectivity parameters." << std::endl;
+	}
+	if (!ap)
+	{
+		std::cout << "[INFO]: Initializing activity parameters..." << std::endl;
+		ap = new ActivityParams(sim_file_buf);
+		std::cout << "[INFO]: Finished initializing activity parameters." << std::endl;
+	} 
+	if (!simState) 
+	{
+		std::cout << "[INFO]: Initializing state..." << std::endl;
+		simState = new CBMState(cp, ap, numMZones, sim_file_buf);
+		std::cout << "[INFO]: Finished initializing state..." << std::endl;
+	}
+	if (!simCore)
+	{
+		std::cout << "[INFO]: Initializing simulation core..." << std::endl;
+		simCore = new CBMSimCore(cp, ap, simState, gpuIndex, gpuP2);
+		std::cout << "[INFO]: Finished initializing simulation core." << std::endl;
+	}
+	if (!mfFreq)
+	{
+		std::cout << "[INFO]: Initializing Poisson MF Population..." << std::endl;
+		mfFreq = new ECMFPopulation(cp->int_params["num_mf"], mfRandSeed,
+			  CSTonicMFFrac, CSPhasicMFFrac, contextMFFrac, nucCollFrac,
+			  bgFreqMin, csbgFreqMin, contextFreqMin, tonicFreqMin, phasicFreqMin, bgFreqMax,
+			  csbgFreqMax, contextFreqMax, tonicFreqMax, phasicFreqMax, collaterals_off,
+			  fracImport, secondCS, fracOverlap);
+		std::cout << "[INFO]: Finished initializing Poisson MF Population." << std::endl;
+	}
+	if (!mfs)
+	{
+		std::cout << "[INFO]: Initializing Poisson MF Population..." << std::endl;
+		mfs = new PoissonRegenCells(cp->int_params["num_mf"], mfRandSeed,
+				threshDecayTau, ap->msPerTimeStep, numMZones, cp->int_params["num_nc"]);
+		std::cout << "[INFO]: Finished initializing Poisson MF Population." << std::endl;
+	}
+	std::cout << "[INFO]: Finished initializing simulation from sim file." << std::endl;
+	sim_file_buf.close();
+}
+
 Control::~Control()
 {
 	// delete all dynamic objects
+	if (cp) delete cp;
 	if (ap) delete ap;
 	if (simState) delete simState;
 	if (simCore) delete simCore;
@@ -81,6 +131,24 @@ Control::~Control()
 
 	// deallocate output arrays
 	if (output_arrays_initialized) deleteOutputArrays();
+}
+
+void Control::build_sim(parsed_file &p_file)
+{
+	// not sure if we want to save mfFreq and mfs in the simulation file
+	if (!(cp && ap && simState))
+	{
+		std::cout << "[INFO]: Initializing connectivity and activity params from build file..."
+				  << std::endl;
+		cp = new ConnectivityParams(p_file);
+		ap = new ActivityParams(p_file);
+		std::cout << "[INFO]: Finished initializing connectivity and activity params from build file."
+				  << std::endl;
+
+		std::cout << "[INFO]: Initializing state from build file..." << std::endl;
+		simState = new CBMState(cp, ap, numMZones);
+		std::cout << "[INFO]: Finished initializing state from build file..." << std::endl;
+	}
 }
 
 void Control::init_activity_params(std::string actParamFile)
@@ -93,6 +161,12 @@ void Control::init_activity_params(std::string actParamFile)
 
 void Control::init_sim_state(std::string stateFile)
 {
+	if (!cp)
+	{
+		fprintf(stderr, "[ERROR]: Trying to initialize state without first connectivity params.\n");
+		fprintf(stderr, "[ERROR]: (Hint: Load a connectivity parameter file first then load the state.\n");
+		return;
+	}
 	if (!ap)
 	{
 		fprintf(stderr, "[ERROR]: Trying to initialize state without first initializing activity params.\n");
@@ -101,7 +175,7 @@ void Control::init_sim_state(std::string stateFile)
 	}
 	if (!simState)
 	{
-		simState = new CBMState(ap, numMZones, stateFile);
+		simState = new CBMState(cp, ap, numMZones, stateFile);
 	}
 	else
 	{
@@ -109,19 +183,63 @@ void Control::init_sim_state(std::string stateFile)
 	}
 }
 
-void Control::save_sim_state(std::string stateFile)
+void Control::save_params_to_file(std::string outFile)
 {
-	if (!(ap && simState && simCore))
+	if (!(cp && ap))
+	{
+		fprintf(stderr, "[ERROR]: Trying to write uninitialized parameters to file.\n");
+		fprintf(stderr, "[ERROR]: (Hint: Try initializing activity parameters and connectivity parameters first.\n");
+		return;
+	}
+	// NOTE: saving as binary for now, will make stream mode an arg in future
+	std::fstream outFileBuffer(outFile.c_str(), std::ios::out | std::ios::binary);
+}
+
+void Control::save_sim_state_to_file(std::string outStateFile)
+{
+	if (!(cp && ap && simState))
 	{
 		fprintf(stderr, "[ERROR]: Trying to write an uninitialized state to file.\n");
 		fprintf(stderr, "[ERROR]: (Hint: Try loading activity parameter file and initializing the state first.)\n");
 		return;
 	}
-	std::fstream outStateFileBuffer(stateFile.c_str(), std::ios::out | std::ios::binary);
-	// notice we are using simcore here: in order to be save the state we *should* have
-	// initialized not only activity params and state but also the sim core.
-	simCore->writeState(ap, outStateFileBuffer);
+	std::fstream outStateFileBuffer(outStateFile.c_str(), std::ios::out | std::ios::binary);
+	if (simCore)
+	{
+		// if we have simCore, save from simcore else save from state.
+		// this covers both edge case scenarios of if the user wants to save to
+		// file an initialized bunny or if the user is using the gui and forgot 
+		// to save to file after initializing state, but wants to do so after 
+		// initializing simcore.
+		simCore->writeState(cp, ap, outStateFileBuffer);
+	}
+	else
+	{
+		simState->writeState(cp, ap, outStateFileBuffer); 
+	}
 	outStateFileBuffer.close();
+}
+
+void Control::save_sim_to_file(std::string outSimFile)
+{
+	if (!(cp && ap && simState))
+	{
+		fprintf(stderr, "[ERROR]: Trying to write an uninitialized simulation to file.\n");
+		fprintf(stderr, "[ERROR]: (Hint: Try loading a build file first.)\n");
+		return;
+	}
+	std::fstream outSimFileBuffer(outSimFile.c_str(), std::ios::out | std::ios::binary);
+	cp->writeParams(outSimFileBuffer);
+	ap->writeParams(outSimFileBuffer);
+	if (simCore)
+	{
+		simCore->writeState(cp, ap, outSimFileBuffer);
+	}
+	else
+	{
+		simState->writeState(cp, ap, outSimFileBuffer); 
+	}
+	outSimFileBuffer.close();
 }
 
 void Control::initializeOutputArrays()
@@ -262,9 +380,6 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 		}
 		timer = clock() - timer;
 		std::cout << "Trial time seconds: " << (float)timer / CLOCKS_PER_SEC << std::endl;
-
-		// save our outputs arrays after each trial...
-		saveOutputArraysToFile(0, trial, local_time, simNum);
 
 		// check the event queue after every iteration
 		if (sim_vis_mode == GUI)
@@ -418,21 +533,22 @@ void Control::deleteOutputArrays()
 	//delete2DArray<ct_uint8_t>(allGOPSTH);
 }
 
-// NOTE:assumes that we have initialized activity params
+// NOTE: assumes that we have initialized activity params
+// TODO: find a better design than this: why else would we have a constructor???
 void Control::construct_control(enum vis_mode sim_vis_mode)
 {
 	if (this->sim_vis_mode == NO_VIS) this->sim_vis_mode = sim_vis_mode;
 	if (!simState)
 	{
 		std::cout << "[INFO]: Initializing state..." << std::endl;
-		simState = new CBMState(ap, numMZones);
+		simState = new CBMState(cp, ap, numMZones);
 		std::cout << "[INFO]: Finished initializing state..." << std::endl;
 	}
 	
 	if (!simCore)
 	{
 		std::cout << "[INFO]: Initializing simulation core..." << std::endl;
-		simCore = new CBMSimCore(ap, simState, gpuIndex, gpuP2);
+		simCore = new CBMSimCore(cp, ap, simState, gpuIndex, gpuP2);
 		std::cout << "[INFO]: Finished initializing simulation core." << std::endl;
 	}
 

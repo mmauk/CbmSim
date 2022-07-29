@@ -12,7 +12,7 @@
 
 CBMSimCore::CBMSimCore() {}
 
-CBMSimCore::CBMSimCore(ActivityParams *ap, CBMState *state,
+CBMSimCore::CBMSimCore(ConnectivityParams *cp, ActivityParams *ap, CBMState *state,
 	int gpuIndStart, int numGPUP2)
 {
 	CRandomSFMT0 randGen(time(0));
@@ -23,7 +23,7 @@ CBMSimCore::CBMSimCore(ActivityParams *ap, CBMState *state,
 		mzoneRSeed[i] = randGen.IRandom(0, INT_MAX);
 	}
 
-	construct(ap, state, mzoneRSeed, gpuIndStart, numGPUP2);
+	construct(cp, ap, state, mzoneRSeed, gpuIndStart, numGPUP2);
 
 	delete[] mzoneRSeed;
 }
@@ -54,6 +54,8 @@ CBMSimCore::~CBMSimCore()
 	delete[] streams;
 }
 
+// cbmsimcore objects contain their own versions of cp and ap
+// for speed
 void CBMSimCore::writeToState()
 {
 	inputNet->writeToState();
@@ -64,10 +66,11 @@ void CBMSimCore::writeToState()
 	}
 }
 
-void CBMSimCore::writeState(ActivityParams *ap, std::fstream& outfile)
-{	
+// cbmstate objects do not contain their own cp and ap
+void CBMSimCore::writeState(ConnectivityParams *cp, ActivityParams *ap, std::fstream& outfile)
+{
 	writeToState();
-	simState->writeState(ap, outfile);
+	simState->writeState(cp, ap, outfile); // using internal cp and ap...
 }
 
 void CBMSimCore::initCUDAStreams()
@@ -453,7 +456,7 @@ MZone** CBMSimCore::getMZoneList()
 	return (MZone **)zones;
 }
 
-void CBMSimCore::construct(ActivityParams *ap, CBMState *state,
+void CBMSimCore::construct(ConnectivityParams *cp, ActivityParams *ap, CBMState *state,
 	int *mzoneRSeed, int gpuIndStart, int numGPUP2)
 {
 	int maxNumGPUs;
@@ -495,15 +498,15 @@ void CBMSimCore::construct(ActivityParams *ap, CBMState *state,
 	std::cout << "finished initialzing cuda streams." << std::endl;
 
 	// NOTE: inputNet has internal cp, no need to pass to constructor
-	inputNet = new InNet(ap, state->getInnetConStateInternal(),
+	inputNet = new InNet(cp, ap, state->getInnetConStateInternal(),
 		state->getInnetActStateInternal(), this->gpuIndStart, numGPUs);
 
 	zones = new MZone*[numZones];
 
 	for (int i = 0; i < numZones; i++)
 	{
-		// same thing for zones as with innet	
-		zones[i] = new MZone(ap, state->getMZoneConStateInternal(i),
+		// same thing for zones as with innet
+		zones[i] = new MZone(cp, ap, state->getMZoneConStateInternal(i),
 			state->getMZoneActStateInternal(i), mzoneRSeed[i], inputNet->getApBufGRGPUPointer(),
 			inputNet->getDelayBCPCSCMaskGPUPointer(), inputNet->getHistGRGPUPointer(),
 			this->gpuIndStart, numGPUs);
