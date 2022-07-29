@@ -18,5 +18,5 @@ bool validateFloatArray(float *array, unsigned int numElements);
 
 bool validateDoubleArray(double *array, unsigned int numElements);
 
-
 #endif /* ARRAYVALIDATE_H_ */
+

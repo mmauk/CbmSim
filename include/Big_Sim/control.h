@@ -6,6 +6,7 @@
 #include <string>
 #include <algorithm>
 #include <iterator>
+#include <ctime>
 
 #include "stdDefinitions/pstdint.h"
 #include "interfaces/cbmstate.h"
@@ -114,8 +115,8 @@ class Control
 		int trialTime = 3000; /* wild that this is here */
 		
 		// raster stuff
-		int allGOPSTHColSize = csLength + msPreCS + msPostCS;
-		int rasterColumnSize = allGOPSTHColSize * numTrainingTrials;
+		int PSTHColSize = csLength + msPreCS + msPostCS;
+		int rasterColumnSize = PSTHColSize * numTrainingTrials;
 
 		//const ct_uint8_t* grSpks;
 		//const float *mfGO;
@@ -131,10 +132,10 @@ class Control
 		//float **grGOgPSTH; 
 
 		//ct_uint8_t **allMFPSTH;
-		//ct_uint8_t **allGRPSTH;
 		//ct_uint8_t **activeGRPSTH;
 
 		//ct_uint8_t **allGORaster;
+		ct_uint8_t **allGRPSTH;
 		ct_uint8_t **allPCRaster;
 		ct_uint8_t **allNCRaster;
 		ct_uint8_t **allSCRaster;
@@ -179,11 +180,11 @@ class Control
 
 		void runTrials(int simNum, float GOGR, float GRGO, float MFGO);
 
-		void saveOutputArraysToFile(int goRecipParam, int simNum);
+		void saveOutputArraysToFile(int goRecipParam, int trial, std::tm *local_time, int simNum);
 
 		void countGOSpikes(int *goSpkCounter, float &medTrials);
 
-		void fillRasterArrays(CBMSimCore *simCore, int rasterCounter);
+		void fillOutputArrays(CBMSimCore *simCore, int trial, int PSTHCounter, int rasterCounter);
 
 		// this should be in CXX Tools or 2D array...
 		void write2DCharArray(std::string outFileName, ct_uint8_t **inArr,

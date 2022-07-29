@@ -1,4 +1,5 @@
 /*
+ *
  * innet.cpp
  *
  *  Created on: Jun 21, 2011
@@ -202,8 +203,8 @@ InNet::~InNet()
 	delete[] grConMFOutGRGPU;
 	delete[] grConMFOutGRGPUP;
 
-	//delete[] outputGRH;
-	cudaFreeHost(outputGRH);
+	delete[] outputGRH;
+	//cudaFreeHost(outputGRH);
 
 	// GO CUDA
 	for (int i = 0; i < numGPUs; i++)
@@ -384,7 +385,7 @@ void getnumGPUs()
 
 const ct_uint8_t* InNet::exportAPGO()
 {
-	return (const ct_uint8_t *)as->apGO.get();	
+	return (const ct_uint8_t *)as->apGO.get();
 }
 
 const ct_uint8_t* InNet::exportAPMF()
@@ -399,17 +400,7 @@ const ct_uint8_t* InNet::exportAPSC()
 
 const ct_uint8_t* InNet::exportAPGR()
 {
-	cudaError_t error;
-	for(int i=0; i<numGPUs; i++)
-	{
-		cudaSetDevice(i+gpuIndStart);
-		error=cudaMemcpy((void *)&outputGRH[i*numGRPerGPU], outputGRGPU[i],
-				numGRPerGPU*sizeof(ct_uint8_t), cudaMemcpyDeviceToHost);
-#ifdef DEBUGOUT
-		cerr<<"exportAPGR cuda memcpy: "<<cudaGetErrorString(error)<<endl;
-#endif
-	}
-
+	cudaError_t error = getGRGPUData<ct_uint8_t>(outputGRGPU, outputGRH);
 	return (const ct_uint8_t *)outputGRH;
 }
 
@@ -1235,12 +1226,12 @@ void InNet::initGRCUDA(ConnectivityParams *cp)
 	grConMFOutGRGPUP = new size_t[numGPUs];
 
 	// NOTE: debating whether to make this page-locked mem or not (06/25/2022)
-	//outputGRH = new ct_uint8_t[cp->int_params["num_gr"]];
-	//std::fill(outputGRH, outputGRH + cp->int_params["num_gr"], 0);
+	outputGRH = new ct_uint8_t[NUM_GR];
+	std::fill(outputGRH, outputGRH + NUM_GR, 0);
 
 	std::cout << "[INFO]: Allocating GR cuda variables..." << std::endl;
-	cudaMallocHost((void **)&outputGRH, cp->int_params["num_gr"] * sizeof(ct_uint8_t));
-	cudaMemset(outputGRH, 0, cp->int_params["num_gr"] * sizeof(ct_uint8_t));
+	//cudaMallocHost((void **)&outputGRH, NUM_GR * sizeof(ct_uint8_t));
+	//cudaMemset(outputGRH, 0, NUM_GR * sizeof(ct_uint8_t));
 
 	//allocate memory for GPU
 	for( int i = 0; i < numGPUs; i++)
@@ -1599,7 +1590,6 @@ void InNet::initSCCUDA(ConnectivityParams *cp)
 template<typename Type>
 cudaError_t InNet::getGRGPUData(Type **gpuData, Type *hostData)
 {
-	//cudaError_t error;
 	for (int i = 0; i < numGPUs; i++)
 	{
 		cudaSetDevice(i + gpuIndStart);

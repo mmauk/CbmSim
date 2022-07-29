@@ -1,5 +1,4 @@
 #include <iomanip>
-#include <time.h>
 #include <gtk/gtk.h>
 #include "control.h"
 #include "fileIO/build_file.h"
@@ -245,25 +244,27 @@ void Control::save_sim_to_file(std::string outSimFile)
 
 void Control::initializeOutputArrays()
 {
-	// Allocate and Initialize PSTH and Raster arrays
-	allPCRaster = allocate2DArray<ct_uint8_t>(NUM_PC, rasterColumnSize);
-	std::fill(allPCRaster[0], allPCRaster[0] +
-			NUM_PC * rasterColumnSize, 0);
-	
-	allNCRaster = allocate2DArray<ct_uint8_t>(NUM_NC, rasterColumnSize);
-	std::fill(allNCRaster[0], allNCRaster[0] +
-			NUM_NC * rasterColumnSize, 0);
+	allGRPSTH = allocate2DArray<ct_uint8_t>(NUM_GR, PSTHColSize);
+	memset(allGRPSTH[0], '\000', (unsigned long)NUM_GR * (unsigned long)PSTHColSize * sizeof(ct_uint8_t));
 
-	allSCRaster = allocate2DArray<ct_uint8_t>(NUM_SC, rasterColumnSize);
-	std::fill(allSCRaster[0], allSCRaster[0] +
-			NUM_SC * rasterColumnSize, 0);
+	//allPCRaster = allocate2DArray<ct_uint8_t>(NUM_PC, rasterColumnSize);
+	//std::fill(allPCRaster[0], allPCRaster[0] +
+	//		NUM_PC * rasterColumnSize, 0);
+	//
+	//allNCRaster = allocate2DArray<ct_uint8_t>(NUM_NC, rasterColumnSize);
+	//std::fill(allNCRaster[0], allNCRaster[0] +
+	//		NUM_NC * rasterColumnSize, 0);
 
-	allBCRaster = allocate2DArray<ct_uint8_t>(NUM_BC, rasterColumnSize);
-	std::fill(allBCRaster[0], allBCRaster[0] +
-			NUM_BC * rasterColumnSize, 0);
-	
-	allGOPSTH = allocate2DArray<ct_uint8_t>(NUM_GO, allGOPSTHColSize);
-	std::fill(allGOPSTH[0], allGOPSTH[0] + NUM_GO * allGOPSTHColSize, 0);
+	//allSCRaster = allocate2DArray<ct_uint8_t>(NUM_SC, rasterColumnSize);
+	//std::fill(allSCRaster[0], allSCRaster[0] +
+	//		NUM_SC * rasterColumnSize, 0);
+
+	//allBCRaster = allocate2DArray<ct_uint8_t>(NUM_BC, rasterColumnSize);
+	//std::fill(allBCRaster[0], allBCRaster[0] +
+	//		NUM_BC * rasterColumnSize, 0);
+	//
+	//allGOPSTH = allocate2DArray<ct_uint8_t>(NUM_GO, PSTHColSize);
+	//std::fill(allGOPSTH[0], allGOPSTH[0] + NUM_GO * PSTHColSize, 0);
 }
 
 void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
@@ -272,8 +273,8 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 	int numTotalTrials   = preTrialNumber + numTrainingTrials;  
 
 	float medTrials;
-	auto curr_time = std::time(nullptr);
-	auto local_time = *std::localtime(&curr_time);
+	std::time_t curr_time = std::time(nullptr);
+	std::tm *local_time = std::localtime(&curr_time);
 	clock_t timer;
 	int rasterCounter = 0;
 	int goSpkCounter[NUM_GO] = {0};
@@ -365,7 +366,7 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 				if (trial >= preTrialNumber && tts >= csStart-msPreCS &&
 						tts < csStart + csLength + msPostCS)
 				{
-					fillRasterArrays(simCore, rasterCounter);
+					fillOutputArrays(simCore, trial, PSTHCounter, rasterCounter);
 
 					PSTHCounter++;
 					rasterCounter++;
@@ -379,6 +380,7 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 		}
 		timer = clock() - timer;
 		std::cout << "Trial time seconds: " << (float)timer / CLOCKS_PER_SEC << std::endl;
+
 		// check the event queue after every iteration
 		if (sim_vis_mode == GUI)
 		{
@@ -401,30 +403,52 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 	if (sim_vis_mode == TUI) reset_tty(&fp); /* reset the tty for later use */
 }
 
-void Control::saveOutputArraysToFile(int goRecipParam, int simNum)
+
+void Control::saveOutputArraysToFile(int goRecipParam, int trial, std::tm *local_time, int simNum)
 {
-	int allGOPOSTHColSize = csLength + msPreCS + msPostCS; 
-	// array of possible convergences to test. 
-	// TODO: put these into an input file instead of here :weird_champ:
-	int conv[8] = {5000, 4000, 3000, 2000, 1000, 500, 250, 125};
-	
-	std::string allGOPSTHFileName = "allGOPSTH_noGOGO_grgoConv" + std::to_string(conv[goRecipParam]) +
-		"_" + std::to_string(simNum) + ".bin";	
-	write2DCharArray(allGOPSTHFileName, allGOPSTH, NUM_GO, allGOPOSTHColSize);
+	if (trial > 0 && trial % 3 == 0)
+	{
+		std::cout << "[INFO]: Saving GR PSTH to file..." << std::endl;
+		std::ostringstream allGRPSTHFileBuf;
+		allGRPSTHFileBuf << OUTPUT_DATA_PATH
+						 << "allGRPSTH"
+						 << "_"
+						 << std::put_time(local_time, "%d-%m-%Y")
+						 << "_"
+						 << std::to_string(trial + 1)
+						 << "."
+						 << BIN_EXT;
+		std::string allGRPSTHFileName = allGRPSTHFileBuf.str();
+		write2DCharArray(allGRPSTHFileName, allGRPSTH, NUM_GR, PSTHColSize);
 
-	std::cout << "Filling BC files" << std::endl;
-	
-	std::string allBCRasterFileName = "allBCRaster_paramSet" + std::to_string(inputStrength) +
-		"_" + std::to_string(simNum) + ".bin";
-	write2DCharArray(allBCRasterFileName, allBCRaster, NUM_BC,
-			numTrainingTrials * allGOPOSTHColSize);
-	
-	std::cout << "Filling SC files" << std::endl;
+		// reset GRPSTH
+		memset(allGRPSTH[0], '\000', (unsigned long)NUM_GR * (unsigned long)PSTHColSize * sizeof(ct_uint8_t));
+		//for (int i = 0; i < NUM_GR; i++)
+		//{
+		//	for (int j = 0; j < PSTHColSize; j++)
+		//	{
+		//		allGRPSTH[i][j] = 0;
+		//	}
+		//}
+	}
 
-	std::string allSCRasterFileName = "allSCRaster_paramSet" + std::to_string(inputStrength) +
-		"_" + std::to_string(simNum) + ".bin";
-	write2DCharArray(allSCRasterFileName, allSCRaster, NUM_SC,
-			numTrainingTrials * allGOPOSTHColSize);
+	//std::string allGOPSTHFileName = "allGOPSTH_noGOGO_grgoConv" + std::to_string(conv[goRecipParam]) +
+	//	"_" + std::to_string(simNum) + ".bin";
+	//write2DCharArray(allGOPSTHFileName, allGOPSTH, NUM_GO, PSTHColSize);
+
+	//std::cout << "Filling BC files" << std::endl;
+	//
+	//std::string allBCRasterFileName = "allBCRaster_paramSet" + std::to_string(inputStrength) +
+	//	"_" + std::to_string(simNum) + ".bin";
+	//write2DCharArray(allBCRasterFileName, allBCRaster, NUM_BC,
+	//		numTrainingTrials * PSTHColSize);
+	//
+	//std::cout << "Filling SC files" << std::endl;
+
+	//std::string allSCRasterFileName = "allSCRaster_paramSet" + std::to_string(inputStrength) +
+	//	"_" + std::to_string(simNum) + ".bin";
+	//write2DCharArray(allSCRasterFileName, allSCRaster, NUM_SC,
+	//		numTrainingTrials * PSTHColSize);
 }
 
 void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
@@ -443,39 +467,44 @@ void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
 	std::cout << "Median GO Rate: " << m / 2.0 << std::endl;
 }
 
-void Control::fillRasterArrays(CBMSimCore *simCore, int rasterCounter)
+void Control::fillOutputArrays(CBMSimCore *simCore, int trial, int PSTHCounter, int rasterCounter)
 {
-	const ct_uint8_t* pcSpks = simCore->getMZoneList()[0]->exportAPPC();
-	const ct_uint8_t* ncSpks = simCore->getMZoneList()[0]->exportAPNC();
-	const ct_uint8_t* bcSpks = simCore->getMZoneList()[0]->exportAPBC();
-	const ct_uint8_t* scSpks = simCore->getInputNet()->exportAPSC();
-	
-	for (int i = 0; i < NUM_PC; i++)
+	const ct_uint8_t* grSpks = simCore->getInputNet()->exportAPGR();
+	//const ct_uint8_t* pcSpks = simCore->getMZoneList()[0]->exportAPPC();
+	//const ct_uint8_t* ncSpks = simCore->getMZoneList()[0]->exportAPNC();
+	//const ct_uint8_t* bcSpks = simCore->getMZoneList()[0]->exportAPBC();
+	//const ct_uint8_t* scSpks = simCore->getInputNet()->exportAPSC();
+	for (int i = 0; i < NUM_GR; i++)
 	{
-		allPCRaster[i][rasterCounter] = pcSpks[i];
+		allGRPSTH[i][PSTHCounter] += grSpks[i];
 	}
 
-	for (int i = 0; i < NUM_NC; i++)
-	{
-		allNCRaster[i][rasterCounter] = ncSpks[i];
-	}
+	//for (int i = 0; i < NUM_PC; i++)
+	//{
+	//	allPCRaster[i][rasterCounter] = pcSpks[i];
+	//}
 
-	for (int i = 0; i < NUM_BC; i++)
-	{
-		allBCRaster[i][rasterCounter] = bcSpks[i];
-	}
+	//for (int i = 0; i < NUM_NC; i++)
+	//{
+	//	allNCRaster[i][rasterCounter] = ncSpks[i];
+	//}
 
-	for (int i = 0; i < NUM_SC; i++)
-	{
-		allSCRaster[i][rasterCounter] = scSpks[i];
-	}
-}	
+	//for (int i = 0; i < NUM_BC; i++)
+	//{
+	//	allBCRaster[i][rasterCounter] = bcSpks[i];
+	//}
+
+	//for (int i = 0; i < NUM_SC; i++)
+	//{
+	//	allSCRaster[i][rasterCounter] = scSpks[i];
+	//}
+}
 
 // TODO: 1) find better place to put this 2) generalize
 void Control::write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
 	unsigned int numRow, unsigned int numCol)
 {
-	std::ofstream outStream(outFileName.c_str(), std::ios::out | std::ios::binary);
+	std::fstream outStream(outFileName.c_str(), std::ios::out | std::ios::binary);
 
 	if (!outStream.is_open())
 	{
@@ -483,24 +512,25 @@ void Control::write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
 		std::cerr << "couldn't open '" << outFileName << "' for writing." << std::endl;
 		return;
 	}
-		
-	for (size_t i = 0; i < numRow; i++)
-	{
-		for (size_t j = 0; j < numCol; j++)
-		{
-			outStream.write((char*) &inArr[i][j], sizeof(ct_uint8_t));
-		}
-	}
+	rawBytesRW((char *)inArr[0], numRow * numCol * sizeof(ct_uint8_t), false, outStream);
+	//for (size_t i = 0; i < numRow; i++)
+	//{
+	//	for (size_t j = 0; j < numCol; j++)
+	//	{
+	//		outStream.write((char*) &inArr[i][j], sizeof(ct_uint8_t));
+	//	}
+	//}
 	outStream.close();
 }
 
 void Control::deleteOutputArrays()
 {
-	delete2DArray<ct_uint8_t>(allPCRaster);
-	delete2DArray<ct_uint8_t>(allNCRaster);
-	delete2DArray<ct_uint8_t>(allSCRaster);
-	delete2DArray<ct_uint8_t>(allBCRaster);
-	delete2DArray<ct_uint8_t>(allGOPSTH);
+	delete2DArray<ct_uint8_t>(allGRPSTH);
+	//delete2DArray<ct_uint8_t>(allPCRaster);
+	//delete2DArray<ct_uint8_t>(allNCRaster);
+	//delete2DArray<ct_uint8_t>(allSCRaster);
+	//delete2DArray<ct_uint8_t>(allBCRaster);
+	//delete2DArray<ct_uint8_t>(allGOPSTH);
 }
 
 // NOTE: assumes that we have initialized activity params
