@@ -564,32 +564,42 @@ void InNetConnectivityState::stateRW(ConnectivityParams *cp, bool read, std::fst
 void InNetConnectivityState::connectMFGL_noUBC(ConnectivityParams *cp)
 {
 	// shorter convenience var names
-	int glX = cp->int_params["gl_x"];
-	int glY = cp->int_params["gl_y"];
-	int mfX = cp->int_params["mf_x"];
-	int mfY = cp->int_params["mf_y"];
+	int glX   = cp->int_params["gl_x"];
+	int glY   = cp->int_params["gl_y"];
+	int numGL = cp->int_params["num_gl"];
+	
+	int mfX   = cp->int_params["mf_x"];
+	int mfY   = cp->int_params["mf_y"];
+	int numMF = cp->int_params["num_mf"];
+
+	int spanMFtoGLX = cp->int_params["span_mf_to_gl_x"];
+	int spanMFtoGLY = cp->int_params["span_mf_to_gl_y"];
+	int numPMFtoGL  = cp->int_params["num_p_mf_to_gl"];
+
+	int maxMFtoGLAttempts = cp->int_params["max_mf_to_gl_attempts"];
+	int initialMFOutput   = cp->int_params["initial_mf_output"];
 
 	// define span and coord arrays locally
-	int spanArrayMFtoGLX[cp->int_params["span_mf_to_gl_x"] + 1] = {0};
-	int spanArrayMFtoGLY[cp->int_params["span_mf_to_gl_y"] + 1] = {0};
-	int xCoorsMFGL[cp->int_params["num_p_mf_to_gl"]] = {0};
-	int yCoorsMFGL[cp->int_params["num_p_mf_to_gl"]] = {0};
+	int spanArrayMFtoGLX[spanMFtoGLX + 1] = {0};
+	int spanArrayMFtoGLY[spanMFtoGLY + 1] = {0};
+	int xCoorsMFGL[numPMFtoGL] = {0};
+	int yCoorsMFGL[numPMFtoGL] = {0};
 
 	// fill span arrays and coord arrays
-	for (int i = 0; i < cp->int_params["span_mf_to_gl_x"] + 1; i++)
+	for (int i = 0; i < spanMFtoGLX + 1; i++)
 	{
-		spanArrayMFtoGLX[i] = i - (cp->int_params["span_mf_to_gl_x"] / 2);
+		spanArrayMFtoGLX[i] = i - (spanMFtoGLX / 2);
 	}
 
-	for (int i = 0; i < cp->int_params["span_mf_to_gl_y"] + 1; i++)
+	for (int i = 0; i < spanMFtoGLY + 1; i++)
 	{
-		spanArrayMFtoGLY[i] = i - (cp->int_params["span_mf_to_gl_y"] / 2);
+		spanArrayMFtoGLY[i] = i - (spanMFtoGLY / 2);
 	}
 		
-	for (int i = 0; i < cp->int_params["num_p_mf_to_gl"]; i++)
+	for (int i = 0; i < numPMFtoGL; i++)
 	{
-		xCoorsMFGL[i] = spanArrayMFtoGLX[i % (cp->int_params["span_mf_to_gl_x"] + 1)];
-		yCoorsMFGL[i] = spanArrayMFtoGLY[i / (cp->int_params["span_mf_to_gl_y"] + 1)];
+		xCoorsMFGL[i] = spanArrayMFtoGLX[i % (spanMFtoGLX + 1)];
+		yCoorsMFGL[i] = spanArrayMFtoGLY[i / (spanMFtoGLY + 1)]; /* should this be the x one? */
 	}
 
 	// scale factors from one cell coord to another
@@ -597,13 +607,13 @@ void InNetConnectivityState::connectMFGL_noUBC(ConnectivityParams *cp)
 	float gridYScaleSrctoDest = (float)mfY/ (float)glY; 
 
 	// random mf index array, supposedly to even out distribution of connections
-	int rMFInd[cp->int_params["num_mf"]] = {0};	
-	for (int i = 0; i < cp->int_params["num_mf"]; i++) rMFInd[i] = i;	
-	std::random_shuffle(rMFInd, rMFInd + cp->int_params["num_mf"]);
+	int rMFInd[numMF] = {0};
+	for (int i = 0; i < numMF; i++) rMFInd[i] = i;
+	std::random_shuffle(rMFInd, rMFInd + numMF);
 
 	// fill random span array with linear indices
-	int rMFSpanInd[cp->int_params["num_p_mf_to_gl"]] = {0};
-	for (int i = 0; i < cp->int_params["num_p_mf_to_gl"]; i++) rMFSpanInd[i] = i;
+	int rMFSpanInd[numPMFtoGL] = {0};
+	for (int i = 0; i < numPMFtoGL; i++) rMFSpanInd[i] = i;
 
 	int srcPosX;
 	int srcPosY;
@@ -612,21 +622,21 @@ void InNetConnectivityState::connectMFGL_noUBC(ConnectivityParams *cp)
 	int destIndex;
 
 	// attempt to make connections
-	for (int attempts = 0; attempts < cp->int_params["max_mf_to_gl_attempts"]; attempts++)
+	for (int attempts = 0; attempts < maxMFtoGLAttempts; attempts++)
 	{
-		std::random_shuffle(rMFInd, rMFInd + cp->int_params["num_mf"]);	
+		std::random_shuffle(rMFInd, rMFInd + numMF);
 		// for each attempt, loop through all presynaptic cells
-		for (int i = 0; i < cp->int_params["num_mf"]; i++)
+		for (int i = 0; i < numMF; i++)
 		{
-			//Select MF Coordinates from random index array: Complete	
+			//Select MF Coordinates from random index array: Complete
 			srcPosX = rMFInd[i] % mfX;
 			srcPosY = rMFInd[i] / mfX;
 			
-			std::random_shuffle(rMFSpanInd, rMFSpanInd + cp->int_params["num_p_mf_to_gl"]);
+			std::random_shuffle(rMFSpanInd, rMFSpanInd + numPMFtoGL);
 			// for each presynaptic cell, attempt to make up to initial output + max attempts
-			// connections.	
-			for (int j = 0; j < cp->int_params["num_p_mf_to_gl"]; j++)
-			{	
+			// connections.
+			for (int j = 0; j < numPMFtoGL; j++)
+			{
 				// calculation of which gl cell this mf is connecting to
 				destPosX = xCoorsMFGL[rMFSpanInd[j]]; 
 				destPosY = yCoorsMFGL[rMFSpanInd[j]];
@@ -639,11 +649,11 @@ void InNetConnectivityState::connectMFGL_noUBC(ConnectivityParams *cp)
 				
 				destIndex = destPosY * glX + destPosX;
 				// break if we hit this dynamic con limit
-				if (numpMFfromMFtoGL[rMFInd[i]] == (cp->int_params["initial_mf_output"] + attempts)) break;
+				if (numpMFfromMFtoGL[rMFInd[i]] == (initialMFOutput + attempts)) break;
 				
 				// if we dont have connections, make them
 				if (!haspGLfromMFtoGL[destIndex]) 
-				{	
+				{
 					// assign gl index to mf array and vice versa, then set our bool array to true
 					pMFfromMFtoGL[rMFInd[i]][numpMFfromMFtoGL[rMFInd[i]]] = destIndex;
 					numpMFfromMFtoGL[rMFInd[i]]++;
@@ -657,52 +667,66 @@ void InNetConnectivityState::connectMFGL_noUBC(ConnectivityParams *cp)
 
 	// finish up by counting the total number of mf -> gl cons made
 	int count = 0;
-	for (int i = 0; i < cp->int_params["num_mf"]; i++) count += numpMFfromMFtoGL[i];
+	for (int i = 0; i < numMF; i++) count += numpMFfromMFtoGL[i];
 	
-	std::cout << "Total number of Mossy Fiber to Glomeruli connections: " << count << std::endl;
-	std::cout << "Correct number: " << cp->int_params["num_gl"] << std::endl;
+	std::cout << "[INFO]: Total number of Mossy Fiber to Glomeruli connections: " << count << std::endl;
+	std::cout << "[INFO]: Correct number: " << numGL << std::endl;
 }
 
 void InNetConnectivityState::connectGLGR(ConnectivityParams *cp, CRandomSFMT &randGen)
 {
 	int grX = cp->int_params["gr_x"];
 	// int grY = GR_Y; /* unused */
+	int numGR = cp->int_params["num_gr"];
+
 	int glX = cp->int_params["gl_x"];
 	int glY = cp->int_params["gl_y"];
+	int numGL = cp->int_params["num_gl"];
+
+	int spanGLtoGRX = cp->int_params["span_gl_to_gr_x"];
+	int spanGLtoGRY = cp->int_params["span_gl_to_gr_y"];
+
+	int maxNumPGRfromGLtoGR = cp->int_params["max_num_p_gr_from_gl_to_gr"];
+
+	int maxNumPGLfromGLtoGR = cp->int_params["max_num_p_gl_from_gl_to_gr"];
+	int lowNumPGLfromGLtoGR = cp->int_params["low_num_p_gl_from_gl_to_gr"];
+
+	int maxGLtoGRAttempts = cp->int_params["max_gl_to_gr_attempts"];
+	int lowGLtoGRAttempts = cp->int_params["low_gl_to_gr_attempts"];
 
 	float gridXScaleStoD = (float)grX / (float)glX;
 	// float gridYScaleStoD = (float)grY / (float)glY; /* unused :/ */
 
-	bool srcConnected[cp->int_params["num_gr"]] = {false};
+	bool srcConnected[numGR] = {false};
 
-	for (int i = 0; i < cp->int_params["max_num_p_gr_from_gl_to_gr"]; i++)
+	for (int i = 0; i < maxNumPGRfromGLtoGR; i++)
 	{
 		int srcNumConnected = 0;
-		std::fill(srcConnected, srcConnected + cp->int_params["num_gr"], false);
+		memset(srcConnected, false, numGR * sizeof(bool));
 
-		while (srcNumConnected < cp->int_params["num_gr"])
+		while (srcNumConnected < numGR)
 		{
-			int srcIndex = randGen.IRandom(0, cp->int_params["num_gr"] - 1);
+			int srcIndex = randGen.IRandom(0, numGR - 1);
 			if (!srcConnected[srcIndex])
 			{
 				int srcPosX = srcIndex % grX;
 				int srcPosY = (int)(srcIndex / grX);
 
-				int tempDestNumConLim = cp->int_params["low_num_p_gl_from_gl_to_gr"];
+				int tempDestNumConLim = lowNumPGLfromGLtoGR;
 
-				for (int attempts = 0; attempts < cp->int_params["max_gl_to_gr_attempts"]; attempts++)
+				for (int attempts = 0; attempts < maxGLtoGRAttempts; attempts++)
 				{
-					if (attempts == cp->int_params["low_gl_to_gr_attempts"])
+					if (attempts == lowGLtoGRAttempts)
 					{
-						tempDestNumConLim = cp->int_params["max_num_p_gl_from_gl_to_gr"];
+						tempDestNumConLim = maxNumPGLfromGLtoGR;
 					}
 
 					int destPosX = (int)round(srcPosX / gridXScaleStoD);
 					int destPosY = (int)round(srcPosY / gridXScaleStoD);
 
 					// again, should add 1 to spans
-					destPosX += round((randGen.Random() - 0.5) * cp->int_params["span_gl_to_gr_x"]);
-					destPosY += round((randGen.Random() - 0.5) * cp->int_params["span_gl_to_gr_y"]);
+					destPosX += round((randGen.Random() - 0.5) * spanGLtoGRX);
+					destPosY += round((randGen.Random() - 0.5) * spanGLtoGRY);
 
 					destPosX = (destPosX % glX + glX) % glX;
 					destPosY = (destPosY % glY + glY) % glY;
@@ -736,14 +760,13 @@ void InNetConnectivityState::connectGLGR(ConnectivityParams *cp, CRandomSFMT &ra
 	}
 
 	int count = 0;
-	for (int i = 0; i < cp->int_params["num_gl"]; i++)
+	for (int i = 0; i < numGL; i++)
 	{
 		count += numpGLfromGLtoGR[i];
 	}
 
-	std::cout << "Total number of Glomeruli to Granule connections: " << count << std::endl; 
-	std::cout << "Correct number: " << cp->int_params["num_gr"] * cp->int_params["max_num_p_gr_from_gl_to_gr"] << std::endl;
-	// for now, no empty counter
+	std::cout << "[INFO]: Total number of Glomeruli to Granule connections: " << count << std::endl; 
+	std::cout << "[INFO]: Correct number: " << numGR * maxNumPGRfromGLtoGR << std::endl;
 }
 
 void InNetConnectivityState::connectGRGO(ConnectivityParams *cp)
@@ -756,8 +779,8 @@ void InNetConnectivityState::connectGRGO(ConnectivityParams *cp)
 	int goY = cp->int_params["go_y"];
 	int numGO = cp->int_params["num_go"];
 
-	int spanPFtoGOX = cp->int_params["span_pf_to_gox"];
-	int spanPFtoGOY = cp->int_params["span_pf_to_goy"];
+	int spanPFtoGOX = cp->int_params["span_pf_to_go_x"];
+	int spanPFtoGOY = cp->int_params["span_pf_to_go_y"];
 	int numPPFtoGO = cp->int_params["num_p_pf_to_go"];
 
 	int maxPFtoGOAttempts = cp->int_params["max_pf_to_go_attempts"];
@@ -830,8 +853,8 @@ void InNetConnectivityState::connectGRGO(ConnectivityParams *cp)
 		}
 	}
 
-	int spanAAtoGOX = cp->int_params["span_aa_to_gox"];
-	int spanAAtoGOY = cp->int_params["span_aa_to_goy"];
+	int spanAAtoGOX = cp->int_params["span_aa_to_go_x"];
+	int spanAAtoGOY = cp->int_params["span_aa_to_go_y"];
 	int numPAAtoGO = cp->int_params["num_p_aa_to_go"];
 
 	int maxAAtoGOAttempts = cp->int_params["max_aa_to_go_attempts"];
@@ -992,7 +1015,7 @@ void InNetConnectivityState::connectGOGL(ConnectivityParams *cp, CRandomSFMT &ra
 				srcNumConnected++;
 			}
 		}
-		std::fill(srcConnected, srcConnected + numGO, false);
+		memset(srcConnected, false, numGO * sizeof(bool));
 	}
 
 	std::cout << "[INFO]: Finished making gl go connections." << std::endl;
@@ -1123,90 +1146,102 @@ void InNetConnectivityState::connectGOGL(ConnectivityParams *cp, CRandomSFMT &ra
 		totalGOGL += numpGLfromGOtoGL[i];
 	}
 
-	std::cout << "Empty Glomeruli Counter: " << shitCounter << std::endl;
-	std::cout << "Total GO -> GL: " << totalGOGL << std::endl;
-	std::cout << "avg Num  GO -> GL Per GL: " << (float)totalGOGL / (float)numGL << std::endl;
+	std::cout << "[INFO]: Empty Glomeruli Counter: " << shitCounter << std::endl;
+	std::cout << "[INFO]: Total number of golgi to glomerulus connections: " << totalGOGL << std::endl;
+	std::cout << "[INFO]: Average number of golgi to glomerulus connections per glomerulus: " << (float)totalGOGL / (float)numGL << std::endl;
 }
 
 void InNetConnectivityState::connectGOGODecayP(ConnectivityParams *cp, CRandomSFMT &randGen)
 {
-	int goX = cp->int_params["go_x"];
-	int goY = cp->int_params["go_y"];
+	int goX   = cp->int_params["go_x"];
+	int goY   = cp->int_params["go_y"];
+	int numGO = cp->int_params["num_go"];
 
-	int spanArrayGOtoGOsynX[cp->int_params["span_go_to_go_x"] + 1] = {0};
-	int spanArrayGOtoGOsynY[cp->int_params["span_go_to_go_y"] + 1] = {0};
-	int xCoorsGOGOsyn[cp->int_params["num_p_go_to_go"]] = {0};
-	int yCoorsGOGOsyn[cp->int_params["num_p_go_to_go"]] = {0};
-	float Pcon[cp->int_params["num_p_go_to_go"]] = {0};
+	int spanGOtoGOX = cp->int_params["span_go_to_go_x"];
+	int spanGOtoGOY = cp->int_params["span_go_to_go_y"];
+	int numPGOtoGO  = cp->int_params["num_p_go_to_go"];
 
-	bool **conGOGOBoolOut = allocate2DArray<bool>
-	(
-		cp->int_params["num_go"],
-		cp->int_params["num_go"]
-	);
-	// TODO: change to memset - is faster
-	std::fill(conGOGOBoolOut[0], conGOGOBoolOut[0] + cp->int_params["num_go"] * cp->int_params["num_go"], false);
+	int numConGOtoGO = cp->int_params["num_con_go_to_go"];
 
-	for (int i = 0; i < cp->int_params["span_go_to_go_x"] + 1; i++)
+	float stdDevGOtoGO = cp->float_params["std_dev_go_to_go"];
+	float amplGOtoGO   = cp->float_params["ampl_go_to_go"];
+
+	int maxGOtoGOAttempts = cp->int_params["max_go_to_go_attempts"];
+
+	bool gotoGORecipCons = (bool)cp->int_params["go_go_recip_cons"];
+	bool reduceBaseRecipGOtoGO = (bool)cp->int_params["reduce_base_recip_go_go"];
+
+	float pRecipGOtoGO = cp->float_params["p_recip_go_go"];
+	float pRecipLowerBaseGOtoGO = cp->float_params["p_recip_lower_base_go_go"];
+
+	int spanArrayGOtoGOsynX[spanGOtoGOX + 1] = {0};
+	int spanArrayGOtoGOsynY[spanGOtoGOY + 1] = {0};
+	int xCoorsGOGOsyn[numPGOtoGO] = {0};
+	int yCoorsGOGOsyn[numPGOtoGO] = {0};
+	float Pcon[numPGOtoGO] = {0};
+
+	bool **conGOGOBoolOut = allocate2DArray<bool>(numGO, numGO);
+	memset(conGOGOBoolOut[0], false, numGO * numGO * sizeof(bool));
+
+	for (int i = 0; i < spanGOtoGOX + 1; i++)
    	{
-		spanArrayGOtoGOsynX[i] = i - (cp->int_params["span_go_to_go_x"] / 2);
+		spanArrayGOtoGOsynX[i] = i - (spanGOtoGOX / 2);
 	}
 
-	for (int i = 0; i < cp->int_params["span_go_to_go_y"] + 1; i++)
+	for (int i = 0; i < spanGOtoGOY + 1; i++)
    	{
-		spanArrayGOtoGOsynY[i] = i - (cp->int_params["span_go_to_go_y"] / 2);
+		spanArrayGOtoGOsynY[i] = i - (spanGOtoGOY / 2);
 	}
 		
-	for (int i = 0; i < cp->int_params["num_p_go_to_go"]; i++)
+	for (int i = 0; i < numPGOtoGO; i++)
 	{
 		xCoorsGOGOsyn[i] = spanArrayGOtoGOsynX[i % (SPAN_GO_TO_GO_X + 1)];
 		yCoorsGOGOsyn[i] = spanArrayGOtoGOsynY[i / (SPAN_GO_TO_GO_X + 1)];
 	}
 
-	for (int i = 0; i < cp->int_params["num_p_go_to_go"]; i++)
+	for (int i = 0; i < numPGOtoGO; i++)
 	{
 		float PconX = (xCoorsGOGOsyn[i] * xCoorsGOGOsyn[i])
-			/ (2 * (cp->float_params["std_dev_go_to_go"] * cp->float_params["std_dev_go_to_go"]));
+			/ (2 * stdDevGOtoGO * stdDevGOtoGO);
 		float PconY = (yCoorsGOGOsyn[i] * yCoorsGOGOsyn[i])
-			/ (2 * (cp->float_params["std_dev_go_to_go"] * cp->float_params["std_dev_go_to_go"]));
-		Pcon[i] = cp->float_params["ampl_go_to_go"] * exp(-(PconX + PconY));
+			/ (2 * stdDevGOtoGO * stdDevGOtoGO);
+		Pcon[i] = amplGOtoGO * exp(-(PconX + PconY));
 	}
 	
 	// Remove self connection 
-	for (int i = 0; i < cp->int_params["num_p_go_to_go"]; i++) 
+	for (int i = 0; i < numPGOtoGO; i++) 
 	{
 		if ((xCoorsGOGOsyn[i] == 0) && (yCoorsGOGOsyn[i] == 0)) Pcon[i] = 0;
 	}
 	
-	int rGOGOSpanInd[cp->int_params["num_p_go_to_go"]] = {0};
-	for (int i = 0; i < cp->int_params["num_p_go_to_go"]; i++) rGOGOSpanInd[i] = i;
+	int rGOGOSpanInd[numPGOtoGO] = {0};
+	for (int i = 0; i < numPGOtoGO; i++) rGOGOSpanInd[i] = i;
 
-	for (int attempts = 0; attempts < cp->int_params["max_go_to_go_attempts"]; attempts++) 
+	for (int attempts = 0; attempts < maxGOtoGOAttempts; attempts++) 
 	{
-		for (int i = 0; i < cp->int_params["num_go"]; i++) 
+		for (int i = 0; i < numGO; i++) 
 		{
 			int srcPosX = i % goX;
 			int srcPosY = i / goX;
 			
-			std::random_shuffle(rGOGOSpanInd, rGOGOSpanInd + cp->int_params["num_p_go_to_go"]);
+			std::random_shuffle(rGOGOSpanInd, rGOGOSpanInd + numPGOtoGO);
 			
-			for (int j = 0; j < cp->int_params["num_p_go_to_go"]; j++)
-		   	{	
+			for (int j = 0; j < numPGOtoGO; j++)
+			{
 				int destPosX = srcPosX + xCoorsGOGOsyn[rGOGOSpanInd[j]]; 
 				int destPosY = srcPosY + yCoorsGOGOsyn[rGOGOSpanInd[j]];
 
 				destPosX = (destPosX % goX + goX) % goX;
 				destPosY = (destPosY % goY + goY) % goY;
-						
+
 				int destIndex = destPosY * goX + destPosX;
 			
-				// Normal One	
-				if ((bool)cp->int_params["go_go_recip_cons"]
-					&& !(bool)cp->int_params["reduce_base_recip_go_go"]
+				// Normal One
+				if (gotoGORecipCons && !reduceBaseRecipGOtoGO
 					&& randGen.Random()>= 1 - Pcon[rGOGOSpanInd[j]]
 					&& !conGOGOBoolOut[i][destIndex]
-					&& numpGOGABAOutGOGO[i] < cp->int_params["num_con_go_to_go"] 
-					&& numpGOGABAInGOGO[destIndex] < cp->int_params["num_con_go_to_go"]) 
+					&& numpGOGABAOutGOGO[i] < numConGOtoGO 
+					&& numpGOGABAInGOGO[destIndex] < numConGOtoGO) 
 				{
 					pGOGABAOutGOGO[i][numpGOGABAOutGOGO[i]] = destIndex;
 					numpGOGABAOutGOGO[i]++;
@@ -1216,10 +1251,10 @@ void InNetConnectivityState::connectGOGODecayP(ConnectivityParams *cp, CRandomSF
 					
 					conGOGOBoolOut[i][destIndex] = true;
 							
-					if (randGen.Random() <= cp->float_params["p_recip_go_go"]
+					if (randGen.Random() <= pRecipGOtoGO
 							&& !conGOGOBoolOut[destIndex][i]
-							&& numpGOGABAOutGOGO[destIndex] < cp->int_params["num_con_go_to_go"] 
-							&& numpGOGABAInGOGO[i] < cp->int_params["num_con_go_to_go"]) 
+							&& numpGOGABAOutGOGO[destIndex] < numConGOtoGO 
+							&& numpGOGABAInGOGO[i] < numConGOtoGO) 
 					{
 						pGOGABAOutGOGO[destIndex][numpGOGABAOutGOGO[destIndex]] = i;
 						numpGOGABAOutGOGO[destIndex]++;
@@ -1231,29 +1266,27 @@ void InNetConnectivityState::connectGOGODecayP(ConnectivityParams *cp, CRandomSF
 					}
 				}
 			
-				if ((bool)cp->int_params["go_go_recip_cons"]
-					&& (bool)cp->int_params["reduce_base_recip_go_go"]
+				if (gotoGORecipCons && reduceBaseRecipGOtoGO
 					&& randGen.Random() >= 1 - Pcon[rGOGOSpanInd[j]]
 					&& !conGOGOBoolOut[i][destIndex] && (!conGOGOBoolOut[destIndex][i]
-					|| randGen.Random() <= cp->float_params["p_recip_lower_base_go_go"])
-					&& numpGOGABAOutGOGO[i] < cp->int_params["num_con_go_to_go"] 
-					&& numpGOGABAInGOGO[destIndex] < cp->int_params["num_con_go_to_go"]) 
-				{	
+					|| randGen.Random() <= pRecipLowerBaseGOtoGO)
+					&& numpGOGABAOutGOGO[i] < numConGOtoGO 
+					&& numpGOGABAInGOGO[destIndex] < numConGOtoGO) 
+				{
 					pGOGABAOutGOGO[i][numpGOGABAOutGOGO[i]] = destIndex;
 					numpGOGABAOutGOGO[i]++;
 					
 					pGOGABAInGOGO[destIndex][numpGOGABAInGOGO[destIndex]] = i;
 					numpGOGABAInGOGO[destIndex]++;
 					
-					conGOGOBoolOut[i][destIndex] = true;	
+					conGOGOBoolOut[i][destIndex] = true;
 				}
 
-				if (!(bool)cp->int_params["go_go_recip_cons"]
-					&& !(bool)cp->int_params["reduce_base_recip_go_go"]
+				if (!gotoGORecipCons && !reduceBaseRecipGOtoGO
 					&& randGen.Random() >= 1 - Pcon[rGOGOSpanInd[j]]
 					&& (!conGOGOBoolOut[i][destIndex]) && !conGOGOBoolOut[destIndex][i]
-					&& numpGOGABAOutGOGO[i] < cp->int_params["num_con_go_to_go"] 
-					&& numpGOGABAInGOGO[destIndex] < cp->int_params["num_con_go_to_go"])
+					&& numpGOGABAOutGOGO[i] < numConGOtoGO 
+					&& numpGOGABAInGOGO[destIndex] < numConGOtoGO)
 				{
 					pGOGABAOutGOGO[i][numpGOGABAOutGOGO[i]] = destIndex;
 					numpGOGABAOutGOGO[i]++;
@@ -1269,18 +1302,17 @@ void InNetConnectivityState::connectGOGODecayP(ConnectivityParams *cp, CRandomSF
 
 	int totalGOGOcons = 0;
 
-	for (int i = 0; i < cp->int_params["num_go"]; i++)
+	for (int i = 0; i < numGO; i++)
 	{
 		totalGOGOcons += numpGOGABAInGOGO[i];
 	}
 
-	std::cout << "Total GOGO connections: " << totalGOGOcons << std::endl;
-	std::cout << "Average GOGO connections:	" << (float)totalGOGOcons / float(cp->int_params["num_go"]) << std::endl;
-	std::cout << cp->int_params["num_go"] << std::endl;
+	std::cout << "[INFO]: Total number of golgi to golgi connections: " << totalGOGOcons << std::endl;
+	std::cout << "[INFO]: Average number of golgi to golgi connections per golgi: " << (float)totalGOGOcons / (float)numGO << std::endl;
 
 	int recipCounter = 0;
 
-	for (int i = 0; i < cp->int_params["num_go"]; i++)
+	for (int i = 0; i < numGO; i++)
 	{
 		for (int j = 0; j < numpGOGABAInGOGO[i]; j++)
 		{
@@ -1297,48 +1329,49 @@ void InNetConnectivityState::connectGOGODecayP(ConnectivityParams *cp, CRandomSF
 	}
 
 	float fracRecip = (float)recipCounter / (float)totalGOGOcons;
-	std::cout << "FracRecip: " << fracRecip << std::endl;
+	std::cout << "[INFO]: Fraction of reciprocal connections: " << fracRecip << std::endl;
 	delete2DArray<bool>(conGOGOBoolOut);
 }
 
 void InNetConnectivityState::connectGOGO_GJ(ConnectivityParams *cp, CRandomSFMT &randGen)
 {
-	int goX = cp->int_params["go_x"];
-	int goY = cp->int_params["go_y"];
+	int goX   = cp->int_params["go_x"];
+	int goY   = cp->int_params["go_y"];
+	int numGO = cp->int_params["num_go"];
 
-	int spanArrayGOtoGOgjX[cp->int_params["span_go_to_go_gj_x"] + 1] = {0};
-	int spanArrayGOtoGOgjY[cp->int_params["span_go_to_go_gj_y"] + 1] = {0};
-	int xCoorsGOGOgj[cp->int_params["num_p_go_to_go_gj"]] = {0};
-	int yCoorsGOGOgj[ cp->int_params["num_p_go_to_go_gj"]] = {0};
+	int spanGOtoGOGJX = cp->int_params["span_go_to_go_gj_x"];
+	int spanGOtoGOGJY = cp->int_params["span_go_to_go_gj_y"];
+	int numPGOtoGOGJ  = cp->int_params["num_p_go_to_go_gj"];
 
-	float gjPCon[cp->int_params["num_p_go_to_go_gj"]] = {0.0};
-	float gjCC[cp->int_params["num_p_go_to_go_gj"]] = {0.0};
+	int spanArrayGOtoGOgjX[spanGOtoGOGJX + 1] = {0};
+	int spanArrayGOtoGOgjY[spanGOtoGOGJY + 1] = {0};
+	int xCoorsGOGOgj[numPGOtoGOGJ] = {0};
+	int yCoorsGOGOgj[numPGOtoGOGJ] = {0};
 
-	bool **gjConBool = allocate2DArray<bool>
-	(
-		cp->int_params["num_go"],
-		cp->int_params["num_go"]
-	);
-	std::fill(gjConBool[0], gjConBool[0] + cp->int_params["num_go"] * cp->int_params["num_go"], false);
+	float gjPCon[numPGOtoGOGJ] = {0.0};
+	float gjCC[numPGOtoGOGJ] = {0.0};
 
-	for (int i = 0; i < cp->int_params["span_go_to_go_gj_x"] + 1; i++)
+	bool **gjConBool = allocate2DArray<bool>(numGO, numGO);
+	memset(gjConBool[0], false, numGO * numGO * sizeof(bool));
+
+	for (int i = 0; i < spanGOtoGOGJX + 1; i++)
 	{
-		spanArrayGOtoGOgjX[i] = i - (cp->int_params["span_go_to_go_gj_x"] / 2);
+		spanArrayGOtoGOgjX[i] = i - (spanGOtoGOGJX / 2);
 	}
 
-	for (int i = 0; i < cp->int_params["span_go_to_go_gj_y"] + 1; i++)
+	for (int i = 0; i < spanGOtoGOGJY + 1; i++)
 	{
-		spanArrayGOtoGOgjY[i] = i - (cp->int_params["span_go_to_go_gj_y"] / 2);
+		spanArrayGOtoGOgjY[i] = i - (spanGOtoGOGJY / 2);
 	}
 
-	for (int i = 0; i < cp->int_params["num_p_go_to_go_gj"]; i++)
+	for (int i = 0; i < numPGOtoGOGJ; i++)
 	{
-		xCoorsGOGOgj[i] = spanArrayGOtoGOgjX[i % (cp->int_params["span_go_to_go_gj_x"] + 1)];
-		yCoorsGOGOgj[i] = spanArrayGOtoGOgjY[i / (cp->int_params["span_go_to_go_gj_x"] + 1)];
+		xCoorsGOGOgj[i] = spanArrayGOtoGOgjX[i % (spanGOtoGOGJX + 1)];
+		yCoorsGOGOgj[i] = spanArrayGOtoGOgjY[i / (spanGOtoGOGJY + 1)];
 	}
 
 	// "In Vivo additions"
-	for (int i = 0; i < cp->int_params["num_p_go_to_go_gj"]; i++)
+	for (int i = 0; i < numPGOtoGOGJ; i++)
 	{
 		float gjPConX = exp(((abs(xCoorsGOGOgj[i]) * 36.0) - 267.0) / 39.0 );	
 		float gjPConY = exp(((abs(yCoorsGOGOgj[i]) * 36.0) - 267.0) / 39.0 );
@@ -1350,7 +1383,7 @@ void InNetConnectivityState::connectGOGO_GJ(ConnectivityParams *cp, CRandomSFMT 
 	}
 
 	// Remove self connection 
-	for (int i = 0; i < cp->int_params["num_p_go_to_go_gj"]; i++)
+	for (int i = 0; i < numPGOtoGOGJ; i++)
 	{
 		if ((xCoorsGOGOgj[i] == 0) && (yCoorsGOGOgj[i] == 0))
 		{
@@ -1365,12 +1398,12 @@ void InNetConnectivityState::connectGOGO_GJ(ConnectivityParams *cp, CRandomSFMT 
 	int destPosY;
 	int destIndex;
 
-	for (int i = 0; i < cp->int_params["num_go"]; i++)
+	for (int i = 0; i < numGO; i++)
 	{
 		srcPosX = i % goX;
 		srcPosY = i / goX;
 		
-		for (int j = 0; j < cp->int_params["num_p_go_to_go_gj"]; j++)
+		for (int j = 0; j < numPGOtoGOGJ; j++)
 		{
 			destPosX = srcPosX + xCoorsGOGOgj[j]; 
 			destPosY = srcPosY + yCoorsGOGOgj[j];
@@ -1400,10 +1433,10 @@ void InNetConnectivityState::connectGOGO_GJ(ConnectivityParams *cp, CRandomSFMT 
 
 void InNetConnectivityState::translateMFGL(ConnectivityParams *cp)
 {
-
+	int numGR = cp->int_params["num_gr"];
 	// Mossy fiber to Granule
 	
-	for (int i = 0; i < cp->int_params["num_gr"]; i++)
+	for (int i = 0; i < numGR; i++)
 	{
 		for (int j = 0; j < numpGRfromGLtoGR[i]; j++)
 		{
@@ -1423,16 +1456,17 @@ void InNetConnectivityState::translateMFGL(ConnectivityParams *cp)
 
 	int grMFInputCounter = 0;
 	
-	for (int i = 0; i < cp->int_params["num_gr"]; i++)
+	for (int i = 0; i < numGR; i++)
 	{
 		grMFInputCounter += numpGRfromMFtoGR[i];
 	}
 
-	std::cout << "Total MF inputs: " << grMFInputCounter << std::endl;
+	std::cout << "[INFO]: Total MF inputs: " << grMFInputCounter << std::endl;
 
-	// Mossy fiber to Golgi	
+	int numGO = cp->int_params["num_go"];
+	// Mossy fiber to Golgi
 	
-	for (int i = 0; i < cp->int_params["num_go"]; i++)
+	for (int i = 0; i < numGO; i++)
 	{
 		for (int j = 0; j < numpGOfromGLtoGO[i]; j++)
 		{
@@ -1454,14 +1488,18 @@ void InNetConnectivityState::translateMFGL(ConnectivityParams *cp)
 
 void InNetConnectivityState::translateGOGL(ConnectivityParams *cp)
 {
-	for (int i = 0; i < cp->int_params["num_gr"]; i++)
+	int numGR = cp->int_params["num_gr"];
+	int maxNumPGRfromGOtoGR = cp->int_params["max_num_p_gr_from_go_to_gr"];
+	int maxNumPGLfromGOtoGL = cp->int_params["max_num_p_gl_from_go_to_gl"]; 
+
+	for (int i = 0; i < numGR; i++)
 	{
-		for (int j = 0; j < cp->int_params["max_num_p_gr_from_go_to_gr"]; j++)
+		for (int j = 0; j < maxNumPGRfromGOtoGR; j++)
 		{
-			for (int k = 0; k < cp->int_params["max_num_p_gl_from_go_to_gl"]; k++)
-			{	
-				if (numpGRfromGOtoGR[i] < cp->int_params["max_num_p_gr_from_go_to_gr"])
-				{	
+			for (int k = 0; k < maxNumPGLfromGOtoGL; k++)
+			{
+				if (numpGRfromGOtoGR[i] < maxNumPGRfromGOtoGR)
+				{
 					int glIndex = pGRfromGLtoGR[i][j];
 					int goIndex = pGLfromGOtoGL[glIndex][k];
 					
@@ -1475,36 +1513,44 @@ void InNetConnectivityState::translateGOGL(ConnectivityParams *cp)
 		}
 	}
 	int totalGOGR = 0;
-	for (int i = 0; i < cp->int_params["num_gr"]; i++) totalGOGR += numpGRfromGOtoGR[i];
+	for (int i = 0; i < numGR; i++) totalGOGR += numpGRfromGOtoGR[i];
 	
-	std::cout << "total GO->GR: " << totalGOGR << std::endl;
-	std::cout << "GO->GR Per GR: " << (float)totalGOGR / (float)cp->int_params["num_gr"] << std::endl;
+	std::cout << "[INFO]: Total golgi to granule connections: " << totalGOGR << std::endl;
+	std::cout << "[INFO]: Average number of golgi to granule connections per granule: " << (float)totalGOGR / (float)numGR << std::endl;
 }
 
 void InNetConnectivityState::assignGRDelays(ConnectivityParams *cp, unsigned int msPerStep)
 {
-	for (int i = 0; i < cp->int_params["num_gr"]; i++)
+	int grX   = cp->int_params["gr_x"];
+	int numGR = cp->int_params["num_gr"];
+
+	int grPFVelInGRXPerTStep = cp->int_params["gr_pf_vel_in_gr_x_per_t_step"];
+	int grAFDelayInTStep     = cp->int_params["gr_af_delay_in_t_step"];
+
+	int goX   = cp->int_params["go_x"];
+
+	for (int i = 0; i < numGR; i++)
 	{
 		//calculate x coordinate of GR position
-		int grPosX = i % cp->int_params["gr_x"];
+		int grPosX = i % grX;
 
 		//calculate distance of GR to BC, PC, and SC, and assign time delay.
-		int grBCPCSCDist = abs((int)(cp->int_params["gr_x"] / 2 - grPosX));
-		pGRDelayMaskfromGRtoBSP[i] = 0x1 << (int)((grBCPCSCDist / cp->int_params["gr_pf_vel_in_gr_x_per_t_step"]
-			+ cp->int_params["gr_af_delay_in_t_step"]) / msPerStep);
+		int grBCPCSCDist = abs((int)(grX / 2 - grPosX));
+		pGRDelayMaskfromGRtoBSP[i] = 0x1 << (int)((grBCPCSCDist / grPFVelInGRXPerTStep
+			+ grAFDelayInTStep) / msPerStep);
 
 		for (int j = 0; j < numpGRfromGRtoGO[i]; j++)
 		{
-			int goPosX = (pGRfromGRtoGO[i][j] % cp->int_params["go_x"]) * (((float)cp->int_params["gr_x"]) / cp->int_params["go_x"]);
+			int goPosX = (pGRfromGRtoGO[i][j] % goX) * ((float)grX / goX);
 			int dfromGRtoGO = abs(goPosX - grPosX);
 
-			if (dfromGRtoGO > cp->int_params["gr_x"] / 2)
+			if (dfromGRtoGO > grX / 2)
 			{
-				if (goPosX < grPosX) dfromGRtoGO = goPosX + cp->int_params["gr_x"] - grPosX;
-				else dfromGRtoGO = grPosX + cp->int_params["gr_x"] - goPosX;
+				if (goPosX < grPosX) dfromGRtoGO = goPosX + grX - grPosX;
+				else dfromGRtoGO = grPosX + grX - goPosX;
 			}
-			pGRDelayMaskfromGRtoGO[i][j] = 0x1<< (int)((dfromGRtoGO / cp->int_params["gr_pf_vel_in_gr_x_per_t_step"]
-				+ cp->int_params["gr_af_delay_in_t_step"]) / msPerStep);
+			pGRDelayMaskfromGRtoGO[i][j] = 0x1<< (int)((dfromGRtoGO / grPFVelInGRXPerTStep 
+				+ grAFDelayInTStep) / msPerStep);
 		}
 	}
 }
