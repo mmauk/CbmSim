@@ -56,9 +56,14 @@ class Control
 		const ct_uint8_t *mfAP;
 
 		// params that I do not know how to categorize
-		float goMin = 0.26; // TODO: remove
+		float goMin = 0.26; 
 		float spillFrac = 0.15; // go->gr synapse, part of build
-		float gogoW = 0.0125; // build input file
+
+		float weightScale = 0.3275;
+		float mfgoW = 0.00350 * weightScale;
+		float grgoW = 0.00056 * weightScale;
+		float gogrW = 0.01050;
+		float gogoW = 0.01250;
 		float inputStrength = 0.0;
 
 		// sim params

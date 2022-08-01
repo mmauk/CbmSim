@@ -16,11 +16,11 @@ BUILD_PATH	  = $(ROOT)build/
 
 # NOTE using update alternatives: to switch back to ver11, use update-alternatives --config g++
 CXX              = g++
-# CXXFLAGS         = -m64 -pipe -std=c++14 -O3
-CXXFLAGS         = -m64 -pipe -std=c++14 -g
+# CXXFLAGS         = -m64 -pipe -std=c++14 -g
+CXXFLAGS         = -m64 -pipe -std=c++14 -O3
 
-# MODULE_CXX_FLAGS = -m64 -pipe -std=c++14 -O3 -fPIC
-MODULE_CXX_FLAGS = -m64 -pipe -std=c++14 -g -fPIC
+# MODULE_CXX_FLAGS = -m64 -pipe -std=c++14 -g -fPIC
+MODULE_CXX_FLAGS = -m64 -pipe -std=c++14 -O3 -fPIC
 INCPATH          = -I. -I$(ROOT)include/Big_Sim -I/usr/local/cuda/include -I$(ROOT)include/CBM_CORE_LIB -I$(ROOT)include/CBM_DATA_LIB \
 			       -I$(ROOT)include/CBM_STATE_LIB -I$(ROOT)include/CBM_TOOLS_LIB -I$(ROOT)include/CBM_VIS_LIB -I$(ROOT)include/CXX_TOOLS_LIB 
 

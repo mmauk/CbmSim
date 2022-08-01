@@ -63,7 +63,7 @@ public:
 	const float* exportgSum_GRGO();
 
 	void updateMFActivties(const ct_uint8_t *actInMF);
-	void calcGOActivities(float goMin, int simNum, float GRGO, float MFGO, float GOGR, float gogoW);
+	void calcGOActivities(float mfgoW, float gogrW, float grgoW, float gogoW);
 	void calcSCActivities();
 
 	void updateMFtoGROut();

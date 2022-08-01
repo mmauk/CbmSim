@@ -20,7 +20,7 @@ void parse_experiment_args(int *argc, char ***argv, experiment &exper);
 void get_in_sim_file(int arg_index, int *argc, char ***argv, std::string &in_file);
 void get_out_sim_file(int arg_index, int *argc, char ***argv, std::string &out_file);
 
-int main(int argc, char **argv)
+int main1(int argc, char **argv)
 {
 	experiment test_experiment;
 
@@ -64,7 +64,7 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-int main1(int argc, char **argv) 
+int main(int argc, char **argv) 
 {
 	enum vis_mode sim_vis_mode = NO_VIS;
 	enum run_mode sim_run_mode = NO_RUN;
@@ -97,7 +97,7 @@ int main1(int argc, char **argv)
 					//exit_status = tui_init_and_run(&argc, &argv, control);
 					get_in_sim_file(4, &argc, &argv, in_sim_file);
 					control = new Control(in_sim_file); 
-					//control->runTrials
+					control->runExperiment(experiment);
 					get_out_sim_file(5, &argc, &argv, out_sim_file);
 					control->save_sim_to_file(out_sim_file);
 					exit_status = 0;
@@ -171,7 +171,7 @@ void verify_is_file(int arg_index, char ***argv, std::string error_msg)
 
 void verify_file_format(int arg_index, char ***argv, std::string first_line_test, std::string error_msg)
 {
-	std::string full_build_file_path = INPUT_DATA_PATH + std::string((*argv)[2]);
+	std::string full_build_file_path = INPUT_DATA_PATH + std::string((*argv)[arg_index]);
 	std::ifstream inFileBuf;
 	inFileBuf.open(full_build_file_path.c_str());
 	std::string first_line = "";

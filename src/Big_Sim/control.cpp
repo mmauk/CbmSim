@@ -278,14 +278,73 @@ void Control::runExperiment(experiment &experiment)
 	int rasterCounter = 0;
 	for (int trial = 0; trial < experiment.num_trials; trial++)
 	{
+		int useCS     = experiment.trials[trial].CSuse;
+		int onsetCS   = experiment.trials[trial].CSonset;
+		int offsetCS  = experiment.trials[trial].CSoffset;
+		int percentCS = experiment.trials[trial].CSpercent;
+		int useUS     = experiment.trials[trial].USuse;
+		int onsetUS   = experiment.trials[trial].USonset;
+
 		timer = clock();
 		int PSTHCounter = 0;
 
 		for (int ts = 0; ts < trialTime; ts++)
 		{
+			if (useUS && ts == onsetUS) /* deliver the US */
+			{
+				simCore->updateErrDrive(0, 0.0);
+			}
+			if (ts < onsetCS || ts >= offsetCS)
+			{
+				mfAP = mfs->calcPoissActivity(mfFreq->getMFBG(),
+					  simCore->getMZoneList());
+			}
+			if (ts >= onsetCS && ts < offsetCS)
+			{
+				if (useCS)
+				{
+					mfAP = mfs->calcPoissActivity(mfFreq->getMFInCSTonicA(),
+						  simCore->getMZoneList());
+				}
+				else
+				{
+					mfAP = mfs->calcPoissActivity(mfFreq->getMFBG(),
+						  simCore->getMZoneList());
+				}
+			}
+			
+			bool *isTrueMF = mfs->calcTrueMFs(mfFreq->getMFBG());
+			simCore->updateTrueMFs(isTrueMF);
+			simCore->updateMFInput(mfAP);
+			simCore->calcActivity(mfgoW, gogrW, grgoW, gogoW, spillFrac); 
 
+			if (sim_vis_mode == GUI)
+			{
+				if (gtk_events_pending()) gtk_main_iteration();
+			}
 		}
-   }
+		
+		timer = clock() - timer;
+		std::cout << "[INFO]: Trial time: " << (float)timer / CLOCKS_PER_SEC << std::endl;
+
+		if (sim_vis_mode == GUI)
+		{
+			if (sim_is_paused)
+			{
+				std::cout << "[INFO]: Simulation is paused at end of trial " << trial << "." << std::endl;
+				while(true)
+				{
+					// Weird edge case not taken into account: if there are events pending after user hits continue...
+					if (gtk_events_pending() || sim_is_paused) gtk_main_iteration();
+					else
+					{
+						std::cout << "[INFO]: Continuing..." << std::endl;
+						break;
+					}
+				}
+			}
+		}
+	}
 }
 
 void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
@@ -357,7 +416,7 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 				bool *isTrueMF = mfs->calcTrueMFs(mfFreq->getMFBG());
 				simCore->updateTrueMFs(isTrueMF); /* two unnecessary fnctn calls: isTrueMF doesn't change its value! */
 				simCore->updateMFInput(mfAP);
-				simCore->calcActivity(goMin, simNum, GOGR, GRGO, MFGO, gogoW, spillFrac);
+				simCore->calcActivity(MFGO, GOGR, GRGO, gogoW, spillFrac);
 				
 				if (tts >= csStart && tts < csStart + csLength)
 				{

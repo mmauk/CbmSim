@@ -69,8 +69,8 @@ void ConnectivityParams::readParams(std::fstream &inParamBuf)
 void ConnectivityParams::writeParams(std::fstream &outParamBuf)
 {
 	std::cout << "[INFO]: Writing connectivity params to file..." << std::endl;
-	serialize_map_to_file<std::string, float>(float_params, outParamBuf);
 	serialize_map_to_file<std::string, int>(int_params, outParamBuf);
+	serialize_map_to_file<std::string, float>(float_params, outParamBuf);
 	std::cout << "[INFO]: Finished writing connectivity params to file." << std::endl;
 }
 

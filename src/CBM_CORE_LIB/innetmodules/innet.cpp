@@ -474,7 +474,8 @@ void InNet::updateMFActivties(const ct_uint8_t *actInMF)
 	}
 }
 
-void InNet::calcGOActivities(float goMin, int simNum, float GRGO, float MFGO, float GOGR, float gogoW)
+//void InNet::calcGOActivities(float goMin, int simNum, float GRGO, float MFGO, float GOGR, float gogoW)
+void InNet::calcGOActivities(float mfgoW, float gogrW, float grgoW, float gogoW)
 {
 	//50ms
 	for (int i = 0; i < cp->int_params["num_go"]; i++)
@@ -484,7 +485,7 @@ void InNet::calcGOActivities(float goMin, int simNum, float GRGO, float MFGO, fl
 		for (int j = 0; j < numGPUs; j++)
 		{
 			sumGRInputGO[i] += grInputGOSumH[j][i];
-		}		
+		}
 	}
 
 #pragma omp parallel for
@@ -499,13 +500,13 @@ void InNet::calcGOActivities(float goMin, int simNum, float GRGO, float MFGO, fl
 		as->gNMDAIncMFGO[i] = (0.00000011969 * as->vGO[i] * as->vGO[i] * as->vGO[i])
 		   + (0.000089369 * as->vGO[i] * as->vGO[i]) + (0.0151 * as->vGO[i]) + 0.7713; 
 	
-		as->gSum_MFGO[i] = (as->inputMFGO[i] * MFGO) + as->gSum_MFGO[i] * ap->gDecMFtoGO;
+		as->gSum_MFGO[i] = (as->inputMFGO[i] * mfgoW) + as->gSum_MFGO[i] * ap->gDecMFtoGO;
 		as->gSum_GOGO[i] = 0;
-		as->gNMDAMFGO[i] = as->inputMFGO[i] * (MFGO * ap->NMDA_AMPAratioMFGO * as->gNMDAIncMFGO[i])
+		as->gNMDAMFGO[i] = as->inputMFGO[i] * (mfgoW * ap->NMDA_AMPAratioMFGO * as->gNMDAIncMFGO[i])
 		   + as->gNMDAMFGO[i] * ap->gDecayMFtoGONMDA;
 		
-		as->gGRGO[i] = (sumGRInputGO[i] * GRGO * as->synWscalerGRtoGO[i]) +as->gGRGO[i] * ap->gDecGRtoGO;
-		as->gGRGO_NMDA[i] = sumGRInputGO[i] * ((GRGO * as->synWscalerGRtoGO[i]) * 0.6 * gNMDAIncGRGO)
+		as->gGRGO[i] = (sumGRInputGO[i] * grgoW * as->synWscalerGRtoGO[i]) +as->gGRGO[i] * ap->gDecGRtoGO;
+		as->gGRGO_NMDA[i] = sumGRInputGO[i] * ((grgoW * as->synWscalerGRtoGO[i]) * 0.6 * gNMDAIncGRGO)
 		   + as->gGRGO_NMDA[i] * ap->gDecayMFtoGONMDA;
 		
 		as->threshCurGO[i] = as->threshCurGO[i] + (ap->threshRestGO - as->threshCurGO[i]) * ap->threshDecGO;

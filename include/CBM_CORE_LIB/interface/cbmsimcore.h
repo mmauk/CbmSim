@@ -40,8 +40,7 @@ public:
 	CBMSimCore(ConnectivityParams *cp, ActivityParams *ap, CBMState *state, int gpuIndStart = -1, int numGPUP2 = -1);
 	~CBMSimCore();
 
-	void calcActivity(float goMin, int simNum, float GOGR, float GRGO, float MFGO,
-		float gogoW, float spillFrac);
+	void calcActivity(float mfgoW, float gogrW, float grgoW, float gogoW, float spillFrac);
 	
 	void updateMFInput(const ct_uint8_t *mfIn);
 	void updateTrueMFs(bool *isTrueMF);

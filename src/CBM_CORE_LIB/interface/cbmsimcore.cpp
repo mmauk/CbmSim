@@ -132,8 +132,9 @@ void CBMSimCore::syncCUDA(std::string title)
 	}
 }
 
-void CBMSimCore::calcActivity(float goMin, int simNum, float GOGR, float GRGO, float MFGO,
-	float gogoW, float spillFrac)
+//void CBMSimCore::calcActivity(float goMin, int simNum, float GOGR, float GRGO, float MFGO,
+//	float gogoW, float spillFrac)
+void CBMSimCore::calcActivity(float mfgoW, float gogrW, float grgoW, float gogoW, float spillFrac)
 {
 	cudaError_t error;
 	syncCUDA("1");
@@ -245,7 +246,7 @@ void CBMSimCore::calcActivity(float goMin, int simNum, float GOGR, float GRGO, f
 #ifdef NO_ASYNC
 	syncCUDA("2b");
 #endif
-	inputNet->runUpdateGOInGRCUDA(streams, 1, GOGR);
+	inputNet->runUpdateGOInGRCUDA(streams, 1, gogrW);
 #ifdef NO_ASYNC
 	syncCUDA("2c");
 #endif
@@ -315,7 +316,7 @@ void CBMSimCore::calcActivity(float goMin, int simNum, float GOGR, float GRGO, f
 	syncCUDA("2ib");
 #endif
 
-	inputNet->calcGOActivities(goMin, simNum, GRGO, MFGO, GOGR, gogoW);
+	inputNet->calcGOActivities(mfgoW, gogrW, grgoW, gogoW); // TODO: remove gogrW and gogoW: don't use???
 #ifdef NO_ASYNC
 	syncCUDA("2ic");
 #endif
@@ -342,7 +343,7 @@ void CBMSimCore::calcActivity(float goMin, int simNum, float GOGR, float GRGO, f
 	syncCUDA("2ih");
 #endif
 
-	inputNet->updateGOtoGROutParameters(GOGR, spillFrac);
+	inputNet->updateGOtoGROutParameters(gogrW, spillFrac);
 #ifdef NO_ASYNC
 	syncCUDA("2ii");
 #endif
