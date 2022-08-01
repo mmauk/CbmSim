@@ -148,7 +148,7 @@ void lex_tokenized_build_file(tokenized_file &t_file, lexed_file &l_file)
  *     of finding when we are finished with a section.
  *
  */
-void parse_lexed_build_file(lexed_file &l_file, parsed_file &p_file)
+void parse_lexed_build_file(lexed_file &l_file, parsed_build_file &p_file)
 {
 	parsed_section curr_section = {};
 	variable curr_variable = {};
@@ -239,7 +239,7 @@ void print_lexed_build_file(lexed_file &l_file)
 	}
 }
 
-void print_parsed_build_file(parsed_file &p_file)
+void print_parsed_build_file(parsed_build_file &p_file)
 {
 	std::cout << "[ 'filetype', " << "'" << p_file.file_type_label << "'" << "]" << std::endl;
 	for (auto p_section = p_file.parsed_sections.begin();

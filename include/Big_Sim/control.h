@@ -8,10 +8,11 @@
 #include <iterator>
 #include <ctime>
 
+#include "fileIO/trial_file.h"
 #include "stdDefinitions/pstdint.h"
-#include "interfaces/cbmstate.h"
 #include "params/connectivityparams.h"
 #include "params/activityparams.h"
+#include "interfaces/cbmstate.h"
 #include "state/innetconnectivitystate.h"
 #include "state/innetactivitystate.h"
 #include "interface/cbmsimcore.h"
@@ -33,7 +34,7 @@ class Control
 	public:
 		// TODO: create training parameter files
 		Control();
-		Control(parsed_file &p_file);
+		Control(parsed_build_file &p_file);
 		Control(std::string sim_file_name);
 		~Control();
 
@@ -164,21 +165,23 @@ class Control
 		//ct_uint8_t *goSpkCount_Trial;
 		const ct_uint8_t* goSpks; 
 
-		void build_sim(parsed_file &p_file);
+		void build_sim(parsed_build_file &p_file);
 		
-		void init_activity_params(std::string actParamFile);
+		void init_activity_params(std::string actParamFile); // TODO: deprecate
 
-		void init_sim_state(std::string stateFile);
+		void init_sim_state(std::string stateFile); // TODO: deprecate
 
 		void save_params_to_file(std::string outFile);
 
-		void save_sim_state_to_file(std::string outStateFile);
+		void save_sim_state_to_file(std::string outStateFile); 
 
 		void save_sim_to_file(std::string outSimFile);
 
 		void initializeOutputArrays();
 
-		void runTrials(int simNum, float GOGR, float GRGO, float MFGO);
+		void runExperiment(experiment &experiment);
+
+		void runTrials(int simNum, float GOGR, float GRGO, float MFGO); // TODO: deprecate
 
 		void saveOutputArraysToFile(int goRecipParam, int trial, std::tm *local_time, int simNum);
 
@@ -191,7 +194,7 @@ class Control
 			unsigned int numRow, unsigned int numCol);
 		void deleteOutputArrays();
 
-		void construct_control(enum vis_mode sim_vis_mode);
+		void construct_control(enum vis_mode sim_vis_mode); // TODO: deprecate
 };
 
 #endif /*_CONTROL_H*/

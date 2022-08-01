@@ -4,6 +4,8 @@
 #include "fileIO/build_file.h"
 #include "ttyManip/tty.h"
 
+const std::string BIN_EXT = "bin";
+
 // private utility function. TODO: move to a better place
 std::string getFileBasename(std::string fullFilePath)
 {
@@ -25,7 +27,7 @@ std::string getFileBasename(std::string fullFilePath)
 
 Control::Control() {}
 
-Control::Control(parsed_file &p_file)
+Control::Control(parsed_build_file &p_file)
 {
 	if (!cp) cp = new ConnectivityParams(p_file);
 	if (!ap) ap = new ActivityParams(p_file);
@@ -133,7 +135,7 @@ Control::~Control()
 	if (output_arrays_initialized) deleteOutputArrays();
 }
 
-void Control::build_sim(parsed_file &p_file)
+void Control::build_sim(parsed_build_file &p_file)
 {
 	// not sure if we want to save mfFreq and mfs in the simulation file
 	if (!(cp && ap && simState))
@@ -265,6 +267,25 @@ void Control::initializeOutputArrays()
 	//
 	//allGOPSTH = allocate2DArray<ct_uint8_t>(NUM_GO, PSTHColSize);
 	//std::fill(allGOPSTH[0], allGOPSTH[0] + NUM_GO * PSTHColSize, 0);
+}
+
+void Control::runExperiment(experiment &experiment)
+{
+	std::time_t curr_time = std::time(nullptr);
+	std::tm *local_time = std::localtime(&curr_time);
+	clock_t timer;
+	
+	int rasterCounter = 0;
+	for (int trial = 0; trial < experiment.num_trials; trial++)
+	{
+		timer = clock();
+		int PSTHCounter = 0;
+
+		for (int ts = 0; ts < trialTime; ts++)
+		{
+
+		}
+   }
 }
 
 void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)

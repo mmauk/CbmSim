@@ -5,6 +5,7 @@
 #include "control.h"
 #include "gui.h"
 #include "fileIO/build_file.h"
+#include "fileIO/trial_file.h"
 
 void verify_and_assign_run_mode(int arg_index, int *argc, char ***argv, enum run_mode *sim_run_mode);
 void verify_vis_mode(int arg_index, int *argc, char ***argv);
@@ -14,44 +15,56 @@ void verify_file_format(int arg_index, char ***argv, std::string first_line_test
 void validate_args_and_set_modes(int *argc, char ***argv,
 	  enum vis_mode *sim_vis_mode, enum run_mode *sim_run_mode);
 
-void parse_build_args(int *argc, char ***argv, parsed_file &p_file);
+void parse_build_args(int *argc, char ***argv, parsed_build_file &p_file);
+void parse_experiment_args(int *argc, char ***argv, experiment &exper);
+void get_in_sim_file(int arg_index, int *argc, char ***argv, std::string &in_file);
 void get_out_sim_file(int arg_index, int *argc, char ***argv, std::string &out_file);
 
-int main1(int argc, char **argv)
+int main(int argc, char **argv)
 {
-	tokenized_file t_file;
-	lexed_file l_file;
-	parsed_file p_file;
+	experiment test_experiment;
 
-	tokenize_build_file(std::string(argv[1]), t_file);
-	lex_tokenized_build_file(t_file, l_file);
-	parse_lexed_build_file(l_file, p_file);
+	if (argc > 1)
+	{
+		std::string input_file_name = INPUT_DATA_PATH + std::string(argv[1]);
+		parse_experiment_file(input_file_name, test_experiment);
+	}
+	
+	std::cout << test_experiment << std::endl;
 
-	ConnectivityParams cp_out(p_file);
-	ActivityParams ap_out(p_file);
+	//tokenized_file t_file;
+	//lexed_file l_file;
+	//parsed_build_file p_file;
 
-	std::fstream out_param_file_buf("all_params.bin", std::ios::out | std::ios::binary);
-	cp_out.writeParams(out_param_file_buf);
-	ap_out.writeParams(out_param_file_buf);
-	out_param_file_buf.close();
+	//tokenize_build_file(std::string(argv[1]), t_file);
+	//lex_tokenized_build_file(t_file, l_file);
+	//parse_lexed_build_file(l_file, p_file);
 
-	ConnectivityParams cp_in;
-	ActivityParams ap_in;
+	//ConnectivityParams cp_out(p_file);
+	//ActivityParams ap_out(p_file);
 
-	std::fstream in_param_file_buf("all_params.bin", std::ios::in | std::ios::binary);
-	cp_in.readParams(in_param_file_buf);
-	ap_in.readParams(in_param_file_buf);
-	in_param_file_buf.close();
+	//std::fstream out_param_file_buf("all_params.bin", std::ios::out | std::ios::binary);
+	//cp_out.writeParams(out_param_file_buf);
+	//ap_out.writeParams(out_param_file_buf);
+	//out_param_file_buf.close();
 
-	std::cout << std::endl;
+	//ConnectivityParams cp_in;
+	//ActivityParams ap_in;
 
-	std::cout << cp_in << std::endl;
-	std::cout << std::endl;
-	std::cout << ap_in << std::endl;
+	//std::fstream in_param_file_buf("all_params.bin", std::ios::in | std::ios::binary);
+	//cp_in.readParams(in_param_file_buf);
+	//ap_in.readParams(in_param_file_buf);
+	//in_param_file_buf.close();
+
+	//std::cout << std::endl;
+
+	//std::cout << cp_in << std::endl;
+	//std::cout << std::endl;
+	//std::cout << ap_in << std::endl;
 	return 0;
 }
 
-int main(int argc, char **argv) 
+int main1(int argc, char **argv) 
 {
 	enum vis_mode sim_vis_mode = NO_VIS;
 	enum run_mode sim_run_mode = NO_RUN;
@@ -59,8 +72,10 @@ int main(int argc, char **argv)
 	// validates that the args are in the correct format, then sets the vis and run modes
 	validate_args_and_set_modes(&argc, &argv, &sim_vis_mode, &sim_run_mode);
 
-	parsed_file p_file;
+	parsed_build_file p_file;
+	experiment experiment;
 	Control *control = NULL;
+	std::string in_sim_file = "";
 	std::string out_sim_file = "";
 	int exit_status = -1;
 
@@ -75,14 +90,23 @@ int main(int argc, char **argv)
 			exit_status = 0;
 			break;
 		case RUN:
-			//parse_run_args(&argc, &argv) // TODO: write this, leverage mike's parse alg
+			parse_experiment_args(&argc, &argv, experiment); 
 			switch (sim_vis_mode)
 			{
 				case TUI:
 					//exit_status = tui_init_and_run(&argc, &argv, control);
+					get_in_sim_file(4, &argc, &argv, in_sim_file);
+					control = new Control(in_sim_file); 
+					//control->runTrials
+					get_out_sim_file(5, &argc, &argv, out_sim_file);
+					control->save_sim_to_file(out_sim_file);
+					exit_status = 0;
 					break;
 				case GUI:
 					exit_status = gui_init_and_run(&argc, &argv, control);
+					break;
+				case NO_VIS:
+					/* unreachable */
 					break;
 			}
 			break;
@@ -176,7 +200,7 @@ void validate_args_and_set_modes(int *argc, char ***argv,
 		assign_vis_mode(2, argc, argv, sim_vis_mode);
 
 		verify_is_file(3, argv, "[ERROR]: Could not open Trials file. Exiting...");
-		verify_file_format(3, argv, "# BEGIN EXPERIMENT", "[ERROR] Improper trial file format. Exiting...");
+		verify_file_format(3, argv, "#Begin Experiment", "[ERROR] Improper trial file format. Exiting...");
 
 		verify_is_file(4, argv, "[ERROR]: Could not open input simulation file. Exiting...");
 	}
@@ -187,7 +211,7 @@ void validate_args_and_set_modes(int *argc, char ***argv,
 	}
 }
 
-void parse_build_args(int *argc, char ***argv, parsed_file &p_file)
+void parse_build_args(int *argc, char ***argv, parsed_build_file &p_file)
 {
 	tokenized_file t_file;
 	lexed_file l_file;
@@ -197,6 +221,17 @@ void parse_build_args(int *argc, char ***argv, parsed_file &p_file)
 	tokenize_build_file(full_build_file_path, t_file);
 	lex_tokenized_build_file(t_file, l_file);
 	parse_lexed_build_file(l_file, p_file);
+}
+
+void parse_experiment_args(int *argc, char ***argv, experiment &exper)
+{
+	std::string full_trial_file_path = INPUT_DATA_PATH + std::string((*argv)[3]);
+	parse_experiment_file(full_trial_file_path, exper);
+}
+
+void get_in_sim_file(int arg_index, int *argc, char ***argv, std::string &in_file)
+{
+	in_file = INPUT_DATA_PATH + std::string((*argv)[arg_index]);
 }
 
 void get_out_sim_file(int arg_index, int *argc, char ***argv, std::string &out_file)

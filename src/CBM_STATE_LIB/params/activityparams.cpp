@@ -13,7 +13,7 @@
 
 ActivityParams::ActivityParams() {}
 
-ActivityParams::ActivityParams(parsed_file &p_file)
+ActivityParams::ActivityParams(parsed_build_file &p_file)
 {
 	for (auto iter = p_file.parsed_sections["activity"].param_map.begin();
 			  iter != p_file.parsed_sections["activity"].param_map.end();

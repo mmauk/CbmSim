@@ -12,6 +12,7 @@
  *     simulation from scratch, akin to "generating" a new rabbit on the fly.
  */
 #ifndef BUILD_FILE_H_
+#define BUILD_FILE_H_
 
 #include <string>
 #include <vector>
@@ -88,13 +89,13 @@ typedef struct lexed_file lexed_file;
  * type as well as all of the parsed sections.
  *
  */
-struct parsed_file
+struct parsed_build_file
 {
 	std::string file_type_label;
 	std::map<std::string, parsed_section> parsed_sections;
 };
 
-typedef parsed_file parsed_file;
+typedef parsed_build_file parsed_file;
 
 /* ============================== FORWARD FUNCTION DECLARATIONS ============================== */
 
@@ -102,14 +103,13 @@ void tokenize_build_file(std::string b_file, tokenized_file &t_file);
 
 void lex_tokenized_build_file(tokenized_file &t_file, lexed_file &l_file);
 
-void parse_lexed_build_file(lexed_file &l_file, parsed_file &p_file);
+void parse_lexed_build_file(lexed_file &l_file, parsed_build_file &p_file);
 
 void print_tokenized_build_file(tokenized_file &t_file);
 
 void print_lexed_build_file(lexed_file &l_file);
 
-void print_parsed_build_file(parsed_file &p_file);
+void print_parsed_build_file(parsed_build_file &p_file);
 
-
-#define BUILD_FILE_H_
 #endif /* BUILD_FILE_H_ */
+

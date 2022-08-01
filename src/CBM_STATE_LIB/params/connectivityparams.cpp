@@ -10,7 +10,7 @@
 
 ConnectivityParams::ConnectivityParams() {}
 
-ConnectivityParams::ConnectivityParams(parsed_file &p_file)
+ConnectivityParams::ConnectivityParams(parsed_build_file &p_file)
 {
 	for (auto iter = p_file.parsed_sections["connectivity"].param_map.begin();
 			  iter != p_file.parsed_sections["connectivity"].param_map.end();
