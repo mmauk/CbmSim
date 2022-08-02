@@ -26,8 +26,14 @@ void parse_experiment_file(std::string trial_file_name, experiment &experiment)
 										  // in terms of capitalization, etc.  
 			if (!fileline.empty())
 			{
-				lineCounter++;
-				data[lineCounter] = fileline;
+				// ignore first two lines for purposes of parsing experiment file
+				if (fileline != "#Begin filetype experiment"
+				 && fileline != "#VIS TUI"
+				 && fileline != "#VIS GUI")
+				{
+					lineCounter++;
+					data[lineCounter] = fileline;
+				}
 				int x = fileline.find_first_not_of(' ');
 				if (isdigit(fileline[x]) == 0)
 				{

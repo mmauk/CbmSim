@@ -23,23 +23,23 @@ int main(int argc, char **argv)
 	switch (sim_run_mode)
 	{
 		case BUILD:
-			parse_build_args(&argc, &argv, p_file);
+			parse_build_args(&argv, p_file);
 			control = new Control();
 			control->build_sim(p_file);
-			get_out_sim_file(3, &argc, &argv, out_sim_file);
+			get_out_sim_file(BUILD_OUT_SIM_FILE, &argv, out_sim_file);
 			control->save_sim_to_file(out_sim_file);
 			exit_status = 0;
 			break;
 		case RUN:
-			parse_experiment_args(&argc, &argv, experiment); 
+			parse_experiment_args(&argv, experiment); 
 			switch (sim_vis_mode)
 			{
 				case TUI:
 					//exit_status = tui_init_and_run(&argc, &argv, control);
-					get_in_sim_file(4, &argc, &argv, in_sim_file);
+					get_in_sim_file(&argv, in_sim_file);
 					control = new Control(in_sim_file); 
 					control->runExperiment(experiment);
-					get_out_sim_file(5, &argc, &argv, out_sim_file);
+					get_out_sim_file(RUN_OUT_SIM_FILE, &argv, out_sim_file);
 					control->save_sim_to_file(out_sim_file);
 					exit_status = 0;
 					break;
