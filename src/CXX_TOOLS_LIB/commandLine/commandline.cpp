@@ -1,8 +1,16 @@
+/*
+ * File: commandline.cpp
+ * Author: Sean Gallogly
+ * Created on: 08/02/2022
+ *
+ * Description:
+ *     This file implements the function prototypes in commandLine/commandline.h
+ */
+
 #include <iostream>
 #include <fstream>
 #include <algorithm>
 #include "commandLine/commandline.h"
-
 
 /*
  * Implementation Notes:

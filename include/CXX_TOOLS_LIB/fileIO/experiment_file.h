@@ -1,3 +1,16 @@
+/*
+ * File: build_file.h
+ * Author: Michael Mauk
+ * Created on: circa 07/01/2022
+ * Modified by: Sean Gallogly
+ * Modified first on: circa 08/02/2022
+ *
+ * Description:
+ *     This is the interface file for reading in an experiment file. It includes the 
+ *     structures and constants necessary to parse an experiment file into a final
+ *     data structure. 
+ *
+ */
 #ifndef TRIAL_FILE_H_
 #define TRIAL_FILE_H_
 #include <string>
@@ -39,7 +52,7 @@ struct experiment_info /* this struct is only used in the function parse_trials 
 	int BlockTrialCount[32];    // number of trials in each block
 };
 
-struct experiment
+struct experiment /* a structure which includes the number of trials, convenient for later processing */
 {
 	int num_trials;
 	trial trials[MAX_NUM_TRIALS];
@@ -47,12 +60,44 @@ struct experiment
 
 typedef struct experiment experiment;
 
+/*
+ * Description:
+ *     the main parsing function. Prints out progress along the way. Takes in a trial file, as
+ *     represented by trial_file_name and populates the experiment referenced by experiment.
+ *
+ */
 void parse_experiment_file(std::string trial_file_name, experiment &experiment);
 
+/*
+ * Description:
+ *     returns a string representation of the trial referred to by ti. The string has no
+ *     EOL character at the very end.
+ *
+ */
 std::string trial_to_string(trial &ti);
+
+/*
+ * Description:
+ *     returns a string representation of the experiment referred to by ei. The string has no
+ *     EOL character at the very end.
+ *
+ */
 std::string experiment_to_string(experiment &ei);
 
+/*
+ * Description:
+ *     overloads the stream insertion operator (<<) to insert a trial into the output stream
+ *     referred to by os.
+ *
+ */
 std::ostream & operator<<(std::ostream &os, trial &ti);
+
+/*
+ * Description:
+ *     overloads the stream insertion operator (<<) to insert a experiment into the output stream
+ *     referred to by os.
+ *
+ */
 std::ostream & operator<<(std::ostream &os, experiment &ei);
 
 #endif /* TRIAL_FILE_H_ */

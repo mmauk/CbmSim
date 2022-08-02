@@ -24,7 +24,6 @@
 class Control 
 {
 	public:
-		// TODO: create training parameter files
 		Control();
 		Control(parsed_build_file &p_file);
 		Control(std::string sim_file_name);
@@ -32,10 +31,10 @@ class Control
 
 		// Objects
 		ConnectivityParams *cp = NULL;
-		ActivityParams *ap = NULL;
+		ActivityParams *ap     = NULL;
 
-		CBMState *simState = NULL;
-		CBMSimCore *simCore = NULL;
+		CBMState *simState     = NULL;
+		CBMSimCore *simCore    = NULL;
 		ECMFPopulation *mfFreq = NULL;
 		PoissonRegenCells *mfs = NULL;
 
@@ -51,6 +50,7 @@ class Control
 		float goMin = 0.26; 
 		float spillFrac = 0.15; // go->gr synapse, part of build
 
+		// weight parameters
 		float weightScale = 0.3275;
 		float mfgoW = 0.00350 * weightScale;
 		float grgoW = 0.00056 * weightScale;
@@ -58,11 +58,11 @@ class Control
 		float gogoW = 0.01250;
 		float inputStrength = 0.0;
 
-		// sim params
+		// sim params -> TODO: place in simcore
 		int gpuIndex = 0;
 		int gpuP2    = 2;
 
-		// Training Parameters
+		// Training Parameters -> TODO: deprecate in gui runExperiment
 		int numTrainingTrials      = 10;
 		int homeoTuningTrials      = 0;
 		int granuleActDetectTrials = 0;
@@ -75,9 +75,10 @@ class Control
 
 		int csLength = 500; // with duration 2s?
 							 
-		// mzone stuff
-		int numMZones = 1;
+		// mzone stuff -> TODO: place in build file down the road
+		int numMZones = 1; 
 
+		// TODO: place in experiment trial down the road
 		// MFFreq params (formally in Simulation::getMFs, Simulation::getMFFreq)
 		int mfRandSeed = 3;
 		float threshDecayTau = 4.0;
@@ -111,8 +112,8 @@ class Control
 		float fracOverlap = 0.2;
 
 		int trialTime = 3000; /* wild that this is here */
-		
-		// raster stuff
+	
+		// raster stuff -> TODO: place in experiment file down the road
 		int PSTHColSize = csLength + msPreCS + msPostCS;
 		int rasterColumnSize = PSTHColSize * numTrainingTrials;
 

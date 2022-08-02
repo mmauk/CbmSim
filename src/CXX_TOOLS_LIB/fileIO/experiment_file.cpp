@@ -1,8 +1,32 @@
+/*
+ * File: build_file.cpp
+ * Author: Michael Mauk
+ * Created on: circa 07/01/2022
+ * Modified by: Sean Gallogly
+ * Modified first on: circa 08/02/2022
+ *
+ * Description:
+ *     implements the function declarations given in fileIO/experiment_file.h
+ *
+ */
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include "fileIO/experiment_file.h"
 
+/*
+ * Implementation Notes:
+ *     This function first loops through the file, obtaining each line and placing
+ *     each line into data. In the first loop it begins to fill the experiment_info
+ *     object with the line numbers (minus empty lines) of where #Begin and #End are
+ *     found. It also checks for digits which will later be interpretted as the number
+ *     of times to repeat the previous line, facilitating easier session and block
+ *     specification. The necessary trial info is then extracted for each trial type,
+ *     and then the number of sessions and blocks is extracted. Finally, experiment
+ *     is filled with each trial's information as well as the number of trials in
+ *     the experiment.
+ *
+ */
 void parse_experiment_file(std::string trial_file_name, experiment &experiment)
 {
 	int i,j,k;
@@ -248,6 +272,12 @@ void parse_experiment_file(std::string trial_file_name, experiment &experiment)
 	experiment.num_trials = numtrials;
 }
 
+/*
+ * Implementation Notes:
+ *     a ostringstream was chosen somewhat out of arbitrariness, as 
+ *     a string variable could equally well have been used.
+ *
+ */
 std::string trial_to_string(trial &ti)
 {
 	std::ostringstream out_string_buf;
@@ -283,6 +313,12 @@ std::string trial_to_string(trial &ti)
 	return out_string_buf.str();
 }
 
+/*
+ * Implementation Notes:
+ *     leverages the trial_to_string method above by looping over
+ *     all trials in the experiment.
+ *
+ */
 std::string experiment_to_string(experiment &ei)
 {
 	std::ostringstream out_string_buf;

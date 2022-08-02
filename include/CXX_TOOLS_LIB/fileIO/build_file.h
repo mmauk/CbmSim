@@ -99,10 +99,29 @@ typedef parsed_build_file parsed_file;
 
 /* ============================== FUNCTION DECLARATIONS ============================== */
 
+/*
+ * Description:
+ *     takes in the string b_file representing the build file's name and constructs
+ *     a tokenized file from it. See the above definition of tokenized_file.
+ *
+ */
 void tokenize_build_file(std::string b_file, tokenized_file &t_file);
 
+/*
+ * Description:
+ *     takes a tokenized file reference t_file and lexes it, i.e. assigns meaningful
+ *     tags to the tokens. It does this by populating the lexed_file reference l_file.
+ *
+ */
 void lex_tokenized_build_file(tokenized_file &t_file, lexed_file &l_file);
 
+/*
+ * Description:
+ *     takes a lexed file reference l_file and parses it, i.e. takes each lexeme
+ *     and adds it to the correct entry in p_file.parsed_sections. See the above
+ *     definition of parsed_build_file and parsed_section for more information.
+ *
+ */
 void parse_lexed_build_file(lexed_file &l_file, parsed_build_file &p_file);
 
 void print_tokenized_build_file(tokenized_file &t_file);

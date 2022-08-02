@@ -13,7 +13,7 @@ PoissonRegenCells::PoissonRegenCells(unsigned int numCells, int randSeed, float 
 	unsigned int numZones, unsigned int numNC, float sigma)
 {
 	randSeedGen = new CRandomSFMT0(randSeed);
-	noiseRandGen=new std::mt19937(randSeed);
+	noiseRandGen = new std::mt19937(randSeed);
 
 	nThreads=1;
 	randGens=new CRandomSFMT0*[nThreads];
@@ -54,7 +54,7 @@ PoissonRegenCells::PoissonRegenCells(unsigned int numCells, int randSeed, float 
 PoissonRegenCells::~PoissonRegenCells()
 {
 	delete randSeedGen;
-	delete noiseRandGen;	
+	delete noiseRandGen;
 	for(unsigned int i=0; i<nThreads; i++)
 	{
 		delete randGens[i];
@@ -93,8 +93,8 @@ void PoissonRegenCells::prepCollaterals(int rSeed)
 	std::copy(tempNCs, tempNCs + nCells, dnCellIndex);
 	std::copy(tempMZs, tempMZs + nCells, mZoneIndex);
 
-	delete tempNCs;
-	delete tempMZs;
+	delete[] tempNCs;
+	delete[] tempMZs;
 	
 }
 const ct_uint8_t* PoissonRegenCells::calcThreshActivity(const float *frequencies, MZone **mZoneList)

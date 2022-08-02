@@ -1,3 +1,14 @@
+/*
+ * File: main.cpp
+ * Author: Sean Gallogly
+ * Created on: circa 07/21/2022
+ * 
+ * Description:
+ *     this is the main entry point to the program. It calls functions from commandline.h
+ *     in order to parse arguments and from control.h in order to run the simulation
+ *     in one of several user-specified modes.
+ *
+ */
 #include <time.h>
 #include <iostream>
 #include <fstream>
@@ -10,7 +21,6 @@ int main(int argc, char **argv)
 	enum vis_mode sim_vis_mode = NO_VIS;
 	enum run_mode sim_run_mode = NO_RUN;
 	
-	// validates that the args are in the correct format, then sets the vis and run modes
 	validate_args_and_set_modes(&argc, &argv, &sim_vis_mode, &sim_run_mode);
 
 	parsed_build_file p_file;
@@ -35,7 +45,6 @@ int main(int argc, char **argv)
 			switch (sim_vis_mode)
 			{
 				case TUI:
-					//exit_status = tui_init_and_run(&argc, &argv, control);
 					get_in_sim_file(&argv, in_sim_file);
 					control = new Control(in_sim_file); 
 					control->runExperiment(experiment);

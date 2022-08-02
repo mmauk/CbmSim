@@ -1,3 +1,14 @@
+/*
+ * File: commandline.h
+ * Author: Sean Gallogly
+ * Created on: 08/02/2022
+ * 
+ * Description:
+ *     This is the interface file for parsing the command line args for cbm sim. 
+ *     It includes the constants, enums, and functions required to parse the command
+ *     line arguments according to a two-mode scheme for building simulations (i.e.
+ *     creating new rabbits) and running simulations (i.e. training rabbits).
+ */
 #ifndef COMMAND_LINE_H_
 #define COMMAND_LINE_H_
 #include <string>

@@ -9,6 +9,8 @@ declare -a expt_file="practice_expt_file_3.expt"
 declare -a in_bunny
 declare -a out_bunny
 
+# set -x # sets all commands to be echoed during script execution
+
 printf "[INFO]: Descending into the build directory...\n"
 cd ../build/
 
@@ -19,9 +21,10 @@ cd ../build/
 # done
 # printf "\n[INFO]: Finished constructing 5 bunnies.\n"
 
-printf "\n[INFO]: daisy chaining bunny 1 on experiment file ${expt_file} 100 times.\n"
+
+printf "\n[INFO]: daisy chaining bunny 1 on experiment file ${expt_file} 5 times.\n"
 in_bunny="${base_name}_1.${sim_ext}"
-for i in {1..100}; do
+for i in {1..5}; do
 	printf "\n[INFO]: Experiment Run Counter: ${i}\n\n"
 	out_bunny="${base_name}_1_${i}.${sim_ext}"
 	# printf "[INFO]: Input file:  ${in_bunny}\n"
@@ -29,7 +32,7 @@ for i in {1..100}; do
 	./big_sim "$expt_file" "$in_bunny" "$out_bunny"
 	in_bunny=$out_bunny
 done
-printf "[INFO]: Finished daisy chaining bunny 1 on experiment file 100 times.\n"
+printf "[INFO]: Finished daisy chaining bunny 1 on experiment file 5 times.\n"
 
 printf "[INFO]: moving back into directory from which $0 was called...\n"
 cd ../scripts
