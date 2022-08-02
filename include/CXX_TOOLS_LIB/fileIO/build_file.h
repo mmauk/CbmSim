@@ -97,7 +97,7 @@ struct parsed_build_file
 
 typedef parsed_build_file parsed_file;
 
-/* ============================== FORWARD FUNCTION DECLARATIONS ============================== */
+/* ============================== FUNCTION DECLARATIONS ============================== */
 
 void tokenize_build_file(std::string b_file, tokenized_file &t_file);
 

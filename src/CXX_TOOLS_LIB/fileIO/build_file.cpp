@@ -144,7 +144,7 @@ void lex_tokenized_build_file(tokenized_file &t_file, lexed_file &l_file)
  *     Notice that I do not have a case for VAR_VALUE: this is because when I reach VAR_IDENTIFIER
  *     I must use the identifier in the param map to assign the VAR_VALUE. So I progress the lexed token
  *     iterator by two at the end of this operatation, either reaching a comment or EOL.
- *     One final note is that I needed to keep in the END_MARKERs as they helped solve the problem
+ *     One final note is that I needed to keep the END_MARKERs in as they helped solve the problem
  *     of finding when we are finished with a section.
  *
  */

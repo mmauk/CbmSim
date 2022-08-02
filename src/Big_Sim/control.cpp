@@ -278,6 +278,8 @@ void Control::runExperiment(experiment &experiment)
 	int rasterCounter = 0;
 	for (int trial = 0; trial < experiment.num_trials; trial++)
 	{
+		std::string trialName = experiment.trials[trial].TrialName;
+
 		int useCS     = experiment.trials[trial].CSuse;
 		int onsetCS   = experiment.trials[trial].CSonset;
 		int offsetCS  = experiment.trials[trial].CSoffset;
@@ -325,7 +327,8 @@ void Control::runExperiment(experiment &experiment)
 		}
 		
 		timer = clock() - timer;
-		std::cout << "[INFO]: Trial time: " << (float)timer / CLOCKS_PER_SEC << std::endl;
+		std::cout << "[INFO]: " << trialName << " took " << (float)timer / CLOCKS_PER_SEC << "s."
+				  << std::endl;
 
 		if (sim_vis_mode == GUI)
 		{
