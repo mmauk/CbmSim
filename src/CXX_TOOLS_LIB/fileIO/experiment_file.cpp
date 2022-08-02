@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include "fileIO/trial_file.h"
+#include "fileIO/experiment_file.h"
 
 void parse_experiment_file(std::string trial_file_name, experiment &experiment)
 {

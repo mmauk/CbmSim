@@ -8,7 +8,7 @@
 #include <iterator>
 #include <ctime>
 
-#include "fileIO/trial_file.h"
+#include "commandLine/commandline.h"
 #include "stdDefinitions/pstdint.h"
 #include "params/connectivityparams.h"
 #include "params/activityparams.h"
@@ -20,14 +20,6 @@
 #include "poissonregencells.h"
 #include "interfaces/ectrialsdata.h"
 #include "eyelidintegrator.h"
-
-// moved from main, should go somewhere better :/
-const std::string INPUT_DATA_PATH = "../data/inputs/";
-const std::string OUTPUT_DATA_PATH = "../data/outputs/";
-const std::string DEFAULT_SIM_OUT_FILE = OUTPUT_DATA_PATH + "default_out_sim_file.sim";
-
-enum vis_mode {GUI, TUI, NO_VIS};
-enum run_mode {BUILD, RUN, NO_RUN};
 
 class Control 
 {

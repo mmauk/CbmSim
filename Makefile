@@ -16,11 +16,9 @@ BUILD_PATH	  = $(ROOT)build/
 
 # NOTE using update alternatives: to switch back to ver11, use update-alternatives --config g++
 CXX              = g++
-# CXXFLAGS         = -m64 -pipe -std=c++14 -g
-CXXFLAGS         = -m64 -pipe -std=c++14 -O3
+CXXFLAGS         = -m64 -pipe -std=c++14 -g
 
-# MODULE_CXX_FLAGS = -m64 -pipe -std=c++14 -g -fPIC
-MODULE_CXX_FLAGS = -m64 -pipe -std=c++14 -O3 -fPIC
+MODULE_CXX_FLAGS = -m64 -pipe -std=c++14 -g -fPIC
 INCPATH          = -I. -I$(ROOT)include/Big_Sim -I/usr/local/cuda/include -I$(ROOT)include/CBM_CORE_LIB -I$(ROOT)include/CBM_DATA_LIB \
 			       -I$(ROOT)include/CBM_STATE_LIB -I$(ROOT)include/CBM_TOOLS_LIB -I$(ROOT)include/CBM_VIS_LIB -I$(ROOT)include/CXX_TOOLS_LIB 
 
@@ -167,9 +165,10 @@ CXX_TOOLS_OBJ_PATH     = $(BUILD_PATH)CXX_TOOLS_LIB/
 
 ####### CXX Tools Files
 
-CXX_TOOLS_SOURCES  = $(CXX_TOOLS_SRC_PATH)fileIO/rawbytesrw.cpp \
+CXX_TOOLS_SOURCES  = $(CXX_TOOLS_SRC_PATH)commandLine/commandline.cpp \
+					 $(CXX_TOOLS_SRC_PATH)fileIO/rawbytesrw.cpp \
 					 $(CXX_TOOLS_SRC_PATH)fileIO/build_file.cpp \
-					 $(CXX_TOOLS_SRC_PATH)fileIO/trial_file.cpp \
+					 $(CXX_TOOLS_SRC_PATH)fileIO/experiment_file.cpp \
 					 $(CXX_TOOLS_SRC_PATH)memoryMgmt/arrayvalidate.cpp \
 					 $(CXX_TOOLS_SRC_PATH)randGenerators/mersenne.cpp \
 					 $(CXX_TOOLS_SRC_PATH)randGenerators/mother.cpp \
@@ -177,14 +176,15 @@ CXX_TOOLS_SOURCES  = $(CXX_TOOLS_SRC_PATH)fileIO/rawbytesrw.cpp \
 					 $(CXX_TOOLS_SRC_PATH)ttyManip/tty.cpp
 
 
-CXX_TOOLS_OBJECTS  = $(CXX_TOOLS_OBJ_PATH)rawbytesrw.o \
-                     $(CXX_TOOLS_OBJ_PATH)build_file.o \
-                     $(CXX_TOOLS_OBJ_PATH)trial_file.o \
-                     $(CXX_TOOLS_OBJ_PATH)arrayvalidate.o \
-                     $(CXX_TOOLS_OBJ_PATH)mersenne.o \
-                     $(CXX_TOOLS_OBJ_PATH)mother.o \
-                     $(CXX_TOOLS_OBJ_PATH)sfmt.o \
-                     $(CXX_TOOLS_OBJ_PATH)tty.o
+CXX_TOOLS_OBJECTS  = $(CXX_TOOLS_OBJ_PATH)commandline.o \
+					 $(CXX_TOOLS_OBJ_PATH)rawbytesrw.o \
+					 $(CXX_TOOLS_OBJ_PATH)build_file.o \
+					 $(CXX_TOOLS_OBJ_PATH)experiment_file.o \
+					 $(CXX_TOOLS_OBJ_PATH)arrayvalidate.o \
+					 $(CXX_TOOLS_OBJ_PATH)mersenne.o \
+					 $(CXX_TOOLS_OBJ_PATH)mother.o \
+					 $(CXX_TOOLS_OBJ_PATH)sfmt.o \
+					 $(CXX_TOOLS_OBJ_PATH)tty.o
 
 
 ####### All Module Include Paths
@@ -885,14 +885,17 @@ $(CXX_TOOLS_OBJ_PATH):
 
 ####### Compile CXX Tools Sources
 
+$(CXX_TOOLS_OBJ_PATH)commandline.o: $(CXX_TOOLS_SRC_PATH)commandLine/commandline.cpp $(CXX_TOOLS_INCLUDE_PATH)commandLine/commandline.h
+	$(CXX) -c $(MODULE_CXX_FLAGS) $(CXX_TOOLS_INCLUDES) -o $(CXX_TOOLS_OBJ_PATH)commandline.o $(CXX_TOOLS_SRC_PATH)commandLine/commandline.cpp
+
 $(CXX_TOOLS_OBJ_PATH)rawbytesrw.o: $(CXX_TOOLS_SRC_PATH)fileIO/rawbytesrw.cpp $(CXX_TOOLS_INCLUDE_PATH)fileIO/rawbytesrw.h
 	$(CXX) -c $(MODULE_CXX_FLAGS) $(CXX_TOOLS_INCLUDES) -o $(CXX_TOOLS_OBJ_PATH)rawbytesrw.o $(CXX_TOOLS_SRC_PATH)fileIO/rawbytesrw.cpp
 
 $(CXX_TOOLS_OBJ_PATH)build_file.o: $(CXX_TOOLS_SRC_PATH)fileIO/build_file.cpp $(CXX_TOOLS_INCLUDE_PATH)fileIO/build_file.h
 	$(CXX) -c $(MODULE_CXX_FLAGS) $(CXX_TOOLS_INCLUDES) -o $(CXX_TOOLS_OBJ_PATH)build_file.o $(CXX_TOOLS_SRC_PATH)fileIO/build_file.cpp
 
-$(CXX_TOOLS_OBJ_PATH)trial_file.o: $(CXX_TOOLS_SRC_PATH)fileIO/trial_file.cpp $(CXX_TOOLS_INCLUDE_PATH)fileIO/trial_file.h
-	$(CXX) -c $(MODULE_CXX_FLAGS) $(CXX_TOOLS_INCLUDES) -o $(CXX_TOOLS_OBJ_PATH)trial_file.o $(CXX_TOOLS_SRC_PATH)fileIO/trial_file.cpp
+$(CXX_TOOLS_OBJ_PATH)experiment_file.o: $(CXX_TOOLS_SRC_PATH)fileIO/experiment_file.cpp $(CXX_TOOLS_INCLUDE_PATH)fileIO/experiment_file.h
+	$(CXX) -c $(MODULE_CXX_FLAGS) $(CXX_TOOLS_INCLUDES) -o $(CXX_TOOLS_OBJ_PATH)experiment_file.o $(CXX_TOOLS_SRC_PATH)fileIO/experiment_file.cpp
 
 $(CXX_TOOLS_OBJ_PATH)arrayvalidate.o: $(CXX_TOOLS_SRC_PATH)memoryMgmt/arrayvalidate.cpp $(CXX_TOOLS_INCLUDE_PATH)memoryMgmt/arrayvalidate.h
 	$(CXX) -c $(MODULE_CXX_FLAGS) $(CXX_TOOLS_INCLUDES) -o $(CXX_TOOLS_OBJ_PATH)arrayvalidate.o $(CXX_TOOLS_SRC_PATH)memoryMgmt/arrayvalidate.cpp
