@@ -18,8 +18,8 @@ const std::string var_id_regex_str = "[a-zA-Z_]{1}[a-zA-Z0-9_]*";
 const std::string var_val_regex_str = "[+-]?([0-9]*[.])?[0-9]*([e][+-]?[0-9]+)?";
 
 // look-up table for lexemes, is used for printing lexemes to whatever stream you want
-std::map<lexeme, std::string> lex_string_look_up = {
-
+std::map<lexeme, std::string> lex_string_look_up =
+{
 		{ BEGIN_MARKER, "BEGIN_MARKER" },
 		{ END_MARKER, "END_MARKER"},
 		{ REGION, "REGION" },
@@ -30,12 +30,11 @@ std::map<lexeme, std::string> lex_string_look_up = {
 		{ SINGLE_COMMENT, "SINGLE_COMMENT" },
 		{ DOUBLE_COMMENT_BEGIN, "DOUBLE_COMMENT_BEGIN" },
 		{ DOUBLE_COMMENT_END, "DOUBLE_COMMENT_END" },
-
 };
 
 // definitions of tokens via their lexemes
-std::map<std::string, lexeme> token_defs = {
-
+std::map<std::string, lexeme> token_defs =
+{
 		{ "#begin", BEGIN_MARKER },
 		{ "#end", END_MARKER },
 		{ "filetype", REGION },
@@ -50,7 +49,6 @@ std::map<std::string, lexeme> token_defs = {
 		{ "//", SINGLE_COMMENT },
 		{ "/*", DOUBLE_COMMENT_BEGIN },
 		{ "*/", DOUBLE_COMMENT_END },
-
 };
 
 /*

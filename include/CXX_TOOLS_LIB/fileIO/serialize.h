@@ -13,12 +13,12 @@
  *
  */
 #include <fstream>
-#include <map>
+#include <unordered_map>
 #include <string>
 #include <cstring>
 
 template<typename key_t, typename val_t>
-void unserialize_map_from_file(std::map<key_t, val_t> &map, std::fstream &file_buf)
+void unserialize_map_from_file(std::unordered_map<key_t, val_t> &map, std::fstream &file_buf)
 {
 	size_t int_params_size;
 	char *int_params_size_arr = (char *)calloc(1, sizeof(size_t));
@@ -53,7 +53,7 @@ void unserialize_map_from_file(std::map<key_t, val_t> &map, std::fstream &file_b
 }
 
 template<typename key_t, typename val_t>
-void serialize_map_to_file(std::map<key_t, val_t> &map, std::fstream &file_buf)
+void serialize_map_to_file(std::unordered_map<key_t, val_t> &map, std::fstream &file_buf)
 {
 	size_t map_size = map.size();
 	char *map_size_bytes = (char *)calloc(1, sizeof(size_t));

@@ -17,11 +17,13 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <unordered_map>
 
 /* ================================ TYPES AND CONSTANTS ================================= */
 
 // lexemes of the build file ie the fundamental meanings behind each token
-enum lexeme {
+enum lexeme
+{
 	BEGIN_MARKER, END_MARKER,
 	REGION,
 	REGION_TYPE,
@@ -59,7 +61,7 @@ typedef struct variable variable;
 struct parsed_section
 {
 	std::string section_label;
-	std::map<std::string, variable> param_map;
+	std::unordered_map<std::string, variable> param_map;
 };
 
 typedef struct parsed_section parsed_section;

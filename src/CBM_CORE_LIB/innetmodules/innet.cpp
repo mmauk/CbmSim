@@ -1301,7 +1301,7 @@ void InNet::initGRCUDA(ConnectivityParams *cp)
 
 	std::cout << "[INFO]: Initializing transposed copies of act state and con state vars..." << std::endl;
 
-	//	create a transposed copy of the matrices from activity state and connectivity
+	// create a transposed copy of the matrices from activity state and connectivity
 	for (int i = 0; i < cp->int_params["max_num_p_gr_from_go_to_gr"]; i++)
 	{
 		for (int j = 0; j < cp->int_params["num_gr"]; j++)

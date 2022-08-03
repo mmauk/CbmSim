@@ -14,7 +14,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <map>
+#include <unordered_map>
 #include "fileIO/build_file.h"
 #include "stdDefinitions/pstdint.h"
 
@@ -28,12 +28,10 @@ class ConnectivityParams
 		void writeParams(std::fstream &outParamBuf);
 		std::string toString();
 		
-		// cannot overload 'operator[]' because we have both int and float params.
-
 		friend std::ostream &operator<<(std::ostream &os, ConnectivityParams &cp);
 
-		std::map<std::string, int> int_params;
-		std::map<std::string, float> float_params;
+		std::unordered_map<std::string, int> int_params;
+		std::unordered_map<std::string, float> float_params;
 };
 
 std::ostream &operator<<(std::ostream &os, ConnectivityParams &cp);

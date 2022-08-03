@@ -10,13 +10,155 @@
 
 #include <math.h>
 #include <stdlib.h>
-#include <map>
+#include <unordered_map>
 #include <string>
 #include <iostream>
 #include <fstream>
 #include "fileIO/build_file.h"
 #include <stdDefinitions/pstdint.h>
 
+//std::map<std::string, float> io_map;
+//
+//struct activity_params
+//{
+//	float coupleRiRjRatioGO;
+//	float coupleRiRjRatioIO;
+//	float eBCtoPC;
+//	float eGABAGO;
+//	float eGOGR;
+//	float eLeakBC;
+//	float eLeakGO;
+//	float eLeakGR;
+//	float eLeakIO; 
+//	float eLeakNC;
+//	float eLeakPC;
+//	float eLeakSC;
+//	float eMFGR;
+//	float eMGluRGO;
+//	float eNCtoIO; 
+//	float ePCtoBC;
+//	float ePCtoNC;
+//	float eSCtoPC;
+//	float gDecTauBCtoPC;
+//	float gIncBCtoPC;
+//	float gGABADecTauGOtoGO;
+//	float gIncDirectGOtoGR;
+//	float gDirectTauGOtoGR;
+//	float gIncFracSpilloverGOtoGR;
+//	float gSpilloverTauGOtoGR;
+//	float gGABAIncGOtoGO;
+//	float gDecTauGRtoGO;
+//	float gIncGRtoGO;
+//	float gDecTauMFtoGO;
+//	float gIncMFtoGO;
+//	float gConstGO;
+//	float NMDA_AMPAratioMFGO;
+//	float gDecTauMFtoGONMDA;
+//	float gIncDirectMFtoGR;
+//	float gDirectTauMFtoGR;
+//	float gIncFracSpilloverMFtoGR;
+//	float gSpilloverTauMFtoGR;
+//	float recoveryTauMF;
+//	float fracDepMF;
+//	float recoveryTauGO;
+//	float fracDepGO;
+//	float gIncMFtoUBC;
+//	float gIncGOtoUBC;
+//	float gIncUBCtoUBC;
+//	float gIncUBCtoGO;
+//	float gIncUBCtoGR;
+//	float gKIncUBC;
+//	float gKTauUBC;
+//	float gConstUBC;
+//	float threshTauUBC;
+//	float gMGluRDecGRtoGO;
+//	float gMGluRIncDecayGO;
+//	float gMGluRIncScaleGO;
+//	float gMGluRScaleGRtoGO;
+//	float gDecT0ofNCtoIO;
+//	float gDecTSofNCtoIO;
+//	float gDecTTofNCtoIO;
+//	float gIncNCtoIO;
+//	float gIncTauNCtoIO;
+//	float gDecTauPCtoBC;
+//	float gDecTauPCtoNC;
+//	float gIncAvgPCtoNC;
+//	float gDecTauGRtoBC;
+//	float gDecTauGRtoPC;
+//	float gDecTauGRtoSC;
+//	float gIncGRtoPC ;
+//	float gDecTauSCtoPC ;
+//	float gIncSCtoPC;
+//	float gluDecayGO;
+//	float gluScaleGO;
+//	float goGABAGOGOSynDepF;
+//	float goGABAGOGOSynRecTau;
+//	float synLTDStepSizeGRtoPC;
+//	float synLTPStepSizeGRtoPC;
+//	float mGluRDecayGO;
+//	float mGluRScaleGO;
+//	float maxExtIncVIO;
+//	float gmaxAMPADecTauMFtoNC;
+//	float synLTDStepSizeMFtoNC;
+//	float synLTDPCPopActThreshMFtoNC2;
+//	float synLTPStepSizeMFtoNC;
+//	float synLTPPCPopActThreshMFtoNC;
+//	float gmaxNMDADecTauMFtoNC;
+//	float initSynWofMFtoNC;
+//	float msLTDDurationIO;
+//	float msLTDStartAPIO;
+//	float msLTPEndAPIO;
+//	float msLTPStartAPIO;
+//	float msPerHistBinGR;
+//	float msPerHistBinMF;
+//	float msPerTimeStep;
+//	float relPDecT0ofNCtoIO;
+//	float relPDecTSofNCtoIO;
+//	float relPDecTTofNCtoIO;
+//	float relPIncNCtoIO;
+//	float relPIncTauNCtoIO;
+//	float gIncPCtoBC;
+//	float gIncGRtoBC;
+//	float gIncGRtoSC;
+//	float initSynWofGRtoPC;
+//	float rawGLeakBC;
+//	float rawGLeakGO;
+//	float rawGLeakGR;
+//	float rawGLeakIO;
+//	float rawGLeakNC;
+//	float rawGLeakPC;
+//	float rawGLeakSC;
+//	float rawGMFAMPAIncNC;
+//	float rawGMFNMDAIncNC;
+//	float threshRestBC;
+//	float threshRestGO;
+//	float threshRestGR;
+//	float threshRestIO;
+//	float threshRestNC;
+//	float threshRestPC;
+//	float threshRestSC;
+//	float threshDecTauBC;
+//	float threshDecTauGO;
+//	float threshDecTauUBC;
+//	float threshDecTauGR;
+//	float threshDecTauIO;
+//	float threshDecTauNC;
+//	float threshDecTauPC;
+//	float threshDecTauSC;
+//	float threshMaxBC;
+//	float threshMaxGO;
+//	float threshMaxGR;
+//	float threshMaxIO;
+//	float threshMaxNC;
+//	float threshMaxPC;
+//	float threshMaxSC;
+//};
+//
+//void fill_io_map(parsed_build_file &p_file, std::map<std::string, float> &io_map);
+//void fill_io_map(std::fstream &sim_file_buf, std::map<std::string, float> &io_map);
+//void fill_act_params_from_io_map(struct activit_params &ap, std::map<std::string, float> &io_map);
+
+/* =========================== PREVIOUS CLASS DECLARATION ========================== */
 class ActivityParams
 {
 public:
@@ -36,7 +178,7 @@ public:
 	friend std::ostream &operator<<(std::ostream &os, ActivityParams &ap);
 	ActivityParams &operator=(const ActivityParams &copyFrom);
 
-	std::map<std::string, float> paramMap;
+	std::unordered_map<std::string, float> paramMap;
 
 	//universtal parameters
 	float msPerTimeStep;
