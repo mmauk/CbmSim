@@ -7,8 +7,7 @@
 
 #include "fileIO/rawbytesrw.h"
 
-using namespace std;
-void rawBytesRW(char *arr, unsigned long byteLen, bool read, fstream &file)
+void rawBytesRW(char *arr, size_t byteLen, bool read, std::fstream &file)
 {
 	if(read)
 	{

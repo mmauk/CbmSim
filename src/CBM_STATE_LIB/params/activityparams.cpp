@@ -8,8 +8,164 @@
 #include <fstream>
 #include <cstring>
 #include <assert.h>
+#include "fileIO/rawbytesrw.h"
 #include "fileIO/serialize.h"
 #include "params/activityparams.h"
+
+std::string ap_names[NUM_AP_PARAMS] = 
+{
+	"coupleRiRjRatioGO",
+	"coupleRiRjRatioIO",
+	"eBCtoPC",
+	"eGABAGO",
+	"eGOGR",
+	"eLeakBC",
+	"eLeakGO",
+	"eLeakGR",
+	"eLeakIO", 
+	"eLeakNC",
+	"eLeakPC",
+	"eLeakSC",
+	"eMFGR",
+	"eMGluRGO",
+	"eNCtoIO", 
+	"ePCtoBC",
+	"ePCtoNC",
+	"eSCtoPC",
+	"gDecTauBCtoPC",
+	"gIncBCtoPC",
+	"gGABADecTauGOtoGO",
+	"gIncDirectGOtoGR",
+	"gDirectTauGOtoGR",
+	"gIncFracSpilloverGOtoGR",
+	"gSpilloverTauGOtoGR",
+	"gGABAIncGOtoGO",
+	"gDecTauGRtoGO",
+	"gIncGRtoGO",
+	"gDecTauMFtoGO",
+	"gIncMFtoGO",
+	"gConstGO",
+	"NMDA_AMPAratioMFGO",
+	"gDecTauMFtoGONMDA",
+	"gIncDirectMFtoGR",
+	"gDirectTauMFtoGR",
+	"gIncFracSpilloverMFtoGR",
+	"gSpilloverTauMFtoGR",
+	"recoveryTauMF",
+	"fracDepMF",
+	"recoveryTauGO",
+	"fracDepGO",
+	"gIncMFtoUBC",
+	"gIncGOtoUBC",
+	"gIncUBCtoUBC",
+	"gIncUBCtoGO",
+	"gIncUBCtoGR",
+	"gKIncUBC",
+	"gKTauUBC",
+	"gConstUBC",
+	"threshTauUBC",
+	"gMGluRDecGRtoGO",
+	"gMGluRIncDecayGO",
+	"gMGluRIncScaleGO",
+	"gMGluRScaleGRtoGO",
+	"gDecT0ofNCtoIO",
+	"gDecTSofNCtoIO",
+	"gDecTTofNCtoIO",
+	"gIncNCtoIO",
+	"gIncTauNCtoIO",
+	"gDecTauPCtoBC",
+	"gDecTauPCtoNC",
+	"gIncAvgPCtoNC",
+	"gDecTauGRtoBC",
+	"gDecTauGRtoPC",
+	"gDecTauGRtoSC",
+	"gIncGRtoPC",
+	"gDecTauSCtoPC",
+	"gIncSCtoPC",
+	"gluDecayGO",
+	"gluScaleGO",
+	"goGABAGOGOSynDepF",
+	"goGABAGOGOSynRecTau",
+	"synLTDStepSizeGRtoPC",
+	"synLTPStepSizeGRtoPC",
+	"mGluRDecayGO",
+	"mGluRScaleGO",
+	"maxExtIncVIO",
+	"gmaxAMPADecTauMFtoNC",
+	"synLTDStepSizeMFtoNC",
+	"synLTDPCPopActThreshMFtoNC",
+	"synLTPStepSizeMFtoNC",
+	"synLTPPCPopActThreshMFtoNC",
+	"gmaxNMDADecTauMFtoNC",
+	"initSynWofMFtoNC",
+	"msLTDDurationIO",
+	"msLTDStartAPIO",
+	"msLTPEndAPIO",
+	"msLTPStartAPIO",
+	"msPerHistBinGR",
+	"msPerHistBinMF",
+	"msPerTimeStep",
+	"relPDecT0ofNCtoIO",
+	"relPDecTSofNCtoIO",
+	"relPDecTTofNCtoIO",
+	"relPIncNCtoIO",
+	"relPIncTauNCtoIO",
+	"gIncPCtoBC",
+	"gIncGRtoBC",
+	"gIncGRtoSC",
+	"initSynWofGRtoPC",
+	"rawGLeakBC",
+	"rawGLeakGO",
+	"rawGLeakGR",
+	"rawGLeakIO",
+	"rawGLeakNC",
+	"rawGLeakPC",
+	"rawGLeakSC",
+	"rawGMFAMPAIncNC",
+	"rawGMFNMDAIncNC",
+	"threshRestBC",
+	"threshRestGO",
+	"threshRestGR",
+	"threshRestIO",
+	"threshRestNC",
+	"threshRestPC",
+	"threshRestSC",
+	"threshDecTauBC",
+	"threshDecTauGO",
+	"threshDecTauUBC",
+	"threshDecTauGR",
+	"threshDecTauIO",
+	"threshDecTauNC",
+	"threshDecTauPC",
+	"threshDecTauSC",
+	"threshMaxBC",
+	"threshMaxGO",
+	"threshMaxGR",
+	"threshMaxIO",
+	"threshMaxNC",
+	"threshMaxPC",
+	"threshMaxSC"
+};
+
+float act_params[NUM_AP_PARAMS] = {0.0};
+
+void pop_ap_frm_f(parsed_build_file &p_file)
+{
+	for (int i = 0; i < NUM_AP_PARAMS; i++)
+	{
+		act_params[i] = std::stof(p_file.parsed_sections["activity"].param_map[ap_names[i]].value);
+	}
+}
+
+void print_ap()
+{
+	for (int i = 0; i < NUM_AP_PARAMS; i++)
+	{
+		std::cout << "[ '" << ap_names[i] << "', '" << act_params[i] << "']" << std::endl;
+	}
+}
+
+/* =========================== PREVIOUS CLASS FUNC DEFS ========================== */
 
 ActivityParams::ActivityParams() {}
 
