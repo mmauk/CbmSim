@@ -12,6 +12,7 @@
 #include "fileIO/serialize.h"
 #include "params/activityparams.h"
 
+// these are used to read the raw parameters from file
 std::string ap_names[NUM_AP_PARAMS] = 
 {
 	"coupleRiRjRatioGO",
@@ -148,13 +149,86 @@ std::string ap_names[NUM_AP_PARAMS] =
 };
 
 float act_params[NUM_AP_PARAMS] = {0.0};
+float derived_act_params[NUM_DERIVED_AP_PARAMS] = {0.0};
 
-void pop_ap_frm_f(parsed_build_file &p_file)
+void populate_act_params(parsed_build_file &p_file)
 {
 	for (int i = 0; i < NUM_AP_PARAMS; i++)
 	{
 		act_params[i] = std::stof(p_file.parsed_sections["activity"].param_map[ap_names[i]].value);
 	}
+}
+
+/* NOTE: should be called *after* populate_act_params */
+void populate_derived_act_params()
+{
+	derived_act_params[numTSinMFHist]       = act_params[msPerHistBinMF] / act_params[msPerTimeStep];
+	derived_act_params[gLeakGO]             = act_params[rawGLeakGO] / (6 - act_params[msPerTimeStep]);
+	derived_act_params[gDecMFtoGO]          = exp(-act_params[msPerTimeStep] / act_params[gDecTauMFtoGO]);
+	derived_act_params[gDecayMFtoGONMDA]    = exp(-act_params[msPerTimeStep] / act_params[gDecTauMFtoGONMDA]);
+	derived_act_params[gDecGRtoGO]          = exp(-act_params[msPerTimeStep] / act_params[gDecTauGRtoGO]);
+	derived_act_params[gGABADecGOtoGO]      = exp(-act_params[msPerTimeStep] / act_params[gGABADecTauGOtoGO]);
+	derived_act_params[goGABAGOGOSynRec]    = 1 - exp(-act_params[msPerTimeStep] / act_params[goGABAGOGOSynRecTau]);
+	derived_act_params[threshDecGO]         = 1 - exp(-act_params[msPerTimeStep] / act_params[threshDecTauGO]);
+	derived_act_params[gDirectDecMFtoGR]    = exp(-act_params[msPerTimeStep] / act_params[gDirectTauMFtoGR]);
+	derived_act_params[gSpilloverDecMFtoGR] = exp(-act_params[msPerTimeStep] / act_params[gSpilloverTauMFtoGR]);
+	derived_act_params[gDirectDecGOtoGR]    = exp(-act_params[msPerTimeStep] / act_params[gDirectTauGOtoGR]);
+	derived_act_params[gSpilloverDecGOtoGR] = exp(-act_params[msPerTimeStep] / act_params[gSpilloverTauGOtoGR]);
+	derived_act_params[threshDecGR]         = 1 - exp(-act_params[msPerTimeStep] / act_params[threshDecTauGR]);
+	derived_act_params[tsPerHistBinGR]      = act_params[msPerHistBinGR] / act_params[msPerTimeStep];
+	derived_act_params[gLeakSC]             = act_params[rawGLeakSC] / (6 - act_params[msPerTimeStep]);
+	derived_act_params[gDecGRtoSC]          = exp(-act_params[msPerTimeStep] / act_params[gDecTauGRtoSC]);
+	derived_act_params[threshDecSC]         = 1 - exp(-act_params[msPerTimeStep] / act_params[threshDecTauSC]);
+	derived_act_params[gDecGRtoBC]          = exp(-act_params[msPerTimeStep] / act_params[gDecTauGRtoBC]);
+	derived_act_params[gDecPCtoBC]          = exp(-act_params[msPerTimeStep] / act_params[gDecTauPCtoBC]);
+	derived_act_params[threshDecBC]         = 1 - exp(-act_params[msPerTimeStep] / act_params[threshDecTauBC]);
+	derived_act_params[threshDecPC]         = 1 - exp(-act_params[msPerTimeStep] / act_params[threshDecTauPC]);
+	derived_act_params[gLeakPC]             = act_params[rawGLeakPC] / (6 - act_params[msPerTimeStep]);
+	derived_act_params[gDecGRtoPC]          = exp(-act_params[msPerTimeStep] / act_params[gDecTauGRtoPC]);
+	derived_act_params[gDecBCtoPC]          = exp(-act_params[msPerTimeStep] / act_params[gDecTauBCtoPC]);
+	derived_act_params[gDecSCtoPC]          = exp(-act_params[msPerTimeStep] / act_params[gDecTauSCtoPC]);
+	derived_act_params[tsPopHistPC]         = 40 / act_params[msPerTimeStep];
+	derived_act_params[tsPerPopHistBinPC]   =  5 / act_params[msPerTimeStep], 
+	derived_act_params[numPopHistBinsPC]    =  8, /* tsPopHistPC / tsPerPopHistBinPC */
+	derived_act_params[gLeakIO]             = act_params[rawGLeakIO] / (6 - act_params[msPerTimeStep]);
+	derived_act_params[threshDecIO]         = 1 - exp(-act_params[msPerTimeStep] / act_params[threshDecTauIO]);
+	derived_act_params[tsLTDDurationIO]     = act_params[msLTDDurationIO] / act_params[msPerTimeStep];
+	derived_act_params[tsLTDstartAPIO]      = act_params[msLTDStartAPIO]  / act_params[msPerTimeStep];
+	derived_act_params[tsLTPstartAPIO]      = act_params[msLTPStartAPIO]  / act_params[msPerTimeStep];
+	derived_act_params[tsLTPEndAPIO]        = act_params[msLTPEndAPIO]    / act_params[msPerTimeStep];
+	derived_act_params[grPCHistCheckBinIO]  = abs(act_params[msLTPEndAPIO] / act_params[msPerHistBinGR]);
+	derived_act_params[gmaxNMDADecMFtoNC]   = exp(-act_params[msPerTimeStep] / act_params[gmaxNMDADecTauMFtoNC]);
+	derived_act_params[gmaxAMPADecMFtoNC]   = exp(-act_params[msPerTimeStep] / act_params[gmaxAMPADecTauMFtoNC]);
+	derived_act_params[gNMDAIncMFtoNC]      = 1 - exp(-act_params[msPerTimeStep] / act_params[rawGMFNMDAIncNC]);
+	derived_act_params[gAMPAIncMFtoNC]      = 1 - exp(-act_params[msPerTimeStep] / act_params[rawGMFAMPAIncNC]);
+	derived_act_params[gDecPCtoNC]          = exp(-act_params[msPerTimeStep] / act_params[gDecTauPCtoNC]);
+	derived_act_params[gLeakNC]             = act_params[rawGLeakNC] / (6 - act_params[msPerTimeStep]);
+	derived_act_params[threshDecNC]         = 1 - exp(-act_params[msPerTimeStep] / act_params[threshDecTauNC]);
+	derived_act_params[gLeakBC]             = act_params[rawGLeakBC];
+}
+
+bool act_params_populated()
+{
+	for (int i = 0; i < NUM_AP_PARAMS; i++)
+	{
+		if (act_params[i] != 0.0) /* float equality :weird_champ: */
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+bool derived_act_params_populated()
+{
+	for (int i = 0; i < NUM_DERIVED_AP_PARAMS; i++)
+	{
+		if (derived_act_params[i] != 0.0) /* float equality :weird_champ: */
+		{
+			return true;
+		}
+	}
+	return false;
 }
 
 void print_ap()
@@ -165,596 +239,11 @@ void print_ap()
 	}
 }
 
-/* =========================== PREVIOUS CLASS FUNC DEFS ========================== */
-
-ActivityParams::ActivityParams() {}
-
-ActivityParams::ActivityParams(parsed_build_file &p_file)
-{
-	for (auto iter = p_file.parsed_sections["activity"].param_map.begin();
-			  iter != p_file.parsed_sections["activity"].param_map.end();
-			  iter++)
-	{
-		paramMap[iter->first] = std::stof(iter->second.value);
-	}
-	updateParams();
-}
-
-// TODO: CHANGE THIS ALGORITHM IN THE FUTURE TO ONE IN CONPARAM.cpp
-ActivityParams::ActivityParams(std::string actParamFile)
-{
-	//Assumes that file is in the following format:
-	//key\tvalue\n
-	//key\tvalue\n
-
-//	//loop through file and add key/value pair to map
-//	//** this is done to remove the necessity of order in the original file
-
-	std::cout << "[INFO]: opening activity parameter file..." << std::endl;
-	std::fstream paramFileBuffer(actParamFile.c_str());
-
-	std::string key;
-	float val;
-	char temp;
-
-	while(true)
-	{
-		temp = paramFileBuffer.peek();
-		while (temp == ' ')
-		{
-			temp = paramFileBuffer.get();
-			temp = paramFileBuffer.peek();
-		}		
-		if (temp == '#')
-		{
-			while (temp != '\n')
-			{
-				temp = paramFileBuffer.get();
-			}
-		}
-
-		paramFileBuffer >> key >> val;
-
-		if (key.compare("activityParamEnd") == 0)
-		{
-			break;
-		}
-
-		paramMap[key] = val;
-	}
-	std::cout << "[INFO]: activity parameter file opened, params loaded in param map..." << std::endl;
-	updateParams();
-	paramFileBuffer.close();
-}
-
-ActivityParams::ActivityParams(std::fstream &sim_file_buf)
-{
-	readParams(sim_file_buf);
-	updateParams(); 
-}
-
-ActivityParams::ActivityParams(const ActivityParams &copyFrom) : paramMap(copyFrom.paramMap)
-{
-	updateParams();
-}
-
-ActivityParams::~ActivityParams() {}
-
-void ActivityParams::readParams(std::fstream &inParamBuf)
-{
-	// TODO: need addtl checks on whether param maps are initialized or not
-	if (paramMap.size() != 0)
-	{
-		paramMap.clear();
-	}
-	std::cout << "[INFO]: Reading activity params from file..." << std::endl;
-	unserialize_map_from_file<std::string, float>(paramMap, inParamBuf);
-	std::cout << "[INFO]: Finished reading activity params from file." << std::endl;
-}
-
-void ActivityParams::writeParams(std::fstream &outParamBuf)
-{
-	std::cout << "[INFO]: Writing activity params to file..." << std::endl;
-	serialize_map_to_file<std::string, float>(paramMap, outParamBuf);
-	std::cout << "[INFO]: Finished writing activity params to file..." << std::endl;
-}
-
-unsigned int ActivityParams::getMSPerTimeStep()
-{
-	return msPerTimeStep;
-}
-
-float ActivityParams::getParam(std::string paramName)
-{
-   	assert(paramMap.find(paramName) != paramMap.end());
-	return paramMap[paramName];
-}
-
-bool ActivityParams::setParam(std::string paramName, float value)
-{
-	if (paramMap.find(paramName) == paramMap.end())
-	{
-		return false;
-	}
-	paramMap[paramName] = value;
-	updateParams();
-
-	return true;
-}
-
-// NOTE: I am pretty sure we define params in the header that are not in the input file
-// for reasons that I simply cannot fathom. SO this guy wont return a *full* string 
-// representation of the activity parameters. *deep sigh*
-std::string ActivityParams::toString()
-{
-	std::string out_string = "[\n";
-	for (auto iter = paramMap.begin(); iter != paramMap.end(); iter++)
-	{
-		out_string += "[ '" + iter->first + "', '"
-							+ std::to_string(iter->second)
-							+ "' ]\n";
-	}
-	out_string += "]";
-	return out_string;
-}
-
-std::ostream &operator<<(std::ostream &os, ActivityParams &ap)
-{
-	return os << ap.toString();
-}
-
-ActivityParams &ActivityParams::operator=(const ActivityParams &copyFrom)
-{
-	if (this != &copyFrom)
-	{
-	   this->paramMap.clear();
-	   this->paramMap = copyFrom.paramMap; /* stl supports assignment op overload of maps */
-	   updateParams();
-	}
-	return *this;
-}
-
-void ActivityParams::updateParams()
-{
-	int flag = paramMap["parameterVersion"];
-	switch(flag){
-		case 0:
-			updateParamsOriginal();
-			break;
-		case 1:
-			updateParamsV1();
-			break;
-	}
-}
-
-//updateParamsOriginal() --- parameterVersion == 0/NULL
-//---> original parameter names
-//---> no original comments (has the ability to though)
-//---> no parameterVersion parameter
-
-void ActivityParams::updateParamsOriginal()
-{
-	msPerTimeStep = paramMap["msPerTimeStep"];
-
-	msPerHistBinMF = paramMap["msPerHistBinMF"];
-	numTSinMFHist = msPerHistBinMF/msPerTimeStep;
-
-	//move elements from map to public variables
-	if (paramMap.find("coupleRiRjRatioGO") == paramMap.end())
-	{
-		paramMap["coupleRiRjRatioGO"] = 0;
-	}
-
-	if (paramMap.find("goGABAGOGOSynRecTau") == paramMap.end())
-	{
-		paramMap["goGABAGOGOSynRecTau"] = 1;
-	}
-
-	if (paramMap.find("goGABAGOGOSynDepF") == paramMap.end())
-	{
-		paramMap["goGABAGOGOSynDepF"] = 1;
-	}
-
-	eLeakGO = paramMap["eLeakGO"];
-	eMGluRGO = paramMap["eMGluRGO"];
-	eGABAGO = paramMap["eGABAGO"];
-	threshMaxGO = paramMap["threshMaxGO"];
-	threshRestGO = paramMap["threshBaseGO"];
-	gIncMFtoGO = paramMap["gMFIncGO"];
-	gGABAIncGOtoGO = paramMap["gGOIncGO"];
-	coupleRiRjRatioGO = paramMap["coupleRiRjRatioGO"];
-
-	gMGluRScaleGRtoGO = paramMap["gMGluRScaleGO"];
-	gMGluRIncScaleGO = paramMap["gMGluRIncScaleGO"];
-	mGluRScaleGO = paramMap["mGluRScaleGO"];
-	gluScaleGO = paramMap["gluScaleGO"];
-	gLeakGO = paramMap["rawGLeakGO"]/(6-msPerTimeStep);
-
-	gDecTauMFtoGO = paramMap["gMFDecayTGO"];
-	gDecMFtoGO = exp(-msPerTimeStep/gDecTauMFtoGO);
-	NMDA_AMPAratioMFGO = paramMap["NMDA_AMPAratioMFGO"];
-	gDecTauMFtoGONMDA = paramMap["gDecTauMFtoGONMDA"];
-	gDecayMFtoGONMDA = exp(-msPerTimeStep/gDecTauMFtoGONMDA);
-
-	gDecTauGRtoGO = paramMap["gGRDecayTGO"];
-	gDecGRtoGO = exp(-msPerTimeStep/gDecTauGRtoGO);
-
-	gGABADecTauGOtoGO = paramMap["gGODecayTGO"];
-	gGABADecGOtoGO = exp(-msPerTimeStep/gGABADecTauGOtoGO);
-
-	//synaptic depression test for GOGABAGO
-	goGABAGOGOSynRecTau = paramMap["goGABAGOGOSynRecTau"];
-	goGABAGOGOSynRec = 1 - exp(-msPerTimeStep / goGABAGOGOSynRecTau);
-	goGABAGOGOSynDepF = paramMap["goGABAGOGOSynDepF"];
-
-	mGluRDecayGO = paramMap["mGluRDecayGO"];
-	gMGluRIncDecayGO = paramMap["gMGluRIncDecayGO"];
-	gMGluRDecGRtoGO = paramMap["gMGluRDecayGO"];
-	gluDecayGO = paramMap["gluDecayGO"];
-
-	threshDecTauGO = paramMap["threshDecayTGO"];
-	threshDecGO = 1 - exp(-msPerTimeStep/threshDecTauGO);
-
-	eLeakGR = paramMap["eLeakGR"];
-	eGOGR = paramMap["eGOGR"];
-	eMFGR = paramMap["eMFGR"];
-	threshMaxGR = paramMap["threshMaxGR"];
-	threshRestGR = paramMap["threshBaseGR"];
-
-	threshDecTauGR = paramMap["threshDecayTGR"];
-	threshDecGR = 1 - exp(-msPerTimeStep / threshDecTauGR);
-
-	msPerHistBinGR = paramMap["msPerHistBinGR"];
-	tsPerHistBinGR = msPerHistBinGR/msPerTimeStep;
-
-	eLeakSC = paramMap["eLeakSC"];
-	gLeakSC = paramMap["rawGLeakSC"] / (6 - msPerTimeStep);
-	gDecTauGRtoSC = paramMap["gPFDecayTSC"];
-	gDecGRtoSC = exp(-msPerTimeStep / gDecTauGRtoSC);
-	threshMaxSC = paramMap["threshMaxSC"];
-	threshRestSC = paramMap["threshBaseSC"];
-	threshDecTauSC = paramMap["threshDecayTSC"];
-	threshDecSC = 1 - exp(-msPerTimeStep / threshDecTauSC);
-	gIncGRtoSC = paramMap["pfIncSC"];
-
-	//**From mzone**
-	eLeakBC = paramMap["eLeakBC"];
-	ePCtoBC = paramMap["ePCBC"];
-	gLeakBC = paramMap["rawGLeakBC"];
-
-	gDecTauGRtoBC = paramMap["gPFDecayTBC"];
-	gDecGRtoBC = exp(-msPerTimeStep / gDecTauGRtoBC);
-
-	gDecTauPCtoBC = paramMap["gPCDecayTBC"];
-	gDecPCtoBC = exp(-msPerTimeStep / gDecTauPCtoBC);
-
-	threshDecTauBC = paramMap["threshDecayTBC"];
-	threshDecBC = 1 - exp(-msPerTimeStep / threshDecTauBC);
-
-	threshRestBC = paramMap["threshBaseBC"];
-	threshMaxBC = paramMap["threshMaxBC"];
-	gIncGRtoBC = paramMap["pfIncConstBC"];
-	gIncPCtoBC = paramMap["pcIncConstBC"];
-
-	initSynWofGRtoPC = paramMap["pfSynWInitPC"];
-	eLeakPC = paramMap["eLeakPC"];
-	eBCtoPC = paramMap["eBCPC"];
-	eSCtoPC = paramMap["eSCPC"];
-	threshMaxPC = paramMap["threshMaxPC"];
-	threshRestPC = paramMap["threshBasePC"];
-
-	threshDecTauPC = paramMap["threshDecayTPC"];
-	threshDecPC = 1 - exp(-msPerTimeStep / threshDecTauPC);
-
-	gLeakPC = paramMap["rawGLeakPC"] / (6 - msPerTimeStep);
-
-	gDecTauGRtoPC = paramMap["gPFDecayTPC"];
-	gDecGRtoPC = exp(-msPerTimeStep / gDecTauGRtoPC);
-
-	gDecTauBCtoPC = paramMap["gBCDecayTPC"];
-	gDecBCtoPC = exp(-msPerTimeStep / gDecTauBCtoPC);
-
-	gDecTauSCtoPC = paramMap["gSCDecayTPC"];
-	gDecSCtoPC = exp(-msPerTimeStep / gDecTauSCtoPC);
-
-	gIncSCtoPC = paramMap["gSCIncConstPC"];
-	gIncGRtoPC = paramMap["gPFScaleConstPC"];
-	gIncBCtoPC = paramMap["gBCScaleConstPC"];
-
-	tsPopHistPC = 40 / msPerTimeStep;  
-	tsPerPopHistBinPC = 5 / msPerTimeStep;
-	numPopHistBinsPC = tsPopHistPC / tsPerPopHistBinPC;
-
-	coupleRiRjRatioIO = paramMap["coupleScaleIO"];
-	eLeakIO = paramMap["eLeakIO"];
-	eNCtoIO = paramMap["eNCIO"];
-	gLeakIO = paramMap["rawGLeakIO"] / (6 - msPerTimeStep);
-	gDecTSofNCtoIO = paramMap["gNCDecTSIO"];
-	gDecTTofNCtoIO = paramMap["gNCDecTTIO"];
-	gDecT0ofNCtoIO = paramMap["gNCDecT0IO"];
-	gIncNCtoIO = paramMap["gNCIncScaleIO"];
-	gIncTauNCtoIO = paramMap["gNCIncTIO"];
-	threshRestIO = paramMap["threshBaseIO"];
-	threshMaxIO = paramMap["threshMaxIO"];
-
-	threshDecTauIO = paramMap["threshDecayTIO"];
-	threshDecIO = 1 - exp(-msPerTimeStep / threshDecTauIO);
-
-	tsLTDDurationIO = paramMap["msLTDDurationIO"] / msPerTimeStep;
-	tsLTDStartAPIO = paramMap["msLTDStartAPIO"] / msPerTimeStep;
-	tsLTPStartAPIO = paramMap["msLTPStartAPIO"] / msPerTimeStep;
-	tsLTPEndAPIO = paramMap["msLTPEndAPIO"] / msPerTimeStep;
-	synLTPStepSizeGRtoPC = paramMap["grPCLTPIncIO"];
-	synLTDStepSizeGRtoPC = paramMap["grPCLTDDecIO"];
-	grPCHistCheckBinIO = abs(tsLTPEndAPIO / ((int)tsPerHistBinGR));
-
-	maxExtIncVIO = paramMap["maxErrDriveIO"];
-
-	eLeakNC = paramMap["eLeakNC"];
-	ePCtoNC = paramMap["ePCNC"];
-
-	gmaxNMDADecTauMFtoNC = paramMap["mfNMDADecayTNC"];
-	gmaxNMDADecMFtoNC = exp(-msPerTimeStep / gmaxNMDADecTauMFtoNC);
-
-	gmaxAMPADecTauMFtoNC = paramMap["mfAMPADecayTNC"];
-	gmaxAMPADecMFtoNC = exp(-msPerTimeStep / gmaxAMPADecTauMFtoNC);
-
-	gNMDAIncMFtoNC = 1 - exp(-msPerTimeStep / paramMap["rawGMFNMDAIncNC"]);
-	gAMPAIncMFtoNC = 1 - exp(-msPerTimeStep / paramMap["rawGMFAMPAIncNC"]);
-	gIncAvgPCtoNC = paramMap["gPCScaleAvgNC"];
-
-	gDecTauPCtoNC = paramMap["gPCDecayTNC"];
-	gDecPCtoNC = exp(-msPerTimeStep / gDecTauPCtoNC);
-
-	gLeakNC = paramMap["rawGLeakNC"] / (6 - msPerTimeStep);
-
-	threshDecTauNC = paramMap["threshDecayTNC"];
-	threshDecNC = 1 - exp(-msPerTimeStep / threshDecTauNC);
-
-	threshMaxNC = paramMap["threshMaxNC"];
-	threshRestNC = paramMap["threshBaseNC"];
-	relPDecTSofNCtoIO = paramMap["outIORelPDecTSNC"];
-	relPDecTTofNCtoIO = paramMap["outIORelPDecTTNC"];
-	relPDecT0ofNCtoIO = paramMap["outIORelPDecT0NC"];
-	relPIncNCtoIO = paramMap["outIORelPIncScaleNC"];
-	relPIncTauNCtoIO = paramMap["outIORelPIncTNC"];
-	initSynWofMFtoNC = paramMap["mfSynWInitNC"];
-	synLTDPCPopActThreshMFtoNC = paramMap["mfNCLTDThreshNC"];
-	synLTPPCPopActThreshMFtoNC = paramMap["mfNCLTPThreshNC"];
-	synLTDStepSizeMFtoNC = paramMap["mfNCLTDDecNC"];
-	synLTPStepSizeMFtoNC = paramMap["mfNCLTPIncNC"];
-}
-
-
- // updateParamsV1() --- parameterVersion  ==  1
- // ---> updated parameter names to match variables
- // ---> includes ability to add comments
- // ---> includes parameterVersion flag 
-
-void ActivityParams::updateParamsV1()
-{
-	msPerTimeStep = paramMap["msPerTimeStep"];
-
-	msPerHistBinMF = paramMap["msPerHistBinMF"];
-	numTSinMFHist = msPerHistBinMF / msPerTimeStep;
-
-	// move elements from map to public variables
-	if (paramMap.find("coupleRiRjRatioGO") == paramMap.end())
-	{
-		paramMap["coupleRiRjRatioGO"] = 0;
-	}
-
-	if (paramMap.find("goGABAGOGOSynRecTau") == paramMap.end())
-	{
-		paramMap["goGABAGOGOSynRecTau"] = 1;
-	}
-
-	if (paramMap.find("goGABAGOGOSynDepF") == paramMap.end())
-	{
-		paramMap["goGABAGOGOSynDepF"] = 1;
-	}
-
-	gIncMFtoUBC = paramMap["gIncMFtoUBC"];
-	gIncGOtoUBC = paramMap["gIncGOtoUBC"];	
-	gIncUBCtoUBC = paramMap["gIncUBCtoUBC"];
-	gIncUBCtoGO = paramMap["gIncUBCtoGO"];
-	gIncUBCtoGR = paramMap["gIncUBCtoGR"];
-
-	gKIncUBC = paramMap["gKIncUBC"];
-	gKTauUBC = paramMap["gKTauUBC"];	
-	gConstUBC = paramMap["gConstUBC"];
-	threshTauUBC = paramMap["threshTauUBC"];
-
-	threshDecTauUBC = paramMap["threshDecayTauUBC"];
-	threshDecUBC = 1 - exp(-msPerTimeStep / threshDecTauUBC);
-
-	eLeakGO = paramMap["eLeakGO"];
-	eMGluRGO = paramMap["eMGluRGO"];
-	eGABAGO = paramMap["eGABAGO"];
-	threshMaxGO = paramMap["threshMaxGO"];
-	threshRestGO = paramMap["threshRestGO"];
-	gIncMFtoGO = paramMap["gIncMFtoGO"];
-	gGABAIncGOtoGO = paramMap["gGABAIncGOtoGO"];
-	coupleRiRjRatioGO = paramMap["coupleRiRjRatioGO"];
-
-	gMGluRScaleGRtoGO = paramMap["gMGluRScaleGRtoGO"];
-	gMGluRIncScaleGO = paramMap["gMGluRIncScaleGO"];
-	mGluRScaleGO = paramMap["mGluRScaleGO"];
-	gluScaleGO = paramMap["gluScaleGO"];
-	gLeakGO = paramMap["rawGLeakGO"] / (6 - msPerTimeStep);
-
-	gDecTauMFtoGO = paramMap["gDecTauMFtoGO"];
-	gDecMFtoGO = exp(-msPerTimeStep / gDecTauMFtoGO);
-	NMDA_AMPAratioMFGO = paramMap["NMDA_AMPAratioMFGO"];
-	gDecTauMFtoGONMDA = paramMap["gDecTauMFtoGONMDA"];
-	gDecayMFtoGONMDA = exp(-msPerTimeStep / gDecTauMFtoGONMDA);
-
-	gDecTauGRtoGO = paramMap["gDecTauGRtoGO"];
-	gDecGRtoGO = exp(-msPerTimeStep / gDecTauGRtoGO);
-
-	gGABADecTauGOtoGO = paramMap["gGABADecTauGOtoGO"];
-	gGABADecGOtoGO = exp(-msPerTimeStep / gGABADecTauGOtoGO);
-
-	// synaptic depression test for GOGABAGO
-	goGABAGOGOSynRecTau = paramMap["goGABAGOGOSynRecTau"];
-	goGABAGOGOSynRec = 1 - exp(-msPerTimeStep / goGABAGOGOSynRecTau);
-	goGABAGOGOSynDepF = paramMap["goGABAGOGOSynDepF"];
-
-	mGluRDecayGO = paramMap["mGluRDecayGO"];
-	gMGluRIncDecayGO = paramMap["gMGluRIncDecayGO"];
-	gMGluRDecGRtoGO = paramMap["gMGluRDecGRtoGO"];
-	gluDecayGO = paramMap["gluDecayGO"];
-
-	gConstGO = paramMap["gConstGO"];
-	threshDecTauGO = paramMap["threshDecTauGO"];
-	threshDecGO = 1 - exp(-msPerTimeStep / threshDecTauGO);
-
-	eLeakGR = paramMap["eLeakGR"];
-	eGOGR = paramMap["eGOGR"];
-	eMFGR = paramMap["eMFGR"];
-	threshMaxGR = paramMap["threshMaxGR"];
-	threshRestGR = paramMap["threshRestGR"];
-
-	gIncDirectMFtoGR = paramMap["gIncDirectMFtoGR"];
-	gDirectTauMFtoGR = paramMap["gDecTauMFtoGR"];
-	gDirectDecMFtoGR = exp(-msPerTimeStep / gDirectTauMFtoGR);
-	gIncFracSpilloverMFtoGR = paramMap["gIncFracSpilloverMFtoGR"];
-	gSpilloverTauMFtoGR = paramMap["gSpilloverTauMFtoGR"];
-	gSpilloverDecMFtoGR = exp(-msPerTimeStep / gSpilloverTauMFtoGR);
-	recoveryTauMF = paramMap["recoveryTauMF"];
-	fracDepMF = paramMap["fracDepMF"];
-	
-	gIncDirectGOtoGR = paramMap["gIncDirectGOtoGR"];
-	gDirectTauGOtoGR = paramMap["gDirectTauGOtoGR"];
-	gDirectDecGOtoGR = exp(-msPerTimeStep / gDirectTauGOtoGR);
-	gIncFracSpilloverGOtoGR = paramMap["gIncFracSpilloverGOtoGR"];
-	gSpilloverTauGOtoGR = paramMap["gSpilloverTauGOtoGR"];
-	gSpilloverDecGOtoGR = exp(-msPerTimeStep / gSpilloverTauGOtoGR);
-
-	recoveryTauGO = paramMap["recoveryTauGO"];
-	fracDepGO = paramMap["fracDepGO"];
-	
-	threshDecTauGR = paramMap["threshDecTauGR"];
-	threshDecGR = 1 - exp(-msPerTimeStep / threshDecTauGR);
-
-	msPerHistBinGR = paramMap["msPerHistBinGR"];
-	tsPerHistBinGR = msPerHistBinGR / msPerTimeStep;
-
-	eLeakSC = paramMap["eLeakSC"];
-	gLeakSC = paramMap["rawGLeakSC"] / (6 - msPerTimeStep);
-	gDecTauGRtoSC = paramMap["gDecTauGRtoSC"];
-	gDecGRtoSC = exp(-msPerTimeStep / gDecTauGRtoSC);
-	threshMaxSC = paramMap["threshMaxSC"];
-	threshRestSC = paramMap["threshRestSC"];
-	threshDecTauSC = paramMap["threshDecTauSC"];
-	threshDecSC = 1 - exp(-msPerTimeStep / threshDecTauSC);
-	gIncGRtoSC = paramMap["gIncGRtoSC"];
-
-	// **From mzone**
-	eLeakBC = paramMap["eLeakBC"];
-	ePCtoBC = paramMap["ePCtoBC"];
-	gLeakBC = paramMap["rawGLeakBC"];
-
-	gDecTauGRtoBC = paramMap["gDecTauGRtoBC"];
-	gDecGRtoBC = exp(-msPerTimeStep / gDecTauGRtoBC);
-
-	gDecTauPCtoBC = paramMap["gDecTauPCtoBC"];
-	gDecPCtoBC = exp(-msPerTimeStep / gDecTauPCtoBC);
-
-	threshDecTauBC = paramMap["threshDecTauBC"];
-	threshDecBC = 1 - exp(-msPerTimeStep / threshDecTauBC);
-
-	threshRestBC = paramMap["threshRestBC"];
-	threshMaxBC = paramMap["threshMaxBC"];
-	gIncGRtoBC = paramMap["gIncGRtoBC"];
-	gIncPCtoBC = paramMap["gIncPCtoBC"];
-
-	initSynWofGRtoPC = paramMap["initSynWofGRtoPC"];
-	eLeakPC = paramMap["eLeakPC"];
-	eBCtoPC = paramMap["eBCtoPC"];
-	eSCtoPC = paramMap["eSCtoPC"];
-	threshMaxPC = paramMap["threshMaxPC"];
-	threshRestPC = paramMap["threshRestPC"];
-
-	threshDecTauPC = paramMap["threshDecTauPC"];
-	threshDecPC = 1 - exp(-msPerTimeStep / threshDecTauPC);
-
-	gLeakPC = paramMap["rawGLeakPC"] / (6 - msPerTimeStep);
-
-	gDecTauGRtoPC = paramMap["gDecTauGRtoPC"];
-	gDecGRtoPC = exp(-msPerTimeStep / gDecTauGRtoPC);
-
-	gDecTauBCtoPC = paramMap["gDecTauBCtoPC"];
-	gDecBCtoPC = exp(-msPerTimeStep / gDecTauBCtoPC);
-
-	gDecTauSCtoPC = paramMap["gDecTauSCtoPC"];
-	gDecSCtoPC = exp(-msPerTimeStep / gDecTauSCtoPC);
-
-	gIncSCtoPC = paramMap["gIncSCtoPC"];
-	gIncGRtoPC = paramMap["gIncGRtoPC"];
-	gIncBCtoPC = paramMap["gIncBCtoPC"];
-
-	tsPopHistPC = 40 / msPerTimeStep;  
-	tsPerPopHistBinPC = 5 / msPerTimeStep;
-	numPopHistBinsPC = tsPopHistPC / tsPerPopHistBinPC;
-
-	coupleRiRjRatioIO = paramMap["coupleRiRjRatioIO"];
-	eLeakIO = paramMap["eLeakIO"];
-	eNCtoIO = paramMap["eNCtoIO"];
-	gLeakIO = paramMap["rawGLeakIO"] / (6 - msPerTimeStep);
-	gDecTSofNCtoIO = paramMap["gDecTSofNCtoIO"];
-	gDecTTofNCtoIO = paramMap["gDecTTofNCtoIO"];
-	gDecT0ofNCtoIO = paramMap["gDecT0ofNCtoIO"];
-	gIncNCtoIO = paramMap["gIncNCtoIO"];
-	gIncTauNCtoIO = paramMap["gIncTauNCtoIO"];
-	threshRestIO = paramMap["threshRestIO"];
-	threshMaxIO = paramMap["threshMaxIO"];
-
-	threshDecTauIO = paramMap["threshDecTauIO"];
-	threshDecIO = 1 - exp(-msPerTimeStep / threshDecTauIO);
-
-	tsLTDDurationIO = paramMap["msLTDDurationIO"] / msPerTimeStep;
-	tsLTDStartAPIO = paramMap["msLTDStartAPIO"] / msPerTimeStep;
-	tsLTPStartAPIO = paramMap["msLTPStartAPIO"] / msPerTimeStep;
-	tsLTPEndAPIO = paramMap["msLTPEndAPIO"] / msPerTimeStep;
-	synLTPStepSizeGRtoPC = paramMap["synLTPStepSizeGRtoPC"];
-	synLTDStepSizeGRtoPC = paramMap["synLTDStepSizeGRtoPC"];
-	grPCHistCheckBinIO = abs(tsLTPEndAPIO / ((int)tsPerHistBinGR));
-
-	maxExtIncVIO = paramMap["maxExtIncVIO"];
-
-	eLeakNC = paramMap["eLeakNC"];
-	ePCtoNC = paramMap["ePCtoNC"];
-
-	gmaxNMDADecTauMFtoNC = paramMap["gmaxNMDADecTauMFtoNC"];
-	gmaxNMDADecMFtoNC = exp(-msPerTimeStep / gmaxNMDADecTauMFtoNC);
-
-	gmaxAMPADecTauMFtoNC = paramMap["gmaxAMPADecTauMFtoNC"];
-	gmaxAMPADecMFtoNC = exp(-msPerTimeStep / gmaxAMPADecTauMFtoNC);
-
-	gNMDAIncMFtoNC = 2.35; // 0.2835; // 1 - exp(-msPerTimeStep / paramMap["rawGMFNMDAIncNC"]);
-	gAMPAIncMFtoNC = 2.35; // 1 - exp(-msPerTimeStep / paramMap["rawGMFAMPAIncNC"]);
-	gIncAvgPCtoNC = paramMap["gIncAvgPCtoNC"];
-
-	gDecTauPCtoNC = paramMap["gDecTauPCtoNC"];
-	gDecPCtoNC = exp(-msPerTimeStep / gDecTauPCtoNC);
-
-	gLeakNC = paramMap["rawGLeakNC"] / (6 - msPerTimeStep);
-
-	threshDecTauNC = paramMap["threshDecTauNC"];
-	threshDecNC = 1-exp(-msPerTimeStep / threshDecTauNC);
-
-	threshMaxNC = paramMap["threshMaxNC"];
-	threshRestNC = paramMap["threshRestNC"];
-	relPDecTSofNCtoIO = paramMap["relPDecTSofNCtoIO"];
-	relPDecTTofNCtoIO = paramMap["relPDecTTofNCtoIO"];
-	relPDecT0ofNCtoIO = paramMap["relPDecT0ofNCtoIO"];
-	relPIncNCtoIO = paramMap["relPIncNCtoIO"];
-	relPIncTauNCtoIO = paramMap["relPIncTauNCtoIO"];
-	initSynWofMFtoNC = paramMap["initSynWofMFtoNC"];
-	synLTDPCPopActThreshMFtoNC = paramMap["synLTDPCPopActThreshMFtoNC"];
-	synLTPPCPopActThreshMFtoNC = paramMap["synLTPPCPopActThreshMFtoNC"];
-	synLTDStepSizeMFtoNC = paramMap["synLTDStepSizeMFtoNC"];
-	synLTPStepSizeMFtoNC = paramMap["synLTPStepSizeMFtoNC"];
-}
+//void print_derived_ap()
+//{
+//	for (int i = 0; i < NUM_DERIVED_AP_PARAMS; i++)
+//	{
+//		std::cout << "[ '" << derived_ap_names[i] << "', '" << derived_act_params[i] << "']" << std::endl;
+//	}
+//}
 

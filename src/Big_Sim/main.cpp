@@ -17,16 +17,17 @@
 #include "commandLine/commandline.h"
 #include "params/activityparams.h"
 
-int main(int argc, char **argv)
+int main1(int argc, char **argv)
 {
 	parsed_build_file p_file;
 	parse_build_args(&argv, p_file);
-	pop_ap_frm_f(p_file);
+	populate_act_params(p_file);
 	print_ap();
+	return 0;
 }
 
 
-int main1(int argc, char **argv) 
+int main(int argc, char **argv) 
 {
 	enum vis_mode sim_vis_mode = NO_VIS;
 	enum run_mode sim_run_mode = NO_RUN;

@@ -9,7 +9,7 @@
 
 MZone::MZone() {}
 
-MZone::MZone(ConnectivityParams *cp, ActivityParams *ap, MZoneConnectivityState *cs,
+MZone::MZone(ConnectivityParams *cp, MZoneConnectivityState *cs,
 		MZoneActivityState *as, int randSeed, ct_uint32_t **actBufGRGPU,
 		ct_uint32_t **delayMaskGRGPU, ct_uint64_t **histGRGPU, int gpuIndStart, int numGPUs)
 {
@@ -19,7 +19,6 @@ MZone::MZone(ConnectivityParams *cp, ActivityParams *ap, MZoneConnectivityState 
 	// that only the caller deletes these items AND that this object
 	// goes out of scope before the caller
 	this->cp = cp;
-	this->ap = ap; 
 	this->cs = cs; 
 	this->as = as; 
 
@@ -32,10 +31,10 @@ MZone::MZone(ConnectivityParams *cp, ActivityParams *ap, MZoneConnectivityState 
 	historyGRGPU         = histGRGPU;
 
 	pfSynWeightPCLinear = new float[cp->int_params["num_gr"]];
-	pfPCPlastStepIO = new float[cp->int_params["num_io"]];
+	pfPCPlastStepIO     = new float[cp->int_params["num_io"]];
 
-	tempGRPCLTDStep = ap->synLTDStepSizeGRtoPC;
-	tempGRPCLTPStep = ap->synLTPStepSizeGRtoPC;
+	tempGRPCLTDStep = act_params[synLTDStepSizeGRtoPC];
+	tempGRPCLTPStep = act_params[synLTPStepSizeGRtoPC];
 
 	this->numGPUs     = numGPUs;
 	this->gpuIndStart = gpuIndStart;
@@ -175,7 +174,7 @@ void MZone::cpyPFPCSynWCUDA()
 
 void MZone::setErrDrive(float errDriveRelative)
 {
-	as->errDrive = errDriveRelative * ap->maxExtIncVIO;
+	as->errDrive = errDriveRelative * act_params[maxExtIncVIO];
 }
 
 void MZone::updateMFActivities(const ct_uint8_t *actMF)
@@ -207,38 +206,38 @@ void MZone::calcPCActivities()
 		{
 			float gSCPCSum;
 
-			as->gPFPC[i] = as->gPFPC[i] + inputSumPFPCMZH[i] * ap->gIncGRtoPC;
-			as->gPFPC[i] = as->gPFPC[i] * ap->gDecGRtoPC;
-			as->gBCPC[i] = as->gBCPC[i] + as->inputBCPC[i] * ap->gIncBCtoPC;
-			as->gBCPC[i] = as->gBCPC[i] * ap->gDecBCtoPC;
+			as->gPFPC[i] = as->gPFPC[i] + inputSumPFPCMZH[i] * act_params[gIncGRtoPC];
+			as->gPFPC[i] = as->gPFPC[i] * derived_act_params[gDecGRtoPC];
+			as->gBCPC[i] = as->gBCPC[i] + as->inputBCPC[i] * act_params[gIncBCtoPC];
+			as->gBCPC[i] = as->gBCPC[i] * derived_act_params[gDecBCtoPC];
 
 			gSCPCSum = 0;
 
 			for (int j = 0; j < cp->int_params["num_p_pc_from_sc_to_pc"]; j++)
 			{
 				as->gSCPC[i * cp->int_params["num_p_pc_from_sc_to_pc"] + j] = as->gSCPC[i * cp->int_params["num_p_pc_from_sc_to_pc"] + j]
-				   + ap->gIncSCtoPC * (1 - as->gSCPC[i * cp->int_params["num_p_pc_from_sc_to_pc"] + j])
+				   + act_params[gIncSCtoPC] * (1 - as->gSCPC[i * cp->int_params["num_p_pc_from_sc_to_pc"] + j])
 				   * as->inputSCPC[i * cp->int_params["num_p_pc_from_sc_to_pc"] + j];
 				as->gSCPC[i * cp->int_params["num_p_pc_from_sc_to_pc"] + j] = as->gSCPC[i * cp->int_params["num_p_pc_from_sc_to_pc"] + j]
-				   * ap->gDecSCtoPC; //GSCDECAYPC;
+				   * derived_act_params[gDecSCtoPC];
 				gSCPCSum += as->gSCPC[i * cp->int_params["num_p_pc_from_sc_to_pc"] + j];
 			}
 
 			as->vPC[i] = as->vPC[i] +
-					(ap->gLeakPC * (ap->eLeakPC - as->vPC[i])) -
+					(derived_act_params[gLeakPC] * (act_params[eLeakPC] - as->vPC[i])) -
 					(as->gPFPC[i] * as->vPC[i]) +
-					(as->gBCPC[i] * (ap->eBCtoPC-as->vPC[i])) +
-					(gSCPCSum * (ap->eSCtoPC - as->vPC[i]));	
+					(as->gBCPC[i] * (act_params[eBCtoPC] - as->vPC[i])) +
+					(gSCPCSum * (act_params[eSCtoPC] - as->vPC[i]));
 
-			as->threshPC[i] = as->threshPC[i] + (ap->threshDecPC * (ap->threshRestPC - as->threshPC[i]));
+			as->threshPC[i] = as->threshPC[i] + (derived_act_params[threshDecPC] * (act_params[threshRestPC] - as->threshPC[i]));
 
 			as->apPC[i] = as->vPC[i] > as->threshPC[i];
 			as->apBufPC[i] = (as->apBufPC[i] << 1) | (as->apPC[i] * 0x00000001);
 
-			as->threshPC[i] = as->apPC[i] * ap->threshMaxPC + (!as->apPC[i]) * as->threshPC[i];
+			as->threshPC[i] = as->apPC[i] * act_params[threshMaxPC] + (!as->apPC[i]) * as->threshPC[i];
 			as->pcPopAct = as->pcPopAct + as->apPC[i];
 		}
-	}		
+	}
 }
 
 void MZone::calcBCActivities(ct_uint32_t **pfInput)
@@ -255,21 +254,21 @@ void MZone::calcBCActivities(ct_uint32_t **pfInput)
 				totalPFInput += pfInput[j][i];
 			}
 			
-			as->gPFBC[i] = as->gPFBC[i] + (sumPFBCInput[i] * ap->gIncGRtoBC);
-			as->gPFBC[i] = as->gPFBC[i] * ap->gDecGRtoBC;
-			as->gPCBC[i] = as->gPCBC[i] + (as->inputPCBC[i] * ap->gIncPCtoBC);
-			as->gPCBC[i] = as->gPCBC[i] * ap->gDecPCtoBC;
+			as->gPFBC[i] = as->gPFBC[i] + sumPFBCInput[i] * act_params[gIncGRtoBC];
+			as->gPFBC[i] = as->gPFBC[i] * derived_act_params[gDecGRtoBC];
+			as->gPCBC[i] = as->gPCBC[i] + as->inputPCBC[i] * act_params[gIncPCtoBC];
+			as->gPCBC[i] = as->gPCBC[i] * derived_act_params[gDecPCtoBC];
 
 			as->vBC[i] = as->vBC[i] +
-					(ap->gLeakBC * (ap->eLeakBC - as->vBC[i])) -
+					(derived_act_params[gLeakBC] * (act_params[eLeakBC] - as->vBC[i])) -
 					(as->gPFBC[i] * as->vBC[i]) +
-					(as->gPCBC[i] * (ap->ePCtoBC - as->vBC[i]));
+					(as->gPCBC[i] * (act_params[ePCtoBC] - as->vBC[i]));
 
-			as->threshBC[i] = as->threshBC[i] + ap->threshDecBC * (ap->threshRestBC - as->threshBC[i]);
+			as->threshBC[i] = as->threshBC[i] + derived_act_params[threshDecBC] * (act_params[threshRestBC] - as->threshBC[i]);
 			as->apBC[i] = as->vBC[i] > as->threshBC[i];
 			as->apBufBC[i] = (as->apBufBC[i] << 1) | (as->apBC[i] * 0x00000001);
 
-			as->threshBC[i] = as->apBC[i] * ap->threshMaxBC + (!as->apBC[i]) * (as->threshBC[i]);
+			as->threshBC[i] = as->apBC[i] * act_params[threshMaxBC] + (!as->apBC[i]) * (as->threshBC[i]);
 		}
 	}
 }
@@ -292,12 +291,12 @@ void MZone::calcIOActivities()
 		for (int j = 0; j < cp->int_params["num_p_io_from_nc_to_io"]; j++)
 		{
 			as->gNCIO[i * cp->int_params["num_p_io_from_nc_to_io"] + j] = as->gNCIO[i * cp->int_params["num_p_io_from_nc_to_io"] + j]
-			   * exp(-ap->msPerTimeStep /
-				(-ap->gDecTSofNCtoIO * exp(-as->gNCIO[i * cp->int_params["num_p_io_from_nc_to_io"] + j] / ap->gDecTTofNCtoIO)
-				 + ap->gDecT0ofNCtoIO));
+			   * exp(-act_params[msPerTimeStep] /
+				(-act_params[gDecTSofNCtoIO] * exp(-as->gNCIO[i * cp->int_params["num_p_io_from_nc_to_io"] + j] / act_params[gDecTTofNCtoIO])
+				 + act_params[gDecT0ofNCtoIO]));
 			as->gNCIO[i * cp->int_params["num_p_io_from_nc_to_io"] + j] = as->gNCIO[i * cp->int_params["num_p_io_from_nc_to_io"] + j]
 			   + as->inputNCIO[i * cp->int_params["num_p_io_from_nc_to_io"] + j]
-			   * ap->gIncNCtoIO * exp(-as->gNCIO[i * cp->int_params["num_p_io_from_nc_to_io"] + j] / ap->gIncTauNCtoIO);
+			   * act_params[gIncNCtoIO] * exp(-as->gNCIO[i * cp->int_params["num_p_io_from_nc_to_io"] + j] / act_params[gIncTauNCtoIO]);
 			gNCSum += as->gNCIO[i * cp->int_params["num_p_io_from_nc_to_io"] + j];
 
 			as->inputNCIO[i * cp->int_params["num_p_io_from_nc_to_io"] + j] = 0;
@@ -305,15 +304,15 @@ void MZone::calcIOActivities()
 
 		gNCSum = 1.5 * gNCSum / 3.1;
 
-		as->vIO[i] = as->vIO[i] + ap->gLeakIO*(ap->eLeakIO - as->vIO[i]) +
-				gNCSum * (ap->eNCtoIO - as->vIO[i]) + as->vCoupleIO[i] +
+		as->vIO[i] = as->vIO[i] + derived_act_params[gLeakIO] * (act_params[eLeakIO] - as->vIO[i]) +
+				gNCSum * (act_params[eNCtoIO] - as->vIO[i]) + as->vCoupleIO[i] +
 				as->errDrive + gNoise;
 
 		as->apIO[i] = as->vIO[i] > as->threshIO[i];
 		as->apBufIO[i] = (as->apBufIO[i] << 1) |(as->apIO[i] * 0x00000001);
 
-		as->threshIO[i] = ap->threshMaxIO * as->apIO[i] +
-				(!as->apIO[i]) * (as->threshIO[i] + ap->threshDecIO * (ap->threshRestIO - as->threshIO[i]));
+		as->threshIO[i] = act_params[threshMaxIO] * as->apIO[i] +
+				(!as->apIO[i]) * (as->threshIO[i] + derived_act_params[threshDecIO] * (act_params[threshRestIO] - as->threshIO[i]));
 	}
 	as->errDrive = 0;
 }
@@ -345,13 +344,13 @@ float gDecay = exp(-1.0 / 20.0);
 				inputMFNCSum += as->inputMFNC[i * cp->int_params["num_p_nc_from_mf_to_nc"] + j];
 
 				as->gMFAMPANC[i * cp->int_params["num_p_nc_from_mf_to_nc"] + j] = as->gMFAMPANC[i * cp->int_params["num_p_nc_from_mf_to_nc"] + j]
-				   * gDecay + (ap->gAMPAIncMFtoNC * as->inputMFNC[i * cp->int_params["num_p_nc_from_mf_to_nc"] + j]
+				   * gDecay + (derived_act_params[gAMPAIncMFtoNC] * as->inputMFNC[i * cp->int_params["num_p_nc_from_mf_to_nc"] + j]
 					 * as->mfSynWeightNC[i * cp->int_params["num_p_nc_from_mf_to_nc"] + j]);
 				gMFAMPASum += as->gMFAMPANC[i * cp->int_params["num_p_nc_from_mf_to_nc"] + j];
 			}
 
-			gMFNMDASum = gMFNMDASum * ap->msPerTimeStep / ((float)cp->int_params["num_p_nc_from_mf_to_nc"]);
-			gMFAMPASum = gMFAMPASum * ap->msPerTimeStep / ((float)cp->int_params["num_p_nc_from_mf_to_nc"]);
+			gMFNMDASum = gMFNMDASum * act_params[msPerTimeStep] / ((float)cp->int_params["num_p_nc_from_mf_to_nc"]);
+			gMFAMPASum = gMFAMPASum * act_params[msPerTimeStep] / ((float)cp->int_params["num_p_nc_from_mf_to_nc"]);
 			gMFNMDASum = gMFNMDASum * -as->vNC[i] / 80.0f;
 
 			gPCNCSum = 0;
@@ -361,22 +360,22 @@ float gDecay = exp(-1.0 / 20.0);
 			{
 				inputPCNCSum += as->inputPCNC[i * cp->int_params["num_p_nc_from_pc_to_nc"] + j];
 
-				as->gPCNC[i * cp->int_params["num_p_nc_from_pc_to_nc"] + j] = as->gPCNC[i * cp->int_params["num_p_nc_from_pc_to_nc"] + j] * ap->gDecPCtoNC + 
-					as->inputPCNC[i * cp->int_params["num_p_nc_from_pc_to_nc"] + j] * ap->gIncAvgPCtoNC
+				as->gPCNC[i * cp->int_params["num_p_nc_from_pc_to_nc"] + j] = as->gPCNC[i * cp->int_params["num_p_nc_from_pc_to_nc"] + j] * derived_act_params[gDecPCtoNC] + 
+					as->inputPCNC[i * cp->int_params["num_p_nc_from_pc_to_nc"] + j] * act_params[gIncAvgPCtoNC]
 					* (1 - as->gPCNC[i * cp->int_params["num_p_nc_from_pc_to_nc"] + j]);
 				gPCNCSum += as->gPCNC[i * cp->int_params["num_p_nc_from_pc_to_nc"] + j];
 
 			}
-			gPCNCSum = gPCNCSum * ap->msPerTimeStep / ((float)cp->int_params["num_p_nc_from_pc_to_nc"]);
+			gPCNCSum = gPCNCSum * act_params[msPerTimeStep] / ((float)cp->int_params["num_p_nc_from_pc_to_nc"]);
 			
-			as->vNC[i] = as->vNC[i] + ap->gLeakNC * (ap->eLeakNC - as->vNC[i]) -
-					(gMFNMDASum + gMFAMPASum) * as->vNC[i] + gPCNCSum * (ap->ePCtoNC - as->vNC[i]);
+			as->vNC[i] = as->vNC[i] + derived_act_params[gLeakNC] * (act_params[eLeakNC] - as->vNC[i]) -
+					(gMFNMDASum + gMFAMPASum) * as->vNC[i] + gPCNCSum * (act_params[ePCtoNC] - as->vNC[i]);
 			
-			as->threshNC[i] = as->threshNC[i] + ap->threshDecNC * (ap->threshRestNC - as->threshNC[i]);
+			as->threshNC[i] = as->threshNC[i] + derived_act_params[threshDecNC] * (act_params[threshRestNC] - as->threshNC[i]);
 			as->apNC[i] = as->vNC[i] > as->threshNC[i];
 			as->apBufNC[i] = (as->apBufNC[i] << 1) | (as->apNC[i] * 0x00000001);
 
-			as->threshNC[i] = as->apNC[i] * ap->threshMaxNC + (!as->apNC[i]) * as->threshNC[i];
+			as->threshNC[i] = as->apNC[i] * act_params[threshMaxNC] + (!as->apNC[i]) * as->threshNC[i];
 		}
 	}
 }
@@ -454,11 +453,11 @@ void MZone::updateIOOut()
 {
 	for (int i = 0; i < cp->int_params["num_io"]; i++)
 	{
-		as->pfPCPlastTimerIO[i] = (!as->apIO[i]) * (as->pfPCPlastTimerIO[i] +1 ) + as->apIO[i]*ap->tsLTPEndAPIO;
+		as->pfPCPlastTimerIO[i] = (!as->apIO[i]) * (as->pfPCPlastTimerIO[i] +1 ) + as->apIO[i] * derived_act_params[tsLTPEndAPIO];
 		as->vCoupleIO[i] = 0;
 		for (int j = 0; j < cp->int_params["num_p_io_in_io_to_io"]; j++)
 		{
-			as->vCoupleIO[i] += ap->coupleRiRjRatioIO * (as->vIO[cs->pIOInIOIO[i][j]] - as->vIO[i]);
+			as->vCoupleIO[i] += act_params[coupleRiRjRatioIO] * (as->vIO[cs->pIOInIOIO[i][j]] - as->vIO[i]);
 		}
 	}
 }
@@ -467,11 +466,11 @@ void MZone::updateNCOut()
 {
 	for (int i = 0; i < NUM_NC; i++)
 	{
-		as->synIOPReleaseNC[i] *= exp(-ap->msPerTimeStep / 
-				(ap->relPDecTSofNCtoIO * exp(-as->synIOPReleaseNC[i] / ap->relPDecTTofNCtoIO) +
-				 ap->relPDecT0ofNCtoIO));
-		as->synIOPReleaseNC[i] += as->apNC[i] * ap->relPIncNCtoIO *
-				exp(-as->synIOPReleaseNC[i] / ap->relPIncTauNCtoIO);
+		as->synIOPReleaseNC[i] *= exp(-act_params[msPerTimeStep] / 
+				(act_params[relPDecTSofNCtoIO] * exp(-as->synIOPReleaseNC[i] / act_params[relPDecTTofNCtoIO]) +
+				 act_params[relPDecT0ofNCtoIO]));
+		as->synIOPReleaseNC[i] += as->apNC[i] * act_params[relPIncNCtoIO] *
+				exp(-as->synIOPReleaseNC[i] / act_params[relPIncTauNCtoIO]);
 	}
 
 	for (int i = 0; i < cp->int_params["num_io"]; i++)
@@ -606,7 +605,7 @@ void MZone::cpyPFPCSumCUDA(cudaStream_t **sts, int streamN)
 void MZone::runPFPCPlastCUDA(cudaStream_t **sts, int streamN, unsigned long t)
 {
 	cudaError_t error;
-	if (t % ap->tsPerHistBinGR == 0)
+	if (t % (unsigned long)derived_act_params[tsPerHistBinGR] == 0)
 	{
 		int curGROffset;
 		int curGPUInd;
@@ -622,13 +621,13 @@ void MZone::runPFPCPlastCUDA(cudaStream_t **sts, int streamN, unsigned long t)
 
 		for (int i = 0; i < cp->int_params["num_io"]; i++)
 		{
-			if (as->pfPCPlastTimerIO[i] < (ap->tsLTDStartAPIO + ((int)(ap->tsLTDDurationIO))) &&
-					as->pfPCPlastTimerIO[i] >= ap->tsLTDStartAPIO)
+			if (as->pfPCPlastTimerIO[i] < (derived_act_params[tsLTDstartAPIO] + ((int)(derived_act_params[tsLTDDurationIO]))) &&
+					as->pfPCPlastTimerIO[i] >= derived_act_params[tsLTDstartAPIO])
 			{
 				pfPCPlastStepIO[i] = tempGRPCLTDStep;
 			}
-			else if (as->pfPCPlastTimerIO[i] >= ap->tsLTPStartAPIO ||
-					as->pfPCPlastTimerIO[i] < ap->tsLTPEndAPIO)
+			else if (as->pfPCPlastTimerIO[i] >= derived_act_params[tsLTPstartAPIO] ||
+					as->pfPCPlastTimerIO[i] < derived_act_params[tsLTPEndAPIO])
 			{
 				pfPCPlastStepIO[i] = tempGRPCLTPStep;
 			}
@@ -657,7 +656,7 @@ void MZone::runPFPCPlastCUDA(cudaStream_t **sts, int streamN, unsigned long t)
 			}
 			callUpdatePFPCPlasticityIOKernel(sts[curGPUInd][streamN + curIOInd],
 					updatePFPCSynWNumBlocks, updatePFPCSynWNumGRPerB, pfSynWeightPCGPU[curGPUInd],
-					historyGRGPU[curGPUInd], ap->grPCHistCheckBinIO, curGROffset, pfPCPlastStepIO[curIOInd]);
+					historyGRGPU[curGPUInd], derived_act_params[grPCHistCheckBinIO], curGROffset, pfPCPlastStepIO[curIOInd]);
 
 			curGROffset += cp->int_params["num_p_pc_from_gr_to_pc"];
 		}
@@ -672,8 +671,8 @@ void MZone::setGRPCPlastSteps(float ltdStep, float ltpStep)
 
 void MZone::resetGRPCPlastSteps()
 {
-	tempGRPCLTDStep = ap->synLTDStepSizeGRtoPC;
-	tempGRPCLTPStep = ap->synLTPStepSizeGRtoPC;
+	tempGRPCLTDStep = act_params[synLTDStepSizeGRtoPC];
+	tempGRPCLTPStep = act_params[synLTPStepSizeGRtoPC];
 }
 
 const float* MZone::exportPFPCWeights()

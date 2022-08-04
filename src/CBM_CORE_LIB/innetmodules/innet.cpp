@@ -12,8 +12,8 @@ using namespace std;
 
 InNet::InNet() {}
 
-InNet::InNet(ConnectivityParams *cp, ActivityParams *ap, InNetConnectivityState *cs, InNetActivityState *as,
-		int gpuIndStart, int numGPUs)
+InNet::InNet(ConnectivityParams *cp, InNetConnectivityState *cs,
+	InNetActivityState *as, int gpuIndStart, int numGPUs)
 {
 	// all of below are shallow-copying the pointers
 	// thus we don't necessarily have ownership over
@@ -21,7 +21,6 @@ InNet::InNet(ConnectivityParams *cp, ActivityParams *ap, InNetConnectivityState 
 	// object goes out of scope before or at the time of 
 	// the calling class.
 	this->cp = cp;
-	this->ap = ap; 
 	this->cs = cs; 
 	this->as = as; 
 
@@ -60,8 +59,8 @@ InNet::InNet(ConnectivityParams *cp, ActivityParams *ap, InNetConnectivityState 
 		cp->int_params["max_num_p_gr_from_gr_to_go"],
 		cp->int_params["num_gr"]
 	);
-	
-	apBufGRHistMask = (1 << ap->tsPerHistBinGR) - 1;
+
+	apBufGRHistMask = (1 << (int)derived_act_params[tsPerHistBinGR]) - 1;
 
 	sumGRInputGO           = new ct_uint32_t[cp->int_params["num_go"]];
 	sumInputGOGABASynDepGO = new float[cp->int_params["num_go"]];
@@ -500,28 +499,28 @@ void InNet::calcGOActivities(float mfgoW, float gogrW, float grgoW, float gogoW)
 		as->gNMDAIncMFGO[i] = (0.00000011969 * as->vGO[i] * as->vGO[i] * as->vGO[i])
 		   + (0.000089369 * as->vGO[i] * as->vGO[i]) + (0.0151 * as->vGO[i]) + 0.7713; 
 	
-		as->gSum_MFGO[i] = (as->inputMFGO[i] * mfgoW) + as->gSum_MFGO[i] * ap->gDecMFtoGO;
+		as->gSum_MFGO[i] = (as->inputMFGO[i] * mfgoW) + as->gSum_MFGO[i] * derived_act_params[gDecMFtoGO];
 		as->gSum_GOGO[i] = 0;
-		as->gNMDAMFGO[i] = as->inputMFGO[i] * (mfgoW * ap->NMDA_AMPAratioMFGO * as->gNMDAIncMFGO[i])
-		   + as->gNMDAMFGO[i] * ap->gDecayMFtoGONMDA;
+		as->gNMDAMFGO[i] = as->inputMFGO[i] * (mfgoW * act_params[NMDA_AMPAratioMFGO] * as->gNMDAIncMFGO[i])
+		   + as->gNMDAMFGO[i] * derived_act_params[gDecayMFtoGONMDA];
 		
-		as->gGRGO[i] = (sumGRInputGO[i] * grgoW * as->synWscalerGRtoGO[i]) +as->gGRGO[i] * ap->gDecGRtoGO;
+		as->gGRGO[i] = (sumGRInputGO[i] * grgoW * as->synWscalerGRtoGO[i]) +as->gGRGO[i] * derived_act_params[gDecGRtoGO];
 		as->gGRGO_NMDA[i] = sumGRInputGO[i] * ((grgoW * as->synWscalerGRtoGO[i]) * 0.6 * gNMDAIncGRGO)
-		   + as->gGRGO_NMDA[i] * ap->gDecayMFtoGONMDA;
+		   + as->gGRGO_NMDA[i] * derived_act_params[gDecayMFtoGONMDA];
 		
-		as->threshCurGO[i] = as->threshCurGO[i] + (ap->threshRestGO - as->threshCurGO[i]) * ap->threshDecGO;
+		as->threshCurGO[i] = as->threshCurGO[i] + (act_params[threshRestGO] - as->threshCurGO[i]) * derived_act_params[threshDecGO];
 		
-		as->vGO[i] = as->vGO[i] + (gLeakGO * (ap->eLeakGO - as->vGO[i])) + (as->gSum_GOGO[i] * (ap->eGABAGO - as->vGO[i]))
+		as->vGO[i] = as->vGO[i] + (gLeakGO * (act_params[eLeakGO] - as->vGO[i])) + (as->gSum_GOGO[i] * (act_params[eGABAGO] - as->vGO[i]))
 				- (as->gSum_MFGO[i] + as->gGRGO[i] + as->gNMDAMFGO[i]
 					  + as->gGRGO_NMDA[i]) * as->vGO[i]
 				- (as->vCoupleGO[i] * as->vGO[i]);
 		
-		if(as->vGO[i] > ap->threshMaxGO) as->vGO[i] = ap->threshMaxGO;
+		if(as->vGO[i] > act_params[threshMaxGO]) as->vGO[i] = act_params[threshMaxGO];
 		
 		as->apGO[i] = as->vGO[i] > as->threshCurGO[i];
 		as->apBufGO[i] = (as->apBufGO[i] << 1) | (as->apGO[i] * 0x00000001);
 
-		as->threshCurGO[i] = as->apGO[i] * ap->threshMaxGO + (!as->apGO[i]) * as->threshCurGO[i];
+		as->threshCurGO[i] = as->apGO[i] * act_params[threshMaxGO] + (!as->apGO[i]) * as->threshCurGO[i];
 
 		as->inputMFGO[i]  = 0;
 		as->inputGOGO[i]  = 0;
@@ -544,30 +543,30 @@ void InNet::calcSCActivities()
 #pragma omp for
 		for (int i = 0; i < cp->int_params["num_sc"]; i++)
 		{
-			as->gPFSC[i] = as->gPFSC[i] + inputSumPFSCH[i] * ap->gIncGRtoSC;
-			as->gPFSC[i] = as->gPFSC[i] * ap->gDecGRtoSC;
+			as->gPFSC[i] = as->gPFSC[i] + inputSumPFSCH[i] * act_params[gIncGRtoSC];
+			as->gPFSC[i] = as->gPFSC[i] * derived_act_params[gDecGRtoSC];
 
-			as->vSC[i] = as->vSC[i] + ap->gLeakSC * (ap->eLeakSC - as->vSC[i]) - as->gPFSC[i] * as->vSC[i];
+			as->vSC[i] = as->vSC[i] + derived_act_params[gLeakSC] * (act_params[gLeakSC] - as->vSC[i]) - as->gPFSC[i] * as->vSC[i];
 
 			as->apSC[i] = (as->vSC[i] > as->threshSC[i]);
 			as->apBufSC[i] = (as->apBufSC[i] << 1) | (as->apSC[i] * 0x00000001);
 
-			as->threshSC[i] = as->threshSC[i] + ap->threshDecSC * (ap->threshRestSC - as->threshSC[i]);
-			as->threshSC[i] = as->apSC[i] * ap->threshMaxSC + (!as->apSC[i]) * as->threshSC[i];
+			as->threshSC[i] = as->threshSC[i] + derived_act_params[threshDecSC] * (act_params[threshRestSC] - as->threshSC[i]);
+			as->threshSC[i] = as->apSC[i] * act_params[threshMaxSC] + (!as->apSC[i]) * as->threshSC[i];
 		}
 	}
 }
 
 void InNet::updateMFtoGROut()
 {
-	float recoveryRate = 1 / ap->recoveryTauMF;
+	float recoveryRate = 1 / act_params[recoveryTauMF];
 
 #pragma omp parallel
 	{
 #pragma omp for
 		for (int i = 0; i < cp->int_params["num_mf"]; i++)
 		{
-			as->depAmpMFGR[i] = apMFH[0][i] * as->depAmpMFGR[i] * ap->fracDepMF
+			as->depAmpMFGR[i] = apMFH[0][i] * as->depAmpMFGR[i] * act_params[fracDepMF]
 			   + (!apMFH[0][i]) * (as->depAmpMFGR[i] + recoveryRate * (1 - as->depAmpMFGR[i])); 
 #pragma omp critical	
 			{
@@ -582,16 +581,16 @@ void InNet::updateMFtoGROut()
 
 void InNet::updateMFtoGOOut()
 {
-	float recoveryRate = 1 / ap->recoveryTauMF;
+	float recoveryRate = 1 / act_params[recoveryTauMF];
 
 #pragma omp parallel
 	{
 #pragma omp for
 		for (int i = 0; i < cp->int_params["num_mf"]; i++)
 		{
-			as->gi_MFtoGO[i] = apMFH[0][i] * ap->gIncMFtoGO * as->depAmpMFGO[i]
-			   + as->gi_MFtoGO[i] * ap->gDecMFtoGO; 
-			as->depAmpMFGO[i] = apMFH[0][i] * as->depAmpMFGO[i] * ap->fracDepMF
+			as->gi_MFtoGO[i] = apMFH[0][i] * act_params[gIncMFtoGO] * as->depAmpMFGO[i]
+			   + as->gi_MFtoGO[i] * derived_act_params[gDecMFtoGO]; 
+			as->depAmpMFGO[i] = apMFH[0][i] * as->depAmpMFGO[i] * act_params[fracDepMF]
 			   + (!apMFH[0][i]) * (as->depAmpMFGO[i] + recoveryRate * (1 - as->depAmpMFGO[i])); 
 
 			if (apMFH[0][i])
@@ -612,11 +611,11 @@ void InNet::updateGOtoGROutParameters(float GOGR, float spillFrac)
 {
 
 	// TODO: place these in the build file as well
-	float scalerGOGR = GOGR*ap->gIncFracSpilloverGOtoGR*1.4;
+	float scalerGOGR = GOGR * act_params[gIncFracSpilloverGOtoGR] * 1.4;
 	float halfShift = 12.0;//shift;
 	float steepness = 20.0;//steep; 
-	float recoveryRate = 1/ap->recoveryTauGO;
-	float baselvl = spillFrac*GOGR;
+	float recoveryRate = 1 / act_params[recoveryTauGO];
+	float baselvl = spillFrac * GOGR;
 
 #pragma omp parallel
 	{
@@ -642,8 +641,8 @@ void InNet::updateGOtoGROutParameters(float GOGR, float spillFrac)
 
 void InNet::updateGOtoGOOut()
 {
-	float gjCoupleScaler = ap->coupleRiRjRatioGO;
-	float recoveryRate = 1 / ap->recoveryTauGO;
+	float gjCoupleScaler = act_params[coupleRiRjRatioGO];
+	float recoveryRate = 1 / act_params[recoveryTauGO];
 
 #pragma omp parallel
 	{
@@ -651,8 +650,8 @@ void InNet::updateGOtoGOOut()
 		for (int i = 0; i < cp->int_params["num_go"]; i++)
 		{
 			
-			as->gi_GOtoGO[i] =  as->apGO[i] * ap->gGABAIncGOtoGO * as->depAmpGOGO[i]
-			   + as->gi_GOtoGO[i] * ap->gGABADecGOtoGO; 
+			as->gi_GOtoGO[i] =  as->apGO[i] * act_params[gGABAIncGOtoGO] * as->depAmpGOGO[i]
+			   + as->gi_GOtoGO[i] * derived_act_params[gGABADecGOtoGO]; 
 			as->depAmpGOGO[i] = 1;
 		}
 
@@ -687,12 +686,13 @@ void InNet::updateGOtoGOOut()
 
 void InNet::resetMFHist(unsigned long t)
 {
-	if(t%ap->numTSinMFHist==0)
+	// why unsigned long?
+	if (t % (unsigned long)derived_act_params[numTSinMFHist] == 0)
 	{
 #pragma omp parallel
 		{
 #pragma omp for
-			for(int i=0; i<cp->int_params["num_mf"]; i++)
+			for(int i = 0; i < cp->int_params["num_mf"]; i++)
 			{
 				as->histMF[i] = false;
 			}
@@ -704,16 +704,16 @@ void InNet::runGRActivitiesCUDA(cudaStream_t **sts, int streamN)
 {
 	cudaError_t error;
 	
-	float gAMPAInc = (ap->gIncDirectMFtoGR)+(ap->gIncDirectMFtoGR*ap->gIncFracSpilloverMFtoGR); 
+	float gAMPAInc = act_params[gIncDirectMFtoGR] + act_params[gIncDirectMFtoGR] * act_params[gIncFracSpilloverMFtoGR]; 
 
 	for(int i=0; i<numGPUs; i++)
-	{	
+	{
 		error=cudaSetDevice(i+gpuIndStart);
 		callGRActKernel(sts[i][streamN], calcGRActNumBlocks, calcGRActNumGRPerB,
 				vGRGPU[i], gKCaGRGPU[i], gLeakGRGPU[i], gNMDAGRGPU[i], gNMDAIncGRGPU[i], threshGRGPU[i],
 				apBufGRGPU[i], outputGRGPU[i], apGRGPU[i], apMFtoGRGPU[i], gEGRSumGPU[i], 
-				gIGRSumGPU[i], ap->eLeakGR, ap->eGOGR, gAMPAInc, ap->threshRestGR, ap->threshMaxGR,
-				ap->threshDecGR);
+				gIGRSumGPU[i], act_params[eLeakGR], act_params[eGOGR], gAMPAInc, act_params[threshRestGR], act_params[threshMaxGR],
+				act_params[threshDecGR]);
 #ifdef DEBUGOUT
 		error=cudaGetLastError();
 		cerr<<"grActivityCUDA: kernel launch for gpu #"<<i<<
@@ -854,8 +854,8 @@ void InNet::runUpdateMFInGRCUDA(cudaStream_t **sts, int streamN)
 				cp->int_params["num_mf"], apMFGPU[i], depAmpMFGRGPU[i] ,gEGRGPU[i], gEGRGPUP[i],   
 				grConMFOutGRGPU[i], grConMFOutGRGPUP[i],
 				numMFInPerGRGPU[i], apMFtoGRGPU[i], gEGRSumGPU[i], gEDirectGPU[i], gESpilloverGPU[i], 
-				ap->gDirectDecMFtoGR, ap->gIncDirectMFtoGR, ap->gSpilloverDecMFtoGR,
-				ap->gIncFracSpilloverMFtoGR);
+				derived_act_params[gDirectDecMFtoGR], act_params[gIncDirectMFtoGR], derived_act_params[gSpilloverDecMFtoGR],
+				act_params[gIncFracSpilloverMFtoGR]);
 #ifdef DEBUGOUT
 		error=cudaGetLastError();
 		cerr<<"runUpdateMFInGRCUDA: kernel launch for gpu #"<<i<<
@@ -896,7 +896,7 @@ void InNet::runUpdateGOInGRCUDA(cudaStream_t **sts, int streamN, float GOGR)
 				cp->int_params["num_go"], apGOGPU[i], dynamicAmpGOGRGPU[i], gIGRGPU[i], gIGRGPUP[i],
 				grConGOOutGRGPU[i], grConGOOutGRGPUP[i],
 				numGOInPerGRGPU[i], gIGRSumGPU[i], gIDirectGPU[i], gISpilloverGPU[i], 
-				ap->gDirectDecGOtoGR, GOGR, ap->gIncFracSpilloverGOtoGR, ap->gSpilloverDecGOtoGR);
+				derived_act_params[gDirectDecGOtoGR], GOGR, act_params[gIncFracSpilloverGOtoGR], derived_act_params[gSpilloverDecGOtoGR]);
 #ifdef DEBUGOUT
 		error=cudaGetLastError();
 		cerr<<"runUpdateGOInGRCUDA: kernel launch for gpu #"<<i<<
@@ -1062,10 +1062,10 @@ void InNet::cpyGRBCSumGPUtoHostCUDA(cudaStream_t **sts,
 void InNet::runUpdateGRHistoryCUDA(cudaStream_t **sts, int streamN, unsigned long t)
 {
 	cudaError_t error;
-	for(int i=0; i<numGPUs; i++)
+	for (int i = 0; i < numGPUs; i++)
 	{
-		error=cudaSetDevice(i+gpuIndStart);
-		if(t%ap->tsPerHistBinGR==0)
+		error=cudaSetDevice(i + gpuIndStart);
+		if (t % (unsigned long)derived_act_params[tsPerHistBinGR] == 0)
 		{
 			callUpdateGRHistKernel(sts[i][streamN], updateGRHistNumBlocks, updateGRHistNumGRPerB,
 					apBufGRGPU[i], historyGRGPU[i], apBufGRHistMask);

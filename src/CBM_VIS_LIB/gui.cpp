@@ -110,12 +110,13 @@ static void on_save_state(GtkWidget *widget, Control *control)
 // NOTE: Assumes that activity params have been loaded!!!!
 static void on_init_sim(GtkWidget *widget, Control *control)
 {
-	if (control->ap) control->construct_control(GUI);
-	else 
-	{
-		fprintf(stderr, "[ERROR]: Trying to initialize a simulation without loading a file.\n");
-		fprintf(stderr, "[ERROR]: (Hint: Load an activity parameter file first then initialize the simulation.)\n");
-	}
+	// TODO: rewrite to accommodate new act param scheme
+	control->construct_control(GUI);
+	//else 
+	//{
+	//	fprintf(stderr, "[ERROR]: Trying to initialize a simulation without loading a file.\n");
+	//	fprintf(stderr, "[ERROR]: (Hint: Load an activity parameter file first then initialize the simulation.)\n");
+	//}
 }
 
 static void on_run(GtkWidget *widget, Control *control)

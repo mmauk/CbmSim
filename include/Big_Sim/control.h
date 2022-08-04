@@ -31,7 +31,6 @@ class Control
 
 		// Objects
 		ConnectivityParams *cp = NULL;
-		ActivityParams *ap     = NULL;
 
 		CBMState *simState     = NULL;
 		CBMSimCore *simCore    = NULL;
@@ -168,8 +167,6 @@ class Control
 		void init_activity_params(std::string actParamFile); // TODO: deprecate
 
 		void init_sim_state(std::string stateFile); // TODO: deprecate
-
-		void save_params_to_file(std::string outFile);
 
 		void save_sim_state_to_file(std::string outStateFile); 
 

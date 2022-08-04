@@ -34,9 +34,8 @@ class InNet
 {
 public:
 	InNet();
-	InNet(ConnectivityParams *cp, ActivityParams *ap,
-		  InNetConnectivityState *cs, InNetActivityState *as,
-		  int gpuIndStart, int numGPUs);
+	InNet(ConnectivityParams *cp, InNetConnectivityState *cs,
+		InNetActivityState *as, int gpuIndStart, int numGPUs);
 	~InNet();
 
 	void writeToState();
@@ -112,7 +111,6 @@ public:
 
 protected:
 	ConnectivityParams *cp;
-	ActivityParams *ap;
 
 	InNetConnectivityState *cs;
 	InNetActivityState *as;

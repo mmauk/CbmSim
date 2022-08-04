@@ -22,13 +22,13 @@ class MZoneActivityState
 {
 public:
 	MZoneActivityState();
-	MZoneActivityState(ConnectivityParams *cp, ActivityParams *ap, int randSeed);
-	MZoneActivityState(ConnectivityParams *cp, ActivityParams *ap, std::fstream &infile);
+	MZoneActivityState(ConnectivityParams *cp, int randSeed);
+	MZoneActivityState(ConnectivityParams *cp, std::fstream &infile);
 
 	~MZoneActivityState();
 	
-	void readState(ConnectivityParams *cp, ActivityParams *ap, std::fstream &infile);
-	void writeState(ConnectivityParams *cp, ActivityParams *ap, std::fstream &outfile);
+	void readState(ConnectivityParams *cp, std::fstream &infile);
+	void writeState(ConnectivityParams *cp, std::fstream &outfile);
 
 	//basket cells
 	std::unique_ptr<ct_uint8_t[]> apBC{nullptr};
@@ -85,11 +85,10 @@ public:
 	ct_uint8_t noLTDMFNC;
 
 private:
-	void allocateMemory(ConnectivityParams *cp, ct_uint32_t numPopHistBinsPC);
-	void initializeVals(ConnectivityParams *cp, ActivityParams *ap, int randSeed);
-	void stateRW(ConnectivityParams *cp, ct_uint32_t numPopHistBinsPC, bool read, std::fstream &file);
+	void allocateMemory(ConnectivityParams *cp);
+	void initializeVals(ConnectivityParams *cp, int randSeed);
+	void stateRW(ConnectivityParams *cp, bool read, std::fstream &file);
 };
-
 
 #endif /* MZONEACTIVITYSTATE_H_ */
 

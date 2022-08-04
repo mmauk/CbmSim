@@ -9,11 +9,11 @@
 
 #include "state/innetactivitystate.h"
 
-InNetActivityState::InNetActivityState(ConnectivityParams *cp, ActivityParams *ap)
+InNetActivityState::InNetActivityState(ConnectivityParams *cp)
 {
 	std::cout << "[INFO]: Allocating and initializing innet activity state..." << std::endl;
 	allocateMemory(cp);
-	initializeVals(cp, ap);
+	initializeVals(cp);
 	std::cout << "[INFO]: Finished allocating and initializing innet activity state." << std::endl;
 }
 
@@ -35,9 +35,9 @@ void InNetActivityState::writeState(ConnectivityParams *cp, std::fstream &outfil
 	stateRW(cp, false, outfile);
 }
 
-void InNetActivityState::resetState(ConnectivityParams *cp, ActivityParams *ap)
+void InNetActivityState::resetState(ConnectivityParams *cp)
 {
-	initializeVals(cp, ap);
+	initializeVals(cp);
 }
 
 void InNetActivityState::stateRW(ConnectivityParams *cp, bool read, std::fstream &file)
@@ -149,7 +149,7 @@ void InNetActivityState::allocateMemory(ConnectivityParams *cp)
 	// inputSumPFSC   = std::make_unique<ct_uint32_t[]>(cp->int_params["num_sc"]);
 }
 
-void InNetActivityState::initializeVals(ConnectivityParams *cp, ActivityParams *ap)
+void InNetActivityState::initializeVals(ConnectivityParams *cp)
 {
 	// only actively initializing those arrays whose initial values we want
 	// differ from the default initilizer value
@@ -160,16 +160,16 @@ void InNetActivityState::initializeVals(ConnectivityParams *cp, ActivityParams *
 
 	// go	
 	std::fill(synWscalerGRtoGO.get(), synWscalerGRtoGO.get() + cp->int_params["num_go"], 1.0);
-	std::fill(vGO.get(), vGO.get() + cp->int_params["num_go"], ap->eLeakGO);
-	std::fill(threshCurGO.get(), threshCurGO.get() + cp->int_params["num_go"], ap->threshRestGO);
+	std::fill(vGO.get(), vGO.get() + cp->int_params["num_go"], act_params[eLeakGO]);
+	std::fill(threshCurGO.get(), threshCurGO.get() + cp->int_params["num_go"], act_params[threshRestGO]);
 
 	// gr
-	std::fill(threshGR.get(), threshGR.get() + cp->int_params["num_gr"], ap->threshRestGR);
-	std::fill(vGR.get(), vGR.get() + cp->int_params["num_gr"], ap->eLeakGR);
+	std::fill(threshGR.get(), threshGR.get() + cp->int_params["num_gr"], act_params[threshRestGR]);
+	std::fill(vGR.get(), vGR.get() + cp->int_params["num_gr"], act_params[eLeakGR]);
 
 	// sc
 	// NOTE: no need to explicitly init apSC: false is the default value made by make_unique
-	std::fill(threshSC.get(), threshSC.get() + cp->int_params["num_sc"], ap->threshRestSC);
-	std::fill(vSC.get(), vSC.get() + cp->int_params["num_sc"], ap->eLeakSC);
+	std::fill(threshSC.get(), threshSC.get() + cp->int_params["num_sc"], act_params[threshRestSC]);
+	std::fill(vSC.get(), vSC.get() + cp->int_params["num_sc"], act_params[eLeakSC]);
 }
 

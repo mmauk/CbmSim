@@ -9,35 +9,31 @@
 
 MZoneActivityState::MZoneActivityState() {}
 
-MZoneActivityState::MZoneActivityState(ConnectivityParams *cp, ActivityParams *ap, int randSeed)
+MZoneActivityState::MZoneActivityState(ConnectivityParams *cp, int randSeed)
 {
-	std::cout << "[INFO]: Initializing mzone activity state..." << std::endl;
-	allocateMemory(cp, ap->numPopHistBinsPC);
-	initializeVals(cp, ap, randSeed);
-	std::cout << "[INFO]: Finished initializing mzone activity state." << std::endl;
+	allocateMemory(cp);
+	initializeVals(cp, randSeed);
 }
 
-MZoneActivityState::MZoneActivityState(ConnectivityParams *cp, ActivityParams *ap, std::fstream &infile)
+MZoneActivityState::MZoneActivityState(ConnectivityParams *cp, std::fstream &infile)
 {
-	//std::cout << "[INFO]: Initializing mzone activity state from file..." << std::endl;
-	allocateMemory(cp, ap->numPopHistBinsPC);
-	stateRW(cp, ap->numPopHistBinsPC, true, infile);
-	//std::cout << "[INFO]: Finished initializing mzone activity state file." << std::endl;
+	allocateMemory(cp);
+	stateRW(cp, true, infile);
 }
 
 MZoneActivityState::~MZoneActivityState() {}
 
-void MZoneActivityState::readState(ConnectivityParams *cp, ActivityParams *ap, std::fstream &infile)
+void MZoneActivityState::readState(ConnectivityParams *cp, std::fstream &infile)
 {
-	stateRW(cp, ap->numPopHistBinsPC, true, infile);
+	stateRW(cp, true, infile);
 }
 
-void MZoneActivityState::writeState(ConnectivityParams *cp, ActivityParams *ap, std::fstream &outfile)
+void MZoneActivityState::writeState(ConnectivityParams *cp, std::fstream &outfile)
 {
-	stateRW(cp, ap->numPopHistBinsPC, false, outfile);
+	stateRW(cp, false, outfile);
 }
 
-void MZoneActivityState::allocateMemory(ConnectivityParams *cp, ct_uint32_t numPopHistBinsPC)
+void MZoneActivityState::allocateMemory(ConnectivityParams *cp)
 {
 	// basket cells
 	apBC      = std::make_unique<ct_uint8_t[]>(cp->int_params["num_bc"]);
@@ -85,7 +81,7 @@ void MZoneActivityState::allocateMemory(ConnectivityParams *cp, ct_uint32_t numP
 	synIOPReleaseNC = std::make_unique<float[]>(cp->int_params["num_nc"]);
 }
 
-void MZoneActivityState::initializeVals(ConnectivityParams *cp, ActivityParams *ap, int randSeed)
+void MZoneActivityState::initializeVals(ConnectivityParams *cp, int randSeed)
 {
 	//uncomment for actual runs 
 	//CRandomSFMT0 randGen(randSeed);
@@ -95,25 +91,25 @@ void MZoneActivityState::initializeVals(ConnectivityParams *cp, ActivityParams *
 	 */
 
 	// bc
-	std::fill(threshBC.get(), threshBC.get() + cp->int_params["num_bc"], ap->threshRestBC);
-	std::fill(vBC.get(), vBC.get() + cp->int_params["num_bc"], ap->eLeakBC);
+	std::fill(threshBC.get(), threshBC.get() + cp->int_params["num_bc"], act_params[threshRestBC]);
+	std::fill(vBC.get(), vBC.get() + cp->int_params["num_bc"], act_params[eLeakBC]);
 
 	// pc
-	std::fill(vPC.get(), vPC.get() + cp->int_params["num_pc"], ap->eLeakPC);
-	std::fill(threshPC.get(), threshPC.get() + cp->int_params["num_pc"], ap->threshRestPC);
+	std::fill(vPC.get(), vPC.get() + cp->int_params["num_pc"], act_params[eLeakPC]);
+	std::fill(threshPC.get(), threshPC.get() + cp->int_params["num_pc"], act_params[threshRestPC]);
 
 	std::fill(pfSynWeightPC.get(), pfSynWeightPC.get()
-		+ cp->int_params["num_pc"] * cp->int_params["num_p_pc_from_gr_to_pc"], ap->initSynWofGRtoPC);
+		+ cp->int_params["num_pc"] * cp->int_params["num_p_pc_from_gr_to_pc"], act_params[initSynWofGRtoPC]);
 
-	std::fill(histPCPopAct.get(), histPCPopAct.get() + ap->numPopHistBinsPC, 0);
+	std::fill(histPCPopAct.get(), histPCPopAct.get() + (int)derived_act_params[numPopHistBinsPC], 0);
 
 	histPCPopActSum     = 0;
 	histPCPopActCurBinN = 0;
 	pcPopAct            = 0;
 
 	// IO
-	std::fill(threshIO.get(), threshIO.get() + cp->int_params["num_io"], ap->threshRestIO);
-	std::fill(vIO.get(), vIO.get() + cp->int_params["num_io"], ap->eLeakIO);
+	std::fill(threshIO.get(), threshIO.get() + cp->int_params["num_io"], act_params[threshRestIO]);
+	std::fill(vIO.get(), vIO.get() + cp->int_params["num_io"], act_params[eLeakIO]);
 
 	errDrive = 0;
 	
@@ -121,14 +117,14 @@ void MZoneActivityState::initializeVals(ConnectivityParams *cp, ActivityParams *
 	noLTPMFNC = 0;
 	noLTDMFNC = 0;
 
-	std::fill(threshNC.get(), threshNC.get() + cp->int_params["num_nc"], ap->threshRestNC);
-	std::fill(vNC.get(), vNC.get() + cp->int_params["num_nc"], ap->eLeakNC);
+	std::fill(threshNC.get(), threshNC.get() + cp->int_params["num_nc"], act_params[threshRestNC]);
+	std::fill(vNC.get(), vNC.get() + cp->int_params["num_nc"], act_params[eLeakNC]);
 
 	std::fill(mfSynWeightNC.get(), mfSynWeightNC.get()
-		+ cp->int_params["num_nc"] * cp->int_params["num_p_nc_from_mf_to_nc"], ap->initSynWofMFtoNC);
+		+ cp->int_params["num_nc"] * cp->int_params["num_p_nc_from_mf_to_nc"], act_params[initSynWofMFtoNC]);
 }
 
-void MZoneActivityState::stateRW(ConnectivityParams *cp, ct_uint32_t numPopHistBinsPC, bool read, std::fstream &file)
+void MZoneActivityState::stateRW(ConnectivityParams *cp, bool read, std::fstream &file)
 {
 	// basket cells
 	rawBytesRW((char *)apBC.get(), cp->int_params["num_bc"] * sizeof(ct_uint8_t), read, file);

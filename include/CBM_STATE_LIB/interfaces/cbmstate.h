@@ -25,17 +25,14 @@ class CBMState
 {
 	public:
 		CBMState();
-		CBMState(ConnectivityParams *cp, ActivityParams *ap,
-			unsigned int nZones);
+		CBMState(ConnectivityParams *cp, unsigned int nZones);
 		// TODO: make a choice which of two below constructors want to keep
-		CBMState(ConnectivityParams *cp, ActivityParams *ap, 
-			unsigned int nZones, std::fstream & sim_file_buf);
-		CBMState(ConnectivityParams *cp, ActivityParams *ap,
-			unsigned int nZones, std::string inFile);
+		CBMState(ConnectivityParams *cp, unsigned int nZones, std::fstream & sim_file_buf);
+		CBMState(ConnectivityParams *cp, unsigned int nZones, std::string inFile);
 		~CBMState();
 
-		void readState(ConnectivityParams *cp, ActivityParams *ap, std::fstream &infile);
-		void writeState(ConnectivityParams *cp, ActivityParams *ap, std::fstream &outfile);
+		void readState(ConnectivityParams *cp, std::fstream &infile);
+		void writeState(ConnectivityParams *cp, std::fstream &outfile);
 
 		ct_uint32_t getNumZones();
 
@@ -56,8 +53,8 @@ class CBMState
 		InNetActivityState *innetActState;
 		MZoneActivityState **mzoneActStates;
 
-		void newState(ConnectivityParams *cp, ActivityParams *ap,
-			unsigned int nZones, int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed);
+		void newState(ConnectivityParams *cp, unsigned int nZones,
+			int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed);
 };
 
 #endif /* CBMSTATE_H_ */
