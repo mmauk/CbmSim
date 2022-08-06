@@ -29,22 +29,10 @@ Control::Control() {}
 
 Control::Control(parsed_build_file &p_file)
 {
-	if (!cp) cp = new ConnectivityParams(p_file);
-	if (!act_params_populated())
-	{
-		populate_act_params(p_file);
-		populate_derived_act_params();
-	}
-	if (!simState)
-	{
-		simState = new CBMState(cp, numMZones);
-	}
-	
-	if (!simCore)
-	{
-		simCore = new CBMSimCore(cp, simState, gpuIndex, gpuP2);
-	}
-
+	if (!con_params_populated) populate_con_params(p_file);
+	if (!act_params_populated) populate_act_params(p_file);
+	if (!simState) simState = new CBMState(numMZones);
+	if (!simCore) simCore = new CBMSimCore(simState, gpuIndex, gpuP2);
 	if (!mfFreq)
 	{
 		mfFreq = new ECMFPopulation(NUM_MF, mfRandSeed, CSTonicMFFrac, CSPhasicMFFrac,
@@ -52,43 +40,25 @@ Control::Control(parsed_build_file &p_file)
 			  tonicFreqMin, phasicFreqMin, bgFreqMax, csbgFreqMax, contextFreqMax, 
 			  tonicFreqMax, phasicFreqMax, collaterals_off, fracImport, secondCS, fracOverlap);
 	}
-	
 	if (!mfs)
 	{
-		mfs = new PoissonRegenCells(NUM_MF, mfRandSeed, threshDecayTau, act_params[msPerTimeStep],
+		mfs = new PoissonRegenCells(NUM_MF, mfRandSeed, threshDecayTau, msPerTimeStep,
 			  	numMZones, NUM_NC);
 	}
 
-	if (!output_arrays_initialized)
-	{
-		initializeOutputArrays();
-		output_arrays_initialized = true;
-	}
+	if (!output_arrays_initialized) initializeOutputArrays();
 }
 
 Control::Control(std::string sim_file_name)
 {
 	std::fstream sim_file_buf(sim_file_name.c_str(), std::ios::in | std::ios::binary);
-	if (!cp) 
-	{
-		cp = new ConnectivityParams(sim_file_buf);
-	}
-	if (!act_params_populated())
-	{
-		rawBytesRW((char *)act_params, NUM_AP_PARAMS * sizeof(float), true, sim_file_buf);
-		rawBytesRW((char *)derived_act_params, NUM_DERIVED_AP_PARAMS * sizeof(float), true, sim_file_buf);
-	} 
-	if (!simState) 
-	{
-		simState = new CBMState(cp, numMZones, sim_file_buf);
-	}
-	if (!simCore)
-	{
-		simCore = new CBMSimCore(cp, simState, gpuIndex, gpuP2);
-	}
+	if (!con_params_populated) read_con_params(sim_file_buf);
+	if (!act_params_populated) read_act_params(sim_file_buf);
+	if (!simState) simState = new CBMState(numMZones, sim_file_buf);
+	if (!simCore) simCore = new CBMSimCore(simState, gpuIndex, gpuP2);
 	if (!mfFreq)
 	{
-		mfFreq = new ECMFPopulation(cp->int_params["num_mf"], mfRandSeed,
+		mfFreq = new ECMFPopulation(num_mf, mfRandSeed,
 			  CSTonicMFFrac, CSPhasicMFFrac, contextMFFrac, nucCollFrac,
 			  bgFreqMin, csbgFreqMin, contextFreqMin, tonicFreqMin, phasicFreqMin, bgFreqMax,
 			  csbgFreqMax, contextFreqMax, tonicFreqMax, phasicFreqMax, collaterals_off,
@@ -96,8 +66,8 @@ Control::Control(std::string sim_file_name)
 	}
 	if (!mfs)
 	{
-		mfs = new PoissonRegenCells(cp->int_params["num_mf"], mfRandSeed,
-				threshDecayTau, act_params[msPerTimeStep], numMZones, cp->int_params["num_nc"]);
+		mfs = new PoissonRegenCells(num_mf, mfRandSeed,
+				threshDecayTau, msPerTimeStep, numMZones, num_nc);
 	}
 	sim_file_buf.close();
 }
@@ -105,11 +75,10 @@ Control::Control(std::string sim_file_name)
 Control::~Control()
 {
 	// delete all dynamic objects
-	if (cp) delete cp;
 	if (simState) delete simState;
-	if (simCore) delete simCore;
-	if (mfFreq) delete mfFreq;
-	if (mfs) delete mfs;
+	if (simCore)  delete simCore;
+	if (mfFreq)   delete mfFreq;
+	if (mfs)      delete mfs;
 
 	// deallocate output arrays
 	if (output_arrays_initialized) deleteOutputArrays();
@@ -118,12 +87,11 @@ Control::~Control()
 void Control::build_sim(parsed_build_file &p_file)
 {
 	// not sure if we want to save mfFreq and mfs in the simulation file
-	if (!(cp && act_params_populated() && derived_act_params_populated() && simState))
+	if (!(con_params_populated && act_params_populated && simState))
 	{
-		cp = new ConnectivityParams(p_file);
+		populate_con_params(p_file);
 		populate_act_params(p_file);
-		populate_derived_act_params();
-		simState = new CBMState(cp, numMZones);
+		simState = new CBMState(numMZones);
 	}
 }
 
@@ -139,31 +107,25 @@ void Control::init_activity_params(std::string actParamFile)
 
 void Control::init_sim_state(std::string stateFile)
 {
-	if (!cp)
+	if (!con_params_populated)
 	{
 		fprintf(stderr, "[ERROR]: Trying to initialize state without first connectivity params.\n");
 		fprintf(stderr, "[ERROR]: (Hint: Load a connectivity parameter file first then load the state.\n");
 		return;
 	}
-	if (!(act_params_populated() && derived_act_params_populated()))
+	if (!act_params_populated)
 	{
 		fprintf(stderr, "[ERROR]: Trying to initialize state without first initializing activity params.\n");
 		fprintf(stderr, "[ERROR]: (Hint: Load an activity parameter file first then load the state.\n");
 		return;
 	}
-	if (!simState)
-	{
-		simState = new CBMState(cp, numMZones, stateFile);
-	}
-	else
-	{
-		fprintf(stderr, "[ERROR]: State already initialized.\n");
-	}
+	if (!simState) simState = new CBMState(numMZones, stateFile);
+	else fprintf(stderr, "[ERROR]: State already initialized.\n");
 }
 
 void Control::save_sim_state_to_file(std::string outStateFile)
 {
-	if (!(cp && act_params_populated() && derived_act_params_populated() && simState))
+	if (!(con_params_populated && act_params_populated && simState))
 	{
 		fprintf(stderr, "[ERROR]: Trying to write an uninitialized state to file.\n");
 		fprintf(stderr, "[ERROR]: (Hint: Try loading activity parameter file and initializing the state first.)\n");
@@ -177,36 +139,25 @@ void Control::save_sim_state_to_file(std::string outStateFile)
 		// file an initialized bunny or if the user is using the gui and forgot 
 		// to save to file after initializing state, but wants to do so after 
 		// initializing simcore.
-		simCore->writeState(cp, outStateFileBuffer);
+		simCore->writeState(outStateFileBuffer);
 	}
-	else
-	{
-		simState->writeState(cp, outStateFileBuffer); 
-	}
+	else simState->writeState(outStateFileBuffer); 
 	outStateFileBuffer.close();
 }
 
 void Control::save_sim_to_file(std::string outSimFile)
 {
-	if (!(cp && act_params_populated() && derived_act_params_populated() && simState))
+	if (!(con_params_populated && act_params_populated && simState))
 	{
 		fprintf(stderr, "[ERROR]: Trying to write an uninitialized simulation to file.\n");
 		fprintf(stderr, "[ERROR]: (Hint: Try loading a build file first.)\n");
 		return;
 	}
 	std::fstream outSimFileBuffer(outSimFile.c_str(), std::ios::out | std::ios::binary);
-	cp->writeParams(outSimFileBuffer);
-	rawBytesRW((char *)act_params, NUM_AP_PARAMS * sizeof(float), false, outSimFileBuffer);
-	rawBytesRW((char *)derived_act_params, NUM_DERIVED_AP_PARAMS * sizeof(float), false, outSimFileBuffer);
-
-	if (simCore)
-	{
-		simCore->writeState(cp, outSimFileBuffer);
-	}
-	else
-	{
-		simState->writeState(cp, outSimFileBuffer); 
-	}
+	write_con_params(outSimFileBuffer);
+	write_act_params(outSimFileBuffer);
+	if (simCore) simCore->writeState(outSimFileBuffer);
+	else simState->writeState(outSimFileBuffer); 
 	outSimFileBuffer.close();
 }
 
@@ -214,7 +165,7 @@ void Control::initializeOutputArrays()
 {
 	allGRPSTH = allocate2DArray<ct_uint8_t>(NUM_GR, PSTHColSize);
 	memset(allGRPSTH[0], '\000', (unsigned long)NUM_GR * (unsigned long)PSTHColSize * sizeof(ct_uint8_t));
-
+	output_arrays_initialized = true;
 	//allPCRaster = allocate2DArray<ct_uint8_t>(NUM_PC, rasterColumnSize);
 	//std::fill(allPCRaster[0], allPCRaster[0] +
 	//		NUM_PC * rasterColumnSize, 0);
@@ -237,11 +188,14 @@ void Control::initializeOutputArrays()
 
 void Control::runExperiment(experiment &experiment)
 {
+	float medTrials;
 	std::time_t curr_time = std::time(nullptr);
 	std::tm *local_time = std::localtime(&curr_time);
 	clock_t timer;
 	
 	int rasterCounter = 0;
+	int goSpkCounter[num_go] = {0};
+
 	for (int trial = 0; trial < experiment.num_trials; trial++)
 	{
 		std::string trialName = experiment.trials[trial].TrialName;
@@ -252,9 +206,18 @@ void Control::runExperiment(experiment &experiment)
 		int percentCS = experiment.trials[trial].CSpercent;
 		int useUS     = experiment.trials[trial].USuse;
 		int onsetUS   = experiment.trials[trial].USonset;
+		
+		//std::cout << "'useCS': " << useCS << std::endl;
+		//std::cout << "'onsetCS': " << onsetCS << std::endl;
+		//std::cout << "'offsetCS': " << offsetCS << std::endl;
+		//std::cout << "'useUS': " << useUS << std::endl;
+		//std::cout << "'onsetUS': " << onsetUS << std::endl;
 
 		timer = clock();
 		int PSTHCounter = 0;
+		float gGRGO_sum = 0;
+		float gMFGO_sum = 0;
+		memset(goSpkCounter, 0, num_go * sizeof(int));
 
 		for (int ts = 0; ts < trialTime; ts++)
 		{
@@ -286,6 +249,29 @@ void Control::runExperiment(experiment &experiment)
 			simCore->updateMFInput(mfAP);
 			simCore->calcActivity(mfgoW, gogrW, grgoW, gogoW, spillFrac); 
 
+			if (ts >= onsetCS && ts < offsetCS)
+			{
+				mfgoG  = simCore->getInputNet()->exportgSum_MFGO();
+				grgoG  = simCore->getInputNet()->exportgSum_GRGO();
+				goSpks = simCore->getInputNet()->exportAPGO();
+			
+				for (int i = 0; i < num_go; i++)
+				{
+						goSpkCounter[i] += goSpks[i];
+						gGRGO_sum       += grgoG[i];
+						gMFGO_sum       += mfgoG[i];
+				}
+			}
+			
+			/* upon offset of CS, report what we got*/
+			if (ts == offsetCS)
+			{
+				countGOSpikes(goSpkCounter, medTrials);
+				std::cout << "mean gGRGO   = " << gGRGO_sum / (num_go * (offsetCS - onsetCS)) << std::endl;
+				std::cout << "mean gMFGO   = " << gMFGO_sum / (num_go * (offsetCS - onsetCS)) << std::endl;
+				std::cout << "GR:MF ratio  = " << gGRGO_sum / gMFGO_sum << std::endl;
+			}
+
 			if (sim_vis_mode == GUI)
 			{
 				if (gtk_events_pending()) gtk_main_iteration();
@@ -295,7 +281,7 @@ void Control::runExperiment(experiment &experiment)
 		timer = clock() - timer;
 		std::cout << "[INFO]: " << trialName << " took " << (float)timer / CLOCKS_PER_SEC << "s."
 				  << std::endl;
-
+		
 		if (sim_vis_mode == GUI)
 		{
 			if (sim_is_paused)
@@ -396,7 +382,7 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 					grgoG  = simCore->getInputNet()->exportgSum_GRGO();
 					goSpks = simCore->getInputNet()->exportAPGO();
 				
-					for (int i = 0; i < NUM_GO; i++)
+					for (int i = 0; i < num_go; i++)
 					{
 							goSpkCounter[i] += goSpks[i];
 							gGRGO_sum       += grgoG[i];
@@ -472,13 +458,6 @@ void Control::saveOutputArraysToFile(int goRecipParam, int trial, std::tm *local
 
 		// reset GRPSTH
 		memset(allGRPSTH[0], '\000', (unsigned long)NUM_GR * (unsigned long)PSTHColSize * sizeof(ct_uint8_t));
-		//for (int i = 0; i < NUM_GR; i++)
-		//{
-		//	for (int j = 0; j < PSTHColSize; j++)
-		//	{
-		//		allGRPSTH[i][j] = 0;
-		//	}
-		//}
 	}
 
 	//std::string allGOPSTHFileName = "allGOPSTH_noGOGO_grgoConv" + std::to_string(conv[goRecipParam]) +
@@ -507,10 +486,9 @@ void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
 	float m = (goSpkCounter[2047] + goSpkCounter[2048]) / 2.0;
 	float goSpkSum = 0;
 
-	//TODO: change for loop into std::transform
-	for (int i = 0; i < NUM_GO; i++) goSpkSum += goSpkCounter[i];
+	for (int i = 0; i < num_go; i++) goSpkSum += goSpkCounter[i];
 	
-	std::cout << "Mean GO Rate: " << goSpkSum / (float)NUM_GO << std::endl;
+	std::cout << "Mean GO Rate: " << goSpkSum / (float)num_go << std::endl;
 
 	medTrials += m / 2.0;
 	std::cout << "Median GO Rate: " << m / 2.0 << std::endl;
@@ -557,18 +535,10 @@ void Control::write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
 
 	if (!outStream.is_open())
 	{
-		// NOTE: should throw an error, which would be caught in main
 		std::cerr << "couldn't open '" << outFileName << "' for writing." << std::endl;
-		return;
+		exit(-1);
 	}
 	rawBytesRW((char *)inArr[0], numRow * numCol * sizeof(ct_uint8_t), false, outStream);
-	//for (size_t i = 0; i < numRow; i++)
-	//{
-	//	for (size_t j = 0; j < numCol; j++)
-	//	{
-	//		outStream.write((char*) &inArr[i][j], sizeof(ct_uint8_t));
-	//	}
-	//}
 	outStream.close();
 }
 
@@ -587,15 +557,9 @@ void Control::deleteOutputArrays()
 void Control::construct_control(enum vis_mode sim_vis_mode)
 {
 	if (this->sim_vis_mode == NO_VIS) this->sim_vis_mode = sim_vis_mode;
-	if (!simState)
-	{
-		simState = new CBMState(cp, numMZones);
-	}
+	if (!simState) simState = new CBMState(numMZones);
 	
-	if (!simCore)
-	{
-		simCore = new CBMSimCore(cp, simState, gpuIndex, gpuP2);
-	}
+	if (!simCore) simCore = new CBMSimCore(simState, gpuIndex, gpuP2);
 
 	if (!mfFreq)
 	{
@@ -607,7 +571,7 @@ void Control::construct_control(enum vis_mode sim_vis_mode)
 	
 	if (!mfs)
 	{
-		mfs = new PoissonRegenCells(NUM_MF, mfRandSeed, threshDecayTau, act_params[msPerTimeStep],
+		mfs = new PoissonRegenCells(NUM_MF, mfRandSeed, threshDecayTau, msPerTimeStep,
 			  	numMZones, NUM_NC);
 	}
 
@@ -615,7 +579,6 @@ void Control::construct_control(enum vis_mode sim_vis_mode)
 	{
 		// allocate and initialize output arrays
 		initializeOutputArrays();
-		output_arrays_initialized = true;
 	}
 }
 

@@ -29,7 +29,7 @@ __global__ void calcActivityGRGPU(float *vm, float *gKCa, float *gLeak, float *g
 
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 
-	float tempV 	= vm[i];
+	float tempV = vm[i];
 
 	gLeak[i] = 0.0000001021370733 * tempV * tempV * tempV * tempV
 	   		 + 0.00001636462 * tempV * tempV * tempV
@@ -41,9 +41,9 @@ __global__ void calcActivityGRGPU(float *vm, float *gKCa, float *gLeak, float *g
 	gNMDAInc[i] = 0.00000011969 * tempV * tempV * tempV
 	   			+ 0.000089369 * tempV * tempV
 				+ 0.0151 * tempV
-				+ 0.7713;	
+				+ 0.7713;
 
-	gNMDA[i] = gNMDAInc[i] * gAMPAInc * apMFtoGR[i] + gNMDA[i] * 0.9672;	
+	gNMDA[i] = gNMDAInc[i] * gAMPAInc * apMFtoGR[i] + gNMDA[i] * 0.9672;
 
 
 	tempV = tempV + gLeak[i] * (eLeak - tempV) - gESum[i] * tempV 
@@ -317,13 +317,13 @@ __global__ void updateUBCGRInOPGPU(unsigned int inNLoads, ct_uint32_t *apIn, flo
 		conRow=(unsigned int *)((char *)conFromIn+i*conFromInPitch);
 		tempApInSum+=sharedIOBufGR[conRow[index]];	
 	}
-
+	/* what gives rise to nans in depAmp? => re-think how modifying to eliminate branch */
+	/* (also we don't work with ubcs currently 08/05/2022) */
 	if( isnan(depAmp[index]) )
 	{
 		gDirect[index] = 0;
 		gSpillover[index] = 0;
 
-		gSum[index] = gDirect[index] + gSpillover[index];
 		apUBCtoGRp[index] = 0;
 	}
 	else{
@@ -331,10 +331,9 @@ __global__ void updateUBCGRInOPGPU(unsigned int inNLoads, ct_uint32_t *apIn, flo
 		gDirect[index] = gDirect[index]*gDecayD + gIncD*(tempApInSum)*depAmp[index];
 		gSpillover[index] = gSpillover[index]*gDecayS + gIncD*gIncFracS*(tempApInSum)*depAmp[index];
 
-		gSum[index] = gDirect[index] + gSpillover[index];
 		apUBCtoGRp[index] = tempApInSum;
 	}
-
+	gSum[index] = gDirect[index] + gSpillover[index];
 
 }
 

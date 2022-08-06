@@ -9,79 +9,79 @@
 
 MZoneActivityState::MZoneActivityState() {}
 
-MZoneActivityState::MZoneActivityState(ConnectivityParams *cp, int randSeed)
+MZoneActivityState::MZoneActivityState(int randSeed)
 {
-	allocateMemory(cp);
-	initializeVals(cp, randSeed);
+	allocateMemory();
+	initializeVals(randSeed);
 }
 
-MZoneActivityState::MZoneActivityState(ConnectivityParams *cp, std::fstream &infile)
+MZoneActivityState::MZoneActivityState(std::fstream &infile)
 {
-	allocateMemory(cp);
-	stateRW(cp, true, infile);
+	allocateMemory();
+	stateRW(true, infile);
 }
 
 MZoneActivityState::~MZoneActivityState() {}
 
-void MZoneActivityState::readState(ConnectivityParams *cp, std::fstream &infile)
+void MZoneActivityState::readState(std::fstream &infile)
 {
-	stateRW(cp, true, infile);
+	stateRW(true, infile);
 }
 
-void MZoneActivityState::writeState(ConnectivityParams *cp, std::fstream &outfile)
+void MZoneActivityState::writeState(std::fstream &outfile)
 {
-	stateRW(cp, false, outfile);
+	stateRW(false, outfile);
 }
 
-void MZoneActivityState::allocateMemory(ConnectivityParams *cp)
+void MZoneActivityState::allocateMemory()
 {
 	// basket cells
-	apBC      = std::make_unique<ct_uint8_t[]>(cp->int_params["num_bc"]);
-	apBufBC   = std::make_unique<ct_uint32_t[]>(cp->int_params["num_bc"]);
-	inputPCBC = std::make_unique<ct_uint32_t[]>(cp->int_params["num_bc"]);
-	gPFBC     = std::make_unique<float[]>(cp->int_params["num_bc"]);
-	gPCBC     = std::make_unique<float[]>(cp->int_params["num_bc"]);
-	vBC       = std::make_unique<float[]>(cp->int_params["num_bc"]);
-	threshBC  = std::make_unique<float[]>(cp->int_params["num_bc"]);
+	apBC      = std::make_unique<ct_uint8_t[]>(num_bc);
+	apBufBC   = std::make_unique<ct_uint32_t[]>(num_bc);
+	inputPCBC = std::make_unique<ct_uint32_t[]>(num_bc);
+	gPFBC     = std::make_unique<float[]>(num_bc);
+	gPCBC     = std::make_unique<float[]>(num_bc);
+	vBC       = std::make_unique<float[]>(num_bc);
+	threshBC  = std::make_unique<float[]>(num_bc);
 
 	// purkinje cells
-	apPC          = std::make_unique<ct_uint8_t[]>(cp->int_params["num_pc"]);
-	apBufPC       = std::make_unique<ct_uint32_t[]>(cp->int_params["num_pc"]);
-	inputBCPC     = std::make_unique<ct_uint32_t[]>(cp->int_params["num_pc"]);
-	inputSCPC     = std::make_unique<ct_uint8_t[]>(cp->int_params["num_pc"] * cp->int_params["num_p_pc_from_sc_to_pc"]);
-	pfSynWeightPC = std::make_unique<float[]>(cp->int_params["num_pc"] * cp->int_params["num_p_pc_from_gr_to_pc"]);
-	inputSumPFPC  = std::make_unique<float[]>(cp->int_params["num_pc"]);
-	gPFPC         = std::make_unique<float[]>(cp->int_params["num_pc"]);
-	gBCPC         = std::make_unique<float[]>(cp->int_params["num_pc"]);
-	gSCPC         = std::make_unique<float[]>(cp->int_params["num_pc"] * cp->int_params["num_p_pc_from_sc_to_pc"]);
-	vPC           = std::make_unique<float[]>(cp->int_params["num_pc"]);
-	threshPC      = std::make_unique<float[]>(cp->int_params["num_pc"]);
+	apPC          = std::make_unique<ct_uint8_t[]>(num_pc);
+	apBufPC       = std::make_unique<ct_uint32_t[]>(num_pc);
+	inputBCPC     = std::make_unique<ct_uint32_t[]>(num_pc);
+	inputSCPC     = std::make_unique<ct_uint8_t[]>(num_pc * num_p_pc_from_sc_to_pc);
+	pfSynWeightPC = std::make_unique<float[]>(num_pc * num_p_pc_from_gr_to_pc);
+	inputSumPFPC  = std::make_unique<float[]>(num_pc);
+	gPFPC         = std::make_unique<float[]>(num_pc);
+	gBCPC         = std::make_unique<float[]>(num_pc);
+	gSCPC         = std::make_unique<float[]>(num_pc * num_p_pc_from_sc_to_pc);
+	vPC           = std::make_unique<float[]>(num_pc);
+	threshPC      = std::make_unique<float[]>(num_pc);
 	histPCPopAct = std::make_unique<ct_uint32_t[]>(numPopHistBinsPC);
 
 	// inferior olivary cells
-	apIO      = std::make_unique<ct_uint8_t[]>(cp->int_params["num_io"]);
-	apBufIO   = std::make_unique<ct_uint8_t[]>(cp->int_params["num_io"]);
-	inputNCIO = std::make_unique<ct_uint8_t[]>(cp->int_params["num_io"] * cp->int_params["num_p_io_from_nc_to_io"]);
-	gNCIO     = std::make_unique<float[]>(cp->int_params["num_io"] * cp->int_params["num_p_io_from_nc_to_io"]);
-	threshIO  = std::make_unique<float[]>(cp->int_params["num_io"]);
-	vIO       = std::make_unique<float[]>(cp->int_params["num_io"]);
-	vCoupleIO = std::make_unique<float[]>(cp->int_params["num_io"]);
-	pfPCPlastTimerIO = std::make_unique<ct_int32_t[]>(cp->int_params["num_io"]);
+	apIO      = std::make_unique<ct_uint8_t[]>(num_io);
+	apBufIO   = std::make_unique<ct_uint8_t[]>(num_io);
+	inputNCIO = std::make_unique<ct_uint8_t[]>(num_io * num_p_io_from_nc_to_io);
+	gNCIO     = std::make_unique<float[]>(num_io * num_p_io_from_nc_to_io);
+	threshIO  = std::make_unique<float[]>(num_io);
+	vIO       = std::make_unique<float[]>(num_io);
+	vCoupleIO = std::make_unique<float[]>(num_io);
+	pfPCPlastTimerIO = std::make_unique<ct_int32_t[]>(num_io);
 
 	// nucleus cells
-	apNC          = std::make_unique<ct_uint8_t[]>(cp->int_params["num_nc"]);
-	apBufNC       = std::make_unique<ct_uint32_t[]>(cp->int_params["num_nc"]);
-	inputPCNC     = std::make_unique<ct_uint8_t[]>(cp->int_params["num_nc"] * cp->int_params["num_p_nc_from_pc_to_nc"]);
-	inputMFNC     = std::make_unique<ct_uint8_t[]>(cp->int_params["num_nc"] * cp->int_params["num_p_nc_from_mf_to_nc"]);
-	gPCNC         = std::make_unique<float[]>(cp->int_params["num_nc"] * cp->int_params["num_p_nc_from_pc_to_nc"]);
-	mfSynWeightNC = std::make_unique<float[]>(cp->int_params["num_nc"] * cp->int_params["num_p_nc_from_mf_to_nc"]);
-	gMFAMPANC     = std::make_unique<float[]>(cp->int_params["num_nc"] * cp->int_params["num_p_nc_from_mf_to_nc"]);
-	threshNC      = std::make_unique<float[]>(cp->int_params["num_nc"]);
-	vNC           = std::make_unique<float[]>(cp->int_params["num_nc"]);
-	synIOPReleaseNC = std::make_unique<float[]>(cp->int_params["num_nc"]);
+	apNC          = std::make_unique<ct_uint8_t[]>(num_nc);
+	apBufNC       = std::make_unique<ct_uint32_t[]>(num_nc);
+	inputPCNC     = std::make_unique<ct_uint8_t[]>(num_nc * num_p_nc_from_pc_to_nc);
+	inputMFNC     = std::make_unique<ct_uint8_t[]>(num_nc * num_p_nc_from_mf_to_nc);
+	gPCNC         = std::make_unique<float[]>(num_nc * num_p_nc_from_pc_to_nc);
+	mfSynWeightNC = std::make_unique<float[]>(num_nc * num_p_nc_from_mf_to_nc);
+	gMFAMPANC     = std::make_unique<float[]>(num_nc * num_p_nc_from_mf_to_nc);
+	threshNC      = std::make_unique<float[]>(num_nc);
+	vNC           = std::make_unique<float[]>(num_nc);
+	synIOPReleaseNC = std::make_unique<float[]>(num_nc);
 }
 
-void MZoneActivityState::initializeVals(ConnectivityParams *cp, int randSeed)
+void MZoneActivityState::initializeVals(int randSeed)
 {
 	//uncomment for actual runs 
 	//CRandomSFMT0 randGen(randSeed);
@@ -91,25 +91,25 @@ void MZoneActivityState::initializeVals(ConnectivityParams *cp, int randSeed)
 	 */
 
 	// bc
-	std::fill(threshBC.get(), threshBC.get() + cp->int_params["num_bc"], act_params[threshRestBC]);
-	std::fill(vBC.get(), vBC.get() + cp->int_params["num_bc"], act_params[eLeakBC]);
+	std::fill(threshBC.get(), threshBC.get() + num_bc, threshRestBC);
+	std::fill(vBC.get(), vBC.get() + num_bc, eLeakBC);
 
 	// pc
-	std::fill(vPC.get(), vPC.get() + cp->int_params["num_pc"], act_params[eLeakPC]);
-	std::fill(threshPC.get(), threshPC.get() + cp->int_params["num_pc"], act_params[threshRestPC]);
+	std::fill(vPC.get(), vPC.get() + num_pc, eLeakPC);
+	std::fill(threshPC.get(), threshPC.get() + num_pc, threshRestPC);
 
 	std::fill(pfSynWeightPC.get(), pfSynWeightPC.get()
-		+ cp->int_params["num_pc"] * cp->int_params["num_p_pc_from_gr_to_pc"], act_params[initSynWofGRtoPC]);
+		+ num_pc * num_p_pc_from_gr_to_pc, initSynWofGRtoPC);
 
-	std::fill(histPCPopAct.get(), histPCPopAct.get() + (int)derived_act_params[numPopHistBinsPC], 0);
+	std::fill(histPCPopAct.get(), histPCPopAct.get() + (int)numPopHistBinsPC, 0);
 
 	histPCPopActSum     = 0;
 	histPCPopActCurBinN = 0;
 	pcPopAct            = 0;
 
 	// IO
-	std::fill(threshIO.get(), threshIO.get() + cp->int_params["num_io"], act_params[threshRestIO]);
-	std::fill(vIO.get(), vIO.get() + cp->int_params["num_io"], act_params[eLeakIO]);
+	std::fill(threshIO.get(), threshIO.get() + num_io, threshRestIO);
+	std::fill(vIO.get(), vIO.get() + num_io, eLeakIO);
 
 	errDrive = 0;
 	
@@ -117,39 +117,39 @@ void MZoneActivityState::initializeVals(ConnectivityParams *cp, int randSeed)
 	noLTPMFNC = 0;
 	noLTDMFNC = 0;
 
-	std::fill(threshNC.get(), threshNC.get() + cp->int_params["num_nc"], act_params[threshRestNC]);
-	std::fill(vNC.get(), vNC.get() + cp->int_params["num_nc"], act_params[eLeakNC]);
+	std::fill(threshNC.get(), threshNC.get() + num_nc, threshRestNC);
+	std::fill(vNC.get(), vNC.get() + num_nc, eLeakNC);
 
 	std::fill(mfSynWeightNC.get(), mfSynWeightNC.get()
-		+ cp->int_params["num_nc"] * cp->int_params["num_p_nc_from_mf_to_nc"], act_params[initSynWofMFtoNC]);
+		+ num_nc * num_p_nc_from_mf_to_nc, initSynWofMFtoNC);
 }
 
-void MZoneActivityState::stateRW(ConnectivityParams *cp, bool read, std::fstream &file)
+void MZoneActivityState::stateRW(bool read, std::fstream &file)
 {
 	// basket cells
-	rawBytesRW((char *)apBC.get(), cp->int_params["num_bc"] * sizeof(ct_uint8_t), read, file);
-	rawBytesRW((char *)apBufBC.get(), cp->int_params["num_bc"] * sizeof(ct_uint32_t), read, file);
-	rawBytesRW((char *)inputPCBC.get(), cp->int_params["num_bc"] * sizeof(ct_uint32_t), read, file);
-	rawBytesRW((char *)gPFBC.get(), cp->int_params["num_bc"] * sizeof(float), read, file);
-	rawBytesRW((char *)gPCBC.get(), cp->int_params["num_bc"] * sizeof(float), read, file);
-	rawBytesRW((char *)vBC.get(), cp->int_params["num_bc"] * sizeof(float), read, file);
-	rawBytesRW((char *)threshBC.get(), cp->int_params["num_bc"] * sizeof(float), read, file);
+	rawBytesRW((char *)apBC.get(), num_bc * sizeof(ct_uint8_t), read, file);
+	rawBytesRW((char *)apBufBC.get(), num_bc * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)inputPCBC.get(), num_bc * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)gPFBC.get(), num_bc * sizeof(float), read, file);
+	rawBytesRW((char *)gPCBC.get(), num_bc * sizeof(float), read, file);
+	rawBytesRW((char *)vBC.get(), num_bc * sizeof(float), read, file);
+	rawBytesRW((char *)threshBC.get(), num_bc * sizeof(float), read, file);
 
 	// purkinje cells
-	rawBytesRW((char *)apPC.get(), cp->int_params["num_pc"] * sizeof(ct_uint8_t), read, file);
-	rawBytesRW((char *)apBufPC.get(), cp->int_params["num_pc"] * sizeof(ct_uint32_t), read, file);
-	rawBytesRW((char *)inputBCPC.get(), cp->int_params["num_pc"] * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)apPC.get(), num_pc * sizeof(ct_uint8_t), read, file);
+	rawBytesRW((char *)apBufPC.get(), num_pc * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)inputBCPC.get(), num_pc * sizeof(ct_uint32_t), read, file);
 	rawBytesRW((char *)inputSCPC.get(),
-		cp->int_params["num_pc"] * cp->int_params["num_p_pc_from_sc_to_pc"] * sizeof(ct_uint8_t), read, file);
+		num_pc * num_p_pc_from_sc_to_pc * sizeof(ct_uint8_t), read, file);
 	rawBytesRW((char *)pfSynWeightPC.get(),
-		cp->int_params["num_pc"] * cp->int_params["num_p_pc_from_gr_to_pc"] * sizeof(float), read, file);
-	rawBytesRW((char *)inputSumPFPC.get(), cp->int_params["num_pc"] * sizeof(float), read, file);
-	rawBytesRW((char *)gPFPC.get(), cp->int_params["num_pc"] * sizeof(float), read, file);
-	rawBytesRW((char *)gBCPC.get(), cp->int_params["num_pc"] * sizeof(float), read, file);
+		num_pc * num_p_pc_from_gr_to_pc * sizeof(float), read, file);
+	rawBytesRW((char *)inputSumPFPC.get(), num_pc * sizeof(float), read, file);
+	rawBytesRW((char *)gPFPC.get(), num_pc * sizeof(float), read, file);
+	rawBytesRW((char *)gBCPC.get(), num_pc * sizeof(float), read, file);
 	rawBytesRW((char *)gSCPC.get(),
-		cp->int_params["num_pc"] * cp->int_params["num_p_pc_from_sc_to_pc"] * sizeof(float), read, file);
-	rawBytesRW((char *)vPC.get(), cp->int_params["num_pc"] * sizeof(float), read, file);
-	rawBytesRW((char *)threshPC.get(), cp->int_params["num_pc"] * sizeof(float), read, file);
+		num_pc * num_p_pc_from_sc_to_pc * sizeof(float), read, file);
+	rawBytesRW((char *)vPC.get(), num_pc * sizeof(float), read, file);
+	rawBytesRW((char *)threshPC.get(), num_pc * sizeof(float), read, file);
 	rawBytesRW((char *)histPCPopAct.get(), numPopHistBinsPC * sizeof(ct_uint32_t), read, file);
 
 	rawBytesRW((char *)&histPCPopActSum, sizeof(ct_uint32_t), read, file);
@@ -157,35 +157,35 @@ void MZoneActivityState::stateRW(ConnectivityParams *cp, bool read, std::fstream
 	rawBytesRW((char *)&pcPopAct, sizeof(ct_uint32_t), read, file);
 	
 	// inferior olivary cells
-	rawBytesRW((char *)apIO.get(), cp->int_params["num_io"] * sizeof(ct_uint8_t), read, file);
-	rawBytesRW((char *)apBufIO.get(), cp->int_params["num_io"] * sizeof(ct_uint8_t), read, file);
+	rawBytesRW((char *)apIO.get(), num_io * sizeof(ct_uint8_t), read, file);
+	rawBytesRW((char *)apBufIO.get(), num_io * sizeof(ct_uint8_t), read, file);
 	rawBytesRW((char *)inputNCIO.get(),
-		cp->int_params["num_io"] * cp->int_params["num_p_io_from_nc_to_io"] * sizeof(ct_uint8_t), read, file);
+		num_io * num_p_io_from_nc_to_io * sizeof(ct_uint8_t), read, file);
 	rawBytesRW((char *)gNCIO.get(),
-		cp->int_params["num_io"] * cp->int_params["num_p_io_from_nc_to_io"] * sizeof(float), read, file);
-	rawBytesRW((char *)threshIO.get(), cp->int_params["num_io"] * sizeof(float), read, file);
-	rawBytesRW((char *)vIO.get(), cp->int_params["num_io"] * sizeof(float), read, file);
-	rawBytesRW((char *)vCoupleIO.get(), cp->int_params["num_io"] * sizeof(float), read, file);
-	rawBytesRW((char *)pfPCPlastTimerIO.get(), cp->int_params["num_io"] * sizeof(ct_int32_t), read, file);
+		num_io * num_p_io_from_nc_to_io * sizeof(float), read, file);
+	rawBytesRW((char *)threshIO.get(), num_io * sizeof(float), read, file);
+	rawBytesRW((char *)vIO.get(), num_io * sizeof(float), read, file);
+	rawBytesRW((char *)vCoupleIO.get(), num_io * sizeof(float), read, file);
+	rawBytesRW((char *)pfPCPlastTimerIO.get(), num_io * sizeof(ct_int32_t), read, file);
 
 	rawBytesRW((char *)&errDrive, sizeof(float), read, file);
 
 	// nucleus cells
-	rawBytesRW((char *)apNC.get(), cp->int_params["num_nc"] * sizeof(ct_uint8_t), read, file);
-	rawBytesRW((char *)apBufNC.get(), cp->int_params["num_nc"] * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)apNC.get(), num_nc * sizeof(ct_uint8_t), read, file);
+	rawBytesRW((char *)apBufNC.get(), num_nc * sizeof(ct_uint32_t), read, file);
 	rawBytesRW((char *)inputPCNC.get(),
-		cp->int_params["num_nc"] * cp->int_params["num_p_nc_from_pc_to_nc"] * sizeof(ct_uint8_t), read, file);
+		num_nc * num_p_nc_from_pc_to_nc * sizeof(ct_uint8_t), read, file);
 	rawBytesRW((char *)inputMFNC.get(),
-		cp->int_params["num_nc"] * cp->int_params["num_p_nc_from_mf_to_nc"] * sizeof(ct_uint8_t), read, file);
+		num_nc * num_p_nc_from_mf_to_nc * sizeof(ct_uint8_t), read, file);
 	rawBytesRW((char *)gPCNC.get(),
-		cp->int_params["num_nc"] * cp->int_params["num_p_nc_from_pc_to_nc"] * sizeof(float), read, file);
+		num_nc * num_p_nc_from_pc_to_nc * sizeof(float), read, file);
 	rawBytesRW((char *)mfSynWeightNC.get(),
-		cp->int_params["num_nc"] * cp->int_params["num_p_nc_from_mf_to_nc"] * sizeof(float), read, file);
+		num_nc * num_p_nc_from_mf_to_nc * sizeof(float), read, file);
 	rawBytesRW((char *)gMFAMPANC.get(),
-		cp->int_params["num_nc"] * cp->int_params["num_p_nc_from_mf_to_nc"] * sizeof(float), read, file);
-	rawBytesRW((char *)threshNC.get(), cp->int_params["num_nc"] * sizeof(float), read, file);
-	rawBytesRW((char *)vNC.get(), cp->int_params["num_nc"] * sizeof(float), read, file);
-	rawBytesRW((char *)synIOPReleaseNC.get(), cp->int_params["num_nc"] * sizeof(float), read, file);
+		num_nc * num_p_nc_from_mf_to_nc * sizeof(float), read, file);
+	rawBytesRW((char *)threshNC.get(), num_nc * sizeof(float), read, file);
+	rawBytesRW((char *)vNC.get(), num_nc * sizeof(float), read, file);
+	rawBytesRW((char *)synIOPReleaseNC.get(), num_nc * sizeof(float), read, file);
 
 	rawBytesRW((char *)&noLTPMFNC, sizeof(ct_uint8_t), read, file);
 	rawBytesRW((char *)&noLTDMFNC, sizeof(ct_uint8_t), read, file);

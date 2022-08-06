@@ -9,7 +9,7 @@
 
 CBMState::CBMState() {}
 
-CBMState::CBMState(ConnectivityParams *cp, unsigned int nZones) : numZones(nZones)
+CBMState::CBMState(unsigned int nZones) : numZones(nZones)
 {
 	CRandomSFMT randGen(time(0));
 
@@ -23,42 +23,41 @@ CBMState::CBMState(ConnectivityParams *cp, unsigned int nZones) : numZones(nZone
 		mzoneARSeed[i] = randGen.IRandom(0, INT_MAX);
 	}
 
-	newState(cp, nZones, innetCRSeed, mzoneCRSeed, mzoneARSeed);
+	newState(nZones, innetCRSeed, mzoneCRSeed, mzoneARSeed);
 
 	delete[] mzoneCRSeed;
 	delete[] mzoneARSeed;
 }
 
-CBMState::CBMState(ConnectivityParams *cp, unsigned int nZones,
-	std::fstream &sim_file_buf) : numZones(nZones)
+CBMState::CBMState(unsigned int nZones, std::fstream &sim_file_buf) : numZones(nZones)
 {
-	innetConState  = new InNetConnectivityState(cp, sim_file_buf);
-	innetActState  = new InNetActivityState(cp, sim_file_buf);
+	innetConState  = new InNetConnectivityState(sim_file_buf);
+	innetActState  = new InNetActivityState(sim_file_buf);
 
 	mzoneConStates = new MZoneConnectivityState*[nZones];
 	mzoneActStates = new MZoneActivityState*[nZones];
 
 	for (int i = 0; i < nZones; i++)
 	{
-		mzoneConStates[i] = new MZoneConnectivityState(cp, sim_file_buf);
-		mzoneActStates[i] = new MZoneActivityState(cp, sim_file_buf);
+		mzoneConStates[i] = new MZoneConnectivityState(sim_file_buf);
+		mzoneActStates[i] = new MZoneActivityState(sim_file_buf);
 	}
 }
 
-CBMState::CBMState(ConnectivityParams *cp, unsigned int nZones,
+CBMState::CBMState(unsigned int nZones,
 	std::string inFile) : numZones(nZones)
 {
 	std::fstream inStateFileBuffer(inFile.c_str(), std::ios::in | std::ios::binary);
-	innetConState  = new InNetConnectivityState(cp, inStateFileBuffer);
-	innetActState  = new InNetActivityState(cp, inStateFileBuffer);
+	innetConState  = new InNetConnectivityState(inStateFileBuffer);
+	innetActState  = new InNetActivityState(inStateFileBuffer);
 
 	mzoneConStates = new MZoneConnectivityState*[nZones];
 	mzoneActStates = new MZoneActivityState*[nZones];
 
 	for (int i = 0; i < nZones; i++)
 	{
-		mzoneConStates[i] = new MZoneConnectivityState(cp, inStateFileBuffer);
-		mzoneActStates[i] = new MZoneActivityState(cp, inStateFileBuffer);
+		mzoneConStates[i] = new MZoneConnectivityState(inStateFileBuffer);
+		mzoneActStates[i] = new MZoneActivityState(inStateFileBuffer);
 	}
 	inStateFileBuffer.close();
 }
@@ -78,42 +77,41 @@ CBMState::~CBMState()
 	delete[] mzoneActStates;
 }
 
-void CBMState::newState(ConnectivityParams *cp, unsigned int nZones,
-	int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed)
+void CBMState::newState(unsigned int nZones, int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed)
 {
-	innetConState  = new InNetConnectivityState(cp, act_params[msPerTimeStep], innetCRSeed);
+	innetConState  = new InNetConnectivityState(msPerTimeStep, innetCRSeed);
 	mzoneConStates = new MZoneConnectivityState*[nZones];
-	innetActState  = new InNetActivityState(cp);
+	innetActState  = new InNetActivityState();
 	mzoneActStates = new MZoneActivityState*[nZones];
 
 	for (int i = 0; i < nZones; i++)
 	{
-		mzoneConStates[i] = new MZoneConnectivityState(cp, mzoneCRSeed[i]);
-		mzoneActStates[i] = new MZoneActivityState(cp, mzoneARSeed[i]);
+		mzoneConStates[i] = new MZoneConnectivityState(mzoneCRSeed[i]);
+		mzoneActStates[i] = new MZoneActivityState(mzoneARSeed[i]);
 	}
 }
 
-void CBMState::readState(ConnectivityParams *cp, std::fstream &infile)
+void CBMState::readState(std::fstream &infile)
 {
-	innetConState->readState(cp, infile);
-	innetActState->readState(cp, infile);
+	innetConState->readState(infile);
+	innetActState->readState(infile);
 
 	for (int i = 0; i < numZones; i++)
 	{
-		mzoneConStates[i]->readState(cp, infile);
-		mzoneActStates[i]->readState(cp, infile);
+		mzoneConStates[i]->readState(infile);
+		mzoneActStates[i]->readState(infile);
 	}
 }
 
-void CBMState::writeState(ConnectivityParams *cp, std::fstream &outfile)
+void CBMState::writeState(std::fstream &outfile)
 {
-	innetConState->writeState(cp, outfile);
-	innetActState->writeState(cp, outfile);
+	innetConState->writeState(outfile);
+	innetActState->writeState(outfile);
 	
 	for (int i = 0; i < numZones; i++)
 	{
-		mzoneConStates[i]->writeState(cp, outfile);
-		mzoneActStates[i]->writeState(cp, outfile);
+		mzoneConStates[i]->writeState(outfile);
+		mzoneActStates[i]->writeState(outfile);
 	}
 }
 

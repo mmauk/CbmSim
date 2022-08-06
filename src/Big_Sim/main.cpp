@@ -21,8 +21,8 @@ int main1(int argc, char **argv)
 {
 	parsed_build_file p_file;
 	parse_build_args(&argv, p_file);
+	populate_con_params(p_file);
 	populate_act_params(p_file);
-	print_ap();
 	return 0;
 }
 

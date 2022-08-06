@@ -15,19 +15,17 @@
 #include "params/connectivityparams.h"
 #include "params/activityparams.h"
 
-
 class InNetActivityState
 {
 public:
 	InNetActivityState();
-	InNetActivityState(ConnectivityParams *cp);
-	InNetActivityState(ConnectivityParams *cp, std::fstream &infile);
+	InNetActivityState(std::fstream &infile);
 
 	~InNetActivityState();
 
-	void readState(ConnectivityParams *cp, std::fstream &infile);
-	void writeState(ConnectivityParams *cp, std::fstream &outfile);
-	void resetState(ConnectivityParams *cp);
+	void readState(std::fstream &infile);
+	void writeState(std::fstream &outfile);
+	void resetState();
 
 	//mossy fiber
 	std::unique_ptr<ct_uint8_t[]> histMF{nullptr};
@@ -93,9 +91,10 @@ public:
 	//std::unique_ptr<ct_uint32_t[]> inputSumPFSC{nullptr};
 
 private:
-	void stateRW(ConnectivityParams *cp, bool read, std::fstream &file);
-	void allocateMemory(ConnectivityParams *cp);
-	void initializeVals(ConnectivityParams *cp);
+	void stateRW(bool read, std::fstream &file);
+	void allocateMemory();
+	void initializeVals();
 };
 
 #endif /* INNETACTIVITYSTATE_H_ */
+

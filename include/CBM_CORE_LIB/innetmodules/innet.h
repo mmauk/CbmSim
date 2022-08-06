@@ -34,8 +34,8 @@ class InNet
 {
 public:
 	InNet();
-	InNet(ConnectivityParams *cp, InNetConnectivityState *cs,
-		InNetActivityState *as, int gpuIndStart, int numGPUs);
+	InNet(InNetConnectivityState *cs, InNetActivityState *as,
+		int gpuIndStart, int numGPUs);
 	~InNet();
 
 	void writeToState();
@@ -110,7 +110,6 @@ public:
 	void runUpdateGRHistoryCUDA(cudaStream_t **sts, int streamN, unsigned long t);
 
 protected:
-	ConnectivityParams *cp;
 
 	InNetConnectivityState *cs;
 	InNetActivityState *as;
@@ -329,12 +328,12 @@ protected:
 	//end gpu related variables
 	//-----------end basket cell variables
 
-	virtual void initCUDA(ConnectivityParams *cp);
-	virtual void initMFCUDA(ConnectivityParams *cp);
-	virtual void initGRCUDA(ConnectivityParams *cp);
-	virtual void initGOCUDA(ConnectivityParams *cp);
-	virtual void initBCCUDA(ConnectivityParams *cp);
-	virtual void initSCCUDA(ConnectivityParams *cp);
+	virtual void initCUDA();
+	virtual void initMFCUDA();
+	virtual void initGRCUDA();
+	virtual void initGOCUDA();
+	virtual void initBCCUDA();
+	virtual void initSCCUDA();
 
 private:
 	template<typename Type>

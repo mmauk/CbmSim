@@ -9,8 +9,7 @@
 
 MZone::MZone() {}
 
-MZone::MZone(ConnectivityParams *cp, MZoneConnectivityState *cs,
-		MZoneActivityState *as, int randSeed, ct_uint32_t **actBufGRGPU,
+MZone::MZone(MZoneConnectivityState *cs, MZoneActivityState *as, int randSeed, ct_uint32_t **actBufGRGPU,
 		ct_uint32_t **delayMaskGRGPU, ct_uint64_t **histGRGPU, int gpuIndStart, int numGPUs)
 {
 	randGen = new CRandomSFMT0(randSeed);
@@ -18,7 +17,6 @@ MZone::MZone(ConnectivityParams *cp, MZoneConnectivityState *cs,
 	// as with innet, shallow-copying all (for now). Thus, important
 	// that only the caller deletes these items AND that this object
 	// goes out of scope before the caller
-	this->cp = cp;
 	this->cs = cs; 
 	this->as = as; 
 
@@ -30,11 +28,11 @@ MZone::MZone(ConnectivityParams *cp, MZoneConnectivityState *cs,
 	delayBCPCSCMaskGRGPU = delayMaskGRGPU;
 	historyGRGPU         = histGRGPU;
 
-	pfSynWeightPCLinear = new float[cp->int_params["num_gr"]];
-	pfPCPlastStepIO     = new float[cp->int_params["num_io"]];
+	pfSynWeightPCLinear = new float[num_gr];
+	pfPCPlastStepIO     = new float[num_io];
 
-	tempGRPCLTDStep = act_params[synLTDStepSizeGRtoPC];
-	tempGRPCLTPStep = act_params[synLTPStepSizeGRtoPC];
+	tempGRPCLTDStep = synLTDStepSizeGRtoPC;
+	tempGRPCLTPStep = synLTPStepSizeGRtoPC;
 
 	this->numGPUs     = numGPUs;
 	this->gpuIndStart = gpuIndStart;
@@ -77,32 +75,32 @@ void MZone::initCUDA()
 	int maxNumGPUs;
 	cudaGetDeviceCount(&maxNumGPUs);
 
-	numGRPerGPU = cp->int_params["num_gr"] / numGPUs;
+	numGRPerGPU = num_gr / numGPUs;
 
 	updatePFPCNumGRPerB = 512;
 	updatePFPCNumBlocks = numGRPerGPU / updatePFPCNumGRPerB;
 
-	updatePFPCSynWNumGRPerB = 512 * (cp->int_params["num_p_pc_from_gr_to_pc"] > 512) +
-			cp->int_params["num_p_pc_from_gr_to_pc"] * (cp->int_params["num_p_pc_from_gr_to_pc"] <= 512);
-	updatePFPCSynWNumBlocks = cp->int_params["num_p_pc_from_gr_to_pc"] / updatePFPCSynWNumGRPerB;
+	updatePFPCSynWNumGRPerB = 512 * (num_p_pc_from_gr_to_pc > 512) +
+			num_p_pc_from_gr_to_pc * (num_p_pc_from_gr_to_pc <= 512);
+	updatePFPCSynWNumBlocks = num_p_pc_from_gr_to_pc / updatePFPCSynWNumGRPerB;
 
 	cudaSetDevice(0 + gpuIndStart);
 	//allocate host cuda memory
-	cudaHostAlloc((void **)&inputSumPFPCMZH, cp->int_params["num_pc"] * sizeof(float), cudaHostAllocPortable);
+	cudaHostAlloc((void **)&inputSumPFPCMZH, num_pc * sizeof(float), cudaHostAllocPortable);
 
 	cudaDeviceSynchronize();
 	//initialize host cuda memory
-	for (int i = 0; i < cp->int_params["num_pc"]; i++)
+	for (int i = 0; i < num_pc; i++)
 	{
 		inputSumPFPCMZH[i] = 0;
 	}
 
-	for (int i = 0; i < cp->int_params["num_pc"]; i++)
+	for (int i = 0; i < num_pc; i++)
 	{
-		for (int j = 0; j < cp->int_params["num_p_pc_from_gr_to_pc"]; j++)
+		for (int j = 0; j < num_p_pc_from_gr_to_pc; j++)
 		{
 			// TODO: get rid of pfSynWeightLinear and use our linearized version directly
-			pfSynWeightPCLinear[i * cp->int_params["num_p_pc_from_gr_to_pc"] + j] = as->pfSynWeightPC[i * cp->int_params["num_p_pc_from_gr_to_pc"] + j];
+			pfSynWeightPCLinear[i * num_p_pc_from_gr_to_pc + j] = as->pfSynWeightPC[i * num_p_pc_from_gr_to_pc + j];
 		}
 	}
 
@@ -121,20 +119,20 @@ void MZone::initCUDA()
 		//allocate device cuda memory
 		cudaMalloc((void **)&pfSynWeightPCGPU[i], numGRPerGPU * sizeof(float));
 		cudaMallocPitch((void **)&inputPFPCGPU[i], (size_t *)&inputPFPCGPUPitch[i],
-				cp->int_params["num_p_pc_from_gr_to_pc"] * sizeof(float), cp->int_params["num_pc"] / numGPUs);
-		cudaMalloc((void **)&inputSumPFPCMZGPU[i], cp->int_params["num_pc"] / numGPUs * sizeof(float));
+				num_p_pc_from_gr_to_pc * sizeof(float), num_pc / numGPUs);
+		cudaMalloc((void **)&inputSumPFPCMZGPU[i], num_pc / numGPUs * sizeof(float));
 
 		cudaDeviceSynchronize();
 		//initialize device cuda memory
 		cudaMemcpy(pfSynWeightPCGPU[i], &pfSynWeightPCLinear[cpyStartInd],
 				numGRPerGPU*sizeof(float), cudaMemcpyHostToDevice);
 
-		for (int j = 0; j < cp->int_params["num_pc"]/numGPUs; j++)
+		for (int j = 0; j < num_pc/numGPUs; j++)
 		{
 			cudaMemset(((char *)inputPFPCGPU[i] + j * inputPFPCGPUPitch[i]),
-					0, cp->int_params["num_p_pc_from_gr_to_pc"] * sizeof(float));
+					0, num_p_pc_from_gr_to_pc * sizeof(float));
 		}
-		cudaMemset(inputSumPFPCMZGPU[i], 0, cp->int_params["num_pc"] / numGPUs * sizeof(float));
+		cudaMemset(inputSumPFPCMZGPU[i], 0, num_pc / numGPUs * sizeof(float));
 
 		cudaDeviceSynchronize();
 	}
@@ -148,7 +146,7 @@ void MZone::writeToState()
 	// TODO: write everything to state...only doing weights and pfpc input sums :/
 	cpyPFPCSynWCUDA();
 
-	for (int i = 0; i < cp->int_params["num_pc"]; i++)
+	for (int i = 0; i < num_pc; i++)
 	{
 		as->inputSumPFPC[i] = inputSumPFPCMZH[i];
 	}
@@ -163,18 +161,18 @@ void MZone::cpyPFPCSynWCUDA()
 			numGRPerGPU * sizeof(float), cudaMemcpyDeviceToHost);
 	}
 
-	for (int i = 0; i < cp->int_params["num_pc"]; i++)
+	for (int i = 0; i < num_pc; i++)
 	{
-		for (int j = 0; j < cp->int_params["num_p_pc_from_gr_to_pc"]; j++)
+		for (int j = 0; j < num_p_pc_from_gr_to_pc; j++)
 		{
-			as->pfSynWeightPC[i * cp->int_params["num_p_pc_from_gr_to_pc"] + j] = pfSynWeightPCLinear[i * cp->int_params["num_p_pc_from_gr_to_pc"] + j];
+			as->pfSynWeightPC[i * num_p_pc_from_gr_to_pc + j] = pfSynWeightPCLinear[i * num_p_pc_from_gr_to_pc + j];
 		}
 	}
 }
 
 void MZone::setErrDrive(float errDriveRelative)
 {
-	as->errDrive = errDriveRelative * act_params[maxExtIncVIO];
+	as->errDrive = errDriveRelative * maxExtIncVIO;
 }
 
 void MZone::updateMFActivities(const ct_uint8_t *actMF)
@@ -202,39 +200,39 @@ void MZone::calcPCActivities()
 #pragma omp parallel
 	{
 #pragma omp for
-		for (int i = 0; i < cp->int_params["num_pc"]; i++)
+		for (int i = 0; i < num_pc; i++)
 		{
 			float gSCPCSum;
 
-			as->gPFPC[i] = as->gPFPC[i] + inputSumPFPCMZH[i] * act_params[gIncGRtoPC];
-			as->gPFPC[i] = as->gPFPC[i] * derived_act_params[gDecGRtoPC];
-			as->gBCPC[i] = as->gBCPC[i] + as->inputBCPC[i] * act_params[gIncBCtoPC];
-			as->gBCPC[i] = as->gBCPC[i] * derived_act_params[gDecBCtoPC];
+			as->gPFPC[i] = as->gPFPC[i] + inputSumPFPCMZH[i] * gIncGRtoPC;
+			as->gPFPC[i] = as->gPFPC[i] * gDecGRtoPC;
+			as->gBCPC[i] = as->gBCPC[i] + as->inputBCPC[i] * gIncBCtoPC;
+			as->gBCPC[i] = as->gBCPC[i] * gDecBCtoPC;
 
 			gSCPCSum = 0;
 
-			for (int j = 0; j < cp->int_params["num_p_pc_from_sc_to_pc"]; j++)
+			for (int j = 0; j < num_p_pc_from_sc_to_pc; j++)
 			{
-				as->gSCPC[i * cp->int_params["num_p_pc_from_sc_to_pc"] + j] = as->gSCPC[i * cp->int_params["num_p_pc_from_sc_to_pc"] + j]
-				   + act_params[gIncSCtoPC] * (1 - as->gSCPC[i * cp->int_params["num_p_pc_from_sc_to_pc"] + j])
-				   * as->inputSCPC[i * cp->int_params["num_p_pc_from_sc_to_pc"] + j];
-				as->gSCPC[i * cp->int_params["num_p_pc_from_sc_to_pc"] + j] = as->gSCPC[i * cp->int_params["num_p_pc_from_sc_to_pc"] + j]
-				   * derived_act_params[gDecSCtoPC];
-				gSCPCSum += as->gSCPC[i * cp->int_params["num_p_pc_from_sc_to_pc"] + j];
+				as->gSCPC[i * num_p_pc_from_sc_to_pc + j] = as->gSCPC[i * num_p_pc_from_sc_to_pc + j]
+				   + gIncSCtoPC * (1 - as->gSCPC[i * num_p_pc_from_sc_to_pc + j])
+				   * as->inputSCPC[i * num_p_pc_from_sc_to_pc + j];
+				as->gSCPC[i * num_p_pc_from_sc_to_pc + j] = as->gSCPC[i * num_p_pc_from_sc_to_pc + j]
+				   * gDecSCtoPC;
+				gSCPCSum += as->gSCPC[i * num_p_pc_from_sc_to_pc + j];
 			}
 
 			as->vPC[i] = as->vPC[i] +
-					(derived_act_params[gLeakPC] * (act_params[eLeakPC] - as->vPC[i])) -
+					(gLeakPC * (eLeakPC - as->vPC[i])) -
 					(as->gPFPC[i] * as->vPC[i]) +
-					(as->gBCPC[i] * (act_params[eBCtoPC] - as->vPC[i])) +
-					(gSCPCSum * (act_params[eSCtoPC] - as->vPC[i]));
+					(as->gBCPC[i] * (eBCtoPC - as->vPC[i])) +
+					(gSCPCSum * (eSCtoPC - as->vPC[i]));
 
-			as->threshPC[i] = as->threshPC[i] + (derived_act_params[threshDecPC] * (act_params[threshRestPC] - as->threshPC[i]));
+			as->threshPC[i] = as->threshPC[i] + (threshDecPC * (threshRestPC - as->threshPC[i]));
 
 			as->apPC[i] = as->vPC[i] > as->threshPC[i];
 			as->apBufPC[i] = (as->apBufPC[i] << 1) | (as->apPC[i] * 0x00000001);
 
-			as->threshPC[i] = as->apPC[i] * act_params[threshMaxPC] + (!as->apPC[i]) * as->threshPC[i];
+			as->threshPC[i] = as->apPC[i] * threshMaxPC + (!as->apPC[i]) * as->threshPC[i];
 			as->pcPopAct = as->pcPopAct + as->apPC[i];
 		}
 	}
@@ -245,7 +243,7 @@ void MZone::calcBCActivities(ct_uint32_t **pfInput)
 #pragma omp parallel
 	{
 #pragma omp for
-		for (int i = 0; i < cp->int_params["num_bc"]; i++)
+		for (int i = 0; i < num_bc; i++)
 		{
 			int totalPFInput = 0;
 
@@ -254,21 +252,21 @@ void MZone::calcBCActivities(ct_uint32_t **pfInput)
 				totalPFInput += pfInput[j][i];
 			}
 			
-			as->gPFBC[i] = as->gPFBC[i] + sumPFBCInput[i] * act_params[gIncGRtoBC];
-			as->gPFBC[i] = as->gPFBC[i] * derived_act_params[gDecGRtoBC];
-			as->gPCBC[i] = as->gPCBC[i] + as->inputPCBC[i] * act_params[gIncPCtoBC];
-			as->gPCBC[i] = as->gPCBC[i] * derived_act_params[gDecPCtoBC];
+			as->gPFBC[i] = as->gPFBC[i] + sumPFBCInput[i] * gIncGRtoBC;
+			as->gPFBC[i] = as->gPFBC[i] * gDecGRtoBC;
+			as->gPCBC[i] = as->gPCBC[i] + as->inputPCBC[i] * gIncPCtoBC;
+			as->gPCBC[i] = as->gPCBC[i] * gDecPCtoBC;
 
 			as->vBC[i] = as->vBC[i] +
-					(derived_act_params[gLeakBC] * (act_params[eLeakBC] - as->vBC[i])) -
+					(gLeakBC * (eLeakBC - as->vBC[i])) -
 					(as->gPFBC[i] * as->vBC[i]) +
-					(as->gPCBC[i] * (act_params[ePCtoBC] - as->vBC[i]));
+					(as->gPCBC[i] * (ePCtoBC - as->vBC[i]));
 
-			as->threshBC[i] = as->threshBC[i] + derived_act_params[threshDecBC] * (act_params[threshRestBC] - as->threshBC[i]);
+			as->threshBC[i] = as->threshBC[i] + threshDecBC * (threshRestBC - as->threshBC[i]);
 			as->apBC[i] = as->vBC[i] > as->threshBC[i];
 			as->apBufBC[i] = (as->apBufBC[i] << 1) | (as->apBC[i] * 0x00000001);
 
-			as->threshBC[i] = as->apBC[i] * act_params[threshMaxBC] + (!as->apBC[i]) * (as->threshBC[i]);
+			as->threshBC[i] = as->apBC[i] * threshMaxBC + (!as->apBC[i]) * (as->threshBC[i]);
 		}
 	}
 }
@@ -283,36 +281,36 @@ void MZone::calcIOActivities()
 	float r = static_cast<float> (rand()) / static_cast<float> (RAND_MAX);
 	float gNoise = (r - 0.5) * 2.0;
 
-	for (int i = 0; i < cp->int_params["num_io"]; i++)
+	for (int i = 0; i < num_io; i++)
 	{
 		float gNCSum;
 		gNCSum = 0;
 
-		for (int j = 0; j < cp->int_params["num_p_io_from_nc_to_io"]; j++)
+		for (int j = 0; j < num_p_io_from_nc_to_io; j++)
 		{
-			as->gNCIO[i * cp->int_params["num_p_io_from_nc_to_io"] + j] = as->gNCIO[i * cp->int_params["num_p_io_from_nc_to_io"] + j]
-			   * exp(-act_params[msPerTimeStep] /
-				(-act_params[gDecTSofNCtoIO] * exp(-as->gNCIO[i * cp->int_params["num_p_io_from_nc_to_io"] + j] / act_params[gDecTTofNCtoIO])
-				 + act_params[gDecT0ofNCtoIO]));
-			as->gNCIO[i * cp->int_params["num_p_io_from_nc_to_io"] + j] = as->gNCIO[i * cp->int_params["num_p_io_from_nc_to_io"] + j]
-			   + as->inputNCIO[i * cp->int_params["num_p_io_from_nc_to_io"] + j]
-			   * act_params[gIncNCtoIO] * exp(-as->gNCIO[i * cp->int_params["num_p_io_from_nc_to_io"] + j] / act_params[gIncTauNCtoIO]);
-			gNCSum += as->gNCIO[i * cp->int_params["num_p_io_from_nc_to_io"] + j];
+			as->gNCIO[i * num_p_io_from_nc_to_io + j] = as->gNCIO[i * num_p_io_from_nc_to_io + j]
+			   * exp(-msPerTimeStep /
+				(-gDecTSofNCtoIO * exp(-as->gNCIO[i * num_p_io_from_nc_to_io + j] / gDecTTofNCtoIO)
+				 + gDecT0ofNCtoIO));
+			as->gNCIO[i * num_p_io_from_nc_to_io + j] = as->gNCIO[i * num_p_io_from_nc_to_io + j]
+			   + as->inputNCIO[i * num_p_io_from_nc_to_io + j]
+			   * gIncNCtoIO * exp(-as->gNCIO[i * num_p_io_from_nc_to_io + j] / gIncTauNCtoIO);
+			gNCSum += as->gNCIO[i * num_p_io_from_nc_to_io + j];
 
-			as->inputNCIO[i * cp->int_params["num_p_io_from_nc_to_io"] + j] = 0;
+			as->inputNCIO[i * num_p_io_from_nc_to_io + j] = 0;
 		}
 
 		gNCSum = 1.5 * gNCSum / 3.1;
 
-		as->vIO[i] = as->vIO[i] + derived_act_params[gLeakIO] * (act_params[eLeakIO] - as->vIO[i]) +
-				gNCSum * (act_params[eNCtoIO] - as->vIO[i]) + as->vCoupleIO[i] +
+		as->vIO[i] = as->vIO[i] + gLeakIO * (eLeakIO - as->vIO[i]) +
+				gNCSum * (eNCtoIO - as->vIO[i]) + as->vCoupleIO[i] +
 				as->errDrive + gNoise;
 
 		as->apIO[i] = as->vIO[i] > as->threshIO[i];
 		as->apBufIO[i] = (as->apBufIO[i] << 1) |(as->apIO[i] * 0x00000001);
 
-		as->threshIO[i] = act_params[threshMaxIO] * as->apIO[i] +
-				(!as->apIO[i]) * (as->threshIO[i] + derived_act_params[threshDecIO] * (act_params[threshRestIO] - as->threshIO[i]));
+		as->threshIO[i] = threshMaxIO * as->apIO[i] +
+				(!as->apIO[i]) * (as->threshIO[i] + threshDecIO * (threshRestIO - as->threshIO[i]));
 	}
 	as->errDrive = 0;
 }
@@ -339,43 +337,43 @@ float gDecay = exp(-1.0 / 20.0);
 			gMFAMPASum   = 0;
 			inputMFNCSum = 0;
 
-			for (int j = 0; j < cp->int_params["num_p_nc_from_mf_to_nc"]; j++)
+			for (int j = 0; j < num_p_nc_from_mf_to_nc; j++)
 			{
-				inputMFNCSum += as->inputMFNC[i * cp->int_params["num_p_nc_from_mf_to_nc"] + j];
+				inputMFNCSum += as->inputMFNC[i * num_p_nc_from_mf_to_nc + j];
 
-				as->gMFAMPANC[i * cp->int_params["num_p_nc_from_mf_to_nc"] + j] = as->gMFAMPANC[i * cp->int_params["num_p_nc_from_mf_to_nc"] + j]
-				   * gDecay + (derived_act_params[gAMPAIncMFtoNC] * as->inputMFNC[i * cp->int_params["num_p_nc_from_mf_to_nc"] + j]
-					 * as->mfSynWeightNC[i * cp->int_params["num_p_nc_from_mf_to_nc"] + j]);
-				gMFAMPASum += as->gMFAMPANC[i * cp->int_params["num_p_nc_from_mf_to_nc"] + j];
+				as->gMFAMPANC[i * num_p_nc_from_mf_to_nc + j] = as->gMFAMPANC[i * num_p_nc_from_mf_to_nc + j]
+				   * gDecay + (gAMPAIncMFtoNC * as->inputMFNC[i * num_p_nc_from_mf_to_nc + j]
+					 * as->mfSynWeightNC[i * num_p_nc_from_mf_to_nc + j]);
+				gMFAMPASum += as->gMFAMPANC[i * num_p_nc_from_mf_to_nc + j];
 			}
 
-			gMFNMDASum = gMFNMDASum * act_params[msPerTimeStep] / ((float)cp->int_params["num_p_nc_from_mf_to_nc"]);
-			gMFAMPASum = gMFAMPASum * act_params[msPerTimeStep] / ((float)cp->int_params["num_p_nc_from_mf_to_nc"]);
+			gMFNMDASum = gMFNMDASum * msPerTimeStep / ((float)num_p_nc_from_mf_to_nc);
+			gMFAMPASum = gMFAMPASum * msPerTimeStep / ((float)num_p_nc_from_mf_to_nc);
 			gMFNMDASum = gMFNMDASum * -as->vNC[i] / 80.0f;
 
 			gPCNCSum = 0;
 			inputPCNCSum = 0;
 
-			for (int j = 0; j < cp->int_params["num_p_nc_from_pc_to_nc"]; j++)
+			for (int j = 0; j < num_p_nc_from_pc_to_nc; j++)
 			{
-				inputPCNCSum += as->inputPCNC[i * cp->int_params["num_p_nc_from_pc_to_nc"] + j];
+				inputPCNCSum += as->inputPCNC[i * num_p_nc_from_pc_to_nc + j];
 
-				as->gPCNC[i * cp->int_params["num_p_nc_from_pc_to_nc"] + j] = as->gPCNC[i * cp->int_params["num_p_nc_from_pc_to_nc"] + j] * derived_act_params[gDecPCtoNC] + 
-					as->inputPCNC[i * cp->int_params["num_p_nc_from_pc_to_nc"] + j] * act_params[gIncAvgPCtoNC]
-					* (1 - as->gPCNC[i * cp->int_params["num_p_nc_from_pc_to_nc"] + j]);
-				gPCNCSum += as->gPCNC[i * cp->int_params["num_p_nc_from_pc_to_nc"] + j];
+				as->gPCNC[i * num_p_nc_from_pc_to_nc + j] = as->gPCNC[i * num_p_nc_from_pc_to_nc + j] * gDecPCtoNC + 
+					as->inputPCNC[i * num_p_nc_from_pc_to_nc + j] * gIncAvgPCtoNC
+					* (1 - as->gPCNC[i * num_p_nc_from_pc_to_nc + j]);
+				gPCNCSum += as->gPCNC[i * num_p_nc_from_pc_to_nc + j];
 
 			}
-			gPCNCSum = gPCNCSum * act_params[msPerTimeStep] / ((float)cp->int_params["num_p_nc_from_pc_to_nc"]);
+			gPCNCSum = gPCNCSum * msPerTimeStep / ((float)num_p_nc_from_pc_to_nc);
 			
-			as->vNC[i] = as->vNC[i] + derived_act_params[gLeakNC] * (act_params[eLeakNC] - as->vNC[i]) -
-					(gMFNMDASum + gMFAMPASum) * as->vNC[i] + gPCNCSum * (act_params[ePCtoNC] - as->vNC[i]);
+			as->vNC[i] = as->vNC[i] + gLeakNC * (eLeakNC - as->vNC[i]) -
+					(gMFNMDASum + gMFAMPASum) * as->vNC[i] + gPCNCSum * (ePCtoNC - as->vNC[i]);
 			
-			as->threshNC[i] = as->threshNC[i] + derived_act_params[threshDecNC] * (act_params[threshRestNC] - as->threshNC[i]);
+			as->threshNC[i] = as->threshNC[i] + threshDecNC * (threshRestNC - as->threshNC[i]);
 			as->apNC[i] = as->vNC[i] > as->threshNC[i];
 			as->apBufNC[i] = (as->apBufNC[i] << 1) | (as->apNC[i] * 0x00000001);
 
-			as->threshNC[i] = as->apNC[i] * act_params[threshMaxNC] + (!as->apNC[i]) * as->threshNC[i];
+			as->threshNC[i] = as->apNC[i] * threshMaxNC + (!as->apNC[i]) * as->threshNC[i];
 		}
 	}
 }
@@ -383,18 +381,18 @@ float gDecay = exp(-1.0 / 20.0);
 void MZone::updatePCOut()
 {
 #ifdef DEBUGOUT
-	std::cout << "resetting inputPCBC " << cp->int_params["num_bc"] << std::endl;
+	std::cout << "resetting inputPCBC " << num_bc << std::endl;
 #endif
-	for (int i = 0; i < cp->int_params["num_bc"]; i++)
+	for (int i = 0; i < num_bc; i++)
 	{
 		as->inputPCBC[i] = 0;
 	}
 #ifdef DEBUGOUT
 	std::cout << "updating pc to bc " << std::endl;
 #endif
-	for (int i = 0; i < cp->int_params["num_pc"]; i++)
+	for (int i = 0; i < num_pc; i++)
 	{
-		for (int j = 0; j < cp->int_params["num_p_pc_from_pc_to_bc"]; j++)
+		for (int j = 0; j < num_p_pc_from_pc_to_bc; j++)
 		{
 #ifdef DEBUGOUT
 			std::cout << "i: " << i << " j: " << j << std::endl;
@@ -405,15 +403,15 @@ void MZone::updatePCOut()
 #ifdef DEBUGOUT
 	std::cout << "updating pc to nc " << std::endl;
 #endif
-	for (int i = 0; i < NUM_NC; i++)
+	for (int i = 0; i < num_nc; i++)
 	{
-		for (int j = 0; j < cp->int_params["num_p_nc_from_pc_to_nc"]; j++)
+		for (int j = 0; j < num_p_nc_from_pc_to_nc; j++)
 		{
 #ifdef DEBUGOUT
 			std::cout << "i: " << i << " j: " << j <<
 				"cs->pNCfromPCtoNC[i][j]: " << cs->pNCfromPCtoNC[i][j] << std::endl;
 #endif
-			as->inputPCNC[i * cp->int_params["num_p_nc_from_pc_to_nc"] + j] = as->apPC[cs->pNCfromPCtoNC[i][j]];
+			as->inputPCNC[i * num_p_nc_from_pc_to_nc + j] = as->apPC[cs->pNCfromPCtoNC[i][j]];
 		}
 	}
 #ifdef DEBUGOUT
@@ -423,13 +421,13 @@ void MZone::updatePCOut()
 
 void MZone::updateBCPCOut()
 {
-	for (int i = 0; i < cp->int_params["num_pc"]; i++) as->inputBCPC[i] = 0;
+	for (int i = 0; i < num_pc; i++) as->inputBCPC[i] = 0;
 	
-	for (int i = 0; i < cp->int_params["num_bc"]; i++)
+	for (int i = 0; i < num_bc; i++)
 	{
 		if (as->apBC[i])
 		{
-			for (int j = 0; j < cp->int_params["num_p_bc_from_bc_to_pc"]; j++)
+			for (int j = 0; j < num_p_bc_from_bc_to_pc; j++)
 			{
 				as->inputBCPC[cs->pBCfromBCtoPC[i][j]]++;
 			}
@@ -440,55 +438,55 @@ void MZone::updateBCPCOut()
 void MZone::updateSCPCOut()
 {
 #pragma omp parallel for
-	for (int i = 0; i < cp->int_params["num_pc"]; i++)
+	for (int i = 0; i < num_pc; i++)
 	{
-		for (int j = 0; j < cp->int_params["num_p_pc_from_sc_to_pc"]; j++)
+		for (int j = 0; j < num_p_pc_from_sc_to_pc; j++)
 		{
-			as->inputSCPC[i * cp->int_params["num_p_pc_from_sc_to_pc"] + j] = apSCInput[cs->pPCfromSCtoPC[i][j]];
+			as->inputSCPC[i * num_p_pc_from_sc_to_pc + j] = apSCInput[cs->pPCfromSCtoPC[i][j]];
 		}
 	}
 }
 
 void MZone::updateIOOut()
 {
-	for (int i = 0; i < cp->int_params["num_io"]; i++)
+	for (int i = 0; i < num_io; i++)
 	{
-		as->pfPCPlastTimerIO[i] = (!as->apIO[i]) * (as->pfPCPlastTimerIO[i] +1 ) + as->apIO[i] * derived_act_params[tsLTPEndAPIO];
+		as->pfPCPlastTimerIO[i] = (!as->apIO[i]) * (as->pfPCPlastTimerIO[i] +1 ) + as->apIO[i] * tsLTPEndAPIO;
 		as->vCoupleIO[i] = 0;
-		for (int j = 0; j < cp->int_params["num_p_io_in_io_to_io"]; j++)
+		for (int j = 0; j < num_p_io_in_io_to_io; j++)
 		{
-			as->vCoupleIO[i] += act_params[coupleRiRjRatioIO] * (as->vIO[cs->pIOInIOIO[i][j]] - as->vIO[i]);
+			as->vCoupleIO[i] += coupleRiRjRatioIO * (as->vIO[cs->pIOInIOIO[i][j]] - as->vIO[i]);
 		}
 	}
 }
 
 void MZone::updateNCOut()
 {
-	for (int i = 0; i < NUM_NC; i++)
+	for (int i = 0; i < num_nc; i++)
 	{
-		as->synIOPReleaseNC[i] *= exp(-act_params[msPerTimeStep] / 
-				(act_params[relPDecTSofNCtoIO] * exp(-as->synIOPReleaseNC[i] / act_params[relPDecTTofNCtoIO]) +
-				 act_params[relPDecT0ofNCtoIO]));
-		as->synIOPReleaseNC[i] += as->apNC[i] * act_params[relPIncNCtoIO] *
-				exp(-as->synIOPReleaseNC[i] / act_params[relPIncTauNCtoIO]);
+		as->synIOPReleaseNC[i] *= exp(-msPerTimeStep / 
+				(relPDecTSofNCtoIO * exp(-as->synIOPReleaseNC[i] / relPDecTTofNCtoIO) +
+				 relPDecT0ofNCtoIO));
+		as->synIOPReleaseNC[i] += as->apNC[i] * relPIncNCtoIO *
+				exp(-as->synIOPReleaseNC[i] / relPIncTauNCtoIO);
 	}
 
-	for (int i = 0; i < cp->int_params["num_io"]; i++)
+	for (int i = 0; i < num_io; i++)
 	{
-		for (int j = 0; j < cp->int_params["num_p_io_from_nc_to_io"]; j++)
+		for (int j = 0; j < num_p_io_from_nc_to_io; j++)
 		{
-			as->inputNCIO[i * cp->int_params["num_p_io_from_nc_to_io"] + j] = (randGen->Random() < as->synIOPReleaseNC[cs->pIOfromNCtoIO[i][j]]);
+			as->inputNCIO[i * num_p_io_from_nc_to_io + j] = (randGen->Random() < as->synIOPReleaseNC[cs->pIOfromNCtoIO[i][j]]);
 		}
 	}
 }
 
 void MZone::updateMFNCOut()
 {
-	for (int i = 0; i < NUM_NC; i++)
+	for (int i = 0; i < num_nc; i++)
 	{
-		for (int j = 0; j < cp->int_params["num_p_nc_from_mf_to_nc"]; j++)
+		for (int j = 0; j < num_p_nc_from_mf_to_nc; j++)
 		{
-			as->inputMFNC[i * cp->int_params["num_p_nc_from_mf_to_nc"] + j] = apMFInput[cs->pNCfromMFtoNC[i][j]];
+			as->inputMFNC[i * num_p_nc_from_mf_to_nc + j] = apMFInput[cs->pNCfromMFtoNC[i][j]];
 		}
 	}
 }
@@ -549,7 +547,7 @@ void MZone::updateMFNCOut()
 //#endif
 //	for (int i = 0; i < NUM_NC; i++)
 //	{
-//		for(int j = 0; j < cp->int_params["num_p_nc_from_mf_to_nc"]; j++)
+//		for(int j = 0; j < num_p_nc_from_mf_to_nc; j++)
 //		{
 //			float synWDelta;
 //			synWDelta = histMF[cs->pNCfromMFtoNC[i][j]] * (doLTD * ap->synLTDStepSizeMFtoNC +
@@ -578,7 +576,7 @@ void MZone::runPFPCOutCUDA(cudaStream_t **sts, int streamN)
 		cudaSetDevice(i + gpuIndStart);
 		callUpdatePFPCOutKernel(sts[i][streamN], updatePFPCNumBlocks, updatePFPCNumGRPerB,
 				apBufGRGPU[i], delayBCPCSCMaskGRGPU[i], pfSynWeightPCGPU[i], inputPFPCGPU[i],
-				inputPFPCGPUPitch[i], cp->int_params["num_p_pc_from_gr_to_pc_p2"]);
+				inputPFPCGPUPitch[i], num_p_pc_from_gr_to_pc_p2);
 	}
 }
 
@@ -588,7 +586,7 @@ void MZone::runPFPCSumCUDA(cudaStream_t **sts, int streamN)
 	{
 		cudaSetDevice(i + gpuIndStart);
 		callSumKernel<float, true, false>(sts[i][streamN], inputPFPCGPU[i], inputPFPCGPUPitch[i],
-				inputSumPFPCMZGPU[i], 1, cp->int_params["num_pc"] / numGPUs, 1, cp->int_params["num_p_pc_from_gr_to_pc"]);
+				inputSumPFPCMZGPU[i], 1, num_pc / numGPUs, 1, num_p_pc_from_gr_to_pc);
 	}
 }
 
@@ -597,15 +595,15 @@ void MZone::cpyPFPCSumCUDA(cudaStream_t **sts, int streamN)
 	for (int i = 0; i < numGPUs; i++)
 	{
 		cudaSetDevice(i + gpuIndStart);
-		cudaMemcpyAsync(&inputSumPFPCMZH[cp->int_params["num_pc"] * i / numGPUs], inputSumPFPCMZGPU[i],
-				cp->int_params["num_pc"] / numGPUs * sizeof(float), cudaMemcpyDeviceToHost, sts[i][streamN]);
+		cudaMemcpyAsync(&inputSumPFPCMZH[num_pc * i / numGPUs], inputSumPFPCMZGPU[i],
+				num_pc / numGPUs * sizeof(float), cudaMemcpyDeviceToHost, sts[i][streamN]);
 	}
 }
 
 void MZone::runPFPCPlastCUDA(cudaStream_t **sts, int streamN, unsigned long t)
 {
 	cudaError_t error;
-	if (t % (unsigned long)derived_act_params[tsPerHistBinGR] == 0)
+	if (t % (unsigned long)tsPerHistBinGR == 0)
 	{
 		int curGROffset;
 		int curGPUInd;
@@ -617,17 +615,17 @@ void MZone::runPFPCPlastCUDA(cudaStream_t **sts, int streamN, unsigned long t)
 		curGPUInd   = 0;
 		curIOInd    = 0;
 
-		numGRPerIO = cp->int_params["num_gr"] / cp->int_params["num_io"];
+		numGRPerIO = num_gr / num_io;
 
-		for (int i = 0; i < cp->int_params["num_io"]; i++)
+		for (int i = 0; i < num_io; i++)
 		{
-			if (as->pfPCPlastTimerIO[i] < (derived_act_params[tsLTDstartAPIO] + ((int)(derived_act_params[tsLTDDurationIO]))) &&
-					as->pfPCPlastTimerIO[i] >= derived_act_params[tsLTDstartAPIO])
+			if (as->pfPCPlastTimerIO[i] < (tsLTDstartAPIO + (int)tsLTDDurationIO) &&
+					as->pfPCPlastTimerIO[i] >= tsLTDstartAPIO)
 			{
 				pfPCPlastStepIO[i] = tempGRPCLTDStep;
 			}
-			else if (as->pfPCPlastTimerIO[i] >= derived_act_params[tsLTPstartAPIO] ||
-					as->pfPCPlastTimerIO[i] < derived_act_params[tsLTPEndAPIO])
+			else if (as->pfPCPlastTimerIO[i] >= tsLTPstartAPIO ||
+					as->pfPCPlastTimerIO[i] < tsLTPEndAPIO)
 			{
 				pfPCPlastStepIO[i] = tempGRPCLTPStep;
 			}
@@ -642,7 +640,7 @@ void MZone::runPFPCPlastCUDA(cudaStream_t **sts, int streamN, unsigned long t)
 			as->pfPCPlastTimerIO[0] << std::endl;
 #endif
 		error = cudaSetDevice(curGPUInd + gpuIndStart);
-		for (int i = 0; i < cp->int_params["num_gr"]; i += cp->int_params["num_p_pc_from_gr_to_pc"])
+		for (int i = 0; i < num_gr; i += num_p_pc_from_gr_to_pc)
 		{
 			if (i >= (curGPUInd + 1) * numGRPerGPU)
 			{
@@ -656,9 +654,9 @@ void MZone::runPFPCPlastCUDA(cudaStream_t **sts, int streamN, unsigned long t)
 			}
 			callUpdatePFPCPlasticityIOKernel(sts[curGPUInd][streamN + curIOInd],
 					updatePFPCSynWNumBlocks, updatePFPCSynWNumGRPerB, pfSynWeightPCGPU[curGPUInd],
-					historyGRGPU[curGPUInd], derived_act_params[grPCHistCheckBinIO], curGROffset, pfPCPlastStepIO[curIOInd]);
+					historyGRGPU[curGPUInd], grPCHistCheckBinIO, curGROffset, pfPCPlastStepIO[curIOInd]);
 
-			curGROffset += cp->int_params["num_p_pc_from_gr_to_pc"];
+			curGROffset += num_p_pc_from_gr_to_pc;
 		}
 	}
 }
@@ -671,8 +669,8 @@ void MZone::setGRPCPlastSteps(float ltdStep, float ltpStep)
 
 void MZone::resetGRPCPlastSteps()
 {
-	tempGRPCLTDStep = act_params[synLTDStepSizeGRtoPC];
-	tempGRPCLTPStep = act_params[synLTPStepSizeGRtoPC];
+	tempGRPCLTDStep = synLTDStepSizeGRtoPC;
+	tempGRPCLTPStep = synLTPStepSizeGRtoPC;
 }
 
 const float* MZone::exportPFPCWeights()
@@ -757,14 +755,14 @@ void MZone::testReduction()
 	cudaError_t error;
 	cudaStream_t *sts = new cudaStream_t[numGPUs];
 
-	float hostTestData[cp->int_params["num_gr"]] = {0.0};
-	float hostPCSum[cp->int_params["num_pc"]] = {0.0};
-	float hostBCSum[cp->int_params["num_bc"]] = {0.0};
-	float hostSCSum[cp->int_params["num_sc"]] = {0.0};
+	float hostTestData[num_gr] = {0.0};
+	float hostPCSum[num_pc] = {0.0};
+	float hostBCSum[num_bc] = {0.0};
+	float hostSCSum[num_sc] = {0.0};
 
-	float gpuToHostPCSum[cp->int_params["num_pc"]] = {0.0};
-	float gpuToHostBCSum[cp->int_params["num_bc"]] = {0.0};
-	float gpuToHostSCSum[cp->int_params["num_sc"]] = {0.0};
+	float gpuToHostPCSum[num_pc] = {0.0};
+	float gpuToHostBCSum[num_bc] = {0.0};
+	float gpuToHostSCSum[num_sc] = {0.0};
 
 	// leaving these dynamic for now as i do not understand cuda oof
 	float **gpuPCTestData = new float*[numGPUs];
@@ -779,7 +777,7 @@ void MZone::testReduction()
 	float **gpuBCSum = new float*[numGPUs];
 	float **gpuSCSum = new float*[numGPUs];
 
-	for (int i = 0; i < cp->int_params["num_gr"]; i++)
+	for (int i = 0; i < num_gr; i++)
 	{
 		hostTestData[i] = randGen->Random();
 	}
@@ -791,15 +789,15 @@ void MZone::testReduction()
 		cudaStreamCreate(&sts[i]);
 
 		cudaMallocPitch(&gpuPCTestData[i], &gpuPCP[i],
-				cp->int_params["num_p_pc_from_gr_to_pc"] * sizeof(float), cp->int_params["num_pc"] / numGPUs);
+				num_p_pc_from_gr_to_pc * sizeof(float), num_pc / numGPUs);
 		cudaMallocPitch(&gpuBCTestData[i], &gpuBCP[i],
-				cp->int_params["num_p_bc_from_gr_to_bc"] * sizeof(float), cp->int_params["num_bc"] / numGPUs);
+				num_p_bc_from_gr_to_bc * sizeof(float), num_bc / numGPUs);
 		cudaMallocPitch(&gpuSCTestData[i], &gpuSCP[i],
-				cp->int_params["num_p_sc_from_gr_to_sc"]*sizeof(float), cp->int_params["num_sc"] / numGPUs);
+				num_p_sc_from_gr_to_sc*sizeof(float), num_sc / numGPUs);
 
-		cudaMalloc(&gpuPCSum[i], cp->int_params["num_pc"] / numGPUs * sizeof(float));
-		cudaMalloc(&gpuBCSum[i], cp->int_params["num_bc"] / numGPUs * sizeof(float));
-		cudaMalloc(&gpuSCSum[i], cp->int_params["num_sc"] / numGPUs * sizeof(float));
+		cudaMalloc(&gpuPCSum[i], num_pc / numGPUs * sizeof(float));
+		cudaMalloc(&gpuBCSum[i], num_bc / numGPUs * sizeof(float));
+		cudaMalloc(&gpuSCSum[i], num_sc / numGPUs * sizeof(float));
 
 		error = cudaGetLastError();
 		std::cout << "allocating memory for gpu " << i << " " << cudaGetErrorString(error) << std::endl;
@@ -811,25 +809,25 @@ void MZone::testReduction()
 	{
 		cudaSetDevice(i + gpuIndStart);
 
-		for (int j = 0; j < cp->int_params["num_pc"] / numGPUs; j++)
+		for (int j = 0; j < num_pc / numGPUs; j++)
 		{
 		   cudaMemcpy(((char *)gpuPCTestData[i] + j * gpuPCP[i]),
-				 &hostTestData[i * numGRPerGPU + j * cp->int_params["num_p_pc_from_gr_to_pc"]],
-				 cp->int_params["num_p_pc_from_gr_to_pc"] * sizeof(float), cudaMemcpyHostToDevice);
+				 &hostTestData[i * numGRPerGPU + j * num_p_pc_from_gr_to_pc],
+				 num_p_pc_from_gr_to_pc * sizeof(float), cudaMemcpyHostToDevice);
 		}
 
-		for (int j = 0; j < cp->int_params["num_bc"] / numGPUs; j++)
+		for (int j = 0; j < num_bc / numGPUs; j++)
 		{
 		   cudaMemcpy(((char *)gpuBCTestData[i] + j * gpuBCP[i]),
-				 &hostTestData[i * numGRPerGPU + j * cp->int_params["num_p_bc_from_gr_to_bc"]],
-				 cp->int_params["num_p_bc_from_gr_to_bc"] * sizeof(float), cudaMemcpyHostToDevice);
+				 &hostTestData[i * numGRPerGPU + j * num_p_bc_from_gr_to_bc],
+				 num_p_bc_from_gr_to_bc * sizeof(float), cudaMemcpyHostToDevice);
 		}
 
-		for (int j = 0; j < cp->int_params["num_sc"] / numGPUs; j++)
+		for (int j = 0; j < num_sc / numGPUs; j++)
 		{
 		   cudaMemcpy(((char *)gpuSCTestData[i] + j * gpuSCP[i]),
-				 &hostTestData[i * numGRPerGPU + j * cp->int_params["num_p_sc_from_gr_to_sc"]],
-				 cp->int_params["num_p_sc_from_gr_to_sc"] * sizeof(float), cudaMemcpyHostToDevice);
+				 &hostTestData[i * numGRPerGPU + j * num_p_sc_from_gr_to_sc],
+				 num_p_sc_from_gr_to_sc * sizeof(float), cudaMemcpyHostToDevice);
 		}
 
 		error = cudaGetLastError();
@@ -838,33 +836,33 @@ void MZone::testReduction()
 		cudaDeviceSynchronize();
 	}
 
-	for (int i = 0; i < cp->int_params["num_pc"]; i++)
+	for (int i = 0; i < num_pc; i++)
 	{
 		hostPCSum[i] = 0;
 
-		for (int j = 0; j < cp->int_params["num_p_pc_from_gr_to_pc"]; j++)
+		for (int j = 0; j < num_p_pc_from_gr_to_pc; j++)
 		{
-			hostPCSum[i] += hostTestData[i * cp->int_params["num_p_pc_from_gr_to_pc"] + j];
+			hostPCSum[i] += hostTestData[i * num_p_pc_from_gr_to_pc + j];
 		}
 	}
 
-	for (int i = 0; i < cp->int_params["num_bc"]; i++)
+	for (int i = 0; i < num_bc; i++)
 	{
 		hostBCSum[i] = 0;
 
-		for (int j = 0; j < cp->int_params["num_p_bc_from_gr_to_bc"]; j++)
+		for (int j = 0; j < num_p_bc_from_gr_to_bc; j++)
 		{
-			hostBCSum[i] += hostTestData[i * cp->int_params["num_p_bc_from_gr_to_bc"] + j];
+			hostBCSum[i] += hostTestData[i * num_p_bc_from_gr_to_bc + j];
 		}
 	}
 
-	for (int i = 0; i < cp->int_params["num_sc"]; i++)
+	for (int i = 0; i < num_sc; i++)
 	{
 		hostSCSum[i] = 0;
 
-		for (int j = 0; j < cp->int_params["num_p_sc_from_gr_to_sc"]; j++)
+		for (int j = 0; j < num_p_sc_from_gr_to_sc; j++)
 		{
-			hostSCSum[i] += hostTestData[i * cp->int_params["num_p_sc_from_gr_to_sc"] + j];
+			hostSCSum[i] += hostTestData[i * num_p_sc_from_gr_to_sc + j];
 		}
 	}
 
@@ -872,13 +870,13 @@ void MZone::testReduction()
 	{
 		cudaSetDevice(i + gpuIndStart);
 		callSumKernel<float, true, false>(sts[i], gpuPCTestData[i], gpuPCP[i],
-				gpuPCSum[i], 1, cp->int_params["num_pc"] / numGPUs, 1, cp->int_params["num_p_pc_from_gr_to_pc"]);
+				gpuPCSum[i], 1, num_pc / numGPUs, 1, num_p_pc_from_gr_to_pc);
 
 		callSumKernel<float, true, false>(sts[i], gpuBCTestData[i], gpuBCP[i],
-				gpuBCSum[i], 1, cp->int_params["num_bc"] / numGPUs, 1, cp->int_params["num_p_bc_from_gr_to_bc"]);
+				gpuBCSum[i], 1, num_bc / numGPUs, 1, num_p_bc_from_gr_to_bc);
 
 		callSumKernel<float, true, false>(sts[i], gpuSCTestData[i], gpuSCP[i],
-				gpuSCSum[i], 1, cp->int_params["num_sc"] / numGPUs, 1, cp->int_params["num_p_sc_from_gr_to_sc"]);
+				gpuSCSum[i], 1, num_sc / numGPUs, 1, num_p_sc_from_gr_to_sc);
 
 		cudaDeviceSynchronize();
 
@@ -890,19 +888,19 @@ void MZone::testReduction()
 	{
 		cudaSetDevice(i + gpuIndStart);
 
-		cudaMemcpy(&gpuToHostPCSum[i * cp->int_params["num_pc"] / numGPUs], gpuPCSum[i],
-			cp->int_params["num_pc"] / numGPUs * sizeof(float), cudaMemcpyDeviceToHost);
-		cudaMemcpy(&gpuToHostBCSum[i * cp->int_params["num_bc"] / numGPUs], gpuBCSum[i],
-			cp->int_params["num_bc"] / numGPUs * sizeof(float), cudaMemcpyDeviceToHost);
-		cudaMemcpy(&gpuToHostSCSum[i * cp->int_params["num_sc"] / numGPUs], gpuSCSum[i],
-			cp->int_params["num_sc"] / numGPUs * sizeof(float), cudaMemcpyDeviceToHost);
+		cudaMemcpy(&gpuToHostPCSum[i * num_pc / numGPUs], gpuPCSum[i],
+			num_pc / numGPUs * sizeof(float), cudaMemcpyDeviceToHost);
+		cudaMemcpy(&gpuToHostBCSum[i * num_bc / numGPUs], gpuBCSum[i],
+			num_bc / numGPUs * sizeof(float), cudaMemcpyDeviceToHost);
+		cudaMemcpy(&gpuToHostSCSum[i * num_sc / numGPUs], gpuSCSum[i],
+			num_sc / numGPUs * sizeof(float), cudaMemcpyDeviceToHost);
 
 		cudaDeviceSynchronize();
 	}
 
-	std::cout << "NumPC per GPU: " << cp->int_params["num_pc"] / numGPUs << std::endl <<
-		"NumBC per GPU: " << cp->int_params["num_bc"] / numGPUs << 
-		"NUMSC per GPU: " << cp->int_params["num_sc"] / numGPUs << std::endl;
+	std::cout << "NumPC per GPU: " << num_pc / numGPUs << std::endl <<
+		"NumBC per GPU: " << num_bc / numGPUs << 
+		"NUMSC per GPU: " << num_sc / numGPUs << std::endl;
 
 	for (int i = 0; i < numGPUs; i++)
 	{

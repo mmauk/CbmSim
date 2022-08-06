@@ -30,8 +30,6 @@ class Control
 		~Control();
 
 		// Objects
-		ConnectivityParams *cp = NULL;
-
 		CBMState *simState     = NULL;
 		CBMSimCore *simCore    = NULL;
 		ECMFPopulation *mfFreq = NULL;
@@ -73,7 +71,7 @@ class Control
 		int csPhasicSize = 50;
 
 		int csLength = 500; // with duration 2s?
-							 
+
 		// mzone stuff -> TODO: place in build file down the road
 		int numMZones = 1; 
 
@@ -110,9 +108,11 @@ class Control
 		float fracImport  = 0.0;
 		float fracOverlap = 0.2;
 
-		int trialTime = 3000; /* wild that this is here */
+		int trialTime = 5000; /* wild that this is here */
 	
 		// raster stuff -> TODO: place in experiment file down the road
+		// closer TODO: construct these within the runExperiment loop:
+		//              depends upon the trial
 		int PSTHColSize = csLength + msPreCS + msPostCS;
 		int rasterColumnSize = PSTHColSize * numTrainingTrials;
 

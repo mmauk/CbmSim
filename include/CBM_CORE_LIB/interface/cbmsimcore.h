@@ -37,7 +37,7 @@ class CBMSimCore
 {
 public:
 	CBMSimCore();
-	CBMSimCore(ConnectivityParams *cp, CBMState *state, int gpuIndStart = -1, int numGPUP2 = -1);
+	CBMSimCore(CBMState *state, int gpuIndStart = -1, int numGPUP2 = -1);
 	~CBMSimCore();
 
 	void calcActivity(float mfgoW, float gogrW, float grgoW, float gogoW, float spillFrac);
@@ -48,7 +48,7 @@ public:
 	void updateErrDrive(unsigned int zoneN, float errDriveRelative);
 
 	void writeToState();
-	void writeState(ConnectivityParams *cp, std::fstream& outfile);
+	void writeState(std::fstream& outfile);
 
 	InNet* getInputNet();
 	MZone** getMZoneList();
@@ -77,7 +77,7 @@ private:
 
 	unsigned long curTime;
 
-	void construct(ConnectivityParams *cp, CBMState *state, int *mzoneRSeed,
+	void construct(CBMState *state, int *mzoneRSeed,
 		int gpuIndStart, int numGPUP2);
 };
 
