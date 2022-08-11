@@ -32,6 +32,7 @@ public:
 	std::unique_ptr<ct_uint32_t[]> apBufMF{nullptr};
 
 	//golgi cells
+	std::unique_ptr<float[]> synWscalerGOtoGO{nullptr};
 	std::unique_ptr<float[]> synWscalerGRtoGO{nullptr};
 	std::unique_ptr<ct_uint8_t[]> apGO{nullptr};
 	std::unique_ptr<ct_uint32_t[]> apBufGO{nullptr};
@@ -43,7 +44,7 @@ public:
 	std::unique_ptr<float[]> depAmpMFGO{nullptr};
 	std::unique_ptr<float[]> gi_MFtoGO{nullptr};
 	std::unique_ptr<float[]> gSum_MFGO{nullptr};
-	std::unique_ptr<ct_uint32_t[]> inputGOGO{nullptr};
+	std::unique_ptr<float[]> inputGOGO{nullptr};
 
 	std::unique_ptr<float[]> gi_GOtoGO{nullptr};
 	std::unique_ptr<float[]> depAmpGOGO{nullptr};

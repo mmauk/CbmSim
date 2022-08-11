@@ -688,6 +688,7 @@ void write_act_params(std::fstream &out_param_buf)
 	out_param_buf.write((char *)&threshMaxPC, sizeof(float));
 	out_param_buf.write((char *)&threshMaxSC, sizeof(float));
 
+	/* derived act params */
 	out_param_buf.write((char *)&numTSinMFHist, sizeof(float));
 	out_param_buf.write((char *)&gLeakGO, sizeof(float));
 	out_param_buf.write((char *)&gDecMFtoGO, sizeof(float));

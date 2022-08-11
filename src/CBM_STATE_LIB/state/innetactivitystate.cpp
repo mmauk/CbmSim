@@ -46,6 +46,7 @@ void InNetActivityState::stateRW(bool read, std::fstream &file)
 	rawBytesRW((char *)histMF.get(), num_mf * sizeof(ct_uint8_t), read, file);
 	rawBytesRW((char *)apBufMF.get(), num_mf * sizeof(ct_uint32_t), read, file);
 
+	rawBytesRW((char *)synWscalerGOtoGO.get(), num_go * sizeof(float), read, file);
 	rawBytesRW((char *)synWscalerGRtoGO.get(), num_go * sizeof(float), read, file);
 	rawBytesRW((char *)apGO.get(), num_go * sizeof(ct_uint8_t), read, file);
 	rawBytesRW((char *)apBufGO.get(), num_go * sizeof(ct_uint32_t), read, file);
@@ -57,7 +58,7 @@ void InNetActivityState::stateRW(bool read, std::fstream &file)
 	rawBytesRW((char *)depAmpMFGO.get(), num_mf * sizeof(float), read, file);
 	rawBytesRW((char *)gi_MFtoGO.get(), num_mf * sizeof(float), read, file);
 	rawBytesRW((char *)gSum_MFGO.get(), num_go * sizeof(float), read, file);
-	rawBytesRW((char *)inputGOGO.get(), num_go * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)inputGOGO.get(), num_go * sizeof(float), read, file);
 
 	rawBytesRW((char *)gi_GOtoGO.get(), num_go * sizeof(float), read, file);
 	rawBytesRW((char *)depAmpGOGO.get(), num_go * sizeof(float), read, file);
@@ -101,6 +102,7 @@ void InNetActivityState::allocateMemory()
 	apBufMF   = std::make_unique<ct_uint32_t[]>(num_mf);
 
 	// go
+	synWscalerGOtoGO = std::make_unique<float[]>(num_go);
 	synWscalerGRtoGO = std::make_unique<float[]>(num_go);
 	apGO             = std::make_unique<ct_uint8_t[]>(num_go);
 	apBufGO          = std::make_unique<ct_uint32_t[]>(num_go);
@@ -112,7 +114,7 @@ void InNetActivityState::allocateMemory()
 	depAmpMFGO = std::make_unique<float[]>(num_mf);
 	gi_MFtoGO  = std::make_unique<float[]>(num_mf);
 	gSum_MFGO  = std::make_unique<float[]>(num_go);
-	inputGOGO  = std::make_unique<ct_uint32_t[]>(num_go);
+	inputGOGO  = std::make_unique<float[]>(num_go);
 
 	gi_GOtoGO  = std::make_unique<float[]>(num_go);
 	depAmpGOGO = std::make_unique<float[]>(num_go);
@@ -158,7 +160,8 @@ void InNetActivityState::initializeVals()
 	std::fill(depAmpMFGO.get(), depAmpMFGO.get() + num_mf, 1.0);
 	std::fill(depAmpMFGR.get(), depAmpMFGR.get() + num_mf, 1.0);
 
-	// go	
+	// go
+	std::fill(synWscalerGOtoGO.get(), synWscalerGOtoGO.get() + num_go, 1.0);
 	std::fill(synWscalerGRtoGO.get(), synWscalerGRtoGO.get() + num_go, 1.0);
 	std::fill(vGO.get(), vGO.get() + num_go, eLeakGO);
 	std::fill(threshCurGO.get(), threshCurGO.get() + num_go, threshRestGO);

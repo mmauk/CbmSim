@@ -58,7 +58,8 @@ int main(int argc, char **argv)
 				case TUI:
 					get_in_sim_file(&argv, in_sim_file);
 					control = new Control(in_sim_file); 
-					control->runExperiment(experiment);
+					control->runTrials(0, 0, 0, 0);
+					//control->runExperiment(experiment);
 					get_out_sim_file(RUN_OUT_SIM_FILE, &argv, out_sim_file);
 					control->save_sim_to_file(out_sim_file);
 					exit_status = 0;

@@ -324,7 +324,7 @@ float gDecay = exp(-1.0 / 20.0);
 #pragma omp parallel
 	{
 #pragma omp for
-		for (int i = 0; i < NUM_NC; i++)
+		for (int i = 0; i < num_nc; i++)
 		{
 			float gMFNMDASum;
 			float gMFAMPASum;

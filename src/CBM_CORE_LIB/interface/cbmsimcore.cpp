@@ -177,14 +177,13 @@ void CBMSimCore::calcActivity(float mfgoW, float gogrW, float grgoW, float gogoW
 #endif
 
 	// Only allow plasticty once HomeoTuning in GCL is complete
-	if (curTime < 1000 * 5000)
-	{	
-		for (int i = 0; i < numZones; i++)
-		{
-			zones[i]->runPFPCPlastCUDA(streams, 1, curTime);
-		}
-
-	}
+	//if (curTime < 1000 * 5000)
+	//{	
+	//	for (int i = 0; i < numZones; i++)
+	//	{
+	//		zones[i]->runPFPCPlastCUDA(streams, 1, curTime);
+	//	}
+	//}
 #ifdef NO_ASYNC
 	syncCUDA("1f");
 #endif
@@ -199,7 +198,7 @@ void CBMSimCore::calcActivity(float mfgoW, float gogrW, float grgoW, float gogoW
 	syncCUDA("1h");
 #endif
 	
-	inputNet->cpyDepAmpGOGRHosttoGPUCUDA(streams, 2); 
+	inputNet->cpyDepAmpGOGRHosttoGPUCUDA(streams, 2); // NOTE: currently does nothing (08/11/2022)
 	
 #ifdef NO_ASYNC
 	syncCUDA("1i");

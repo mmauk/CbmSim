@@ -1,5 +1,5 @@
 .git
-scripts/venv/**
+scripts/analysis/.venv/**
 build/**
 data/**
 logs/**

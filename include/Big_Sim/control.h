@@ -40,7 +40,7 @@ class Control
 		bool sim_is_paused = false;
 		std::string inStateFileName = "";
 
-		const float *grgoG, *mfgoG;
+		const float *grgoG, *mfgoG, *gogrG, *mfgrG;
 		const ct_uint8_t *mfAP;
 
 		// params that I do not know how to categorize
@@ -48,10 +48,10 @@ class Control
 		float spillFrac = 0.15; // go->gr synapse, part of build
 
 		// weight parameters
-		float weightScale = 0.3275;
+		float weightScale = 0.9; // was 0.3275 before 08/09/2022
 		float mfgoW = 0.00350 * weightScale;
-		float grgoW = 0.00056 * weightScale;
-		float gogrW = 0.01050;
+		float grgoW = 0.0007 * weightScale; // was 0.00056 before 08/09/2022
+		float gogrW = 0.017; // was 0.01050 before 08/09/2022
 		float gogoW = 0.01250;
 		float inputStrength = 0.0;
 
@@ -60,17 +60,17 @@ class Control
 		int gpuP2    = 2;
 
 		// Training Parameters -> TODO: deprecate in gui runExperiment
-		int numTrainingTrials      = 10;
+		int numTrainingTrials      = 100;
 		int homeoTuningTrials      = 0;
 		int granuleActDetectTrials = 0;
 
-		int msPreCS = 1500;
-		int msPostCS = 1000;
+		int msPreCS = 400; // was 1500 (08/09/2022)
+		int msPostCS = 400; // was 1000 (08/09/2022)
 
-		int csStart = 1500; // begin at 2s?
+		int csStart = 2000; // was 1500 (08/09/2022)
 		int csPhasicSize = 50;
 
-		int csLength = 500; // with duration 2s?
+		int csLength = 2000; // was 500 (08/09/2022)
 
 		// mzone stuff -> TODO: place in build file down the road
 		int numMZones = 1; 
@@ -132,14 +132,16 @@ class Control
 		//ct_uint8_t **allMFPSTH;
 		//ct_uint8_t **activeGRPSTH;
 
-		//ct_uint8_t **allGORaster;
-		ct_uint8_t **allGRPSTH;
+		//ct_uint8_t **allGRPSTH;
+		ct_uint8_t **allMFRaster;
+		ct_uint8_t **allGORaster;
+		ct_uint8_t **sampleGRRaster;
 		ct_uint8_t **allPCRaster;
 		ct_uint8_t **allNCRaster;
 		ct_uint8_t **allSCRaster;
 		ct_uint8_t **allBCRaster;
-		//ct_uint8_t **allIORaster;
-		ct_uint8_t **allGOPSTH;
+		ct_uint8_t **allIORaster;
+		//ct_uint8_t **allGOPSTH;
 		//float **allGORaster_gogoG; 
 		//float **eyelidPos;
 		//float **activeGRgISum;
@@ -181,8 +183,7 @@ class Control
 		void saveOutputArraysToFile(int goRecipParam, int trial, std::tm *local_time, int simNum);
 
 		void countGOSpikes(int *goSpkCounter, float &medTrials);
-
-		void fillOutputArrays(CBMSimCore *simCore, int trial, int PSTHCounter, int rasterCounter);
+		void fillOutputArrays(int *gr_indices, const ct_uint8_t *mfAP, CBMSimCore *simCore, int trial, int PSTHCounter, int rasterCounter);
 
 		// this should be in CXX Tools or 2D array...
 		void write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
