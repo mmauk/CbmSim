@@ -452,7 +452,7 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 				if (trial >= preTrialNumber && tts >= csStart-msPreCS &&
 						tts < csStart + csLength + msPostCS)
 				{
-					fillOutputArrays(gr_indices, mfAP, simCore, trial, PSTHCounter, rasterCounter);
+					fillOutputArrays(gr_indices, mfAP, simCore, PSTHCounter, rasterCounter);
 
 					PSTHCounter++;
 					rasterCounter++;
@@ -558,7 +558,7 @@ void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
 	medTrials += m / 2.0;
 	std::cout << "Median GO Rate: " << m / 2.0 << std::endl;
 }
-void Control::fillOutputArrays(int *gr_indices, const ct_uint8_t *mfAP, CBMSimCore *simCore, int trial, int PSTHCounter, int rasterCounter)
+void Control::fillOutputArrays(int *gr_indices, const ct_uint8_t *mfAP, CBMSimCore *simCore, int PSTHCounter, int rasterCounter)
 {
 	const ct_uint8_t* goSpks = simCore->getInputNet()->exportAPGO();
 	const ct_uint8_t* grSpks = simCore->getInputNet()->exportAPGR();
@@ -608,7 +608,6 @@ void Control::fillOutputArrays(int *gr_indices, const ct_uint8_t *mfAP, CBMSimCo
 	{
 		allIORaster[i][rasterCounter] = ioSpks[i];
 	}
-
 }
 
 // TODO: 1) find better place to put this 2) generalize
@@ -649,7 +648,7 @@ void Control::construct_control(enum vis_mode sim_vis_mode)
 
 	if (!mfFreq)
 	{
-		mfFreq = new ECMFPopulation(NUM_MF, mfRandSeed, CSTonicMFFrac, CSPhasicMFFrac,
+		mfFreq = new ECMFPopulation(num_mf, mfRandSeed, CSTonicMFFrac, CSPhasicMFFrac,
 			  contextMFFrac, nucCollFrac, bgFreqMin, csbgFreqMin, contextFreqMin, 
 			  tonicFreqMin, phasicFreqMin, bgFreqMax, csbgFreqMax, contextFreqMax, 
 			  tonicFreqMax, phasicFreqMax, collaterals_off, fracImport, secondCS, fracOverlap);
@@ -657,8 +656,8 @@ void Control::construct_control(enum vis_mode sim_vis_mode)
 	
 	if (!mfs)
 	{
-		mfs = new PoissonRegenCells(NUM_MF, mfRandSeed, threshDecayTau, msPerTimeStep,
-			  	numMZones, NUM_NC);
+		mfs = new PoissonRegenCells(num_mf, mfRandSeed, threshDecayTau, msPerTimeStep,
+			  	numMZones, num_nc);
 	}
 
 	if (!output_arrays_initialized)

@@ -29,6 +29,7 @@ __global__ void calcActivityGRGPU(float *vm, float *gKCa, float *gLeak, float *g
 
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 
+	float tempGKCa = gKCa[i];
 	float tempV = vm[i];
 
 	gLeak[i] = 0.0000001021370733 * tempV * tempV * tempV * tempV
@@ -49,13 +50,14 @@ __global__ void calcActivityGRGPU(float *vm, float *gKCa, float *gLeak, float *g
 	tempV = tempV + gLeak[i] * (eLeak - tempV) - gESum[i] * tempV 
 	   	  - gNMDA[i] * tempV + gISum[i] * (eGOIn - tempV); 
 
-	if (tempV > (threshMax)) tempV = threshMax;
+	if (tempV > threshMax) tempV = threshMax;
 
 	tempThresh = thresh[i] + (threshBase - thresh[i]) * threshDecay;
 	tempAP 	   = tempV > tempThresh;
 	thresh[i]  = tempAP * threshMax + (!tempAP) * tempThresh;
 
-	gKCa[i] = tempAP * (gKCa[i] + 0.000f) + (!tempAP) * gKCa[i];
+	tempGKCa = tempGKCa * 0.9999f; 
+	gKCa[i] = tempAP * (tempGKCa + 0.000f) + (!tempAP) * tempGKCa;
 
 	apBuf[i]   = (apBuf[i] << 1) | tempAP;
 	apOutGR[i] = tempAP;
@@ -64,7 +66,7 @@ __global__ void calcActivityGRGPU(float *vm, float *gKCa, float *gLeak, float *g
 }
 
 __global__ void updateGRGOOutGPU(ct_uint32_t *apBuf,
-		float *goOut, size_t goOutPitch,
+		ct_uint32_t *goOut, size_t goOutPitch,
 		ct_uint32_t *delay, size_t delayPitch,
 		ct_uint32_t *con, size_t conPitch,
 		ct_int32_t *numSyn, int nWrites)
@@ -102,6 +104,7 @@ __global__ void updateGRGOOutGPU(ct_uint32_t *apBuf,
 		goRow[tid+i*blockDim.x]=sharedIOBufGR[tid+i*blockDim.x];
 	}
 }
+
 __global__ void updateGRBCOutGPU(ct_uint32_t *apBuf,
 		ct_uint32_t *bcOut, size_t bcOutPitch,
 		ct_uint32_t *delay, size_t delayPitch,
@@ -142,7 +145,7 @@ __global__ void updateGRBCOutGPU(ct_uint32_t *apBuf,
 	}
 }
 
-__global__ void sumGRGOOutGPU(unsigned int nRows, float *goOut, size_t goOutPitch, float *goOutSum)
+__global__ void sumGRGOOutGPU(unsigned int nRows, ct_uint32_t *goOut, size_t goOutPitch, ct_uint32_t *goOutSum)
 {
 	unsigned int *goOutRow;
 	int index=blockIdx.x*blockDim.x+threadIdx.x;
@@ -159,6 +162,7 @@ __global__ void sumGRGOOutGPU(unsigned int nRows, float *goOut, size_t goOutPitc
 	goOutSum[index]=tempSum;
 	//goOutSum[index]=1;
 }
+
 __global__ void sumGRBCOutGPU(unsigned int nRows, ct_uint32_t *bcOut, size_t bcOutPitch, ct_uint32_t *bcOutSum)
 {
 	unsigned int *bcOutRow;
@@ -582,7 +586,7 @@ void callBroadcastKernel(cudaStream_t &st, Type *broadcastVal, Type *outArray,
 }
 
 void callSumGRGOOutKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGOPerBlock,
-		unsigned int numGROutRows, float *grInGOGPU,  size_t grInGOGPUPitch, float *grInGOSGPU)
+		unsigned int numGROutRows, ct_uint32_t *grInGOGPU,  size_t grInGOGPUPitch, ct_uint32_t *grInGOSGPU)
 {
 	sumGRGOOutGPU<<<numBlocks, numGOPerBlock, 0, st>>>(numGROutRows, grInGOGPU, grInGOGPUPitch, grInGOSGPU);
 }
@@ -674,7 +678,7 @@ void callUpdatePFPCOutKernel(cudaStream_t &st, unsigned int numBlocks, unsigned 
 }
 
 void callUpdateGROutGOKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock, unsigned int numGO,
-		ct_uint32_t *apBufGPU, float *grInGOGPU, ct_uint32_t grInGOGPUPitch,
+		ct_uint32_t *apBufGPU, ct_uint32_t *grInGOGPU, ct_uint32_t grInGOGPUPitch,
 		ct_uint32_t *delayMasksGPU, ct_uint32_t delayMasksGPUPitch,
 		ct_uint32_t *conGRtoGOGPU, size_t conGRtoGOGPUPitch,
 		ct_int32_t *numGOPerGRGPU)

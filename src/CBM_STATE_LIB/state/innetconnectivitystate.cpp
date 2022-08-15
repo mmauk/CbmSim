@@ -1072,7 +1072,7 @@ void InNetConnectivityState::connectGOGO_GJ(CRandomSFMT &randGen)
 	// "In Vivo additions"
 	for (int i = 0; i < span_go_to_go_gj_x; i++)
 	{
-		float gjPConX = exp(((abs(xCoorsGOGOgj[i]) * 36.0) - 267.0) / 39.0 );	
+		float gjPConX = exp(((abs(xCoorsGOGOgj[i]) * 36.0) - 267.0) / 39.0 );
 		float gjPConY = exp(((abs(yCoorsGOGOgj[i]) * 36.0) - 267.0) / 39.0 );
 		gjPCon[i] = ((-1745.0 + (1836.0 / (1 + (gjPConX + gjPConY)))) * 0.01);
 		

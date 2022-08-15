@@ -410,7 +410,7 @@ ct_uint64_t** InNet::getHistGRGPUPointer()
 	return historyGRGPU;
 }
 
-float** InNet::getGRInputGOSumHPointer()
+ct_uint32_t** InNet::getGRInputGOSumHPointer()
 {
 	return grInputGOSumH;
 }
@@ -467,7 +467,6 @@ void InNet::calcGOActivities(float mfgoW, float gogrW, float grgoW, float gogoW)
 	for (int i = 0; i < num_go; i++)
 	{
 		sumGRInputGO[i] = 0;
-
 		for (int j = 0; j < numGPUs; j++)
 		{
 			sumGRInputGO[i] += grInputGOSumH[j][i];
@@ -1016,14 +1015,14 @@ void InNet::cpyGRGOSumGPUtoHostCUDA(cudaStream_t **sts, int streamN)
 	cpyGRGOSumGPUtoHostCUDA(sts, streamN, grInputGOSumH);
 }
 
-void InNet::cpyGRGOSumGPUtoHostCUDA(cudaStream_t **sts, int streamN, float **grInputGOSumHost)
+void InNet::cpyGRGOSumGPUtoHostCUDA(cudaStream_t **sts, int streamN, ct_uint32_t **grInputGOSumHost)
 {
 	cudaError_t error;
 	for(int i=0; i<numGPUs; i++)
 	{
 		error=cudaSetDevice(i+gpuIndStart);
 
-		error=cudaMemcpyAsync(grInputGOSumHost[i], grInputGOSumGPU[i], num_go*sizeof(float),
+		error=cudaMemcpyAsync(grInputGOSumHost[i], grInputGOSumGPU[i], num_go * sizeof(ct_uint32_t),
 				cudaMemcpyDeviceToHost, sts[i][streamN]);
 	}
 }
@@ -1410,12 +1409,12 @@ void InNet::initGRCUDA()
 void InNet::initGOCUDA()
 {
 	//FIXME: change the types of some of these arrays (see joe's biasManip sim)
-	grInputGOSumH   = new float*[numGPUs];
+	grInputGOSumH   = new ct_uint32_t*[numGPUs];
 	apGOH		    = new ct_uint32_t*[numGPUs];
 	apGOGPU		    = new ct_uint32_t*[numGPUs];
-	grInputGOGPU    = new float*[numGPUs];
+	grInputGOGPU    = new ct_uint32_t*[numGPUs];
 	grInputGOGPUP   = new size_t[numGPUs];
-	grInputGOSumGPU = new float*[numGPUs];
+	grInputGOSumGPU = new ct_uint32_t*[numGPUs];
 	depAmpGOH		= new float*[numGPUs];
 	depAmpGOGPU		= new float*[numGPUs];	
 	dynamicAmpGOH	= new float*[numGPUs];
@@ -1429,7 +1428,7 @@ void InNet::initGOCUDA()
 	for (int i = 0; i < numGPUs; i++)
 	{
 		cudaSetDevice(i + gpuIndStart);
-		cudaMallocHost((void **)&grInputGOSumH[i], num_go*sizeof(float));
+		cudaMallocHost((void **)&grInputGOSumH[i], num_go*sizeof(ct_uint32_t));
 		cudaMallocHost((void **)&apGOH[i], num_go*sizeof(ct_uint32_t));
 		cudaMallocHost((void **)&depAmpGOH[i], num_go*sizeof(float));
 		cudaMallocHost((void **)&dynamicAmpGOH[i], num_go*sizeof(float));
@@ -1440,8 +1439,8 @@ void InNet::initGOCUDA()
 		cudaMalloc((void **)&dynamicAmpGOGPU[i], num_go*sizeof(float));
 
 		cudaMallocPitch((void **)&grInputGOGPU[i], (size_t *)&grInputGOGPUP[i],
-				num_go*sizeof(float), updateGRGOOutNumGRRows);
-		cudaMalloc((void **)&grInputGOSumGPU[i], num_go*sizeof(float));
+				num_go*sizeof(ct_uint32_t), updateGRGOOutNumGRRows);
+		cudaMalloc((void **)&grInputGOSumGPU[i], num_go * sizeof(ct_uint32_t));
 
 		cudaDeviceSynchronize();
 	}
@@ -1456,7 +1455,7 @@ void InNet::initGOCUDA()
 		cudaMemset(apGOH[i], 0, num_go * sizeof(ct_uint32_t));
 		cudaMemset(depAmpGOH[i], 1, num_go * sizeof(float));
 		cudaMemset(dynamicAmpGOH[i], 1, num_go * sizeof(float));
-		cudaMemset(grInputGOSumH[i], 0, num_go * sizeof(float));
+		cudaMemset(grInputGOSumH[i], 0, num_go * sizeof(ct_uint32_t));
 
 		cudaMemset(apGOGPU[i], 0, num_go*sizeof(ct_uint32_t));
 		cudaMemset(depAmpGOGPU[i], 1, num_go*sizeof(float));
@@ -1465,9 +1464,9 @@ void InNet::initGOCUDA()
 		for (int j = 0; j < updateGRGOOutNumGRRows; j++)
 		{
 			cudaMemset(((char *)grInputGOGPU[i]+j * grInputGOGPUP[i]),
-					0, num_go * sizeof(float));
+					0, num_go * sizeof(ct_uint32_t));
 		}
-		cudaMemset(grInputGOSumGPU[i], 0, num_go*sizeof(float));
+		cudaMemset(grInputGOSumGPU[i], 0, num_go*sizeof(ct_uint32_t));
 
 		cudaDeviceSynchronize();
 	}

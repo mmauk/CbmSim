@@ -55,7 +55,7 @@ public:
 	ct_uint32_t** getDelayBCPCSCMaskGPUPointer();
 	ct_uint64_t** getHistGRGPUPointer();
 
-	float** getGRInputGOSumHPointer();
+	ct_uint32_t** getGRInputGOSumHPointer();
 	ct_uint32_t** getGRInputBCSumHPointer();
 
 	const float* exportGESumGR();
@@ -106,7 +106,7 @@ public:
 	void cpyGRBCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN);
 	void cpyGRGOSumGPUtoHostCUDA(cudaStream_t **sts, int streamN);
 	void cpyGRGOSumGPUtoHostCUDA(cudaStream_t **sts, int streamN,
-		float **grInputGOSumHost);
+		ct_uint32_t **grInputGOSumHost);
 	void cpyGRBCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN,
 		ct_uint32_t **grInputBCSumHost);
 	void runUpdateGRHistoryCUDA(cudaStream_t **sts, int streamN, unsigned long t);
@@ -180,7 +180,7 @@ protected:
 	//GPU parameters
 
 	ct_uint32_t **apGOH;
-	float **grInputGOSumH;
+	ct_uint32_t **grInputGOSumH;
 
 	float **depAmpGOH;
 	float **dynamicAmpGOH;
@@ -197,8 +197,8 @@ protected:
 
 
 	ct_uint32_t **apGOGPU;
-	float **grInputGOGPU;
-	float **grInputGOSumGPU;
+	ct_uint32_t **grInputGOGPU;
+	ct_uint32_t **grInputGOSumGPU;
 
 	size_t *grInputGOGPUP;
 

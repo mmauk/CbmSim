@@ -183,7 +183,7 @@ class Control
 		void saveOutputArraysToFile(int goRecipParam, int trial, std::tm *local_time, int simNum);
 
 		void countGOSpikes(int *goSpkCounter, float &medTrials);
-		void fillOutputArrays(int *gr_indices, const ct_uint8_t *mfAP, CBMSimCore *simCore, int trial, int PSTHCounter, int rasterCounter);
+		void fillOutputArrays(int *gr_indices, const ct_uint8_t *mfAP, CBMSimCore *simCore, int PSTHCounter, int rasterCounter);
 
 		// this should be in CXX Tools or 2D array...
 		void write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
