@@ -15,35 +15,6 @@ static bool assert(bool expr, const char *error_string, const char *func = "asse
 	return true;
 }
 
-// for now we load in the activity params file and init the sim with a separate button
-static void on_load_activity_param_file(GtkWidget *widget, Control *control)
-{
-	GtkWidget *dialog = gtk_file_chooser_dialog_new
-		(
-		  "Open File",
-		  NULL, /* no parent window is fine for now */
-		  GTK_FILE_CHOOSER_ACTION_OPEN,
-		  "Cancel",
-		  GTK_RESPONSE_CANCEL,
-		  "Open",
-		  GTK_RESPONSE_ACCEPT,
-		  NULL
-		);
-
-	gint response = gtk_dialog_run(GTK_DIALOG(dialog));
-
-	if (response == GTK_RESPONSE_ACCEPT)
-	{
-		GtkFileChooser *chooser = GTK_FILE_CHOOSER(dialog);
-		char *activity_file = gtk_file_chooser_get_filename(chooser);
-		// TODO: pop-up warning for invalid file
-		control->init_activity_params(std::string(activity_file));
-		g_free(activity_file);
-	}
-
-	gtk_widget_destroy(dialog);
-}
-
 static void on_load_sim_state_file(GtkWidget *widget, Control *control)
 {
 	GtkWidget *dialog = gtk_file_chooser_dialog_new
@@ -123,29 +94,8 @@ static void on_run(GtkWidget *widget, Control *control)
 {
 	if (control->simState && control->simCore && control->mfFreq && control->mfs)
 	{
-
-		float mfW = 0.0035; // mf weights (to what?)
-		float ws = 0.3275; // weight scale
-		float gogr = 0.0105; // gogr weights
-
-		float grW[8] = { 0.00056, 0.0007, 0.000933, 0.0014, 0.0028, 0.0056, 0.0112, 0.0224 };
-		int grWLength = sizeof(grW) / sizeof(grW[0]);
-
-		std::cout << "[INFO]: Running all simulations..." << std::endl;
 		clock_t time = clock();
-		for (int goRecipParamNum = 0; goRecipParamNum < 1; goRecipParamNum++)
-		{
-			float GRGO = grW[goRecipParamNum] * ws; // scaled grgo weights
-			float MFGO = mfW * ws; // scaled mfgo weights
-			float GOGR = gogr; // gogr weights, unchanged
-			for (int simNum = 0; simNum < 1; simNum++)
-			{
-				std::cout << "[INFO]: Running simulation #" << (simNum + 1) << std::endl;
-				control->runTrials(simNum, GOGR, GRGO, MFGO);
-				// TODO: put in output file dir to save to!
-				//control.saveOutputArraysToFile(goRecipParamNum, simNum);
-			}
-		}
+		control->runTrials(0, 0, 0, 0);
 		time = clock() - time;
 		std::cout << "[INFO] All simulations finished in "
 		          << (float) time / CLOCKS_PER_SEC << "s." << std::endl;
@@ -475,15 +425,16 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 							{"Load...", gtk_menu_item_new(), {},
 								{gtk_menu_new(), NUM_FILE_SUB_MENU_ITEMS, new menu_item[NUM_FILE_SUB_MENU_ITEMS]
 									{
-										{"Activity Parameter File", gtk_menu_item_new(),
-											{
-												"activate",
-												G_CALLBACK(on_load_activity_param_file),
-												control,
-												false
-											},
-											{}
-										},
+										{},
+										//{"Experiment File", gtk_menu_item_new(),
+										//	{
+										//		"activate",
+										//		G_CALLBACK(on_load_experiment_file),
+										//		control,
+										//		false
+										//	},
+										//	{}
+										//},
 										{"Simulation State File", gtk_menu_item_new(),
 											{
 												"activate",

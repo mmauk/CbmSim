@@ -26,10 +26,11 @@ class Control
 	public:
 		Control();
 		Control(parsed_build_file &p_file);
-		Control(std::string sim_file_name);
+		Control(char ***argv, enum vis_mode sim_vis_mode);
 		~Control();
 
 		// Objects
+		experiment expt; // TODO: find a better scheme for this
 		CBMState *simState     = NULL;
 		CBMSimCore *simCore    = NULL;
 		ECMFPopulation *mfFreq = NULL;
@@ -166,8 +167,6 @@ class Control
 
 		void build_sim(parsed_build_file &p_file);
 		
-		void init_activity_params(std::string actParamFile); // TODO: deprecate
-
 		void init_sim_state(std::string stateFile); // TODO: deprecate
 
 		void save_sim_state_to_file(std::string outStateFile); 

@@ -49,9 +49,13 @@ Control::Control(parsed_build_file &p_file)
 	if (!output_arrays_initialized) initializeOutputArrays();
 }
 
-Control::Control(std::string sim_file_name)
+Control::Control(char ***argv, enum vis_mode sim_vis_mode)
 {
-	std::fstream sim_file_buf(sim_file_name.c_str(), std::ios::in | std::ios::binary);
+	parse_experiment_args(argv, expt); 
+	std::string in_sim_filename = "";
+	get_in_sim_file(argv, in_sim_filename);
+	std::fstream sim_file_buf(in_sim_filename.c_str(), std::ios::in | std::ios::binary);
+
 	if (!con_params_populated) read_con_params(sim_file_buf);
 	if (!act_params_populated) read_act_params(sim_file_buf);
 	if (!simState) simState = new CBMState(numMZones, sim_file_buf);
@@ -71,6 +75,8 @@ Control::Control(std::string sim_file_name)
 	}
 	if (!output_arrays_initialized) initializeOutputArrays();
 	sim_file_buf.close();
+
+	this->sim_vis_mode = sim_vis_mode;
 }
 
 Control::~Control()
@@ -94,16 +100,6 @@ void Control::build_sim(parsed_build_file &p_file)
 		populate_act_params(p_file);
 		simState = new CBMState(numMZones);
 	}
-}
-
-void Control::init_activity_params(std::string actParamFile)
-{
-	// do nothing for now so we can compile.
-	// TODO: deprecate
-	//if (!act_params_populated())
-	//{
-	//	populate_act_params
-	//}
 }
 
 void Control::init_sim_state(std::string stateFile)
@@ -164,9 +160,6 @@ void Control::save_sim_to_file(std::string outSimFile)
 
 void Control::initializeOutputArrays()
 {
-	//allGRPSTH = allocate2DArray<ct_uint8_t>(NUM_GR, PSTHColSize);
-	//memset(allGRPSTH[0], '\000', (unsigned long)NUM_GR * (unsigned long)PSTHColSize * sizeof(ct_uint8_t));
-
 	// DEBUG: looking at a sample of the granules of size 4096
 	sampleGRRaster = allocate2DArray<ct_uint8_t>(4096, rasterColumnSize);
 	std::fill(sampleGRRaster[0], sampleGRRaster[0] +
@@ -201,8 +194,6 @@ void Control::initializeOutputArrays()
 			num_io * rasterColumnSize, 0);
 	
 	output_arrays_initialized = true;
-	//allGOPSTH = allocate2DArray<ct_uint8_t>(NUM_GO, PSTHColSize);
-	//std::fill(allGOPSTH[0], allGOPSTH[0] + NUM_GO * PSTHColSize, 0);
 }
 
 void Control::runExperiment(experiment &experiment)
@@ -226,12 +217,6 @@ void Control::runExperiment(experiment &experiment)
 		int useUS     = experiment.trials[trial].USuse;
 		int onsetUS   = experiment.trials[trial].USonset;
 		
-		//std::cout << "'useCS': " << useCS << std::endl;
-		//std::cout << "'onsetCS': " << onsetCS << std::endl;
-		//std::cout << "'offsetCS': " << offsetCS << std::endl;
-		//std::cout << "'useUS': " << useUS << std::endl;
-		//std::cout << "'onsetUS': " << onsetUS << std::endl;
-
 		timer = clock();
 		int PSTHCounter = 0;
 		float gGRGO_sum = 0;
@@ -524,24 +509,6 @@ void Control::saveOutputArraysToFile(int goRecipParam, int trial, std::tm *local
 	std::cout << "Filling IO files..." << std::endl;
 	std::string allIORasterFileName = OUTPUT_DATA_PATH + "allIORaster.bin";
 	write2DCharArray(allIORasterFileName, allIORaster, num_io, rasterColumnSize);
-
-	//std::string allGOPSTHFileName = "allGOPSTH_noGOGO_grgoConv" + std::to_string(conv[goRecipParam]) +
-	//	"_" + std::to_string(simNum) + ".bin";
-	//write2DCharArray(allGOPSTHFileName, allGOPSTH, NUM_GO, PSTHColSize);
-
-	//std::cout << "Filling BC files" << std::endl;
-	//
-	//std::string allBCRasterFileName = "allBCRaster_paramSet" + std::to_string(inputStrength) +
-	//	"_" + std::to_string(simNum) + ".bin";
-	//write2DCharArray(allBCRasterFileName, allBCRaster, NUM_BC,
-	//		numTrainingTrials * PSTHColSize);
-	//
-	//std::cout << "Filling SC files" << std::endl;
-
-	//std::string allSCRasterFileName = "allSCRaster_paramSet" + std::to_string(inputStrength) +
-	//	"_" + std::to_string(simNum) + ".bin";
-	//write2DCharArray(allSCRasterFileName, allSCRaster, NUM_SC,
-	//		numTrainingTrials * PSTHColSize);
 }
 
 void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
@@ -558,6 +525,7 @@ void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
 	medTrials += m / 2.0;
 	std::cout << "Median GO Rate: " << m / 2.0 << std::endl;
 }
+
 void Control::fillOutputArrays(int *gr_indices, const ct_uint8_t *mfAP, CBMSimCore *simCore, int PSTHCounter, int rasterCounter)
 {
 	const ct_uint8_t* goSpks = simCore->getInputNet()->exportAPGO();

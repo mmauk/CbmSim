@@ -20,27 +20,12 @@
 #define DEFAULT_RASTER_WINDOW_WIDTH 600
 #define DEFAULT_RASTER_WINDOW_HEIGHT 600
 
-//const int num_item_per_sub_menu[NUM_SUB_MENUS] = {
-//	NUM_FILE_MENU_ITEMS,
-//	NUM_WEIGHTS_MENU_ITEMS,
-//	NUM_PSTH_MENU_ITEMS,
-//	NUM_ANALYSIS_MENU_ITEMS
-//};
-
-struct async_data
-{
-	GCancellable *cancellable;
-	GAsyncReadyCallback cb_func;
-	gpointer main_object;
-};
-
 struct signal
 {
 	const gchar *signal;
 	GCallback handler;
 	gpointer data;
 	bool swapped; /* may find this to be unnecessary... */
-	//GdkEventMask mask;
 };
 
 struct button
@@ -62,7 +47,6 @@ struct menu
 struct menu_item
 {
 	const gchar *label;
-	//GCallback handler;
 	GtkWidget *menu_item;
 	struct signal signal;
 	struct menu sub_menu; /* single sub menu for every menu item */

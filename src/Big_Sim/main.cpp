@@ -37,7 +37,7 @@ int main(int argc, char **argv)
 	parsed_build_file p_file;
 	experiment experiment;
 	Control *control = NULL;
-	std::string in_sim_file = "";
+	//std::string in_sim_file = "";
 	std::string out_sim_file = "";
 	int exit_status = -1;
 
@@ -52,12 +52,10 @@ int main(int argc, char **argv)
 			exit_status = 0;
 			break;
 		case RUN:
-			parse_experiment_args(&argv, experiment); 
+			control = new Control(&argv, sim_vis_mode); 
 			switch (sim_vis_mode)
 			{
 				case TUI:
-					get_in_sim_file(&argv, in_sim_file);
-					control = new Control(in_sim_file); 
 					control->runTrials(0, 0, 0, 0);
 					//control->runExperiment(experiment);
 					get_out_sim_file(RUN_OUT_SIM_FILE, &argv, out_sim_file);
