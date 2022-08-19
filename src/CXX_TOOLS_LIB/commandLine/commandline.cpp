@@ -110,8 +110,18 @@ enum vis_mode get_vis_mode(const char *arg)
  *
  */
 void validate_args_and_set_modes(int *argc, char ***argv,
-	  enum vis_mode *sim_vis_mode, enum run_mode *sim_run_mode)
+	  enum vis_mode *sim_vis_mode, enum run_mode *sim_run_mode,
+	  enum user_mode *sim_user_mode)
 {
+	/* debug feature: if no args, assume run in gui */
+	if (*argc == 1)
+	{
+		*sim_run_mode = RUN;
+		*sim_vis_mode = GUI;
+		*sim_user_mode = FRIENDLY;
+		return;
+	}
+	*sim_user_mode = VETERAN; /* veteran mode for advanced commandline arg specification */
 	for (int i = 1; i < *argc; i++)
 	{
 		if (is_file((*argv)[i]))

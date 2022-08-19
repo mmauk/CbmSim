@@ -24,7 +24,7 @@
 class Control 
 {
 	public:
-		Control();
+		Control(enum vis_mode sim_vis_mode);
 		Control(parsed_build_file &p_file);
 		Control(char ***argv, enum vis_mode sim_vis_mode);
 		~Control();
@@ -38,8 +38,11 @@ class Control
 
 		enum vis_mode sim_vis_mode = NO_VIS;
 		bool output_arrays_initialized = false; /* temporary, going to refactor soon */
+		bool terminate = false;
+		bool in_run = false;
 		bool sim_is_paused = false;
 		std::string inStateFileName = "";
+		std::string inSimFileName = "";
 
 		const float *grgoG, *mfgoG, *gogrG, *mfgrG;
 		const ct_uint8_t *mfAP;
@@ -65,6 +68,7 @@ class Control
 		int homeoTuningTrials      = 0;
 		int granuleActDetectTrials = 0;
 
+		int trial = 0;
 		int msPreCS = 400; // was 1500 (08/09/2022)
 		int msPostCS = 400; // was 1000 (08/09/2022)
 
@@ -133,7 +137,7 @@ class Control
 		//ct_uint8_t **allMFPSTH;
 		//ct_uint8_t **activeGRPSTH;
 
-		//ct_uint8_t **allGRPSTH;
+		int gr_indices[4096] = {0};
 		ct_uint8_t **allMFRaster;
 		ct_uint8_t **allGORaster;
 		ct_uint8_t **sampleGRRaster;
@@ -142,6 +146,8 @@ class Control
 		ct_uint8_t **allSCRaster;
 		ct_uint8_t **allBCRaster;
 		ct_uint8_t **allIORaster;
+
+		float *sample_pfpc_syn_weights;
 		//ct_uint8_t **allGOPSTH;
 		//float **allGORaster_gogoG; 
 		//float **eyelidPos;
@@ -169,6 +175,10 @@ class Control
 		
 		void init_sim_state(std::string stateFile); // TODO: deprecate
 
+		void init_experiment(std::string in_expt_filename);
+
+		void init_sim(std::string in_sim_filename);
+
 		void save_sim_state_to_file(std::string outStateFile); 
 
 		void save_sim_to_file(std::string outSimFile);
@@ -182,14 +192,13 @@ class Control
 		void saveOutputArraysToFile(int goRecipParam, int trial, std::tm *local_time, int simNum);
 
 		void countGOSpikes(int *goSpkCounter, float &medTrials);
-		void fillOutputArrays(int *gr_indices, const ct_uint8_t *mfAP, CBMSimCore *simCore, int PSTHCounter, int rasterCounter);
+		void fillOutputArrays(const ct_uint8_t *mfAP, CBMSimCore *simCore, int PSTHCounter, int rasterCounter);
 
 		// this should be in CXX Tools or 2D array...
 		void write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
 			unsigned int numRow, unsigned int numCol);
 		void deleteOutputArrays();
 
-		void construct_control(enum vis_mode sim_vis_mode); // TODO: deprecate
 };
 
 #endif /*_CONTROL_H*/

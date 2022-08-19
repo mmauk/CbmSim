@@ -9,6 +9,7 @@
  *     in one of several user-specified modes.
  *
  */
+
 #include <time.h>
 #include <iostream>
 #include <fstream>
@@ -17,25 +18,15 @@
 #include "commandLine/commandline.h"
 #include "params/activityparams.h"
 
-int main1(int argc, char **argv)
-{
-	parsed_build_file p_file;
-	parse_build_args(&argv, p_file);
-	populate_con_params(p_file);
-	populate_act_params(p_file);
-	return 0;
-}
-
-
 int main(int argc, char **argv) 
 {
-	enum vis_mode sim_vis_mode = NO_VIS;
-	enum run_mode sim_run_mode = NO_RUN;
+	enum vis_mode sim_vis_mode  = NO_VIS;
+	enum run_mode sim_run_mode  = NO_RUN;
+	enum user_mode sim_user_mode = NO_USER_MODE;
 	
-	validate_args_and_set_modes(&argc, &argv, &sim_vis_mode, &sim_run_mode);
+	validate_args_and_set_modes(&argc, &argv, &sim_vis_mode, &sim_run_mode, &sim_user_mode);
 
 	parsed_build_file p_file;
-	experiment experiment;
 	Control *control = NULL;
 	//std::string in_sim_file = "";
 	std::string out_sim_file = "";
@@ -45,14 +36,25 @@ int main(int argc, char **argv)
 	{
 		case BUILD:
 			parse_build_args(&argv, p_file);
-			control = new Control();
+			control = new Control(NO_VIS);
 			control->build_sim(p_file);
 			get_out_sim_file(BUILD_OUT_SIM_FILE, &argv, out_sim_file);
 			control->save_sim_to_file(out_sim_file);
 			exit_status = 0;
 			break;
 		case RUN:
-			control = new Control(&argv, sim_vis_mode); 
+			switch (sim_user_mode)
+			{
+				case FRIENDLY:
+					control = new Control(GUI);
+					break;
+				case VETERAN:
+					control = new Control(&argv, sim_vis_mode); 
+					break;
+				case NO_USER_MODE:
+					/* unreachable */
+					break;
+			}
 			switch (sim_vis_mode)
 			{
 				case TUI:

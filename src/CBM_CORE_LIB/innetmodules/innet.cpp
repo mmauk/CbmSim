@@ -45,7 +45,7 @@ InNet::InNet(InNetConnectivityState *cs,
 
 InNet::~InNet()
 {
-	std::cout << "**********************************************CUDA DESTRUCTOR ENTERED**********************************************" << std::endl;
+	std::cout << "[INFO] Deleting innet gpu arrays." << std::endl;
 
 	//gr external to initCUDA
 	delete2DArray<float>(gGOGRT);
@@ -63,7 +63,6 @@ InNet::~InNet()
 	// MF CUDA	
 	for (int i = 0; i < numGPUs; i++)
 	{
-		cout << i+gpuIndStart << endl;
 		cudaSetDevice(i + gpuIndStart);
 
 		//mf variables
@@ -83,7 +82,6 @@ InNet::~InNet()
 	// GR CUDA
 	for (int i = 0; i < numGPUs; i++)
 	{
-		cout << i+gpuIndStart << endl;
 		cudaSetDevice(i + gpuIndStart);
 
 		cudaFree(outputGRGPU[i]);
@@ -183,7 +181,6 @@ InNet::~InNet()
 	// GO CUDA
 	for (int i = 0; i < numGPUs; i++)
 	{
-		cout << i+gpuIndStart << endl;
 		cudaSetDevice(i+gpuIndStart);
 
 		cudaFreeHost(grInputGOSumH[i]);
@@ -260,7 +257,7 @@ InNet::~InNet()
 	delete[] inputPFSCGPUP;
 	delete[] inputSumPFSCGPU;
 
-	std::cout << "***************GPU DELETED************" << std::endl;
+	std::cout << "[INFO]: Finished deleting innet gpu arrays." << std::endl;
 }
 
 void InNet::writeToState()

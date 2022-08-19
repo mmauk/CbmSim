@@ -37,8 +37,9 @@ void parse_experiment_file(std::string trial_file_name, experiment &experiment)
 	std::string previous;
 	std::fstream inFile;     // buffer to open file
 
-	e.numTrialTypes = 0;
-	e.numBlockTypes = 0;
+	e.numTrialTypes   = 0;
+	e.numBlockTypes   = 0;
+	e.numSessionTypes = 0;
 	inFile.open(trial_file_name, std::ios::in); //open file to perform read operation using file object
 
 	if (inFile.is_open())  //checking whether the file is open
@@ -107,7 +108,6 @@ void parse_experiment_file(std::string trial_file_name, experiment &experiment)
 						lineCounter++;
 						data[lineCounter] = previous;
 					}
-					std::cout << "found one that starts with digit: " << x << std::endl; 
 					// figure out what the number is and add that number of previous filelines
 				}
 			}
@@ -121,7 +121,6 @@ void parse_experiment_file(std::string trial_file_name, experiment &experiment)
 	
 	for (i = 0; i < e.numTrialTypes; i++)  // The names of each trial go into TrialNames
 	{    
-		std::cout << e.TrialBegin[i] + 1 << std::endl;
 		std::string full = data[e.TrialBegin[i] + 1];
 
 		std::string comment_delim;
@@ -135,20 +134,12 @@ void parse_experiment_file(std::string trial_file_name, experiment &experiment)
 		stream >> temptrials[i].CSpercent;
 		stream >> temptrials[i].USuse;
 		stream >> temptrials[i].USonset;
-
-		std::cout << temptrials[i].TrialName << " "
-			 << temptrials[i].CSuse     << " " 
-			 << temptrials[i].CSonset   << " " 
-			 << temptrials[i].CSoffset  << " "
-			 << temptrials[i].CSpercent << " "
-			 << temptrials[i].USuse     << " " 
-			 << temptrials[i].USonset   << std::endl;
 	}
 	
 	// now find lists of sessions and blocks
 	int ans;
 	int countTrials;
-	for (i = 0; i < e.numBlockTypes + 1; i++) // for each block find the list of trials
+	for (i = 0; i < e.numBlockTypes; i++) // for each block find the list of trials
 	{  
 		e.Blocks[i][0] = data[e.BlockBegin[i] + 1];   // This is the name of the block
 		counter = 1;
@@ -160,7 +151,7 @@ void parse_experiment_file(std::string trial_file_name, experiment &experiment)
 			for (k = 0; k < e.numTrialTypes; k++)  // this is the list of block as numeric "tags" so they can be indexed later
 			{     
 				ans = data[j].find(temptrials[k].TrialName); // bugfix: find in data, as data includes more spaces...
-				std::cout << data[j] << " " << temptrials[k].TrialName << " " << ans << std::endl;
+				//std::cout << data[j] << " " << temptrials[k].TrialName << " " << ans << std::endl;
 				if (ans >= 0)  // give it this tag
 				{                                
 					e.BlockTags[i][counter] = k;
@@ -172,20 +163,20 @@ void parse_experiment_file(std::string trial_file_name, experiment &experiment)
 		e.BlockTrialCount[i] = countTrials;  // stores the number of trials in each block
 	}
 
-	std::cout << std::endl;
+	//std::cout << std::endl;
 
-	for ( i = 0; i < e.numBlockTypes; i++)
-	{
-		counter = 1;
-		std::cout << e.Blocks[i][0] << std::endl; 
-		for ( j = e.BlockBegin[i] + 2; j < e.BlockEnd[i]; j++)
-		{
-		   std::cout << e.Blocks[i][counter] << "   " << e.BlockTags[i][counter] << std::endl;
-			counter++;
-		}
-	}
+	//for ( i = 0; i < e.numBlockTypes; i++)
+	//{
+	//	counter = 1;
+	//	std::cout << e.Blocks[i][0] << std::endl; 
+	//	for ( j = e.BlockBegin[i] + 2; j < e.BlockEnd[i]; j++)
+	//	{
+	//	   std::cout << e.Blocks[i][counter] << "   " << e.BlockTags[i][counter] << std::endl;
+	//		counter++;
+	//	}
+	//}
 	
-	for (i = 0; i < e.numSessionTypes + 1; i++)  // for each session find the list of blocks
+	for (i = 0; i < e.numSessionTypes; i++)  // for each session find the list of blocks
 	{ 
 		e.Sessions[i][0] = data[e.SessionBegin[i] + 1];
 		counter = 1;
@@ -197,7 +188,7 @@ void parse_experiment_file(std::string trial_file_name, experiment &experiment)
 			for (k = 0; k < e.numBlockTypes; k++)
 			{
 				ans = data[j].find(e.Blocks[k][0]);
-				std::cout << ans << "*" << data[j] << "  *" << e.Blocks[k][0] << std::endl;
+				//std::cout << ans << "*" << data[j] << "  *" << e.Blocks[k][0] << std::endl;
 				if (ans >= 0)
 				{
 					e.SessionTags[i][counter] = k;
@@ -209,20 +200,20 @@ void parse_experiment_file(std::string trial_file_name, experiment &experiment)
 		e.SessionBlockCount[i] = countTrials;
 	}
 
-	std::cout << std::endl;
+	//std::cout << std::endl;
 
-	for (i = 0; i < e.numSessionTypes; i++)
-	{
-		counter = 1;
-		std::cout << e.Sessions[i][0] << std::endl; 
-		for (j = e.SessionBegin[i] + 2; j < e.SessionEnd[i]; j++)
-		{
-		   std::cout << e.Sessions[i][counter] << "   " << e.SessionTags[i][counter] << std::endl;
-			counter++;
-		}
-	}
+	//for (i = 0; i < e.numSessionTypes; i++)
+	//{
+	//	counter = 1;
+	//	std::cout << e.Sessions[i][0] << std::endl; 
+	//	for (j = e.SessionBegin[i] + 2; j < e.SessionEnd[i]; j++)
+	//	{
+	//	   std::cout << e.Sessions[i][counter] << "   " << e.SessionTags[i][counter] << std::endl;
+	//		counter++;
+	//	}
+	//}
 
-	std::cout << std::endl;
+	//std::cout << std::endl;
 
 	e.numSessions = 0;
 	for (i = e.ExpBegin + 1; i < e.ExpEnd; i++)
@@ -243,7 +234,7 @@ void parse_experiment_file(std::string trial_file_name, experiment &experiment)
 				break;
 			}
 		}
-		std::cout << e.SessionList[i] << "  " << e.ExpTags[i] << std::endl;
+		//std::cout << e.SessionList[i] << "  " << e.ExpTags[i] << std::endl;
 	}
 	
 	// now assemble the full list of trials from the list of sessions and blocks and trials 
@@ -264,7 +255,7 @@ void parse_experiment_file(std::string trial_file_name, experiment &experiment)
 				experiment.trials[numtrials].CSpercent = temptrials[currentTrial].CSpercent;
 				experiment.trials[numtrials].USuse     = temptrials[currentTrial].USuse;
 				experiment.trials[numtrials].USonset   = temptrials[currentTrial].USonset;
-				std::cout << numtrials << "  " << experiment.trials[numtrials].TrialName << std::endl;
+				//std::cout << numtrials << "  " << experiment.trials[numtrials].TrialName << std::endl;
 				numtrials++;
 			}
 		}

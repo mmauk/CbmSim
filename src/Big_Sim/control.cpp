@@ -25,7 +25,10 @@ std::string getFileBasename(std::string fullFilePath)
 	return (dot != std::string::npos) ? fullFilePath.substr(0, dot) : fullFilePath;
 }
 
-Control::Control() {}
+Control::Control(enum vis_mode sim_vis_mode)
+{
+	this->sim_vis_mode = sim_vis_mode;
+}
 
 Control::Control(parsed_build_file &p_file)
 {
@@ -120,6 +123,37 @@ void Control::init_sim_state(std::string stateFile)
 	else fprintf(stderr, "[ERROR]: State already initialized.\n");
 }
 
+void Control::init_experiment(std::string in_expt_filename)
+{
+	std::cout << "[INFO]: Loading Experiment file..." << std::endl;
+	parse_experiment_file(in_expt_filename, expt);
+	std::cout << "[INFO]: Finished loading Experiment file." << std::endl;
+}
+
+void Control::init_sim(std::string in_sim_filename)
+{
+	std::fstream sim_file_buf(in_sim_filename.c_str(), std::ios::in | std::ios::binary);
+	if (!con_params_populated) read_con_params(sim_file_buf);
+	if (!act_params_populated) read_act_params(sim_file_buf);
+	if (!simState) simState = new CBMState(numMZones, sim_file_buf);
+	if (!simCore) simCore = new CBMSimCore(simState, gpuIndex, gpuP2);
+	if (!mfFreq)
+	{
+		mfFreq = new ECMFPopulation(num_mf, mfRandSeed,
+			  CSTonicMFFrac, CSPhasicMFFrac, contextMFFrac, nucCollFrac,
+			  bgFreqMin, csbgFreqMin, contextFreqMin, tonicFreqMin, phasicFreqMin, bgFreqMax,
+			  csbgFreqMax, contextFreqMax, tonicFreqMax, phasicFreqMax, collaterals_off,
+			  fracImport, secondCS, fracOverlap);
+	}
+	if (!mfs)
+	{
+		mfs = new PoissonRegenCells(num_mf, mfRandSeed,
+				threshDecayTau, msPerTimeStep, numMZones, num_nc);
+	}
+	if (!output_arrays_initialized) initializeOutputArrays();
+	sim_file_buf.close();
+}
+
 void Control::save_sim_state_to_file(std::string outStateFile)
 {
 	if (!(con_params_populated && act_params_populated && simState))
@@ -162,37 +196,32 @@ void Control::initializeOutputArrays()
 {
 	// DEBUG: looking at a sample of the granules of size 4096
 	sampleGRRaster = allocate2DArray<ct_uint8_t>(4096, rasterColumnSize);
-	std::fill(sampleGRRaster[0], sampleGRRaster[0] +
-			4096 * rasterColumnSize, 0);
+	memset((void *)sampleGRRaster[0], 0, 4096 * rasterColumnSize * sizeof(ct_uint8_t));
 
 	allMFRaster = allocate2DArray<ct_uint8_t>(num_mf, rasterColumnSize);
-	std::fill(allMFRaster[0], allMFRaster[0] +
-			num_mf * rasterColumnSize, 0);
+	memset((void *)allMFRaster[0], 0, num_mf * rasterColumnSize * sizeof(ct_uint8_t));
 
 	allGORaster = allocate2DArray<ct_uint8_t>(num_go, rasterColumnSize);
-	std::fill(allGORaster[0], allGORaster[0] +
-			num_go * rasterColumnSize, 0);
+	memset((void *)allGORaster[0], 0, num_go * rasterColumnSize * sizeof(ct_uint8_t));
 
 	allPCRaster = allocate2DArray<ct_uint8_t>(num_pc, rasterColumnSize);
-	std::fill(allPCRaster[0], allPCRaster[0] +
-			num_pc * rasterColumnSize, 0);
+	memset((void *)allPCRaster[0], 0, num_pc * rasterColumnSize * sizeof(ct_uint8_t));
 	
 	allNCRaster = allocate2DArray<ct_uint8_t>(num_nc, rasterColumnSize);
-	std::fill(allNCRaster[0], allNCRaster[0] +
-			num_nc * rasterColumnSize, 0);
+	memset((void *)allNCRaster[0], 0, num_nc * rasterColumnSize * sizeof(ct_uint8_t));
 
 	allSCRaster = allocate2DArray<ct_uint8_t>(num_sc, rasterColumnSize);
-	std::fill(allSCRaster[0], allSCRaster[0] +
-			num_sc * rasterColumnSize, 0);
+	memset((void *)allSCRaster[0], 0, num_sc * rasterColumnSize * sizeof(ct_uint8_t));
 
 	allBCRaster = allocate2DArray<ct_uint8_t>(num_bc, rasterColumnSize);
-	std::fill(allBCRaster[0], allBCRaster[0] +
-			num_bc * rasterColumnSize, 0);
+	memset((void *)allBCRaster[0], 0, num_bc * rasterColumnSize * sizeof(ct_uint8_t));
 
 	allIORaster = allocate2DArray<ct_uint8_t>(num_io, rasterColumnSize);
-	std::fill(allIORaster[0], allIORaster[0] +
-			num_io * rasterColumnSize, 0);
-	
+	memset((void *)allIORaster[0], 0, num_io * rasterColumnSize * sizeof(ct_uint8_t));
+
+	sample_pfpc_syn_weights = new float[4096];
+	memset((void *)sample_pfpc_syn_weights, 0, 4096);
+
 	output_arrays_initialized = true;
 }
 
@@ -333,7 +362,7 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 	clock_t timer;
 	int rasterCounter = 0;
 	int goSpkCounter[num_go] = {0};
-	int gr_indices[4096] = {0};
+
 	gen_gr_sample(gr_indices, 4096, num_gr);
 
 	GOGR = 0.017;
@@ -346,9 +375,10 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 		init_tty(&fp);
 	}
 
-	for (int trial = 0; trial < numTotalTrials; trial++)
+	in_run = true;
+	trial = 0;
+	while (trial < numTotalTrials && in_run)
 	{
-		// TODO: ensure we get time value before we pause!
 		timer = clock();
 		
 		// re-initialize spike counter vector
@@ -437,7 +467,7 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 				if (trial >= preTrialNumber && tts >= csStart-msPreCS &&
 						tts < csStart + csLength + msPostCS)
 				{
-					fillOutputArrays(gr_indices, mfAP, simCore, PSTHCounter, rasterCounter);
+					fillOutputArrays(mfAP, simCore, PSTHCounter, rasterCounter);
 
 					PSTHCounter++;
 					rasterCounter++;
@@ -457,8 +487,8 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 		{
 			if (sim_is_paused)
 			{
-				std::cout << "[INFO]: Simulation is paused at end of trial " << trial << "." << std::endl;
-				while(true)
+				std::cout << "[INFO]: Simulation is paused at end of trial " << trial+1 << "." << std::endl;
+				while(in_run)
 				{
 					// Weird edge case not taken into account: if there are events pending after user hits continue...
 					if (gtk_events_pending() || sim_is_paused) gtk_main_iteration();
@@ -470,9 +500,11 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO)
 				}
 			}
 		}
+		trial++;
 	}
 	if (sim_vis_mode == TUI) reset_tty(&fp); /* reset the tty for later use */
-	saveOutputArraysToFile(0, 0, local_time, 0);
+	//saveOutputArraysToFile(0, 0, local_time, 0);
+	in_run = false;
 }
 
 
@@ -526,20 +558,20 @@ void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
 	std::cout << "Median GO Rate: " << m / 2.0 << std::endl;
 }
 
-void Control::fillOutputArrays(int *gr_indices, const ct_uint8_t *mfAP, CBMSimCore *simCore, int PSTHCounter, int rasterCounter)
+void Control::fillOutputArrays(const ct_uint8_t *mfAP, CBMSimCore *simCore, int PSTHCounter, int rasterCounter)
 {
 	const ct_uint8_t* goSpks = simCore->getInputNet()->exportAPGO();
 	const ct_uint8_t* grSpks = simCore->getInputNet()->exportAPGR();
-	const ct_uint8_t* pcSpks = simCore->getMZoneList()[0]->exportAPPC();
-	const ct_uint8_t* ncSpks = simCore->getMZoneList()[0]->exportAPNC();
-	const ct_uint8_t* scSpks = simCore->getInputNet()->exportAPSC();
-	const ct_uint8_t* bcSpks = simCore->getMZoneList()[0]->exportAPBC();
-	const ct_uint8_t* ioSpks = simCore->getMZoneList()[0]->exportAPIO();
+	//const ct_uint8_t* pcSpks = simCore->getMZoneList()[0]->exportAPPC();
+	//const ct_uint8_t* ncSpks = simCore->getMZoneList()[0]->exportAPNC();
+	//const ct_uint8_t* scSpks = simCore->getInputNet()->exportAPSC();
+	//const ct_uint8_t* bcSpks = simCore->getMZoneList()[0]->exportAPBC();
+	//const ct_uint8_t* ioSpks = simCore->getMZoneList()[0]->exportAPIO();
 
-	for (int i = 0; i < num_mf; i++)
-	{
-		allMFRaster[i][rasterCounter] = mfAP[i];
-	}
+	//for (int i = 0; i < num_mf; i++)
+	//{
+	//	allMFRaster[i][rasterCounter] = mfAP[i];
+	//}
 
 	for (int i = 0; i < num_go; i++)
 	{
@@ -552,30 +584,30 @@ void Control::fillOutputArrays(int *gr_indices, const ct_uint8_t *mfAP, CBMSimCo
 		sampleGRRaster[i][rasterCounter] = grSpks[gr_indices[i]];
 	}
 
-	for (int i = 0; i < num_pc; i++)
-	{
-		allPCRaster[i][rasterCounter] = pcSpks[i];
-	}
+	//for (int i = 0; i < num_pc; i++)
+	//{
+	//	allPCRaster[i][rasterCounter] = pcSpks[i];
+	//}
 
-	for (int i = 0; i < num_nc; i++)
-	{
-		allNCRaster[i][rasterCounter] = ncSpks[i];
-	}
+	//for (int i = 0; i < num_nc; i++)
+	//{
+	//	allNCRaster[i][rasterCounter] = ncSpks[i];
+	//}
 
-	for (int i = 0; i < num_sc; i++)
-	{
-		allSCRaster[i][rasterCounter] = scSpks[i];
-	}
+	//for (int i = 0; i < num_sc; i++)
+	//{
+	//	allSCRaster[i][rasterCounter] = scSpks[i];
+	//}
 
-	for (int i = 0; i < num_bc; i++)
-	{
-		allBCRaster[i][rasterCounter] = bcSpks[i];
-	}
+	//for (int i = 0; i < num_bc; i++)
+	//{
+	//	allBCRaster[i][rasterCounter] = bcSpks[i];
+	//}
 
-	for (int i = 0; i < num_io; i++)
-	{
-		allIORaster[i][rasterCounter] = ioSpks[i];
-	}
+	//for (int i = 0; i < num_io; i++)
+	//{
+	//	allIORaster[i][rasterCounter] = ioSpks[i];
+	//}
 }
 
 // TODO: 1) find better place to put this 2) generalize
@@ -603,35 +635,6 @@ void Control::deleteOutputArrays()
 	delete2DArray<ct_uint8_t>(allSCRaster);
 	delete2DArray<ct_uint8_t>(allBCRaster);
 	delete2DArray<ct_uint8_t>(allIORaster);
-}
-
-// NOTE: assumes that we have initialized activity params
-// TODO: find a better design than this: why else would we have a constructor???
-void Control::construct_control(enum vis_mode sim_vis_mode)
-{
-	if (this->sim_vis_mode == NO_VIS) this->sim_vis_mode = sim_vis_mode;
-	if (!simState) simState = new CBMState(numMZones);
-	
-	if (!simCore) simCore = new CBMSimCore(simState, gpuIndex, gpuP2);
-
-	if (!mfFreq)
-	{
-		mfFreq = new ECMFPopulation(num_mf, mfRandSeed, CSTonicMFFrac, CSPhasicMFFrac,
-			  contextMFFrac, nucCollFrac, bgFreqMin, csbgFreqMin, contextFreqMin, 
-			  tonicFreqMin, phasicFreqMin, bgFreqMax, csbgFreqMax, contextFreqMax, 
-			  tonicFreqMax, phasicFreqMax, collaterals_off, fracImport, secondCS, fracOverlap);
-	}
-	
-	if (!mfs)
-	{
-		mfs = new PoissonRegenCells(num_mf, mfRandSeed, threshDecayTau, msPerTimeStep,
-			  	numMZones, num_nc);
-	}
-
-	if (!output_arrays_initialized)
-	{
-		// allocate and initialize output arrays
-		initializeOutputArrays();
-	}
+	delete[] sample_pfpc_syn_weights;
 }
 

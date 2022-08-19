@@ -37,6 +37,7 @@ enum run_args {RUN_PROGRAM, EXPERIMENT_FILE, IN_SIM_FILE, RUN_OUT_SIM_FILE};
 enum vis_mode {GUI, TUI, NO_VIS};
 enum run_mode {BUILD, RUN, NO_RUN};
 
+enum user_mode {FRIENDLY, VETERAN, NO_USER_MODE};
 
 /* ======================= FUNCTION DECLARATIONS ======================= */
 
@@ -87,7 +88,8 @@ enum vis_mode get_vis_mode(const char *arg);
  *
  */
 void validate_args_and_set_modes(int *argc, char ***argv,
-	  enum vis_mode *sim_vis_mode, enum run_mode *sim_run_mode);
+	  enum vis_mode *sim_vis_mode, enum run_mode *sim_run_mode,
+	  enum user_mode *sim_user_mode);
 
 /*
  * Description:

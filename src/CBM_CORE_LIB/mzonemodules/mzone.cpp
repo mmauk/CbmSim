@@ -43,6 +43,7 @@ MZone::MZone(MZoneConnectivityState *cs, MZoneActivityState *as, int randSeed, c
 
 MZone::~MZone()
 {
+	std::cout << "[INFO] Deleting mzone gpu arrays..." << std::endl;
 	//clean up allocated memory
 	delete randGen;
 
@@ -68,6 +69,7 @@ MZone::~MZone()
 	delete[] inputPFPCGPU;
 	delete[] inputPFPCGPUPitch;
 	delete[] inputSumPFPCMZGPU;
+	std::cout << "[INFO] Finished deleting mzone gpu arrays." << std::endl;
 }
 
 void MZone::initCUDA()

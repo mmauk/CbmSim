@@ -15,7 +15,7 @@ static bool assert(bool expr, const char *error_string, const char *func = "asse
 	return true;
 }
 
-static void on_load_sim_state_file(GtkWidget *widget, Control *control)
+static void load_file(GtkWidget *widget, Control *control, std::string &out_file_name)
 {
 	GtkWidget *dialog = gtk_file_chooser_dialog_new
 		(
@@ -34,17 +34,40 @@ static void on_load_sim_state_file(GtkWidget *widget, Control *control)
 	if (response == GTK_RESPONSE_ACCEPT)
 	{
 		GtkFileChooser *chooser = GTK_FILE_CHOOSER(dialog);
-		char *sim_state_file = gtk_file_chooser_get_filename(chooser);
+		char *sim_file = gtk_file_chooser_get_filename(chooser);
 		// TODO: pop-up warning for invalid file
-		std::string sim_state_file_std_str = std::string(sim_state_file);
-		// set input state file name for saving state after each trial
-		control->inStateFileName = sim_state_file_std_str;
-		control->init_sim_state(std::string(sim_state_file));
-		g_free(sim_state_file);
+		out_file_name = std::string(sim_file);
+		g_free(sim_file);
 	}
 
 	gtk_widget_destroy(dialog);
 
+}
+
+static void on_load_experiment_file(GtkWidget *widget, Control *control)
+{
+		std::string expt_filename = "";
+		load_file(widget, control, expt_filename);
+		if (expt_filename == "")
+		{
+			fprintf(stderr, "[ERROR]: Could not open experiment file.\n");
+			return;
+		}
+		control->init_experiment(expt_filename);
+}
+
+static void on_load_sim_file(GtkWidget *widget, Control *control)
+{
+		std::string in_sim_filename = "";
+		load_file(widget, control, in_sim_filename);
+		if (in_sim_filename == "")
+		{
+			fprintf(stderr, "[ERROR]: Could not open simulation file.\n");
+			return;
+		}
+		// set input state file name for saving state after each trial
+		control->inSimFileName = in_sim_filename;
+		control->init_sim(in_sim_filename);
 }
 
 static void on_save_state(GtkWidget *widget, Control *control)
@@ -78,18 +101,6 @@ static void on_save_state(GtkWidget *widget, Control *control)
 	gtk_widget_destroy(dialog);
 }
 
-// NOTE: Assumes that activity params have been loaded!!!!
-static void on_init_sim(GtkWidget *widget, Control *control)
-{
-	// TODO: rewrite to accommodate new act param scheme
-	control->construct_control(GUI);
-	//else 
-	//{
-	//	fprintf(stderr, "[ERROR]: Trying to initialize a simulation without loading a file.\n");
-	//	fprintf(stderr, "[ERROR]: (Hint: Load an activity parameter file first then initialize the simulation.)\n");
-	//}
-}
-
 static void on_run(GtkWidget *widget, Control *control)
 {
 	if (control->simState && control->simCore && control->mfFreq && control->mfs)
@@ -97,8 +108,17 @@ static void on_run(GtkWidget *widget, Control *control)
 		clock_t time = clock();
 		control->runTrials(0, 0, 0, 0);
 		time = clock() - time;
-		std::cout << "[INFO] All simulations finished in "
-		          << (float) time / CLOCKS_PER_SEC << "s." << std::endl;
+		if (control->terminate)
+		{
+			std::cout << "[INFO] Finished running trials in "
+			          << (float) time / CLOCKS_PER_SEC << "s." << std::endl;
+		   gtk_main_quit();
+		}
+		else
+		{
+			std::cout << "[INFO] Finished running all trials in "
+			          << (float) time / CLOCKS_PER_SEC << "s." << std::endl;
+		}
 	}
 	else
 	{
@@ -107,37 +127,104 @@ static void on_run(GtkWidget *widget, Control *control)
 	}
 }
 
-static void draw_gr_raster(GtkDrawingArea *drawing_area, cairo_t *cr, Control *control)
+static void draw_raster(GtkWidget *drawing_area, cairo_t *cr, ct_uint32_t trial, ct_uint32_t num_cells,
+	  ct_uint32_t num_col, ct_uint8_t **raster_data)
 {
-	//// background color setup
-	//cairo_set_source_rgb(cr, 0, 0, 0);
-	//cairo_paint(cr);
+	// background color setup
+	cairo_set_source_rgb(cr, 0, 0, 0);
+	cairo_paint(cr);
 
-	//// point color
-	//cairo_set_source_rgb(cr, 0.42, 0.65, 0.80);
-	//cairo_set_line_width(cr, 3);
-	//
-	//for (int i = 0; i < NUM_GR; i++)
-	//{
-	//	for (int j = 0; j < control->rasterColumnSize; j++)
-	//	{
-	//		// this may not actually exist because we have so many...
-	//		if (control->allGRRaster[i][j])
-	//		{
-	//			// FIXME: this is definitely not the correct conversion to pixel space
-	//			int x = j * DEFAULT_RASTER_WINDOW_WIDTH / control->rasterColumnSize;
-	//			int y = control->allGRRaster[i][j] * DEFAULT_RASTER_WINDOW_HEIGHT / NUM_GR;
-	//			cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
-	//			cairo_move_to(cr, x, y);
-	//			cairo_line_to(cr, x, y);
-	//		}
-	//	}
-	//	cairo_stroke(cr);
-	//}
+	/* GtkDrawingArea size */
+	GdkRectangle da;            
+	GdkWindow *window = gtk_widget_get_window(GTK_WIDGET(drawing_area));
+	
+	/* Determine GtkDrawingArea dimensions */
+	gdk_window_get_geometry(window,
+	        &da.x,
+	        &da.y,
+	        &da.width,
+	        &da.height);
+
+	// raster sample size == 4096
+	// TODO: add pixel_height_per_cell var
+	float raster_to_pixel_scale_y = da.height / (float)num_cells;
+	float raster_to_pixel_scale_x = da.width / (float)num_col;
+
+	cairo_translate(cr, 0, da.height);
+	cairo_scale(cr, raster_to_pixel_scale_x, -raster_to_pixel_scale_y);
+
+	// point color
+	cairo_set_source_rgb(cr, 0.0, 1.0, 0.0);
+
+	int index_offset = trial * num_col; 
+
+	for (int i = 0; i < num_cells; i++)
+	{
+		for (int j = 0; j < num_col; j++)
+		{
+			if (raster_data[i][index_offset+j])
+			{
+				cairo_rectangle(cr, j, i, 2, 2);
+				cairo_fill(cr);
+			}
+		}
+	}
+} 
+
+static void draw_gr_raster(GtkWidget *drawing_area, cairo_t *cr, Control *control)
+{
+	/* 4096 gr raster sample size */
+	draw_raster(drawing_area, cr, control->trial, 4096, control->PSTHColSize, control->sampleGRRaster);
+}
+
+static void draw_go_raster(GtkWidget *drawing_area, cairo_t *cr, Control *control)
+{
+	draw_raster(drawing_area, cr, control->trial, num_go, control->PSTHColSize, control->allGORaster);
+}
+static void draw_pf_pc_plot(GtkWidget *drawing_area, cairo_t *cr, Control *control)
+{
+	const float *pfpc_weights = control->simCore->getMZoneList()[0]->exportPFPCWeights();
+	for (int i = 0; i < 4096; i++)
+	{
+		control->sample_pfpc_syn_weights[i] = pfpc_weights[control->gr_indices[i]];
+	}
+	//std::sort(control->sample_pfpc_syn_weights, control->sample_pfpc_syn_weights + 4096,
+	//	  [](float a, float b){return abs(a-0.5) < abs(b-0.5);});
+
+	// background color setup
+	cairo_set_source_rgb(cr, 0, 0, 0);
+	cairo_paint(cr);
+
+	/* GtkDrawingArea size */
+	GdkRectangle da;            
+	GdkWindow *window = gtk_widget_get_window(GTK_WIDGET(drawing_area));
+	
+	/* Determine GtkDrawingArea dimensions */
+	gdk_window_get_geometry(window,
+	        &da.x,
+	        &da.y,
+	        &da.width,
+	        &da.height);
+
+	float pfpc_w_to_pixel_scale_y = 1.0; /* weights bounded within [0, 1] */
+	float pfpc_w_to_pixel_scale_x = da.width / (float)4096; /* gr sample size is 4096 */
+ 
+	cairo_translate(cr, 0, da.height);
+	cairo_scale(cr, pfpc_w_to_pixel_scale_x, -pfpc_w_to_pixel_scale_y);
+
+	// point color
+	cairo_set_source_rgb(cr, 0.0, 0.0, 1.0);
+
+	// TODO: place scaling in above scale
+	for (int i = 0; i < 4096; i++)
+	{
+		cairo_rectangle(cr, i, (int)(da.height * control->sample_pfpc_syn_weights[i]), 2, 2);
+		cairo_fill(cr);
+	}
 }
 
 static void generate_raster_plot(GtkWidget *widget,
-	  void (* draw_func)(GtkDrawingArea *, cairo_t *, Control *))
+	  void (* draw_func)(GtkWidget *, cairo_t *, Control *), Control *control)
 {
 	GtkWidget *child_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	
@@ -152,9 +239,38 @@ static void generate_raster_plot(GtkWidget *widget,
 								DEFAULT_RASTER_WINDOW_WIDTH,
 								DEFAULT_RASTER_WINDOW_HEIGHT);
 	gtk_container_add(GTK_CONTAINER(child_window), drawing_area);
-	// FIXME: redraws at odd intervals when spawned widget moves, or similar
-	g_signal_connect(G_OBJECT(drawing_area), "draw", G_CALLBACK(draw_func), NULL);
+	g_signal_connect(G_OBJECT(drawing_area), "draw", G_CALLBACK(draw_func), control);
 	gtk_widget_show_all(child_window);
+}
+
+static void generate_pfpc_plot(GtkWidget *widget,
+	  void (* draw_func)(GtkWidget *, cairo_t *, Control *), Control *control)
+{
+	GtkWidget *child_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	
+	gtk_window_set_title(GTK_WINDOW(child_window), "PFPC Weights");
+	gtk_window_set_default_size(GTK_WINDOW(child_window),
+								DEFAULT_PFPC_WINDOW_WIDTH,
+								DEFAULT_PFPC_WINDOW_HEIGHT);
+	gtk_window_set_resizable(GTK_WINDOW(child_window), FALSE);
+
+	GtkWidget *drawing_area = gtk_drawing_area_new();
+	gtk_widget_set_size_request(drawing_area,
+								DEFAULT_PFPC_WINDOW_WIDTH,
+								DEFAULT_PFPC_WINDOW_HEIGHT);
+	gtk_container_add(GTK_CONTAINER(child_window), drawing_area);
+	g_signal_connect(G_OBJECT(drawing_area), "draw", G_CALLBACK(draw_func), control);
+	gtk_widget_show_all(child_window);
+
+}
+static void on_quit(GtkWidget *widget, Control *control)
+{
+	if (control->in_run)
+	{
+		control->in_run = false;
+		control->terminate = true;
+	}
+	else gtk_main_quit();
 }
 
 static void on_pause(GtkWidget *widget, Control *control)
@@ -169,17 +285,17 @@ static void on_continue(GtkWidget *widget, Control *control)
 
 static void on_gr_raster(GtkWidget *widget, Control *control)
 {
-	generate_raster_plot(widget, draw_gr_raster);
+	generate_raster_plot(widget, draw_gr_raster, control);
 }
 
-static bool on_go_raster(GtkWidget *widget, gpointer data)
+static void on_go_raster(GtkWidget *widget, Control *control)
 {
-	return assert(false, "Not implemented", __func__);
+	generate_raster_plot(widget, draw_go_raster, control);
 }
 
-static bool on_pc_window(GtkWidget *widget, gpointer data)
+static void on_pc_window(GtkWidget *widget, Control *control)
 {
-	return assert(false, "Not implemented", __func__);
+	generate_pfpc_plot(widget, draw_pf_pc_plot, control);
 }
 
 static bool on_parameters(GtkWidget *widget, gpointer data)
@@ -201,7 +317,7 @@ static bool on_radio(GtkWidget *widget, gpointer data)
 static void set_gui_window_attribs(struct gui *gui)
 {
 	gtk_window_set_title(GTK_WINDOW(gui->window), "Main Window");
-	gtk_window_set_default_size(GTK_WINDOW(gui->window), 600, 400);
+	gtk_window_set_default_size(GTK_WINDOW(gui->window), MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT);
 	gtk_window_set_position(GTK_WINDOW(gui->window), GTK_WIN_POS_CENTER);
 
 	gtk_widget_add_events(gui->window, GDK_DELETE);
@@ -330,15 +446,7 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 		.window = gtk_window_new(GTK_WINDOW_TOPLEVEL),
 		.grid = gtk_grid_new(),
 		.normal_buttons = {
-			{"Initialize Sim", gtk_button_new(), 0, 0,
-				{
-					"clicked",
-					G_CALLBACK(on_init_sim),
-					control,
-					false
-				}
-			},
-			{"Run", gtk_button_new(), 1, 0,
+			{"Run", gtk_button_new(), 0, 0,
 				{
 					"clicked",
 					G_CALLBACK(on_run),
@@ -374,7 +482,7 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 				{
 				   "clicked",
 				   G_CALLBACK(on_go_raster),
-				   NULL,
+				   control,
 				   false
 				}
 			},
@@ -382,7 +490,7 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 				{
 				   "clicked",
 				   G_CALLBACK(on_pc_window),
-				   NULL,
+				   control,
 				   false
 				}
 			},
@@ -425,20 +533,19 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 							{"Load...", gtk_menu_item_new(), {},
 								{gtk_menu_new(), NUM_FILE_SUB_MENU_ITEMS, new menu_item[NUM_FILE_SUB_MENU_ITEMS]
 									{
-										{},
-										//{"Experiment File", gtk_menu_item_new(),
-										//	{
-										//		"activate",
-										//		G_CALLBACK(on_load_experiment_file),
-										//		control,
-										//		false
-										//	},
-										//	{}
-										//},
-										{"Simulation State File", gtk_menu_item_new(),
+										{"Experiment File", gtk_menu_item_new(),
 											{
 												"activate",
-												G_CALLBACK(on_load_sim_state_file),
+												G_CALLBACK(on_load_experiment_file),
+												control,
+												false
+											},
+											{}
+										},
+										{"Simulation File", gtk_menu_item_new(),
+											{
+												"activate",
+												G_CALLBACK(on_load_sim_file),
 												control,
 												false
 											},
@@ -460,8 +567,8 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 							{"Quit", gtk_menu_item_new(),
 								{
 									"activate",
-									G_CALLBACK(gtk_main_quit),
-									NULL,
+									G_CALLBACK(on_quit),
+									control,
 									false
 								},  
 								{}
