@@ -392,30 +392,53 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 	gtk_widget_show_all(tw.window);
 }
 
-static void on_run(GtkWidget *widget, struct gui *gui)
+static void on_toggle_run(GtkWidget *widget, struct gui *gui)
 {
 	if (gui->ctrl_ptr->simState && gui->ctrl_ptr->simCore && gui->ctrl_ptr->mfFreq && gui->ctrl_ptr->mfs)
 	{
-		clock_t time = clock();
-		gui->ctrl_ptr->runTrials(0, 0, 0, 0, gui);
-		time = clock() - time;
-		if (gui->ctrl_ptr->terminate)
+		switch (gui->ctrl_ptr->run_state)
 		{
-			std::cout << "[INFO] Finished running trials in "
-			          << (float) time / CLOCKS_PER_SEC << "s." << std::endl;
-		   gtk_main_quit();
+			case NOT_IN_RUN:
+				// TODO: start sim in a new thread
+				gtk_button_set_label(GTK_BUTTON(widget), "Pause");
+				gui->ctrl_ptr->run_state = IN_RUN_NO_PAUSE;
+				gtk_widget_show(gui->normal_buttons[1].widget);
+				gui->ctrl_ptr->runTrials(0, 0, 0, 0, gui);
+				break;
+			case IN_RUN_NO_PAUSE:
+				gtk_button_set_label(GTK_BUTTON(widget), "Continue");
+				gui->ctrl_ptr->run_state = IN_RUN_PAUSE;
+				break;
+			case IN_RUN_PAUSE:
+				gtk_button_set_label(GTK_BUTTON(widget), "Pause");
+				gui->ctrl_ptr->run_state = IN_RUN_NO_PAUSE;
+				break;
 		}
-		else
-		{
-			std::cout << "[INFO] Finished running all trials in "
-			          << (float) time / CLOCKS_PER_SEC << "s." << std::endl;
-		}
+		//if (gui->ctrl_ptr->terminate)
+		//{
+		//	std::cout << "[INFO] Finished running trials in "
+		//	          << (float) time / CLOCKS_PER_SEC << "s." << std::endl;
+		//   gtk_main_quit();
+		//}
+		//else
+		//{
+		//	std::cout << "[INFO] Finished running all trials in "
+		//	          << (float) time / CLOCKS_PER_SEC << "s." << std::endl;
+		//}
 	}
 	else
 	{
 		fprintf(stderr, "[ERROR]: trying to run an uninitialized simulation.\n");
 		fprintf(stderr, "[ERROR]: (Hint: initialize the simulation before running it.)\n");
 	}
+}
+
+static void on_exit_sim(GtkWidget *widget, struct gui *gui)
+{
+	// TODO: change label of run button back to run
+	gtk_button_set_label(GTK_BUTTON(gui->normal_buttons[0].widget), "Run");
+	gui->ctrl_ptr->run_state = NOT_IN_RUN;
+	gtk_widget_hide(widget);
 }
 
 static void draw_raster(GtkWidget *drawing_area, cairo_t *cr, ct_uint32_t trial, ct_uint32_t num_cells,
@@ -564,15 +587,6 @@ static void on_quit(GtkWidget *widget, Control *control)
 	else gtk_main_quit();
 }
 
-static void on_pause(GtkWidget *widget, Control *control)
-{
-	control->sim_is_paused = true;
-}
-
-static void on_continue(GtkWidget *widget, Control *control)
-{
-	control->sim_is_paused = false;
-}
 
 static void on_gr_raster(GtkWidget *widget, Control *control)
 {
@@ -740,28 +754,20 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 			{"Run", gtk_button_new(), 0, 0,
 				{
 					"clicked",
-					G_CALLBACK(on_run),
+					G_CALLBACK(on_toggle_run),
 					&gui,
 					false
 				}
 			},
-			{"Pause", gtk_button_new(), 0, 1,
+			{"Exit Sim", gtk_button_new(), 0, 1,
 				{
 					"clicked",
-					G_CALLBACK(on_pause),
-					control,
+					G_CALLBACK(on_exit_sim),
+					&gui,
 					false
 				}
 			},
-			{"Continue", gtk_button_new(), 1, 1,
-				{
-					"clicked",
-					G_CALLBACK(on_continue),
-					control,
-					false
-				}
-			},
-			{"GR Raster", gtk_button_new(), 3, 0,
+			{"GR Raster", gtk_button_new(), 1, 0,
 				{
 				   "clicked",
 				   G_CALLBACK(on_gr_raster),
@@ -769,7 +775,7 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 				   false
 				}
 			},
-			{"GO Raster", gtk_button_new(), 3, 1,
+			{"GO Raster", gtk_button_new(), 1, 1,
 				{
 				   "clicked",
 				   G_CALLBACK(on_go_raster),
@@ -777,7 +783,7 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 				   false
 				}
 			},
-			{"PC Window", gtk_button_new(), 3, 2,
+			{"PC Window", gtk_button_new(), 1, 2,
 				{
 				   "clicked",
 				   G_CALLBACK(on_pc_window),
@@ -785,7 +791,7 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 				   false
 				}
 			},
-			{"Parameters", gtk_button_new(), 3, 3,
+			{"Parameters", gtk_button_new(), 1, 3,
 				{
 				   "clicked",
 				   G_CALLBACK(on_parameters),
@@ -1197,6 +1203,7 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 
 	// show and run
 	gtk_widget_show_all(gui.window);
+	gtk_widget_hide(gui.normal_buttons[1].widget);
 	gtk_main();
 
 	// manually delete objects we created

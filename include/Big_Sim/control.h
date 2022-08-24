@@ -23,14 +23,9 @@
 
 // TODO: place in a common place, as gui uses a constant like this too
 #define NUM_CELL_TYPES 8
-
+#define NUM_RUN_STATES 3
 // convenience enum for indexing cell arrays
 enum {MF, GR, GO, BC, SC, PC, IO, DCN};
-
-// for label matching 
-//const char *cell_names[NUM_CELL_TYPES] = {
-//	"MF", "GR", "GO", "BC", "SC", "PC", "IO", "DCN"
-//};
 
 struct cell_spike_sums
 { ct_uint32_t num_cells;
@@ -47,6 +42,8 @@ struct cell_firing_rates
 	float cs_mean_fr;
 	float cs_median_fr;
 };
+
+enum sim_run_state {NOT_IN_RUN, IN_RUN_NO_PAUSE, IN_RUN_PAUSE};
 
 class Control 
 {
@@ -69,6 +66,7 @@ class Control
 		bool terminate = false;
 		bool in_run = false;
 		bool sim_is_paused = false;
+		enum sim_run_state run_state = NOT_IN_RUN; 
 		std::string inStateFileName = "";
 		std::string inSimFileName = "";
 
@@ -217,7 +215,6 @@ class Control
 
 		void initialize_spike_sums();
 		void initializeOutputArrays();
-
 		void runExperiment(experiment &experiment);
 
 		void runTrials(int simNum, float GOGR, float GRGO, float MFGO, struct gui *gui); // TODO: deprecate

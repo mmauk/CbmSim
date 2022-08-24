@@ -406,7 +406,7 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO, struct g
 
 	in_run = true;
 	trial = 0;
-	while (trial < numTotalTrials && in_run)
+	while (trial < numTotalTrials && run_state != NOT_IN_RUN)
 	{
 		timer = clock();
 		
@@ -517,19 +517,14 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO, struct g
 			// for now, compute the mean and median firing rates for all cells regardless
 			calculate_firing_rates();
 			gdk_threads_add_idle((GSourceFunc)update_fr_labels, gui);
-			if (sim_is_paused)
+			if (run_state == IN_RUN_PAUSE)
 			{
 				std::cout << "[INFO]: Simulation is paused at end of trial " << trial+1 << "." << std::endl;
-				while(in_run)
+				while(run_state == IN_RUN_PAUSE)
 				{
-					// Weird edge case not taken into account: if there are events pending after user hits continue...
-					if (gtk_events_pending() || sim_is_paused) gtk_main_iteration();
-					else
-					{
-						std::cout << "[INFO]: Continuing..." << std::endl;
-						break;
-					}
+					if (gtk_events_pending()) gtk_main_iteration();
 				}
+				std::cout << "[INFO]: Continuing..." << std::endl;
 			}
 			reset_spike_sums();
 		}
@@ -537,7 +532,7 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO, struct g
 	}
 	if (sim_vis_mode == TUI) reset_tty(&fp); /* reset the tty for later use */
 	//saveOutputArraysToFile(0, 0, local_time, 0);
-	in_run = false;
+	run_state = NOT_IN_RUN;
 }
 
 

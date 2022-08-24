@@ -6,10 +6,10 @@
 #include "control.h"
 
 /* main window constants */
-#define MAIN_WINDOW_WIDTH 600
-#define MAIN_WINDOW_HEIGHT 400
+#define MAIN_WINDOW_WIDTH 300
+#define MAIN_WINDOW_HEIGHT 300
 
-#define NUM_NORMAL_BUTTONS 7
+#define NUM_NORMAL_BUTTONS 6
 #define NUM_PLASTICITY_RADIOS 4
 
 #define NUM_SUB_MENU_ITEMS 5
