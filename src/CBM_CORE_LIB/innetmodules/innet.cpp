@@ -457,7 +457,6 @@ void InNet::updateMFActivties(const ct_uint8_t *actInMF)
 	}
 }
 
-//void InNet::calcGOActivities(float goMin, int simNum, float GRGO, float MFGO, float GOGR, float gogoW)
 void InNet::calcGOActivities(float mfgoW, float gogrW, float grgoW, float gogoW)
 {
 	//50ms
@@ -473,41 +472,53 @@ void InNet::calcGOActivities(float mfgoW, float gogrW, float grgoW, float gogoW)
 #pragma omp parallel for
 	for (int i = 0; i < num_go; i++)
 	{
+		float tempVGO = as->vGO[i];
 		float gLeakGO = 0.02;
 		//NMDA Low
-		float gNMDAIncGRGO = (0.00000082263 * as->vGO[i] * as->vGO[i] * as->vGO[i])
-		   + (0.00021653 * as->vGO[i] * as->vGO[i]) + (0.0195 * as->vGO[i]) + 0.6117; 
+		float gNMDAIncGRGO = (0.00000082263 * tempVGO * tempVGO * tempVGO)
+						   + (0.00021653 * tempVGO * tempVGO)
+						   + (0.0195 * tempVGO)
+						   + 0.6117; 
 
 		//NMDA High
-		as->gNMDAIncMFGO[i] = (0.00000011969 * as->vGO[i] * as->vGO[i] * as->vGO[i])
-		   + (0.000089369 * as->vGO[i] * as->vGO[i]) + (0.0151 * as->vGO[i]) + 0.7713; 
+		as->gNMDAIncMFGO[i] = (0.00000011969 * tempVGO * tempVGO * tempVGO)
+							+ (0.000089369 * tempVGO * tempVGO)
+							+ (0.0151 * tempVGO)
+							+ 0.7713; 
 	
-		as->gSum_MFGO[i] = (as->inputMFGO[i] * mfgoW) + as->gSum_MFGO[i] * gDecMFtoGO;
+		as->gSum_MFGO[i] = (as->inputMFGO[i] * mfgoW)
+						 + as->gSum_MFGO[i] * gDecMFtoGO;
 		as->gSum_GOGO[i] = (as->inputGOGO[i] * gogoW * as->synWscalerGOtoGO[i])
-						 +  as->gSum_GOGO[i] * gGABADecGOtoGO; // as->gSum_GOGO = 0
+						 +  as->gSum_GOGO[i] * gGABADecGOtoGO;
 		as->gNMDAMFGO[i] = as->inputMFGO[i] * (mfgoW * NMDA_AMPAratioMFGO * as->gNMDAIncMFGO[i])
-		   + as->gNMDAMFGO[i] * gDecayMFtoGONMDA;
+						 + as->gNMDAMFGO[i] * gDecayMFtoGONMDA;
 		
-		as->gGRGO[i] = (sumGRInputGO[i] * grgoW * as->synWscalerGRtoGO[i]) + as->gGRGO[i] * gDecGRtoGO;
+		as->gGRGO[i] = (sumGRInputGO[i] * grgoW * as->synWscalerGRtoGO[i])
+					 + as->gGRGO[i] * gDecGRtoGO;
 		as->gGRGO_NMDA[i] = sumGRInputGO[i] * ((grgoW * as->synWscalerGRtoGO[i]) * 0.6 * gNMDAIncGRGO)
-		   + as->gGRGO_NMDA[i] * gDecayMFtoGONMDA;
+						  + as->gGRGO_NMDA[i] * gDecayMFtoGONMDA;
 		
-		as->threshCurGO[i] = as->threshCurGO[i] + (threshRestGO - as->threshCurGO[i]) * threshDecGO;
+		as->threshCurGO[i] = as->threshCurGO[i]
+						   + (threshRestGO - as->threshCurGO[i]) * threshDecGO;
 		
-		as->vGO[i] = as->vGO[i] + (gLeakGO * (eLeakGO - as->vGO[i])) + (as->gSum_GOGO[i] * (eGABAGO - as->vGO[i]))
+		tempVGO = tempVGO
+				+ (gLeakGO * (eLeakGO - tempVGO))
+				+ (as->gSum_GOGO[i] * (eGABAGO - tempVGO))
 				- (as->gSum_MFGO[i] + as->gGRGO[i] + as->gNMDAMFGO[i]
-					  + as->gGRGO_NMDA[i]) * as->vGO[i]
-				- (as->vCoupleGO[i] * as->vGO[i]);
-	
-		if (as->vGO[i] > threshMaxGO) as->vGO[i] = threshMaxGO;
+					+ as->gGRGO_NMDA[i]) * tempVGO
+				- (as->vCoupleGO[i] * tempVGO);
+
+		if (tempVGO > threshMaxGO) tempVGO = threshMaxGO;
 		
-		as->apGO[i] = as->vGO[i] > as->threshCurGO[i];
+		as->apGO[i]    = tempVGO > as->threshCurGO[i];
 		as->apBufGO[i] = (as->apBufGO[i] << 1) | (as->apGO[i] * 0x00000001);
 
-		as->threshCurGO[i] = as->apGO[i] * threshMaxGO + (!as->apGO[i]) * as->threshCurGO[i];
+		as->threshCurGO[i] = as->apGO[i] * threshMaxGO
+						   + (1-as->apGO[i]) * as->threshCurGO[i];
 
 		as->inputMFGO[i]  = 0;
 		as->inputGOGO[i]  = 0;
+		as->vGO[i]        = tempVGO;
 	}
 
 	for (int i = 0; i < num_go; i++)
@@ -518,7 +529,6 @@ void InNet::calcGOActivities(float mfgoW, float gogrW, float grgoW, float gogoW)
 		}
 	}
 }
-
 
 void InNet::calcSCActivities()
 {

@@ -21,6 +21,33 @@
 #include "interfaces/ectrialsdata.h"
 #include "eyelidintegrator.h"
 
+// TODO: place in a common place, as gui uses a constant like this too
+#define NUM_CELL_TYPES 8
+
+// convenience enum for indexing cell arrays
+enum {MF, GR, GO, BC, SC, PC, IO, DCN};
+
+// for label matching 
+//const char *cell_names[NUM_CELL_TYPES] = {
+//	"MF", "GR", "GO", "BC", "SC", "PC", "IO", "DCN"
+//};
+
+struct cell_spike_sums
+{ ct_uint32_t num_cells;
+	ct_uint32_t non_cs_spike_sum;
+	ct_uint32_t cs_spike_sum;
+	ct_uint32_t *non_cs_spike_counter;
+	ct_uint32_t *cs_spike_counter;
+};
+
+struct cell_firing_rates
+{
+	float non_cs_mean_fr;
+	float non_cs_median_fr;
+	float cs_mean_fr;
+	float cs_median_fr;
+};
+
 class Control 
 {
 	public:
@@ -38,6 +65,7 @@ class Control
 
 		enum vis_mode sim_vis_mode = NO_VIS;
 		bool output_arrays_initialized = false; /* temporary, going to refactor soon */
+		bool spike_sums_initialized = false;
 		bool terminate = false;
 		bool in_run = false;
 		bool sim_is_paused = false;
@@ -64,7 +92,7 @@ class Control
 		int gpuP2    = 2;
 
 		// Training Parameters -> TODO: deprecate in gui runExperiment
-		int numTrainingTrials      = 100;
+		int numTrainingTrials      = 500;
 		int homeoTuningTrials      = 0;
 		int granuleActDetectTrials = 0;
 
@@ -136,6 +164,10 @@ class Control
 
 		//ct_uint8_t **allMFPSTH;
 		//ct_uint8_t **activeGRPSTH;
+	
+		struct cell_spike_sums spike_sums[NUM_CELL_TYPES] = {{}};
+		struct cell_firing_rates firing_rates[NUM_CELL_TYPES] = {{}};
+		const ct_uint8_t *cell_spikes[NUM_CELL_TYPES];
 
 		int gr_indices[4096] = {0};
 		ct_uint8_t **allMFRaster;
@@ -183,20 +215,25 @@ class Control
 
 		void save_sim_to_file(std::string outSimFile);
 
+		void initialize_spike_sums();
 		void initializeOutputArrays();
 
 		void runExperiment(experiment &experiment);
 
-		void runTrials(int simNum, float GOGR, float GRGO, float MFGO); // TODO: deprecate
+		void runTrials(int simNum, float GOGR, float GRGO, float MFGO, struct gui *gui); // TODO: deprecate
 
 		void saveOutputArraysToFile(int goRecipParam, int trial, std::tm *local_time, int simNum);
 
 		void countGOSpikes(int *goSpkCounter, float &medTrials);
+		void update_spike_sums(int tts);
+		void reset_spike_sums();
+		void calculate_firing_rates();
 		void fillOutputArrays(const ct_uint8_t *mfAP, CBMSimCore *simCore, int PSTHCounter, int rasterCounter);
 
 		// this should be in CXX Tools or 2D array...
 		void write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
 			unsigned int numRow, unsigned int numCol);
+		void delete_spike_sums();
 		void deleteOutputArrays();
 
 };

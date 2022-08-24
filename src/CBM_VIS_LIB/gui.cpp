@@ -101,14 +101,305 @@ static void on_save_state(GtkWidget *widget, Control *control)
 	gtk_widget_destroy(dialog);
 }
 
-static void on_run(GtkWidget *widget, Control *control)
+gboolean update_fr_labels(struct gui *gui)
 {
-	if (control->simState && control->simCore && control->mfFreq && control->mfs)
+	const struct cell_firing_rates *fr = gui->ctrl_ptr->firing_rates;
+	int cell_index = 0;
+	FOREACH(gui->frw.cell_labels, clp)
+	{
+		int fr_index = 0;
+		FOREACH(*clp, rp)
+		{
+			if (fr_index > 0)
+			{
+				int len = snprintf(NULL, 0, "%.2f", ((float *)(&fr[cell_index]))[fr_index-1]);
+				char *result = (char *)malloc(len+1);
+				snprintf(result, len+1, "%.2f", ((float *)(&fr[cell_index]))[fr_index-1]);
+				gtk_label_set_text(GTK_LABEL(rp->label), result);
+				free(result);
+			}
+			fr_index++;
+		}
+		cell_index++;
+	}
+	return false;
+}
+
+static void on_firing_rates_window(GtkWidget *widget, struct gui *gui)
+{
+	gui->frw.window = gtk_window_new(GTK_WINDOW_TOPLEVEL),
+	gui->frw.grid = gtk_grid_new(),
+
+	// set window props
+	gtk_window_set_title(GTK_WINDOW(gui->frw.window), "Firing Rates");
+	gtk_window_set_default_size(GTK_WINDOW(gui->frw.window),
+								DEFAULT_FIRING_RATE_WINDOW_WIDTH,
+								DEFAULT_FIRING_RATE_WINDOW_HEIGHT);
+	gtk_window_set_position(GTK_WINDOW(gui->frw.window), GTK_WIN_POS_CENTER);
+	gtk_window_set_resizable(GTK_WINDOW(gui->frw.window), TRUE);
+	gtk_container_set_border_width(GTK_CONTAINER(gui->frw.window), 5);
+
+	//set grid props
+	gtk_grid_set_column_spacing(GTK_GRID(gui->frw.grid), 3);
+	gtk_grid_set_row_spacing(GTK_GRID(gui->frw.grid), 3);
+
+	// header label props
+	FOREACH(gui->frw.headers, hp)
+	{
+		hp->label = gtk_label_new(hp->string);
+		gtk_widget_set_hexpand(hp->label, true);
+		gtk_widget_set_vexpand(hp->label, true);
+		gtk_grid_attach(GTK_GRID(gui->frw.grid),
+						hp->label,
+						hp->col,
+						hp->row, 1, 1);
+	}
+
+	// row entry props
+	FOREACH(gui->frw.cell_labels, clp)
+	{
+		FOREACH(*clp, rp)
+		{
+			rp->label = gtk_label_new(rp->string);
+			gtk_widget_set_hexpand(rp->label, true);
+			gtk_widget_set_vexpand(rp->label, true);
+			gtk_grid_attach(GTK_GRID(gui->frw.grid),
+							rp->label,
+							rp->col,
+							rp->row, 1, 1);
+		}
+	}
+
+	gtk_container_add(GTK_CONTAINER(gui->frw.window), gui->frw.grid);
+	gtk_widget_show_all(gui->frw.window);
+}
+
+void update_weight(GtkWidget *spin_button, float *weight)
+{
+	*weight = gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button));
+}
+
+static void on_tuning_window(GtkWidget *widget, struct gui *gui)
+{
+	struct tuning_window tw = {
+		.window = gtk_window_new(GTK_WINDOW_TOPLEVEL),
+		.grid = gtk_grid_new(),
+		.tuning_buttons = {
+			{
+				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
+				NULL, 1, 0,
+				{
+					NULL, "MF-GR", 0, 0
+				},
+				{
+					"activate",
+					G_CALLBACK(update_weight),
+					&gIncDirectMFtoGR,
+					false
+				}
+			},
+			{
+				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
+				NULL, 1, 1,
+				{
+					NULL, "MF-GO", 0, 1
+				},
+				{
+					"activate",
+					G_CALLBACK(null_callback),
+					NULL,
+					false
+				}
+			},
+			{
+				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
+				NULL, 1, 2,
+				{
+					NULL, "GR-GO", 0, 2
+				},
+				{
+					"activate",
+					G_CALLBACK(null_callback),
+					NULL,
+					false
+				}
+			},
+			{
+				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
+				NULL, 1, 3,
+				{
+					NULL, "GO-GR", 0, 3
+				},
+				{
+					"activate",
+					G_CALLBACK(null_callback),
+					NULL,
+					false
+				}
+			},
+			{
+				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
+				NULL, 3, 0,
+				{
+					NULL, "GR-PC", 2, 0
+				},
+				{
+					"activate",
+					G_CALLBACK(null_callback),
+					NULL,
+					false
+				}
+			},
+			{
+				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
+				NULL, 3, 1,
+				{
+					NULL, "GR-SC", 2, 1
+				},
+				{
+					"activate",
+					G_CALLBACK(null_callback),
+					NULL,
+					false
+				}
+			},
+			{
+				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
+				NULL, 3, 2,
+				{
+					NULL, "GR-BC", 2, 2
+				},
+				{
+					"activate",
+					G_CALLBACK(null_callback),
+					NULL,
+					false
+				}
+			},
+			{
+				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
+				NULL, 3, 3,
+				{
+					NULL, "SC-PC", 2, 3
+				},
+				{
+					"activate",
+					G_CALLBACK(null_callback),
+					NULL,
+					false
+				}
+			},
+			{
+				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
+				NULL, 5, 0,
+				{
+					NULL, "BC-PC", 4, 0
+				},
+				{
+					"activate",
+					G_CALLBACK(null_callback),
+					NULL,
+					false
+				}
+			},
+			{
+				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
+				NULL, 5, 1,
+				{
+					NULL, "PC-BC", 4, 1
+				},
+				{
+					"activate",
+					G_CALLBACK(null_callback),
+					NULL,
+					false
+				}
+			},
+			{
+				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
+				NULL, 5, 2,
+				{
+					NULL, "PC-DCN", 4, 2
+				},
+				{
+					"activate",
+					G_CALLBACK(null_callback),
+					NULL,
+					false
+				}
+			},
+			{
+				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
+				NULL, 5, 3,
+				{
+					NULL, "MF-DCN", 4, 3
+				},
+				{
+					"activate",
+					G_CALLBACK(null_callback),
+					NULL,
+					false
+				}
+			},
+			{
+				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
+				NULL, 7, 0,
+				{
+					NULL, "DCN-IO", 6, 0
+				},
+				{
+					"activate",
+					G_CALLBACK(null_callback),
+					NULL,
+					false
+				}
+			}
+		}
+	};
+
+	// set window props
+	gtk_window_set_title(GTK_WINDOW(tw.window), "Tuning");
+	gtk_window_set_default_size(GTK_WINDOW(tw.window),
+								DEFAULT_TUNING_WINDOW_WIDTH,
+								DEFAULT_TUNING_WINDOW_HEIGHT);
+	gtk_window_set_position(GTK_WINDOW(tw.window), GTK_WIN_POS_CENTER);
+	gtk_window_set_resizable(GTK_WINDOW(tw.window), FALSE);
+	gtk_container_set_border_width(GTK_CONTAINER(tw.window), 5);
+
+	//set grid props
+	gtk_grid_set_column_spacing(GTK_GRID(tw.grid), 3);
+	gtk_grid_set_row_spacing(GTK_GRID(tw.grid), 3);
+	
+	//set button props
+	FOREACH(tw.tuning_buttons, b)
+	{
+		// set button label
+		b->label.label = gtk_label_new(b->label.string);
+		gtk_grid_attach(GTK_GRID(tw.grid),
+						b->label.label,
+						b->label.col,
+						b->label.row, 1, 1);
+
+		// set button
+		b->widget = gtk_spin_button_new(b->adjustment, 0.001, 3);
+		gtk_widget_set_hexpand(b->widget, true);
+		gtk_widget_set_vexpand(b->widget, true);
+		gtk_grid_attach(GTK_GRID(tw.grid), b->widget, b->col, b->row, 1, 1);
+		g_signal_connect(b->widget, b->signal.signal, b->signal.handler, b->signal.data);
+	}
+
+	gtk_container_add(GTK_CONTAINER(tw.window), tw.grid);
+	gtk_widget_show_all(tw.window);
+}
+
+static void on_run(GtkWidget *widget, struct gui *gui)
+{
+	if (gui->ctrl_ptr->simState && gui->ctrl_ptr->simCore && gui->ctrl_ptr->mfFreq && gui->ctrl_ptr->mfs)
 	{
 		clock_t time = clock();
-		control->runTrials(0, 0, 0, 0);
+		gui->ctrl_ptr->runTrials(0, 0, 0, 0, gui);
 		time = clock() - time;
-		if (control->terminate)
+		if (gui->ctrl_ptr->terminate)
 		{
 			std::cout << "[INFO] Finished running trials in "
 			          << (float) time / CLOCKS_PER_SEC << "s." << std::endl;
@@ -450,7 +741,7 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 				{
 					"clicked",
 					G_CALLBACK(on_run),
-					control,
+					&gui,
 					false
 				}
 			},
@@ -699,11 +990,26 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 				{"Analysis", gtk_menu_item_new(), {},
 					{gtk_menu_new(), NUM_ANALYSIS_MENU_ITEMS, new menu_item[NUM_ANALYSIS_MENU_ITEMS]
 						{
-							{"Analysis", gtk_menu_item_new(),
+							{"Firing Rates", gtk_menu_item_new(),
 								{
 									"activate",
-									G_CALLBACK(null_callback),
-									NULL,
+									G_CALLBACK(on_firing_rates_window),
+									&gui,
+									false
+								},
+								{}
+							},
+						}
+					}
+				},
+				{"Tuning", gtk_menu_item_new(), {},
+					{gtk_menu_new(), NUM_TUNING_MENU_ITEMS, new menu_item[NUM_TUNING_MENU_ITEMS]
+						{
+							{"Tuning", gtk_menu_item_new(),
+								{
+									"activate",
+									G_CALLBACK(on_tuning_window),
+									&gui,
 									false
 								},
 								{}
@@ -712,7 +1018,167 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 					}
 				}
 			}
-		}
+		},
+		.frw = {
+			.window = NULL,
+			.grid = NULL,
+			.headers = {
+				{
+					NULL, "Cell", 0, 0
+				},
+				{
+					NULL, "Non-CS r_mean", 1, 0
+				},
+				{
+					NULL, "Non-CS r_median", 2, 0
+				},
+				{
+					NULL, "CS r_mean", 3, 0
+				},
+				{
+					NULL, "CS r_median", 4, 0
+				}
+			},
+			.cell_labels = {
+				{
+					{
+						NULL, "MF", 0, 1
+					},
+					{
+						NULL, "0.00", 1, 1
+					},
+					{
+						NULL, "0.00", 2, 1
+					},
+					{
+						NULL, "0.00", 3, 1
+					},
+					{
+						NULL, "0.00", 4, 1
+					}
+				},
+				{
+					{
+						NULL, "GR", 0, 2
+					},
+					{
+						NULL, "0.00", 1, 2
+					},
+					{
+						NULL, "0.00", 2, 2
+					},
+					{
+						NULL, "0.00", 3, 2
+					},
+					{
+						NULL, "0.00", 4, 2
+					}
+				},
+				{
+					{
+						NULL, "GO", 0, 3
+					},
+					{
+						NULL, "0.00", 1, 3
+					},
+					{
+						NULL, "0.00", 2, 3
+					},
+					{
+						NULL, "0.00", 3, 3
+					},
+					{
+						NULL, "0.00", 4, 3
+					}
+				},
+				{
+					{
+						NULL, "BC", 0, 4
+					},
+					{
+						NULL, "0.00", 1, 4
+					},
+					{
+						NULL, "0.00", 2, 4
+					},
+					{
+						NULL, "0.00", 3, 4
+					},
+					{
+						NULL, "0.00", 4, 4
+					}
+				},
+				{
+					{
+						NULL, "SC", 0, 5
+					},
+					{
+						NULL, "0.00", 1, 5
+					},
+					{
+						NULL, "0.00", 2, 5
+					},
+					{
+						NULL, "0.00", 3, 5
+					},
+					{
+						NULL, "0.00", 4, 5
+					}
+				},
+				{
+					{
+						NULL, "PC", 0, 6
+					},
+					{
+						NULL, "0.00", 1, 6
+					},
+					{
+						NULL, "0.00", 2, 6
+					},
+					{
+						NULL, "0.00", 3, 6
+					},
+					{
+						NULL, "0.00", 4, 6
+					}
+				},
+				{
+					{
+						NULL, "IO", 0, 7
+					},
+					{
+						NULL, "0.00", 1, 7
+					},
+					{
+						NULL, "0.00", 2, 7
+					},
+					{
+						NULL, "0.00", 3, 7
+					},
+					{
+						NULL, "0.00", 4, 7
+					}
+				},
+				{
+					{
+						NULL, "DCN", 0, 8
+					},
+					{
+						NULL, "0.00", 1, 8
+					},
+					{
+						NULL, "0.00", 2, 8
+					},
+					{
+						NULL, "0.00", 3, 8
+					},
+					{
+						NULL, "0.00", 4, 8
+					}
+				}
+			}
+		},
+		.ctrl_ptr = control /* big yikes move */
 	}; 
 
 	// set all attribs

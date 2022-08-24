@@ -1,0 +1,22 @@
+#!/usr/Dev/Git/Big_Sim/scripts/analysis/.venv/bin/python
+import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
+
+def array_sigmoid(x, N, a, b, c, d):
+    for i in np.arange(N):
+        x[i] = a + b * (1 / (1 + np.exp((i - c) / d)))
+
+a = 0.00255
+b = 0.238
+c = 12.0
+d = 20.0
+
+num_go = 20
+
+ys = np.zeros(num_go)
+array_sigmoid(ys, 20, a, b, c, d)
+
+plt.plot(ys, 'bo')
+plt.savefig("sigmoid.png", format='png', bbox_inches='tight')
+

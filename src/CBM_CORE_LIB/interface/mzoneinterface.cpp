@@ -5,10 +5,10 @@
  *      Author: consciousness
  */
 
-#include "interface/mzoneinterface.h"
-
-MZoneInterface::~MZoneInterface()
-{
-
-}
+//#include "interface/mzoneinterface.h"
+//
+//MZoneInterface::~MZoneInterface()
+//{
+//
+//}
 

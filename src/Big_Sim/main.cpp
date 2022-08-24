@@ -58,7 +58,7 @@ int main(int argc, char **argv)
 			switch (sim_vis_mode)
 			{
 				case TUI:
-					control->runTrials(0, 0, 0, 0);
+					control->runTrials(0, 0, 0, 0, NULL);
 					//control->runExperiment(experiment);
 					get_out_sim_file(RUN_OUT_SIM_FILE, &argv, out_sim_file);
 					control->save_sim_to_file(out_sim_file);

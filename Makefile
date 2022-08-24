@@ -65,15 +65,11 @@ CBM_CORE_OBJ_PATH     = $(BUILD_PATH)CBM_CORE_LIB/
 
 CBM_CORE_SOURCES  = $(CBM_CORE_SRC_PATH)innetmodules/innet.cpp \
 			        $(CBM_CORE_SRC_PATH)interface/cbmsimcore.cpp \
-			        $(CBM_CORE_SRC_PATH)interface/innetinterface.cpp \
-			        $(CBM_CORE_SRC_PATH)interface/mzoneinterface.cpp \
 			        $(CBM_CORE_SRC_PATH)mzonemodules/mzone.cpp
 
 CBM_CORE_OBJECTS  = $(CBM_CORE_OBJ_PATH)kernels_cuda.o \
                     $(CBM_CORE_OBJ_PATH)innet.o \
                     $(CBM_CORE_OBJ_PATH)cbmsimcore.o \
-                    $(CBM_CORE_OBJ_PATH)innetinterface.o \
-                    $(CBM_CORE_OBJ_PATH)mzoneinterface.o \
                     $(CBM_CORE_OBJ_PATH)mzone.o
 
 
@@ -722,27 +718,17 @@ $(CBM_CORE_OBJ_PATH)kernels_cuda.o: $(CBM_CORE_INCLUDE_PATH)cuda/kernels.h \
 ####### compile CBM Core Non-Cuda Sources
 
 $(CBM_CORE_OBJ_PATH)innet.o: $(CBM_CORE_SRC_PATH)innetmodules/innet.cpp $(CBM_CORE_INCLUDE_PATH)innetmodules/innet.h \
-                             $(CBM_CORE_INCLUDE_PATH)cuda/kernels.h \
-                             $(CBM_CORE_INCLUDE_PATH)interface/innetinterface.h
+                             $(CBM_CORE_INCLUDE_PATH)cuda/kernels.h
 	$(CXX) -c $(MODULE_CXX_FLAGS) $(CBM_CORE_INCLUDES) -o $(CBM_CORE_OBJ_PATH)innet.o $(CBM_CORE_SRC_PATH)innetmodules/innet.cpp
  
 $(CBM_CORE_OBJ_PATH)cbmsimcore.o: $(CBM_CORE_SRC_PATH)interface/cbmsimcore.cpp $(CBM_CORE_INCLUDE_PATH)interface/cbmsimcore.h \
-                                  $(CBM_CORE_INCLUDE_PATH)interface/innetinterface.h \
-                                  $(CBM_CORE_INCLUDE_PATH)interface/mzoneinterface.h \
                                   $(CBM_CORE_INCLUDE_PATH)mzonemodules/mzone.h \
                                   $(CBM_CORE_INCLUDE_PATH)cuda/kernels.h \
                                   $(CBM_CORE_INCLUDE_PATH)innetmodules/innet.h
 	$(CXX) -c $(MODULE_CXX_FLAGS) $(CBM_CORE_INCLUDES) -o $(CBM_CORE_OBJ_PATH)cbmsimcore.o $(CBM_CORE_SRC_PATH)interface/cbmsimcore.cpp
   
-$(CBM_CORE_OBJ_PATH)innetinterface.o: $(CBM_CORE_SRC_PATH)interface/innetinterface.cpp $(CBM_CORE_INCLUDE_PATH)interface/innetinterface.h
-	$(CXX) -c $(MODULE_CXX_FLAGS) $(CBM_CORE_INCLUDES) -o $(CBM_CORE_OBJ_PATH)innetinterface.o $(CBM_CORE_SRC_PATH)interface/innetinterface.cpp
-  
-$(CBM_CORE_OBJ_PATH)mzoneinterface.o: $(CBM_CORE_SRC_PATH)interface/mzoneinterface.cpp $(CBM_CORE_INCLUDE_PATH)interface/mzoneinterface.h
-	$(CXX) -c $(MODULE_CXX_FLAGS) $(CBM_CORE_INCLUDES) -o $(CBM_CORE_OBJ_PATH)mzoneinterface.o $(CBM_CORE_SRC_PATH)interface/mzoneinterface.cpp
-  
 $(CBM_CORE_OBJ_PATH)mzone.o: $(CBM_CORE_SRC_PATH)mzonemodules/mzone.cpp $(CBM_CORE_INCLUDE_PATH)mzonemodules/mzone.h \
-                             $(CBM_CORE_INCLUDE_PATH)cuda/kernels.h \
-                             $(CBM_CORE_INCLUDE_PATH)interface/mzoneinterface.h
+                             $(CBM_CORE_INCLUDE_PATH)cuda/kernels.h
 	$(CXX) -c $(MODULE_CXX_FLAGS) $(CBM_CORE_INCLUDES) -o $(CBM_CORE_OBJ_PATH)mzone.o $(CBM_CORE_SRC_PATH)mzonemodules/mzone.cpp
 
 

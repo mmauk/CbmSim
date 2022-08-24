@@ -5,9 +5,9 @@
  *      Author: consciousness
  */
 
-#include "interface/innetinterface.h"
-
-InNetInterface::~InNetInterface()
-{
-
-}
+//#include "interface/innetinterface.h"
+//
+//InNetInterface::~InNetInterface()
+//{
+//
+//}

@@ -334,7 +334,7 @@ void populate_act_params(parsed_build_file &p_file)
 	gGABADecGOtoGO      = exp(-msPerTimeStep / gGABADecTauGOtoGO);
 	goGABAGOGOSynRec    = 1 - exp(-msPerTimeStep / goGABAGOGOSynRecTau);
 	threshDecGO         = 1 - exp(-msPerTimeStep / threshDecTauGO);
-	// gDirectDecMFtoGR    = exp(-msPerTimeStep / gDirectTauMFtoGR);
+	gDirectDecMFtoGR    = exp(-msPerTimeStep / gDirectTauMFtoGR);
 	gSpilloverDecMFtoGR = exp(-msPerTimeStep / gSpilloverTauMFtoGR);
 	gDirectDecGOtoGR    = exp(-msPerTimeStep / gDirectTauGOtoGR);
 	gSpilloverDecGOtoGR = exp(-msPerTimeStep / gSpilloverTauGOtoGR);
@@ -515,7 +515,7 @@ void read_act_params(std::fstream &in_param_buf)
 	in_param_buf.read((char *)&gGABADecGOtoGO, sizeof(float));
 	in_param_buf.read((char *)&goGABAGOGOSynRec, sizeof(float));
 	in_param_buf.read((char *)&threshDecGO, sizeof(float));
-	// in_param_buf.read((char *)&gDirectDecMFtoGR, sizeof(float));
+	in_param_buf.read((char *)&gDirectDecMFtoGR, sizeof(float));
 	in_param_buf.read((char *)&gSpilloverDecMFtoGR, sizeof(float));
 	in_param_buf.read((char *)&gDirectDecGOtoGR, sizeof(float)); 
 	in_param_buf.read((char *)&gSpilloverDecGOtoGR, sizeof(float));
@@ -697,7 +697,7 @@ void write_act_params(std::fstream &out_param_buf)
 	out_param_buf.write((char *)&gGABADecGOtoGO, sizeof(float));
 	out_param_buf.write((char *)&goGABAGOGOSynRec, sizeof(float));
 	out_param_buf.write((char *)&threshDecGO, sizeof(float));
-	// out_param_buf.write((char *)&gDirectDecMFtoGR, sizeof(float));
+	out_param_buf.write((char *)&gDirectDecMFtoGR, sizeof(float));
 	out_param_buf.write((char *)&gSpilloverDecMFtoGR, sizeof(float));
 	out_param_buf.write((char *)&gDirectDecGOtoGR, sizeof(float)); 
 	out_param_buf.write((char *)&gSpilloverDecGOtoGR, sizeof(float));
