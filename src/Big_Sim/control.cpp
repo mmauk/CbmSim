@@ -1,6 +1,7 @@
 #include <iomanip>
 #include <gtk/gtk.h>
 #include "control.h"
+#include "bits/bits.h"
 #include "fileIO/build_file.h"
 #include "ttyManip/tty.h"
 #include "array_util.h"
@@ -50,6 +51,7 @@ Control::Control(parsed_build_file &p_file)
 		mfs = new PoissonRegenCells(num_mf, mfRandSeed, threshDecayTau, msPerTimeStep,
 			  	numMZones, num_nc);
 	}
+	if (!internal_arrays_initialized) initialize_rast_internal();
 	if (!output_arrays_initialized) initializeOutputArrays();
 	if (!spike_sums_initialized) initialize_spike_sums();
 }
@@ -78,6 +80,7 @@ Control::Control(char ***argv, enum vis_mode sim_vis_mode)
 		mfs = new PoissonRegenCells(num_mf, mfRandSeed,
 				threshDecayTau, msPerTimeStep, numMZones, num_nc);
 	}
+	if (!internal_arrays_initialized) initialize_rast_internal();
 	if (!output_arrays_initialized) initializeOutputArrays();
 	if (!spike_sums_initialized) initialize_spike_sums();
 	sim_file_buf.close();
@@ -94,6 +97,7 @@ Control::~Control()
 	if (mfs)      delete mfs;
 
 	// deallocate output arrays
+	if (internal_arrays_initialized) delete_rast_internal();
 	if (output_arrays_initialized) deleteOutputArrays();
 	if (spike_sums_initialized) delete_spike_sums();
 }
@@ -154,6 +158,7 @@ void Control::init_sim(std::string in_sim_filename)
 		mfs = new PoissonRegenCells(num_mf, mfRandSeed,
 				threshDecayTau, msPerTimeStep, numMZones, num_nc);
 	}
+	if (!internal_arrays_initialized) initialize_rast_internal();
 	if (!output_arrays_initialized) initializeOutputArrays();
 	if (!spike_sums_initialized) initialize_spike_sums();
 	sim_file_buf.close();
@@ -220,36 +225,40 @@ void Control::initialize_spike_sums()
 	spike_sums_initialized = true;
 }
 
+void Control::initialize_rast_internal()
+{
+	all_mf_rast_internal    = allocate2DArray<ct_uint8_t>(num_mf, PSTHColSize);
+	all_go_rast_internal    = allocate2DArray<ct_uint8_t>(num_go, PSTHColSize);
+	sample_gr_rast_internal = allocate2DArray<ct_uint8_t>(num_gr / 2, PSTHColSize);
+	all_pc_rast_internal    = allocate2DArray<ct_uint8_t>(num_pc, PSTHColSize);
+	all_nc_rast_internal    = allocate2DArray<ct_uint8_t>(num_nc, PSTHColSize);
+	all_sc_rast_internal    = allocate2DArray<ct_uint8_t>(num_sc, PSTHColSize);
+	all_bc_rast_internal    = allocate2DArray<ct_uint8_t>(num_bc, PSTHColSize);
+	all_io_rast_internal    = allocate2DArray<ct_uint8_t>(num_io, PSTHColSize);
+	internal_arrays_initialized = true;
+}
+
 void Control::initializeOutputArrays()
 {
-	// DEBUG: looking at a sample of the granules of size 4096
-	sampleGRRaster = allocate2DArray<ct_uint8_t>(4096, rasterColumnSize);
-	memset((void *)sampleGRRaster[0], 0, 4096 * rasterColumnSize * sizeof(ct_uint8_t));
+	ct_uint32_t all_mf_rast_size = num_mf * rasterColumnSize / BITS_PER_BYTE;
+	ct_uint32_t all_go_rast_size = num_go * rasterColumnSize / BITS_PER_BYTE;
+	ct_uint32_t sample_gr_rast_size = (num_gr / 2) * rasterColumnSize / BITS_PER_BYTE;
+	ct_uint32_t all_pc_rast_size = num_pc * rasterColumnSize / BITS_PER_BYTE;
+	ct_uint32_t all_nc_rast_size = num_nc * rasterColumnSize / BITS_PER_BYTE;
+	ct_uint32_t all_sc_rast_size = num_sc * rasterColumnSize / BITS_PER_BYTE;
+	ct_uint32_t all_bc_rast_size = num_bc * rasterColumnSize / BITS_PER_BYTE;
+	ct_uint32_t all_io_rast_size = num_io * rasterColumnSize / BITS_PER_BYTE;
 
-	//allMFRaster = allocate2DArray<ct_uint8_t>(num_mf, rasterColumnSize);
-	//memset((void *)allMFRaster[0], 0, num_mf * rasterColumnSize * sizeof(ct_uint8_t));
-
-	allGORaster = allocate2DArray<ct_uint8_t>(num_go, rasterColumnSize);
-	memset((void *)allGORaster[0], 0, num_go * rasterColumnSize * sizeof(ct_uint8_t));
-
-	allPCRaster = allocate2DArray<ct_uint8_t>(num_pc, rasterColumnSize);
-	memset((void *)allPCRaster[0], 0, num_pc * rasterColumnSize * sizeof(ct_uint8_t));
-	
-	allNCRaster = allocate2DArray<ct_uint8_t>(num_nc, rasterColumnSize);
-	memset((void *)allNCRaster[0], 0, num_nc * rasterColumnSize * sizeof(ct_uint8_t));
-
-	//allSCRaster = allocate2DArray<ct_uint8_t>(num_sc, rasterColumnSize);
-	//memset((void *)allSCRaster[0], 0, num_sc * rasterColumnSize * sizeof(ct_uint8_t));
-
-	//allBCRaster = allocate2DArray<ct_uint8_t>(num_bc, rasterColumnSize);
-	//memset((void *)allBCRaster[0], 0, num_bc * rasterColumnSize * sizeof(ct_uint8_t));
-
-	allIORaster = allocate2DArray<ct_uint8_t>(num_io, rasterColumnSize);
-	memset((void *)allIORaster[0], 0, num_io * rasterColumnSize * sizeof(ct_uint8_t));
+	allMFRaster = (ct_uint8_t *)calloc(all_mf_rast_size, sizeof(ct_uint8_t));
+	allGORaster = (ct_uint8_t *)calloc(all_go_rast_size, sizeof(ct_uint8_t));
+	sampleGRRaster = (ct_uint8_t *)calloc(sample_gr_rast_size, sizeof(ct_uint8_t));
+	allPCRaster = (ct_uint8_t *)calloc(all_pc_rast_size, sizeof(ct_uint8_t));
+	allNCRaster = (ct_uint8_t *)calloc(all_nc_rast_size, sizeof(ct_uint8_t));
+	allSCRaster = (ct_uint8_t *)calloc(all_sc_rast_size, sizeof(ct_uint8_t));
+	allBCRaster = (ct_uint8_t *)calloc(all_bc_rast_size, sizeof(ct_uint8_t));
+	allIORaster = (ct_uint8_t *)calloc(all_io_rast_size, sizeof(ct_uint8_t));
 
 	sample_pfpc_syn_weights = new float[4096];
-	memset((void *)sample_pfpc_syn_weights, 0, 4096);
-
 	output_arrays_initialized = true;
 }
 
@@ -404,7 +413,7 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO, struct g
 		init_tty(&fp);
 	}
 
-	in_run = true;
+	if (gui == NULL) run_state = IN_RUN_NO_PAUSE;
 	trial = 0;
 	while (trial < numTotalTrials && run_state != NOT_IN_RUN)
 	{
@@ -483,24 +492,24 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO, struct g
 					//		gMFGR_sum       += mfgrG[i];
 					//}
 				}
-				//if (tts == csStart + csLength)
-				//{
-				//	countGOSpikes(goSpkCounter, medTrials);
-				//	std::cout << "mean gGRGO   = " << gGRGO_sum / (num_go * csLength) << std::endl;
-				//	std::cout << "mean gMFGO   = " << gMFGO_sum / (num_go * csLength) << std::endl;
-				//	//std::cout << "mean gGOGR   = " << gGOGR_sum / (10000 * csLength) << std::endl;
-				//	//std::cout << "mean gMFGR   = " << gMFGR_sum / (10000 * csLength) << std::endl;
-				//	std::cout << "GR:MF ratio  = " << gGRGO_sum / gMFGO_sum << std::endl;
-				//}
+				if (tts == csStart + csLength)
+				{
+					countGOSpikes(goSpkCounter, medTrials);
+					std::cout << "mean gGRGO   = " << gGRGO_sum / (num_go * csLength) << std::endl;
+					std::cout << "mean gMFGO   = " << gMFGO_sum / (num_go * csLength) << std::endl;
+					//std::cout << "mean gGOGR   = " << gGOGR_sum / (10000 * csLength) << std::endl;
+					//std::cout << "mean gMFGR   = " << gMFGR_sum / (10000 * csLength) << std::endl;
+					std::cout << "GR:MF ratio  = " << gGRGO_sum / gMFGO_sum << std::endl;
+				}
 
-				//if (trial >= preTrialNumber && tts >= csStart-msPreCS &&
-				//		tts < csStart + csLength + msPostCS)
-				//{
-				//	fillOutputArrays(mfAP, simCore, PSTHCounter, rasterCounter);
+				if (trial >= preTrialNumber && tts >= csStart-msPreCS &&
+						tts < csStart + csLength + msPostCS)
+				{
+					fill_rast_internal(PSTHCounter);
+					PSTHCounter++;
+					rasterCounter++;
+				}
 
-				//	PSTHCounter++;
-				//	rasterCounter++;
-				//}
 				if (gui != NULL)
 				{
 					if (gtk_events_pending()) gtk_main_iteration(); // place this here?
@@ -510,7 +519,8 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO, struct g
 		}
 		timer = clock() - timer;
 		std::cout << "Trial time seconds: " << (float)timer / CLOCKS_PER_SEC << std::endl;
-		
+
+		fillOutputArrays();
 		// check the event queue after every iteration
 		if (gui != NULL)
 		{
@@ -542,21 +552,21 @@ void Control::saveOutputArraysToFile(int goRecipParam, int trial, std::tm *local
 	//std::string allMFRasterFileName = OUTPUT_DATA_PATH + "allMFRaster.bin";
 	//write2DCharArray(allMFRasterFileName, allMFRaster, num_mf, rasterColumnSize);
 
-	std::cout << "Filling GO files..." << std::endl;
-	std::string allGORasterFileName = OUTPUT_DATA_PATH + "allGORaster.bin";
-	write2DCharArray(allGORasterFileName, allGORaster, num_go, rasterColumnSize);
+	//std::cout << "Filling GO files..." << std::endl;
+	//std::string allGORasterFileName = OUTPUT_DATA_PATH + "allGORaster.bin";
+	//write2DCharArray(allGORasterFileName, allGORaster, num_go, rasterColumnSize);
 
 	//std::cout << "Filling GR files..." << std::endl;
 	//std::string sampleGRRasterFileName = OUTPUT_DATA_PATH + "sampleGRRaster.bin";
 	//write2DCharArray(sampleGRRasterFileName, sampleGRRaster, 4096, rasterColumnSize);
 
-	std::cout << "Filling PC files..." << std::endl;
-	std::string allPCRasterFileName = OUTPUT_DATA_PATH + "allPCRaster.bin";
-	write2DCharArray(allPCRasterFileName, allPCRaster, num_pc, rasterColumnSize);
+	//std::cout << "Filling PC files..." << std::endl;
+	//std::string allPCRasterFileName = OUTPUT_DATA_PATH + "allPCRaster.bin";
+	//write2DCharArray(allPCRasterFileName, allPCRaster, num_pc, rasterColumnSize);
 
-	std::cout << "Filling NC files..." << std::endl;
-	std::string allNCRasterFileName = OUTPUT_DATA_PATH + "allNCRaster.bin";
-	write2DCharArray(allNCRasterFileName, allNCRaster, num_nc, rasterColumnSize);
+	//std::cout << "Filling NC files..." << std::endl;
+	//std::string allNCRasterFileName = OUTPUT_DATA_PATH + "allNCRaster.bin";
+	//write2DCharArray(allNCRasterFileName, allNCRaster, num_nc, rasterColumnSize);
 
 	//std::cout << "Filling SC files..." << std::endl;
 	//std::string allSCRasterFileName = OUTPUT_DATA_PATH + "allSCRaster.bin";
@@ -566,9 +576,9 @@ void Control::saveOutputArraysToFile(int goRecipParam, int trial, std::tm *local
 	//std::string allBCRasterFileName = OUTPUT_DATA_PATH + "allBCRaster.bin";
 	//write2DCharArray(allBCRasterFileName, allBCRaster, num_bc, rasterColumnSize);
 
-	std::cout << "Filling IO files..." << std::endl;
-	std::string allIORasterFileName = OUTPUT_DATA_PATH + "allIORaster.bin";
-	write2DCharArray(allIORasterFileName, allIORaster, num_io, rasterColumnSize);
+	//std::cout << "Filling IO files..." << std::endl;
+	//std::string allIORasterFileName = OUTPUT_DATA_PATH + "allIORaster.bin";
+	//write2DCharArray(allIORasterFileName, allIORaster, num_io, rasterColumnSize);
 }
 
 void Control::update_spike_sums(int tts)
@@ -661,56 +671,70 @@ void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
 	std::cout << "Median GO Rate: " << m / 2.0 << std::endl;
 }
 
-void Control::fillOutputArrays(const ct_uint8_t *mfAP, CBMSimCore *simCore, int PSTHCounter, int rasterCounter)
+void Control::fill_rast_internal(int PSTHCounter)
 {
 	const ct_uint8_t* goSpks = simCore->getInputNet()->exportAPGO();
 	const ct_uint8_t* grSpks = simCore->getInputNet()->exportAPGR();
 	const ct_uint8_t* pcSpks = simCore->getMZoneList()[0]->exportAPPC();
 	const ct_uint8_t* ncSpks = simCore->getMZoneList()[0]->exportAPNC();
-	//const ct_uint8_t* scSpks = simCore->getInputNet()->exportAPSC();
-	//const ct_uint8_t* bcSpks = simCore->getMZoneList()[0]->exportAPBC();
+	const ct_uint8_t* scSpks = simCore->getInputNet()->exportAPSC();
+	const ct_uint8_t* bcSpks = simCore->getMZoneList()[0]->exportAPBC();
 	const ct_uint8_t* ioSpks = simCore->getMZoneList()[0]->exportAPIO();
 
-	//for (int i = 0; i < num_mf; i++)
-	//{
-	//	allMFRaster[i][rasterCounter] = mfAP[i];
-	//}
+	for (int i = 0; i < num_mf; i++)
+	{
+		all_mf_rast_internal[i][PSTHCounter] = mfAP[i];
+	}
 
 	for (int i = 0; i < num_go; i++)
 	{
-		allGORaster[i][rasterCounter] = goSpks[i];
+		all_go_rast_internal[i][PSTHCounter] = goSpks[i];
 	}
 
 	// 4096 sample size
-	for (int i = 0; i < 4096; i++)
+	for (int i = 0; i < num_gr / 2; i++)
 	{
-		sampleGRRaster[i][rasterCounter] = grSpks[gr_indices[i]];
+		sample_gr_rast_internal[i][PSTHCounter] = grSpks[i];
 	}
 
 	for (int i = 0; i < num_pc; i++)
 	{
-		allPCRaster[i][rasterCounter] = pcSpks[i];
+		all_pc_rast_internal[i][PSTHCounter] = pcSpks[i];
 	}
 
 	for (int i = 0; i < num_nc; i++)
 	{
-		allNCRaster[i][rasterCounter] = ncSpks[i];
+		all_nc_rast_internal[i][PSTHCounter] = ncSpks[i];
 	}
 
-	//for (int i = 0; i < num_sc; i++)
-	//{
-	//	allSCRaster[i][rasterCounter] = scSpks[i];
-	//}
+	for (int i = 0; i < num_sc; i++)
+	{
+		all_sc_rast_internal[i][PSTHCounter] = scSpks[i];
+	}
 
-	//for (int i = 0; i < num_bc; i++)
-	//{
-	//	allBCRaster[i][rasterCounter] = bcSpks[i];
-	//}
+	for (int i = 0; i < num_bc; i++)
+	{
+		all_bc_rast_internal[i][PSTHCounter] = bcSpks[i];
+	}
 
 	for (int i = 0; i < num_io; i++)
 	{
-		allIORaster[i][rasterCounter] = ioSpks[i];
+		all_io_rast_internal[i][PSTHCounter] = ioSpks[i];
 	}
+}
+
+
+void Control::fillOutputArrays()
+{
+	uint32_t offset = trial * PSTHColSize / BITS_PER_BYTE;
+	pack_2d_byte_array(all_mf_rast_internal, num_mf, PSTHColSize, allMFRaster, offset);
+	pack_2d_byte_array(all_go_rast_internal, num_go, PSTHColSize, allGORaster, offset);
+	pack_2d_byte_array(sample_gr_rast_internal, num_gr / 2, PSTHColSize, sampleGRRaster, offset);
+	pack_2d_byte_array(all_pc_rast_internal, num_pc, PSTHColSize, allPCRaster, offset);
+	pack_2d_byte_array(all_nc_rast_internal, num_nc, PSTHColSize, allNCRaster, offset);
+	pack_2d_byte_array(all_sc_rast_internal, num_sc, PSTHColSize, allSCRaster, offset);
+	pack_2d_byte_array(all_bc_rast_internal, num_bc, PSTHColSize, allBCRaster, offset);
+	pack_2d_byte_array(all_io_rast_internal, num_io, PSTHColSize, allIORaster, offset);
 }
 
 // TODO: 1) find better place to put this 2) generalize
@@ -735,19 +759,30 @@ void Control::delete_spike_sums()
 		delete[] ssp->non_cs_spike_counter;
 		delete[] ssp->cs_spike_counter;
 	}
+}
 
+void Control::delete_rast_internal()
+{
+	delete2DArray<ct_uint8_t>(all_mf_rast_internal);
+	delete2DArray<ct_uint8_t>(all_go_rast_internal);
+	delete2DArray<ct_uint8_t>(sample_gr_rast_internal);
+	delete2DArray<ct_uint8_t>(all_pc_rast_internal); 
+	delete2DArray<ct_uint8_t>(all_nc_rast_internal);
+	delete2DArray<ct_uint8_t>(all_sc_rast_internal);
+	delete2DArray<ct_uint8_t>(all_bc_rast_internal);
+	delete2DArray<ct_uint8_t>(all_io_rast_internal);
 }
 
 void Control::deleteOutputArrays()
 {
-	//delete2DArray<ct_uint8_t>(allMFRaster);
-	delete2DArray<ct_uint8_t>(allGORaster);
-	delete2DArray<ct_uint8_t>(sampleGRRaster);
-	delete2DArray<ct_uint8_t>(allPCRaster);
-	delete2DArray<ct_uint8_t>(allNCRaster);
-	//delete2DArray<ct_uint8_t>(allSCRaster);
-	//delete2DArray<ct_uint8_t>(allBCRaster);
-	delete2DArray<ct_uint8_t>(allIORaster);
+	free((void *)allMFRaster);
+	free((void *)allGORaster);
+	free((void *)sampleGRRaster);
+	free((void *)allPCRaster);
+	free((void *)allNCRaster);
+	free((void *)allSCRaster);
+	free((void *)allBCRaster);
+	free((void *)allIORaster);
 	delete[] sample_pfpc_syn_weights;
 }
 

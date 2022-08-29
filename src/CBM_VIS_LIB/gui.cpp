@@ -15,6 +15,7 @@ static bool assert(bool expr, const char *error_string, const char *func = "asse
 	return true;
 }
 
+
 static void load_file(GtkWidget *widget, Control *control, std::string &out_file_name)
 {
 	GtkWidget *dialog = gtk_file_chooser_dialog_new
@@ -488,12 +489,14 @@ static void draw_raster(GtkWidget *drawing_area, cairo_t *cr, ct_uint32_t trial,
 static void draw_gr_raster(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 {
 	/* 4096 gr raster sample size */
-	draw_raster(drawing_area, cr, control->trial, 4096, control->PSTHColSize, control->sampleGRRaster);
+   // NOTE: commented out for debug 08/29/2022
+	//draw_raster(drawing_area, cr, control->trial, 4096, control->PSTHColSize, control->sampleGRRaster);
 }
 
 static void draw_go_raster(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 {
-	draw_raster(drawing_area, cr, control->trial, num_go, control->PSTHColSize, control->allGORaster);
+   // NOTE: commented out for debug 08/29/2022
+	//draw_raster(drawing_area, cr, control->trial, num_go, control->PSTHColSize, control->allGORaster);
 }
 static void draw_pf_pc_plot(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 {

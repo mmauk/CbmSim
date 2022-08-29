@@ -61,7 +61,8 @@ class Control
 		PoissonRegenCells *mfs = NULL;
 
 		enum vis_mode sim_vis_mode = NO_VIS;
-		bool output_arrays_initialized = false; /* temporary, going to refactor soon */
+		bool internal_arrays_initialized = false; /* temporary, going to refactor soon */
+		bool output_arrays_initialized = false; 
 		bool spike_sums_initialized = false;
 		bool terminate = false;
 		bool in_run = false;
@@ -90,7 +91,7 @@ class Control
 		int gpuP2    = 2;
 
 		// Training Parameters -> TODO: deprecate in gui runExperiment
-		int numTrainingTrials      = 500;
+		int numTrainingTrials      = 1000;
 		int homeoTuningTrials      = 0;
 		int granuleActDetectTrials = 0;
 
@@ -168,14 +169,24 @@ class Control
 		const ct_uint8_t *cell_spikes[NUM_CELL_TYPES];
 
 		int gr_indices[4096] = {0};
-		ct_uint8_t **allMFRaster;
-		ct_uint8_t **allGORaster;
-		ct_uint8_t **sampleGRRaster;
-		ct_uint8_t **allPCRaster;
-		ct_uint8_t **allNCRaster;
-		ct_uint8_t **allSCRaster;
-		ct_uint8_t **allBCRaster;
-		ct_uint8_t **allIORaster;
+
+		ct_uint8_t **all_mf_rast_internal;
+		ct_uint8_t **all_go_rast_internal;
+		ct_uint8_t **sample_gr_rast_internal;
+		ct_uint8_t **all_pc_rast_internal;
+		ct_uint8_t **all_nc_rast_internal;
+		ct_uint8_t **all_sc_rast_internal;
+		ct_uint8_t **all_bc_rast_internal;
+		ct_uint8_t **all_io_rast_internal;
+
+		ct_uint8_t *allMFRaster;
+		ct_uint8_t *allGORaster;
+		ct_uint8_t *sampleGRRaster;
+		ct_uint8_t *allPCRaster;
+		ct_uint8_t *allNCRaster;
+		ct_uint8_t *allSCRaster;
+		ct_uint8_t *allBCRaster;
+		ct_uint8_t *allIORaster;
 
 		float *sample_pfpc_syn_weights;
 		//ct_uint8_t **allGOPSTH;
@@ -214,6 +225,7 @@ class Control
 		void save_sim_to_file(std::string outSimFile);
 
 		void initialize_spike_sums();
+		void initialize_rast_internal();
 		void initializeOutputArrays();
 		void runExperiment(experiment &experiment);
 
@@ -225,14 +237,15 @@ class Control
 		void update_spike_sums(int tts);
 		void reset_spike_sums();
 		void calculate_firing_rates();
-		void fillOutputArrays(const ct_uint8_t *mfAP, CBMSimCore *simCore, int PSTHCounter, int rasterCounter);
+		void fill_rast_internal(int PSTHCounter);
+		void fillOutputArrays();
 
 		// this should be in CXX Tools or 2D array...
 		void write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
 			unsigned int numRow, unsigned int numCol);
+		void delete_rast_internal();
 		void delete_spike_sums();
 		void deleteOutputArrays();
-
 };
 
 #endif /*_CONTROL_H*/

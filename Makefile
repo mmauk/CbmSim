@@ -161,7 +161,8 @@ CXX_TOOLS_OBJ_PATH     = $(BUILD_PATH)CXX_TOOLS_LIB/
 
 ####### CXX Tools Files
 
-CXX_TOOLS_SOURCES  = $(CXX_TOOLS_SRC_PATH)commandLine/commandline.cpp \
+CXX_TOOLS_SOURCES  = $(CXX_TOOLS_SRC_PATH)bits/bits.cpp \
+					 $(CXX_TOOLS_SRC_PATH)commandLine/commandline.cpp \
 					 $(CXX_TOOLS_SRC_PATH)fileIO/rawbytesrw.cpp \
 					 $(CXX_TOOLS_SRC_PATH)fileIO/build_file.cpp \
 					 $(CXX_TOOLS_SRC_PATH)fileIO/experiment_file.cpp \
@@ -172,7 +173,8 @@ CXX_TOOLS_SOURCES  = $(CXX_TOOLS_SRC_PATH)commandLine/commandline.cpp \
 					 $(CXX_TOOLS_SRC_PATH)ttyManip/tty.cpp
 
 
-CXX_TOOLS_OBJECTS  = $(CXX_TOOLS_OBJ_PATH)commandline.o \
+CXX_TOOLS_OBJECTS  = $(CXX_TOOLS_OBJ_PATH)bits.o \
+					 $(CXX_TOOLS_OBJ_PATH)commandline.o \
 					 $(CXX_TOOLS_OBJ_PATH)rawbytesrw.o \
 					 $(CXX_TOOLS_OBJ_PATH)build_file.o \
 					 $(CXX_TOOLS_OBJ_PATH)experiment_file.o \
@@ -214,7 +216,7 @@ $(BIG_SIM_OBJ_PATH):
 
 all: $(TARGET)
 
-$(TARGET):  $(MODULE_OBJECTS) $(BIG_SIM_OBJECTS) 	
+$(TARGET):  $(MODULE_OBJECTS) $(BIG_SIM_OBJECTS)
 	$(LINK) $(LFLAGS) -o $(TARGET) $(MODULE_OBJECTS) $(BIG_SIM_OBJECTS) $(LIBS) 
 	
 ####### Compile Big Simulation
@@ -870,6 +872,9 @@ $(CXX_TOOLS_OBJ_PATH):
 	@$(CHK_DIR_EXISTS) $(CXX_TOOLS_OBJ_PATH) || $(MKDIR) $(CXX_TOOLS_OBJ_PATH)
 
 ####### Compile CXX Tools Sources
+
+$(CXX_TOOLS_OBJ_PATH)bits.o: $(CXX_TOOLS_SRC_PATH)bits/bits.cpp $(CXX_TOOLS_INCLUDE_PATH)bits/bits.h
+	$(CXX) -c $(MODULE_CXX_FLAGS) $(CXX_TOOLS_INCLUDES) -o $(CXX_TOOLS_OBJ_PATH)bits.o $(CXX_TOOLS_SRC_PATH)bits/bits.cpp
 
 $(CXX_TOOLS_OBJ_PATH)commandline.o: $(CXX_TOOLS_SRC_PATH)commandLine/commandline.cpp $(CXX_TOOLS_INCLUDE_PATH)commandLine/commandline.h
 	$(CXX) -c $(MODULE_CXX_FLAGS) $(CXX_TOOLS_INCLUDES) -o $(CXX_TOOLS_OBJ_PATH)commandline.o $(CXX_TOOLS_SRC_PATH)commandLine/commandline.cpp
