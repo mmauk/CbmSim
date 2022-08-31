@@ -557,7 +557,7 @@ void MZone::updateMFNCOut()
 //			as->mfSynWeightNC[i][j] += synWDelta;
 //			as->mfSynWeightNC[i][j] *= as->mfSynWeightNC[i][j] > 0;
 //			as->mfSynWeightNC[i][j] *= as->mfSynWeightNC[i][j] <= 1; 
-//			as->mfSynWeightNC[i][j]	+= as->mfSynWeightNC[i][j] > 1;
+//			as->mfSynWeightNC[i][j] += as->mfSynWeightNC[i][j] > 1;
 //			
 //			//Now uses isTrueMF to take collaterals into account
 //			as->mfSynWeightNC[i][j] *= isTrueMF[cs->pNCfromMFtoNC[i][j]];
@@ -679,6 +679,11 @@ const float* MZone::exportPFPCWeights()
 {
 	cpyPFPCSynWCUDA();
 	return (const float *)pfSynWeightPCLinear; 
+}
+
+const float* MZone::exportMFDCNWeights()
+{
+	return (const float *)as->mfSynWeightNC.get(); 
 }
 
 // Why not write one export function which takes in the thing you want to export?

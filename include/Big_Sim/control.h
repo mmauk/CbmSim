@@ -91,7 +91,7 @@ class Control
 		int gpuP2    = 2;
 
 		// Training Parameters -> TODO: deprecate in gui runExperiment
-		int numTrainingTrials      = 1000;
+		int numTrainingTrials      = 100;
 		int homeoTuningTrials      = 0;
 		int granuleActDetectTrials = 0;
 
@@ -215,15 +215,13 @@ class Control
 		void build_sim(parsed_build_file &p_file);
 		
 		void init_sim_state(std::string stateFile); // TODO: deprecate
-
 		void init_experiment(std::string in_expt_filename);
-
 		void init_sim(std::string in_sim_filename);
 
 		void save_sim_state_to_file(std::string outStateFile); 
-
 		void save_sim_to_file(std::string outSimFile);
-
+		void save_pfpc_weights_to_file(std::string out_pfpc_file);
+		void save_mfdcn_weights_to_file(std::string out_mfdcn_file);
 		void initialize_spike_sums();
 		void initialize_rast_internal();
 		void initializeOutputArrays();
@@ -238,6 +236,7 @@ class Control
 		void reset_spike_sums();
 		void calculate_firing_rates();
 		void fill_rast_internal(int PSTHCounter);
+		void reset_rast_internal();
 		void fillOutputArrays();
 
 		// this should be in CXX Tools or 2D array...

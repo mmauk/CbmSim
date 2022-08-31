@@ -102,6 +102,80 @@ static void on_save_state(GtkWidget *widget, Control *control)
 	gtk_widget_destroy(dialog);
 }
 
+static void on_save_pfpc_weights(GtkWidget *widget, Control *control)
+{
+	// before we make the file chooser dialog, should determine whether we can even do this operation
+	GtkWidget *dialog = gtk_file_chooser_dialog_new
+		(
+		  "Save File",
+		  NULL, /* no parent window is fine for now */
+		  GTK_FILE_CHOOSER_ACTION_SAVE,
+		  "Cancel",
+		  GTK_RESPONSE_CANCEL,
+		  "Save",
+		  GTK_RESPONSE_ACCEPT,
+		  NULL
+		);
+
+	GtkFileChooser *chooser = GTK_FILE_CHOOSER(dialog);
+	gtk_file_chooser_set_do_overwrite_confirmation(chooser, TRUE); /* huh? */
+
+	gtk_file_chooser_set_current_name(chooser, DEFAULT_PFPC_WEIGHT_NAME);
+
+	gint response = gtk_dialog_run(GTK_DIALOG(dialog));
+
+	if (response == GTK_RESPONSE_ACCEPT)
+	{
+		char *pfpc_weights_file = gtk_file_chooser_get_filename(chooser);
+		// TODO: pop-up warning for invalid file
+		control->save_pfpc_weights_to_file(std::string(pfpc_weights_file));
+		g_free(pfpc_weights_file);
+	}
+	gtk_widget_destroy(dialog);
+}
+
+static void on_save_mfdcn_weights(GtkWidget *widget, Control *control)
+{
+	// before we make the file chooser dialog, should determine whether we can even do this operation
+	GtkWidget *dialog = gtk_file_chooser_dialog_new
+		(
+		  "Save File",
+		  NULL, /* no parent window is fine for now */
+		  GTK_FILE_CHOOSER_ACTION_SAVE,
+		  "Cancel",
+		  GTK_RESPONSE_CANCEL,
+		  "Save",
+		  GTK_RESPONSE_ACCEPT,
+		  NULL
+		);
+
+	GtkFileChooser *chooser = GTK_FILE_CHOOSER(dialog);
+	gtk_file_chooser_set_do_overwrite_confirmation(chooser, TRUE); /* huh? */
+
+	gtk_file_chooser_set_current_name(chooser, DEFAULT_MFDCN_WEIGHT_NAME);
+
+	gint response = gtk_dialog_run(GTK_DIALOG(dialog));
+
+	if (response == GTK_RESPONSE_ACCEPT)
+	{
+		char *mfdcn_weights_file = gtk_file_chooser_get_filename(chooser);
+		// TODO: pop-up warning for invalid file
+		control->save_mfdcn_weights_to_file(std::string(mfdcn_weights_file));
+		g_free(mfdcn_weights_file);
+	}
+	gtk_widget_destroy(dialog);
+
+} 
+
+//FIXME: below is a stop-gap solution. should be more careful with destroy callback
+gboolean firing_rates_win_visible(struct gui *gui)
+{
+	return gui->frw.window != NULL
+	   && GTK_IS_WIDGET(gui->frw.window)
+	   && gtk_widget_get_realized(gui->frw.window)
+	   && gtk_widget_get_visible(gui->frw.window);
+}
+
 gboolean update_fr_labels(struct gui *gui)
 {
 	const struct cell_firing_rates *fr = gui->ctrl_ptr->firing_rates;
@@ -139,6 +213,9 @@ static void on_firing_rates_window(GtkWidget *widget, struct gui *gui)
 	gtk_window_set_position(GTK_WINDOW(gui->frw.window), GTK_WIN_POS_CENTER);
 	gtk_window_set_resizable(GTK_WINDOW(gui->frw.window), TRUE);
 	gtk_container_set_border_width(GTK_CONTAINER(gui->frw.window), 5);
+
+	//gtk_widget_add_events(gui->frw.window, GDK_DELETE);
+	//g_signal_connect(gui->frw.window, "destroy", G_CALLBACK(gtk_widget_destroy), NULL);
 
 	//set grid props
 	gtk_grid_set_column_spacing(GTK_GRID(gui->frw.grid), 3);
@@ -242,7 +319,7 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
 				NULL, 3, 0,
 				{
-					NULL, "GR-PC", 2, 0
+					NULL, "GO-GO", 2, 0
 				},
 				{
 					"activate",
@@ -255,7 +332,7 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
 				NULL, 3, 1,
 				{
-					NULL, "GR-SC", 2, 1
+					NULL, "GR-PC", 2, 1
 				},
 				{
 					"activate",
@@ -268,7 +345,7 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
 				NULL, 3, 2,
 				{
-					NULL, "GR-BC", 2, 2
+					NULL, "GR-SC", 2, 2
 				},
 				{
 					"activate",
@@ -281,7 +358,7 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
 				NULL, 3, 3,
 				{
-					NULL, "SC-PC", 2, 3
+					NULL, "GR-BC", 2, 3
 				},
 				{
 					"activate",
@@ -294,7 +371,7 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
 				NULL, 5, 0,
 				{
-					NULL, "BC-PC", 4, 0
+					NULL, "SC-PC", 4, 0
 				},
 				{
 					"activate",
@@ -307,7 +384,7 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
 				NULL, 5, 1,
 				{
-					NULL, "PC-BC", 4, 1
+					NULL, "BC-PC", 4, 1
 				},
 				{
 					"activate",
@@ -320,7 +397,7 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
 				NULL, 5, 2,
 				{
-					NULL, "PC-DCN", 4, 2
+					NULL, "PC-BC", 4, 2
 				},
 				{
 					"activate",
@@ -333,7 +410,7 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
 				NULL, 5, 3,
 				{
-					NULL, "MF-DCN", 4, 3
+					NULL, "PC-DCN", 4, 3
 				},
 				{
 					"activate",
@@ -346,7 +423,20 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
 				NULL, 7, 0,
 				{
-					NULL, "DCN-IO", 6, 0
+					NULL, "MF-DCN", 6, 0
+				},
+				{
+					"activate",
+					G_CALLBACK(null_callback),
+					NULL,
+					false
+				}
+			},
+			{
+				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
+				NULL, 7, 1,
+				{
+					NULL, "DCN-IO", 6, 1
 				},
 				{
 					"activate",
@@ -471,13 +561,11 @@ static void draw_raster(GtkWidget *drawing_area, cairo_t *cr, ct_uint32_t trial,
 	// point color
 	cairo_set_source_rgb(cr, 0.0, 1.0, 0.0);
 
-	int index_offset = trial * num_col; 
-
 	for (int i = 0; i < num_cells; i++)
 	{
 		for (int j = 0; j < num_col; j++)
 		{
-			if (raster_data[i][index_offset+j])
+			if (raster_data[i][j])
 			{
 				cairo_rectangle(cr, j, i, 2, 2);
 				cairo_fill(cr);
@@ -489,15 +577,14 @@ static void draw_raster(GtkWidget *drawing_area, cairo_t *cr, ct_uint32_t trial,
 static void draw_gr_raster(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 {
 	/* 4096 gr raster sample size */
-   // NOTE: commented out for debug 08/29/2022
-	//draw_raster(drawing_area, cr, control->trial, 4096, control->PSTHColSize, control->sampleGRRaster);
+	draw_raster(drawing_area, cr, control->trial, 4096, control->PSTHColSize, control->sample_gr_rast_internal);
 }
 
 static void draw_go_raster(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 {
-   // NOTE: commented out for debug 08/29/2022
-	//draw_raster(drawing_area, cr, control->trial, num_go, control->PSTHColSize, control->allGORaster);
+	draw_raster(drawing_area, cr, control->trial, num_go, control->PSTHColSize, control->all_go_rast_internal);
 }
+
 static void draw_pf_pc_plot(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 {
 	const float *pfpc_weights = control->simCore->getMZoneList()[0]->exportPFPCWeights();
@@ -580,6 +667,7 @@ static void generate_pfpc_plot(GtkWidget *widget,
 	gtk_widget_show_all(child_window);
 
 }
+
 static void on_quit(GtkWidget *widget, Control *control)
 {
 	if (control->in_run)
@@ -879,16 +967,16 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 				{"Weights", gtk_menu_item_new(), {},
 					{gtk_menu_new(), NUM_WEIGHTS_MENU_ITEMS, new menu_item[NUM_WEIGHTS_MENU_ITEMS]
 						{
-							{"Save Weights", gtk_menu_item_new(),
+							{"Save PF-PC", gtk_menu_item_new(),
 								{
 									"activate",
-									G_CALLBACK(null_callback),
-									NULL,
+									G_CALLBACK(on_save_pfpc_weights),
+									control,
 									false
 								},
 								{}
 							},
-							{"Load Weights", gtk_menu_item_new(),
+							{"Load PF-PC", gtk_menu_item_new(),
 								{
 									"activate",
 									G_CALLBACK(null_callback),
@@ -900,8 +988,8 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 							{"Save MF-DN", gtk_menu_item_new(),
 								{
 									"activate",
-									G_CALLBACK(null_callback),
-									NULL,
+									G_CALLBACK(on_save_mfdcn_weights),
+									control,
 									false
 								},
 								{}

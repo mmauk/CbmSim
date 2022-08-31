@@ -25,6 +25,7 @@ void pack_byte_array(uint8_t *byte_arr,
 	}
 }
 
+// TODO: DEBUG
 void pack_2d_byte_array(uint8_t **byte_arr_2d,
 					 const uint32_t byte_arr_num_rows,
 					 const uint32_t byte_arr_num_cols,

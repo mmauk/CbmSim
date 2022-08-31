@@ -81,6 +81,7 @@ public:
 	const float* exportgBCPC();
 	const float* exportgPFPC();
 	const float* exportPFPCWeights();
+	const float* exportMFDCNWeights();
 
 	const ct_uint32_t* exportAPBufBC();
 	const ct_uint32_t* exportAPBufPC();

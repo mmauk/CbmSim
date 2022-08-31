@@ -202,6 +202,35 @@ void Control::save_sim_to_file(std::string outSimFile)
 	outSimFileBuffer.close();
 }
 
+void Control::save_pfpc_weights_to_file(std::string out_pfpc_file)
+{
+	// TODO: make a boolean on weights loaded
+	if (!simCore)
+	{
+		fprintf(stderr, "[ERROR]: Trying to write uninitialized weights to file.\n");
+		fprintf(stderr, "[ERROR]: (Hint: Try initializing a sim or loading the weights first.)\n");
+		return;
+	}
+	const float *pfpc_weights = simCore->getMZoneList()[0]->exportPFPCWeights();
+	std::fstream outPFPCFileBuffer(out_pfpc_file.c_str(), std::ios::out | std::ios::binary);
+	rawBytesRW((char *)pfpc_weights, num_gr * sizeof(const float), false, outPFPCFileBuffer);
+	outPFPCFileBuffer.close();
+}
+void Control::save_mfdcn_weights_to_file(std::string out_mfdcn_file)
+{
+	if (!simCore)
+	{
+		fprintf(stderr, "[ERROR]: Trying to write uninitialized weights to file.\n");
+		fprintf(stderr, "[ERROR]: (Hint: Try initializing a sim or loading the weights first.)\n");
+		return;
+	}
+	// TODO: make a export function for mfdcn weights
+	const float *mfdcn_weights = simCore->getMZoneList()[0]->exportMFDCNWeights();
+	std::fstream outMFDCNFileBuffer(out_mfdcn_file.c_str(), std::ios::out | std::ios::binary);
+	rawBytesRW((char *)mfdcn_weights, num_nc * num_p_nc_from_mf_to_nc * sizeof(const float), false, outMFDCNFileBuffer);
+	outMFDCNFileBuffer.close();
+}
+
 void Control::initialize_spike_sums()
 {
 	spike_sums[MF].num_cells  = num_mf;
@@ -520,13 +549,15 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO, struct g
 		timer = clock() - timer;
 		std::cout << "Trial time seconds: " << (float)timer / CLOCKS_PER_SEC << std::endl;
 
-		fillOutputArrays();
 		// check the event queue after every iteration
 		if (gui != NULL)
 		{
 			// for now, compute the mean and median firing rates for all cells regardless
-			calculate_firing_rates();
-			gdk_threads_add_idle((GSourceFunc)update_fr_labels, gui);
+			if (firing_rates_win_visible(gui))
+			{
+				calculate_firing_rates();
+				gdk_threads_add_idle((GSourceFunc)update_fr_labels, gui);
+			}
 			if (run_state == IN_RUN_PAUSE)
 			{
 				std::cout << "[INFO]: Simulation is paused at end of trial " << trial+1 << "." << std::endl;
@@ -538,8 +569,11 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO, struct g
 			}
 			reset_spike_sums();
 		}
+		fillOutputArrays();
 		trial++;
 	}
+	// debug statement
+	if (run_state == NOT_IN_RUN) std::cout << "[INFO]: Simulation terminated." << std::endl;
 	if (sim_vis_mode == TUI) reset_tty(&fp); /* reset the tty for later use */
 	//saveOutputArraysToFile(0, 0, local_time, 0);
 	run_state = NOT_IN_RUN;
@@ -691,7 +725,6 @@ void Control::fill_rast_internal(int PSTHCounter)
 		all_go_rast_internal[i][PSTHCounter] = goSpks[i];
 	}
 
-	// 4096 sample size
 	for (int i = 0; i < num_gr / 2; i++)
 	{
 		sample_gr_rast_internal[i][PSTHCounter] = grSpks[i];
@@ -723,6 +756,17 @@ void Control::fill_rast_internal(int PSTHCounter)
 	}
 }
 
+void Control::reset_rast_internal()
+{
+	memset(all_mf_rast_internal[0], '\000', num_mf * PSTHColSize * sizeof(ct_uint8_t));
+	memset(all_go_rast_internal[0], '\000', num_go * PSTHColSize * sizeof(ct_uint8_t));
+	memset(sample_gr_rast_internal[0], '\000', (num_gr / 2) * PSTHColSize * sizeof(ct_uint8_t));
+	memset(all_pc_rast_internal[0], '\000', num_mf * PSTHColSize * sizeof(ct_uint8_t));
+	memset(all_nc_rast_internal[0], '\000', num_mf * PSTHColSize * sizeof(ct_uint8_t));
+	memset(all_sc_rast_internal[0], '\000', num_mf * PSTHColSize * sizeof(ct_uint8_t));
+	memset(all_bc_rast_internal[0], '\000', num_mf * PSTHColSize * sizeof(ct_uint8_t));
+	memset(all_io_rast_internal[0], '\000', num_mf * PSTHColSize * sizeof(ct_uint8_t));
+}
 
 void Control::fillOutputArrays()
 {
@@ -775,14 +819,14 @@ void Control::delete_rast_internal()
 
 void Control::deleteOutputArrays()
 {
-	free((void *)allMFRaster);
-	free((void *)allGORaster);
-	free((void *)sampleGRRaster);
-	free((void *)allPCRaster);
-	free((void *)allNCRaster);
-	free((void *)allSCRaster);
-	free((void *)allBCRaster);
-	free((void *)allIORaster);
+	free(allMFRaster);
+	free(allGORaster);
+	free(sampleGRRaster);
+	free(allPCRaster);
+	free(allNCRaster);
+	free(allSCRaster);
+	free(allBCRaster);
+	free(allIORaster);
 	delete[] sample_pfpc_syn_weights;
 }
 

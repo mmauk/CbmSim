@@ -29,13 +29,13 @@
 #define DEFAULT_FIRING_RATE_WINDOW_HEIGHT 160
 
 /* tuning window constants */
-#define NUM_TUNING_BUTTONS 13
+#define NUM_TUNING_BUTTONS 14
 #define DEFAULT_TUNING_WINDOW_WIDTH 600
 #define DEFAULT_TUNING_WINDOW_HEIGHT 160
 
 /* raster window constants */
-#define DEFAULT_RASTER_WINDOW_WIDTH 1080
-#define DEFAULT_RASTER_WINDOW_HEIGHT 1920
+#define DEFAULT_RASTER_WINDOW_WIDTH 540
+#define DEFAULT_RASTER_WINDOW_HEIGHT 960
 
 /* pfpc weight window constants */
 #define DEFAULT_PFPC_WINDOW_WIDTH 1024
@@ -43,7 +43,8 @@
 
 /* file dialog constants */
 #define DEFAULT_STATE_FILE_NAME "connectivity_state"
-
+#define DEFAULT_PFPC_WEIGHT_NAME "pfpc_weights.bin"
+#define DEFAULT_MFDCN_WEIGHT_NAME "mfdcn_weights.bin"
 //const gchar *firing_rate_headers[NUM_FIRING_RATE_TABLE_HEADERS] = {
 //	"Cell", "Non-CS r_mean", "Non-CS r_median", "CS r_mean", "CS r_median"
 //};
@@ -141,6 +142,7 @@ struct gui
 	
 };
 
+gboolean firing_rates_win_visible(struct gui *gui);
 gboolean update_fr_labels(struct gui *gui); /* here because use in control */
 int gui_init_and_run(int *argc, char ***argv, Control *control);
 
