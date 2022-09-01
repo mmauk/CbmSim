@@ -213,9 +213,23 @@ void Control::save_pfpc_weights_to_file(std::string out_pfpc_file)
 	}
 	const float *pfpc_weights = simCore->getMZoneList()[0]->exportPFPCWeights();
 	std::fstream outPFPCFileBuffer(out_pfpc_file.c_str(), std::ios::out | std::ios::binary);
-	rawBytesRW((char *)pfpc_weights, num_gr * sizeof(const float), false, outPFPCFileBuffer);
+	rawBytesRW((char *)pfpc_weights, num_gr * sizeof(float), false, outPFPCFileBuffer);
 	outPFPCFileBuffer.close();
 }
+
+void Control::load_pfpc_weights_from_file(std::string in_pfpc_file)
+{
+	if (!simCore)
+	{
+		fprintf(stderr, "[ERROR]: Trying to read weights to uninitialized simulation.\n");
+		fprintf(stderr, "[ERROR]: (Hint: Try initializing a sim first.)\n");
+		return;
+	}
+	std::fstream inPFPCFileBuffer(in_pfpc_file.c_str(), std::ios::in | std::ios::binary);
+	simCore->getMZoneList()[0]->load_pfpc_weights_from_file(inPFPCFileBuffer);
+	inPFPCFileBuffer.close();
+} 
+
 void Control::save_mfdcn_weights_to_file(std::string out_mfdcn_file)
 {
 	if (!simCore)
@@ -229,6 +243,19 @@ void Control::save_mfdcn_weights_to_file(std::string out_mfdcn_file)
 	std::fstream outMFDCNFileBuffer(out_mfdcn_file.c_str(), std::ios::out | std::ios::binary);
 	rawBytesRW((char *)mfdcn_weights, num_nc * num_p_nc_from_mf_to_nc * sizeof(const float), false, outMFDCNFileBuffer);
 	outMFDCNFileBuffer.close();
+}
+
+void Control::load_mfdcn_weights_from_file(std::string in_mfdcn_file)
+{
+	if (!simCore)
+	{
+		fprintf(stderr, "[ERROR]: Trying to read weights to uninitialized simulation.\n");
+		fprintf(stderr, "[ERROR]: (Hint: Try initializing a sim first.)\n");
+		return;
+	}
+	std::fstream inMFDCNFileBuffer(in_mfdcn_file.c_str(), std::ios::in | std::ios::binary);
+	simCore->getMZoneList()[0]->load_mfdcn_weights_from_file(inMFDCNFileBuffer);
+	inMFDCNFileBuffer.close();
 }
 
 void Control::initialize_spike_sums()
@@ -264,6 +291,11 @@ void Control::initialize_rast_internal()
 	all_sc_rast_internal    = allocate2DArray<ct_uint8_t>(num_sc, PSTHColSize);
 	all_bc_rast_internal    = allocate2DArray<ct_uint8_t>(num_bc, PSTHColSize);
 	all_io_rast_internal    = allocate2DArray<ct_uint8_t>(num_io, PSTHColSize);
+
+	all_pc_vm_rast_internal = allocate2DArray<float>(num_pc, PSTHColSize);
+	all_nc_vm_rast_internal = allocate2DArray<float>(num_nc, PSTHColSize);
+	all_io_vm_rast_internal = allocate2DArray<float>(num_io, PSTHColSize);
+
 	internal_arrays_initialized = true;
 }
 
@@ -496,7 +528,7 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO, struct g
 				simCore->updateMFInput(mfAP);
 				simCore->calcActivity(MFGO, GOGR, GRGO, gogoW, spillFrac);
 				
-				if (gui != NULL) update_spike_sums(tts);
+				//if (gui != NULL) update_spike_sums(tts);
 
 				if (tts >= csStart && tts < csStart + csLength)
 				{
@@ -567,9 +599,9 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO, struct g
 				}
 				std::cout << "[INFO]: Continuing..." << std::endl;
 			}
-			reset_spike_sums();
+			//reset_spike_sums();
 		}
-		fillOutputArrays();
+		//fillOutputArrays();
 		trial++;
 	}
 	// debug statement
@@ -666,8 +698,9 @@ void Control::reset_spike_sums()
 
 void Control::calculate_firing_rates()
 {
-	float non_cs_time = (csStart - 1) / 1000.0;
-	// array name: firing_rates, spike_sums
+	float non_cs_time_secs = (csStart - 1) / 1000.0; // why only pre-cs? (Ask Joe)
+	float cs_time_secs = csLength / 1000.0;
+
 	for (int i = 0; i < NUM_CELL_TYPES; i++)
 	{
 		// sort sums for medians 
@@ -679,14 +712,14 @@ void Control::calculate_firing_rates()
 		// calculate medians
 		firing_rates[i].non_cs_median_fr =
 			(spike_sums[i].non_cs_spike_counter[spike_sums[i].num_cells / 2 - 1]
-		   + spike_sums[i].non_cs_spike_counter[spike_sums[i].num_cells / 2]) / (2.0 * non_cs_time);
+		   + spike_sums[i].non_cs_spike_counter[spike_sums[i].num_cells / 2]) / (2.0 * non_cs_time_secs);
 		firing_rates[i].cs_median_fr     =
 			(spike_sums[i].cs_spike_counter[spike_sums[i].num_cells / 2 - 1]
-		   + spike_sums[i].cs_spike_counter[spike_sums[i].num_cells / 2]) / 4.0;
+		   + spike_sums[i].cs_spike_counter[spike_sums[i].num_cells / 2]) / (2.0 * cs_time_secs);
 		
 		// calculate means
-		firing_rates[i].non_cs_mean_fr = spike_sums[i].non_cs_spike_sum / (non_cs_time * spike_sums[i].num_cells);
-		firing_rates[i].cs_mean_fr     = spike_sums[i].cs_spike_sum / (2.0 * spike_sums[i].num_cells);
+		firing_rates[i].non_cs_mean_fr = spike_sums[i].non_cs_spike_sum / (non_cs_time_secs * spike_sums[i].num_cells);
+		firing_rates[i].cs_mean_fr     = spike_sums[i].cs_spike_sum / (cs_time_secs * spike_sums[i].num_cells);
 	}
 }
 
@@ -707,52 +740,59 @@ void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
 
 void Control::fill_rast_internal(int PSTHCounter)
 {
-	const ct_uint8_t* goSpks = simCore->getInputNet()->exportAPGO();
-	const ct_uint8_t* grSpks = simCore->getInputNet()->exportAPGR();
+	//const ct_uint8_t* goSpks = simCore->getInputNet()->exportAPGO();
+	//const ct_uint8_t* grSpks = simCore->getInputNet()->exportAPGR();
 	const ct_uint8_t* pcSpks = simCore->getMZoneList()[0]->exportAPPC();
 	const ct_uint8_t* ncSpks = simCore->getMZoneList()[0]->exportAPNC();
-	const ct_uint8_t* scSpks = simCore->getInputNet()->exportAPSC();
-	const ct_uint8_t* bcSpks = simCore->getMZoneList()[0]->exportAPBC();
+	//const ct_uint8_t* scSpks = simCore->getInputNet()->exportAPSC();
+	//const ct_uint8_t* bcSpks = simCore->getMZoneList()[0]->exportAPBC();
 	const ct_uint8_t* ioSpks = simCore->getMZoneList()[0]->exportAPIO();
 
-	for (int i = 0; i < num_mf; i++)
-	{
-		all_mf_rast_internal[i][PSTHCounter] = mfAP[i];
-	}
+	const float* vm_pc = simCore->getMZoneList()[0]->exportVmPC();
+	const float* vm_nc = simCore->getMZoneList()[0]->exportVmNC();
+	const float* vm_io = simCore->getMZoneList()[0]->exportVmIO();
 
-	for (int i = 0; i < num_go; i++)
-	{
-		all_go_rast_internal[i][PSTHCounter] = goSpks[i];
-	}
+	//for (int i = 0; i < num_mf; i++)
+	//{
+	//	all_mf_rast_internal[i][PSTHCounter] = mfAP[i];
+	//}
 
-	for (int i = 0; i < num_gr / 2; i++)
-	{
-		sample_gr_rast_internal[i][PSTHCounter] = grSpks[i];
-	}
+	//for (int i = 0; i < num_go; i++)
+	//{
+	//	all_go_rast_internal[i][PSTHCounter] = goSpks[i];
+	//}
+
+	//for (int i = 0; i < num_gr / 2; i++)
+	//{
+	//	sample_gr_rast_internal[i][PSTHCounter] = grSpks[i];
+	//}
 
 	for (int i = 0; i < num_pc; i++)
 	{
 		all_pc_rast_internal[i][PSTHCounter] = pcSpks[i];
+		all_pc_vm_rast_internal[i][PSTHCounter] = vm_pc[i];
 	}
 
 	for (int i = 0; i < num_nc; i++)
 	{
 		all_nc_rast_internal[i][PSTHCounter] = ncSpks[i];
+		all_nc_vm_rast_internal[i][PSTHCounter] = vm_nc[i];
 	}
 
-	for (int i = 0; i < num_sc; i++)
-	{
-		all_sc_rast_internal[i][PSTHCounter] = scSpks[i];
-	}
+	//for (int i = 0; i < num_sc; i++)
+	//{
+	//	all_sc_rast_internal[i][PSTHCounter] = scSpks[i];
+	//}
 
-	for (int i = 0; i < num_bc; i++)
-	{
-		all_bc_rast_internal[i][PSTHCounter] = bcSpks[i];
-	}
+	//for (int i = 0; i < num_bc; i++)
+	//{
+	//	all_bc_rast_internal[i][PSTHCounter] = bcSpks[i];
+	//}
 
 	for (int i = 0; i < num_io; i++)
 	{
 		all_io_rast_internal[i][PSTHCounter] = ioSpks[i];
+		all_io_vm_rast_internal[i][PSTHCounter] = vm_io[i];
 	}
 }
 
@@ -815,6 +855,10 @@ void Control::delete_rast_internal()
 	delete2DArray<ct_uint8_t>(all_sc_rast_internal);
 	delete2DArray<ct_uint8_t>(all_bc_rast_internal);
 	delete2DArray<ct_uint8_t>(all_io_rast_internal);
+
+	delete2DArray<float>(all_pc_vm_rast_internal);
+	delete2DArray<float>(all_nc_vm_rast_internal);
+	delete2DArray<float>(all_io_vm_rast_internal);
 }
 
 void Control::deleteOutputArrays()

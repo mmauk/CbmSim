@@ -91,7 +91,7 @@ class Control
 		int gpuP2    = 2;
 
 		// Training Parameters -> TODO: deprecate in gui runExperiment
-		int numTrainingTrials      = 100;
+		int numTrainingTrials      = 1000;
 		int homeoTuningTrials      = 0;
 		int granuleActDetectTrials = 0;
 
@@ -189,6 +189,12 @@ class Control
 		ct_uint8_t *allIORaster;
 
 		float *sample_pfpc_syn_weights;
+
+		float **all_pc_vm_rast_internal;
+		float **all_nc_vm_rast_internal;
+		float **all_io_vm_rast_internal;
+
+		//TODO: get mfdcn weights too 
 		//ct_uint8_t **allGOPSTH;
 		//float **allGORaster_gogoG; 
 		//float **eyelidPos;
@@ -221,7 +227,9 @@ class Control
 		void save_sim_state_to_file(std::string outStateFile); 
 		void save_sim_to_file(std::string outSimFile);
 		void save_pfpc_weights_to_file(std::string out_pfpc_file);
+		void load_pfpc_weights_from_file(std::string in_pfpc_file);
 		void save_mfdcn_weights_to_file(std::string out_mfdcn_file);
+		void load_mfdcn_weights_from_file(std::string in_mfdcn_file);
 		void initialize_spike_sums();
 		void initialize_rast_internal();
 		void initializeOutputArrays();

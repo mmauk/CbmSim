@@ -41,6 +41,10 @@
 #define DEFAULT_PFPC_WINDOW_WIDTH 1024
 #define DEFAULT_PFPC_WINDOW_HEIGHT 700
 
+/* pc window constants */
+#define DEFAULT_PC_WINDOW_WIDTH 1024
+#define DEFAULT_PC_WINDOW_HEIGHT 1000
+
 /* file dialog constants */
 #define DEFAULT_STATE_FILE_NAME "connectivity_state"
 #define DEFAULT_PFPC_WEIGHT_NAME "pfpc_weights.bin"

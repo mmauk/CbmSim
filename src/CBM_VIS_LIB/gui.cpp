@@ -134,6 +134,18 @@ static void on_save_pfpc_weights(GtkWidget *widget, Control *control)
 	gtk_widget_destroy(dialog);
 }
 
+static void on_load_pfpc_weights(GtkWidget *widget, Control *control)
+{
+		std::string pfpc_weights_filename = "";
+		load_file(widget, control, pfpc_weights_filename);
+		if (pfpc_weights_filename == "")
+		{
+			fprintf(stderr, "[ERROR]: Could not open pf-pc weights file.\n");
+			return;
+		}
+		control->load_pfpc_weights_from_file(pfpc_weights_filename);
+}
+
 static void on_save_mfdcn_weights(GtkWidget *widget, Control *control)
 {
 	// before we make the file chooser dialog, should determine whether we can even do this operation
@@ -164,8 +176,19 @@ static void on_save_mfdcn_weights(GtkWidget *widget, Control *control)
 		g_free(mfdcn_weights_file);
 	}
 	gtk_widget_destroy(dialog);
-
 } 
+
+static void on_load_mfdcn_weights(GtkWidget *widget, Control *control)
+{
+		std::string mfdcn_weights_filename = "";
+		load_file(widget, control, mfdcn_weights_filename);
+		if (mfdcn_weights_filename == "")
+		{
+			fprintf(stderr, "[ERROR]: Could not open pf-pc weights file.\n");
+			return;
+		}
+		control->load_mfdcn_weights_from_file(mfdcn_weights_filename);
+}
 
 //FIXME: below is a stop-gap solution. should be more careful with destroy callback
 gboolean firing_rates_win_visible(struct gui *gui)
@@ -592,8 +615,6 @@ static void draw_pf_pc_plot(GtkWidget *drawing_area, cairo_t *cr, Control *contr
 	{
 		control->sample_pfpc_syn_weights[i] = pfpc_weights[control->gr_indices[i]];
 	}
-	//std::sort(control->sample_pfpc_syn_weights, control->sample_pfpc_syn_weights + 4096,
-	//	  [](float a, float b){return abs(a-0.5) < abs(b-0.5);});
 
 	// background color setup
 	cairo_set_source_rgb(cr, 0, 0, 0);
@@ -626,6 +647,94 @@ static void draw_pf_pc_plot(GtkWidget *drawing_area, cairo_t *cr, Control *contr
 		cairo_fill(cr);
 	}
 }
+
+// TODO: continue development and adjusting scale params
+static void draw_pc_plot(GtkWidget *drawing_area, cairo_t *cr, Control *control)
+{
+	// background color setup
+	cairo_set_source_rgb(cr, 0, 0, 0);
+	cairo_paint(cr);
+
+	/* GtkDrawingArea size */
+	GdkRectangle da;            
+	GdkWindow *window = gtk_widget_get_window(GTK_WIDGET(drawing_area));
+
+	gdk_window_get_geometry(window,
+	        &da.x,
+	        &da.y,
+	        &da.width,
+	        &da.height);
+
+	float len_scale_y = threshRestPC - threshMaxPC;
+	float pc_w_to_pixel_scale_y = -da.height / (9.5 * len_scale_y); // 6  //60.0 50.0 40.0 30.0 20.0 6.0
+	float pc_w_to_pixel_scale_x = da.width / (float)control->PSTHColSize;
+
+	cairo_scale(cr, pc_w_to_pixel_scale_x, -pc_w_to_pixel_scale_y);
+	cairo_translate(cr, 0, 17.0); // 22 //53.5 50 50 50 40 -40
+
+	// pc point color
+	cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
+
+	for (int i = 0; i < control->PSTHColSize; i++)
+	{
+		int alternator = 1;
+		for (int j = 0; j < num_pc; j++)
+		{
+			float vm_ij = control->all_pc_vm_rast_internal[j][i] + alternator * 0.2 * ceil(j/2.0) * len_scale_y; 
+			cairo_rectangle(cr, i, vm_ij, 1.0, 0.05);
+			if (control->all_pc_rast_internal[j][i])
+			{
+				cairo_rectangle(cr, i, vm_ij, 1.0, 1.0);
+			}
+			alternator *= -1;
+		}
+		cairo_fill(cr);
+	}
+
+	// nc point color
+	cairo_set_source_rgb(cr, 0.0, 1.0, 0.0);
+	
+	float nc_offset = -64.0;
+	float nc_scale  = 0.65;
+
+	for (int i = 0; i < control->PSTHColSize; i++)
+	{
+		int alternator = 1;
+		for (int j = 0; j < num_nc; j++)
+		{
+			float vm_ij = nc_scale * control->all_nc_vm_rast_internal[j][i] + nc_offset + alternator * 0.2 * ceil(j/2.0) * len_scale_y; 
+			cairo_rectangle(cr, i, vm_ij, 1.0, 0.05);
+			if (control->all_nc_rast_internal[j][i])
+			{
+				cairo_rectangle(cr, i, vm_ij, 1.0, 1.0);
+			}
+			alternator *= -1;
+		}
+		cairo_fill(cr);
+	}
+
+	// io point color
+	cairo_set_source_rgb(cr, 0.0, 1.0, 1.0);
+	
+	float io_offset = -124.0;
+	float io_scale  = 0.1;
+
+	for (int i = 0; i < control->PSTHColSize; i++)
+	{
+		int alternator = 1;
+		for (int j = 0; j < num_io; j++)
+		{
+			float vm_ij = io_scale * control->all_io_vm_rast_internal[j][i] + io_offset + alternator * 0.2 * ceil(j/2.0) * len_scale_y; 
+			cairo_rectangle(cr, i, vm_ij, 1.0, 0.05);
+			if (control->all_io_rast_internal[j][i])
+			{
+				cairo_rectangle(cr, i, vm_ij, 1.0, 1.0);
+			}
+			alternator *= -1;
+		}
+		cairo_fill(cr);
+	}
+} 
 
 static void generate_raster_plot(GtkWidget *widget,
 	  void (* draw_func)(GtkWidget *, cairo_t *, Control *), Control *control)
@@ -665,7 +774,26 @@ static void generate_pfpc_plot(GtkWidget *widget,
 	gtk_container_add(GTK_CONTAINER(child_window), drawing_area);
 	g_signal_connect(G_OBJECT(drawing_area), "draw", G_CALLBACK(draw_func), control);
 	gtk_widget_show_all(child_window);
+}
 
+static void generate_pc_plot(GtkWidget *widget,
+	  void (* draw_func)(GtkWidget *, cairo_t *, Control *), Control *control)
+{
+	GtkWidget *child_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	
+	gtk_window_set_title(GTK_WINDOW(child_window), "PC Window");
+	gtk_window_set_default_size(GTK_WINDOW(child_window),
+								DEFAULT_PC_WINDOW_WIDTH,
+								DEFAULT_PC_WINDOW_HEIGHT);
+	gtk_window_set_resizable(GTK_WINDOW(child_window), FALSE);
+
+	GtkWidget *drawing_area = gtk_drawing_area_new();
+	gtk_widget_set_size_request(drawing_area,
+								DEFAULT_PC_WINDOW_WIDTH,
+								DEFAULT_PC_WINDOW_HEIGHT);
+	gtk_container_add(GTK_CONTAINER(child_window), drawing_area);
+	g_signal_connect(G_OBJECT(drawing_area), "draw", G_CALLBACK(draw_func), control);
+	gtk_widget_show_all(child_window);
 }
 
 static void on_quit(GtkWidget *widget, Control *control)
@@ -677,7 +805,6 @@ static void on_quit(GtkWidget *widget, Control *control)
 	}
 	else gtk_main_quit();
 }
-
 
 static void on_gr_raster(GtkWidget *widget, Control *control)
 {
@@ -691,7 +818,8 @@ static void on_go_raster(GtkWidget *widget, Control *control)
 
 static void on_pc_window(GtkWidget *widget, Control *control)
 {
-	generate_pfpc_plot(widget, draw_pf_pc_plot, control);
+	//generate_pfpc_plot(widget, draw_pf_pc_plot, control);
+	generate_pc_plot(widget, draw_pc_plot, control);
 }
 
 static bool on_parameters(GtkWidget *widget, gpointer data)
@@ -979,8 +1107,8 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 							{"Load PF-PC", gtk_menu_item_new(),
 								{
 									"activate",
-									G_CALLBACK(null_callback),
-									NULL,
+									G_CALLBACK(on_load_pfpc_weights),
+									control,
 									false
 								},
 								{}
@@ -997,8 +1125,8 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 							{"Load MF-DN", gtk_menu_item_new(),
 								{
 									"activate",
-									G_CALLBACK(null_callback),
-									NULL,
+									G_CALLBACK(on_load_mfdcn_weights),
+									control,
 									false
 								},
 								{}

@@ -1079,10 +1079,10 @@ void InNet::initCUDA()
 	cerr<<"number of devices used: "<<numGPUs<<" starting at GPU# "<<gpuIndStart<<endl;
 
 	numGRPerGPU=num_gr / numGPUs;
-	calcGRActNumGRPerB=512;
+	calcGRActNumGRPerB = 512;
 	calcGRActNumBlocks=numGRPerGPU/calcGRActNumGRPerB;
 
-	updateGRGOOutNumGRPerR=512 * (num_go>512) + num_go*(num_go<=512);
+	updateGRGOOutNumGRPerR = 512 * (num_go > 512) + num_go * (num_go <= 512);
 	updateGRGOOutNumGRRows=numGRPerGPU/updateGRGOOutNumGRPerR;
 
 	sumGRGOOutNumGOPerB=1024*(num_go>1024)+num_go*(num_go<=1024);

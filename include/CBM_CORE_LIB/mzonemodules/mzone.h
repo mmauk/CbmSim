@@ -83,6 +83,9 @@ public:
 	const float* exportPFPCWeights();
 	const float* exportMFDCNWeights();
 
+	void load_pfpc_weights_from_file(std::fstream &in_file_buf);
+	void load_mfdcn_weights_from_file(std::fstream &in_file_buf);
+
 	const ct_uint32_t* exportAPBufBC();
 	const ct_uint32_t* exportAPBufPC();
 	const ct_uint8_t* exportAPBufIO();

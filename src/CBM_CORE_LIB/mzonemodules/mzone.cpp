@@ -686,6 +686,22 @@ const float* MZone::exportMFDCNWeights()
 	return (const float *)as->mfSynWeightNC.get(); 
 }
 
+void MZone::load_pfpc_weights_from_file(std::fstream &in_file_buf)
+{
+	rawBytesRW((char *)pfSynWeightPCLinear,
+				num_gr * sizeof(float),
+				true,
+				in_file_buf);
+}
+
+void MZone::load_mfdcn_weights_from_file(std::fstream &in_file_buf)
+{
+	rawBytesRW((char *)as->mfSynWeightNC.get(),
+				num_nc * num_p_nc_from_mf_to_nc * sizeof(float),
+				true,
+				in_file_buf);
+}
+
 // Why not write one export function which takes in the thing you want to export?
 const ct_uint8_t* MZone::exportAPNC()
 {
