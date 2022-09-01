@@ -17,8 +17,6 @@ template<typename Type> Type** allocate2DArray(unsigned int numRows, unsigned in
 {
 	Type** retArr = (Type **)calloc(numRows, sizeof(Type *));
 	retArr[0] = (Type *)calloc(numRows * numCols, sizeof(Type));
-	//Type** retArr = new Type*[numRows];
-	//retArr[0]     = new Type[numRows * numCols];
 
 	for (size_t i = 1; i < numRows; i++)
 	{

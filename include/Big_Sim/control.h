@@ -20,6 +20,7 @@
 #include "poissonregencells.h"
 #include "interfaces/ectrialsdata.h"
 #include "eyelidintegrator.h"
+#include "bits/bits.h"
 
 // TODO: place in a common place, as gui uses a constant like this too
 #define NUM_CELL_TYPES 8
@@ -179,6 +180,15 @@ class Control
 		ct_uint8_t **all_bc_rast_internal;
 		ct_uint8_t **all_io_rast_internal;
 
+		ct_uint32_t all_mf_rast_size    = num_mf * rasterColumnSize / BITS_PER_BYTE;
+		ct_uint32_t all_go_rast_size    = num_go * rasterColumnSize / BITS_PER_BYTE;
+		ct_uint32_t sample_gr_rast_size = (num_gr / 2) * rasterColumnSize / BITS_PER_BYTE;
+		ct_uint32_t all_pc_rast_size    = num_pc * rasterColumnSize / BITS_PER_BYTE;
+		ct_uint32_t all_nc_rast_size    = num_nc * rasterColumnSize / BITS_PER_BYTE;
+		ct_uint32_t all_sc_rast_size    = num_sc * rasterColumnSize / BITS_PER_BYTE;
+		ct_uint32_t all_bc_rast_size    = num_bc * rasterColumnSize / BITS_PER_BYTE;
+		ct_uint32_t all_io_rast_size    = num_io * rasterColumnSize / BITS_PER_BYTE;
+
 		ct_uint8_t *allMFRaster;
 		ct_uint8_t *allGORaster;
 		ct_uint8_t *sampleGRRaster;
@@ -230,6 +240,16 @@ class Control
 		void load_pfpc_weights_from_file(std::string in_pfpc_file);
 		void save_mfdcn_weights_to_file(std::string out_mfdcn_file);
 		void load_mfdcn_weights_from_file(std::string in_mfdcn_file);
+
+		void save_gr_psth_to_file(std::string out_gr_psth_file);
+		void save_go_psth_to_file(std::string out_go_psth_file);
+		void save_pc_psth_to_file(std::string out_pc_psth_file);
+		void save_nc_psth_to_file(std::string out_nc_psth_file);
+		void save_io_psth_to_file(std::string out_io_psth_file);
+		void save_bc_psth_to_file(std::string out_bc_psth_file);
+		void save_sc_psth_to_file(std::string out_sc_psth_file);
+		void save_mf_psth_to_file(std::string out_mf_psth_file);
+
 		void initialize_spike_sums();
 		void initialize_rast_internal();
 		void initializeOutputArrays();

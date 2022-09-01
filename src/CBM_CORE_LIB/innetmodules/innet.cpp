@@ -45,7 +45,7 @@ InNet::InNet(InNetConnectivityState *cs,
 
 InNet::~InNet()
 {
-	std::cout << "[INFO] Deleting innet gpu arrays." << std::endl;
+	std::cout << "[INFO]: Deleting innet gpu arrays." << std::endl;
 
 	//gr external to initCUDA
 	delete2DArray<float>(gGOGRT);

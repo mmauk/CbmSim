@@ -1,7 +1,6 @@
 #include <iomanip>
 #include <gtk/gtk.h>
 #include "control.h"
-#include "bits/bits.h"
 #include "fileIO/build_file.h"
 #include "ttyManip/tty.h"
 #include "array_util.h"
@@ -258,6 +257,62 @@ void Control::load_mfdcn_weights_from_file(std::string in_mfdcn_file)
 	inMFDCNFileBuffer.close();
 }
 
+void Control::save_gr_psth_to_file(std::string out_gr_psth_file)
+{
+	std::fstream out_gr_psth_file_buffer(out_gr_psth_file.c_str(), std::ios::out | std::ios::binary);
+	rawBytesRW((char *)sampleGRRaster, sample_gr_rast_size, false, out_gr_psth_file_buffer);
+	out_gr_psth_file_buffer.close();
+}
+
+void Control::save_go_psth_to_file(std::string out_go_psth_file)
+{
+	std::fstream out_go_psth_file_buffer(out_go_psth_file.c_str(), std::ios::out | std::ios::binary);
+	rawBytesRW((char *)allGORaster, all_go_rast_size, false, out_go_psth_file_buffer);
+	out_go_psth_file_buffer.close();
+}
+
+void Control::save_pc_psth_to_file(std::string out_pc_psth_file)
+{
+	std::fstream out_pc_psth_file_buffer(out_pc_psth_file.c_str(), std::ios::out | std::ios::binary);
+	rawBytesRW((char *)allPCRaster, all_pc_rast_size, false, out_pc_psth_file_buffer);
+	out_pc_psth_file_buffer.close();
+}
+
+void Control::save_nc_psth_to_file(std::string out_nc_psth_file)
+{
+	std::fstream out_nc_psth_file_buffer(out_nc_psth_file.c_str(), std::ios::out | std::ios::binary);
+	rawBytesRW((char *)allNCRaster, all_nc_rast_size, false, out_nc_psth_file_buffer);
+	out_nc_psth_file_buffer.close();
+}
+
+void Control::save_io_psth_to_file(std::string out_io_psth_file)
+{
+	std::fstream out_io_psth_file_buffer(out_io_psth_file.c_str(), std::ios::out | std::ios::binary);
+	rawBytesRW((char *)allIORaster, all_io_rast_size, false, out_io_psth_file_buffer);
+	out_io_psth_file_buffer.close();
+}
+
+void Control::save_bc_psth_to_file(std::string out_bc_psth_file)
+{
+	std::fstream out_bc_psth_file_buffer(out_bc_psth_file.c_str(), std::ios::out | std::ios::binary);
+	rawBytesRW((char *)allBCRaster, all_bc_rast_size, false, out_bc_psth_file_buffer);
+	out_bc_psth_file_buffer.close();
+}
+
+void Control::save_sc_psth_to_file(std::string out_sc_psth_file)
+{
+	std::fstream out_sc_psth_file_buffer(out_sc_psth_file.c_str(), std::ios::out | std::ios::binary);
+	rawBytesRW((char *)allSCRaster, all_sc_rast_size, false, out_sc_psth_file_buffer);
+	out_sc_psth_file_buffer.close();
+}
+
+void Control::save_mf_psth_to_file(std::string out_mf_psth_file)
+{
+	std::fstream out_mf_psth_file_buffer(out_mf_psth_file.c_str(), std::ios::out | std::ios::binary);
+	rawBytesRW((char *)allMFRaster, all_mf_rast_size, false, out_mf_psth_file_buffer);
+	out_mf_psth_file_buffer.close();
+}
+
 void Control::initialize_spike_sums()
 {
 	spike_sums[MF].num_cells  = num_mf;
@@ -301,15 +356,6 @@ void Control::initialize_rast_internal()
 
 void Control::initializeOutputArrays()
 {
-	ct_uint32_t all_mf_rast_size = num_mf * rasterColumnSize / BITS_PER_BYTE;
-	ct_uint32_t all_go_rast_size = num_go * rasterColumnSize / BITS_PER_BYTE;
-	ct_uint32_t sample_gr_rast_size = (num_gr / 2) * rasterColumnSize / BITS_PER_BYTE;
-	ct_uint32_t all_pc_rast_size = num_pc * rasterColumnSize / BITS_PER_BYTE;
-	ct_uint32_t all_nc_rast_size = num_nc * rasterColumnSize / BITS_PER_BYTE;
-	ct_uint32_t all_sc_rast_size = num_sc * rasterColumnSize / BITS_PER_BYTE;
-	ct_uint32_t all_bc_rast_size = num_bc * rasterColumnSize / BITS_PER_BYTE;
-	ct_uint32_t all_io_rast_size = num_io * rasterColumnSize / BITS_PER_BYTE;
-
 	allMFRaster = (ct_uint8_t *)calloc(all_mf_rast_size, sizeof(ct_uint8_t));
 	allGORaster = (ct_uint8_t *)calloc(all_go_rast_size, sizeof(ct_uint8_t));
 	sampleGRRaster = (ct_uint8_t *)calloc(sample_gr_rast_size, sizeof(ct_uint8_t));
@@ -468,11 +514,11 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO, struct g
 	GRGO = 0.0007 * 0.9;
 	MFGO = 0.00350 * 0.9;
 
-	FILE *fp = NULL;
-	if (sim_vis_mode == TUI)
-	{
-		init_tty(&fp);
-	}
+	//FILE *fp = NULL;
+	//if (sim_vis_mode == TUI)
+	//{
+	//	init_tty(&fp);
+	//}
 
 	if (gui == NULL) run_state = IN_RUN_NO_PAUSE;
 	trial = 0;
@@ -489,10 +535,8 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO, struct g
 		float gGOGR_sum = 0;
 		float gMFGR_sum = 0;
 
-		trial <= homeoTuningTrials ?
-			std::cout << "Pre-tuning trial number: " << trial + 1 << std::endl :
-			std::cout << "Post-tuning trial number: " << trial + 1 << std::endl;
-		
+		std::cout << "[INFO]: Trial number: " << trial + 1 << std::endl;
+
 		// Homeostatic plasticity trials
 		if (trial >= homeoTuningTrials)
 		{
@@ -518,7 +562,6 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO, struct g
 				else
 				{
 					// Tonic MF activity during the CS period
-					// this never gets reached...
 					mfAP = mfs->calcPoissActivity(mfFreq->getMFInCSTonicA(),
 							simCore->getMZoneList());
 				}
@@ -537,8 +580,6 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO, struct g
 					// even better: simCore->updateGSum<Granule, Golgi>(gGRGOSum); <- granule and golgi are their own cell objs
 					mfgoG  = simCore->getInputNet()->exportgSum_MFGO();
 					grgoG  = simCore->getInputNet()->exportgSum_GRGO();
-					//mfgrG  = simCore->getInputNet()->exportGESumGR(); // excite
-					//gogrG  = simCore->getInputNet()->exportGISumGR(); // inhibit
 					goSpks = simCore->getInputNet()->exportAPGO();
 				
 					for (int i = 0; i < num_go; i++)
@@ -547,20 +588,13 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO, struct g
 							gGRGO_sum       += grgoG[i];
 							gMFGO_sum       += mfgoG[i];
 					}
-					//for (int i = 0; i < 10000; i++)
-					//{
-					//		gGOGR_sum       += gogrG[i];
-					//		gMFGR_sum       += mfgrG[i];
-					//}
 				}
 				if (tts == csStart + csLength)
 				{
 					countGOSpikes(goSpkCounter, medTrials);
-					std::cout << "mean gGRGO   = " << gGRGO_sum / (num_go * csLength) << std::endl;
-					std::cout << "mean gMFGO   = " << gMFGO_sum / (num_go * csLength) << std::endl;
-					//std::cout << "mean gGOGR   = " << gGOGR_sum / (10000 * csLength) << std::endl;
-					//std::cout << "mean gMFGR   = " << gMFGR_sum / (10000 * csLength) << std::endl;
-					std::cout << "GR:MF ratio  = " << gGRGO_sum / gMFGO_sum << std::endl;
+					std::cout << "[INFO]: Mean gGRGO   = " << gGRGO_sum / (num_go * csLength) << std::endl;
+					std::cout << "[INFO]: Mean gMFGO   = " << gMFGO_sum / (num_go * csLength) << std::endl;
+					std::cout << "[INFO]: GR:MF ratio  = " << gGRGO_sum / gMFGO_sum << std::endl;
 				}
 
 				if (trial >= preTrialNumber && tts >= csStart-msPreCS &&
@@ -575,21 +609,21 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO, struct g
 				{
 					if (gtk_events_pending()) gtk_main_iteration(); // place this here?
 				}
-				else if (sim_vis_mode == TUI) process_input(&fp, tts, trial + 1); /* process user input from kb */
+				//else if (sim_vis_mode == TUI) process_input(&fp, tts, trial + 1); /* process user input from kb */
 			}
 		}
 		timer = clock() - timer;
-		std::cout << "Trial time seconds: " << (float)timer / CLOCKS_PER_SEC << std::endl;
+		std::cout << "[INFO]: Trial time seconds: " << (float)timer / CLOCKS_PER_SEC << std::endl;
 
 		// check the event queue after every iteration
 		if (gui != NULL)
 		{
 			// for now, compute the mean and median firing rates for all cells regardless
-			if (firing_rates_win_visible(gui))
-			{
-				calculate_firing_rates();
-				gdk_threads_add_idle((GSourceFunc)update_fr_labels, gui);
-			}
+			//if (firing_rates_win_visible(gui))
+			//{
+			//	calculate_firing_rates();
+			//	gdk_threads_add_idle((GSourceFunc)update_fr_labels, gui);
+			//}
 			if (run_state == IN_RUN_PAUSE)
 			{
 				std::cout << "[INFO]: Simulation is paused at end of trial " << trial+1 << "." << std::endl;
@@ -606,7 +640,8 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO, struct g
 	}
 	// debug statement
 	if (run_state == NOT_IN_RUN) std::cout << "[INFO]: Simulation terminated." << std::endl;
-	if (sim_vis_mode == TUI) reset_tty(&fp); /* reset the tty for later use */
+	else if (run_state == IN_RUN_NO_PAUSE) std::cout << "[INFO]: Simulation Completed." << std::endl;
+	//if (sim_vis_mode == TUI) reset_tty(&fp); /* reset the tty for later use */
 	//saveOutputArraysToFile(0, 0, local_time, 0);
 	run_state = NOT_IN_RUN;
 }
@@ -732,10 +767,10 @@ void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
 
 	for (int i = 0; i < num_go; i++) goSpkSum += goSpkCounter[i];
 	
-	std::cout << "Mean GO Rate: " << goSpkSum / ((float)num_go * 2.0) << std::endl;
+	std::cout << "[INFO]: Mean GO Rate: " << goSpkSum / ((float)num_go * 2.0) << std::endl;
 
 	medTrials += m / 2.0;
-	std::cout << "Median GO Rate: " << m / 2.0 << std::endl;
+	std::cout << "[INFO]: Median GO Rate: " << m / 2.0 << std::endl;
 }
 
 void Control::fill_rast_internal(int PSTHCounter)

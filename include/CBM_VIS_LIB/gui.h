@@ -49,13 +49,14 @@
 #define DEFAULT_STATE_FILE_NAME "connectivity_state"
 #define DEFAULT_PFPC_WEIGHT_NAME "pfpc_weights.bin"
 #define DEFAULT_MFDCN_WEIGHT_NAME "mfdcn_weights.bin"
-//const gchar *firing_rate_headers[NUM_FIRING_RATE_TABLE_HEADERS] = {
-//	"Cell", "Non-CS r_mean", "Non-CS r_median", "CS r_mean", "CS r_median"
-//};
-
-//const gchar *cell_labels[NUM_CELL_TYPES] = {
-//	"MF", "GR", "GO", "BC", "SC", "PC", "IO", "NC"
-//};
+#define DEFAULT_GR_PSTH_FILE_NAME "gr_psth.bin"
+#define DEFAULT_GO_PSTH_FILE_NAME "go_psth.bin"
+#define DEFAULT_PC_PSTH_FILE_NAME "pc_psth.bin"
+#define DEFAULT_NC_PSTH_FILE_NAME "dcn_psth.bin"
+#define DEFAULT_IO_PSTH_FILE_NAME "cf_psth.bin"
+#define DEFAULT_BC_PSTH_FILE_NAME "bc_psth.bin"
+#define DEFAULT_SC_PSTH_FILE_NAME "sc_psth.bin"
+#define DEFAULT_MF_PSTH_FILE_NAME "mf_psth.bin"
 
 struct signal
 {

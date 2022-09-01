@@ -15,11 +15,11 @@ static bool assert(bool expr, const char *error_string, const char *func = "asse
 	return true;
 }
 
-
-static void load_file(GtkWidget *widget, Control *control, std::string &out_file_name)
+static void load_file(GtkWidget *widget, Control *control, void (Control::*on_file_load_func)(std::string),
+	std::string err_msg)
 {
-	GtkWidget *dialog = gtk_file_chooser_dialog_new
-		(
+	std::string in_file_std_str = "";
+	GtkWidget *dialog = gtk_file_chooser_dialog_new(
 		  "Open File",
 		  NULL, /* no parent window is fine for now */
 		  GTK_FILE_CHOOSER_ACTION_OPEN,
@@ -28,166 +28,139 @@ static void load_file(GtkWidget *widget, Control *control, std::string &out_file
 		  "Open",
 		  GTK_RESPONSE_ACCEPT,
 		  NULL
+	);
+	gint response = gtk_dialog_run(GTK_DIALOG(dialog));
+	if (response == GTK_RESPONSE_ACCEPT)
+	{
+		GtkFileChooser *chooser = GTK_FILE_CHOOSER(dialog);
+		char *in_file_c_str = gtk_file_chooser_get_filename(chooser);
+		// TODO: pop-up warning for invalid file
+		in_file_std_str = std::string(in_file_c_str);
+		g_free(in_file_c_str);
+	}
+	else
+	{
+		fprintf(stderr, "%s\n", err_msg.c_str());
+		gtk_widget_destroy(dialog);
+		return;
+	}
+	gtk_widget_destroy(dialog);
+	(control->*on_file_load_func)(in_file_std_str);
+}
+
+static void save_file(GtkWidget *widget, Control *control, void (Control::*on_file_save_func)(std::string),
+	std::string err_msg, const char *default_out_file)
+{
+	std::string out_file_std_str = "";
+	GtkWidget *dialog = gtk_file_chooser_dialog_new
+		(
+		  "Save File",
+		  NULL, /* no parent window is fine for now */
+		  GTK_FILE_CHOOSER_ACTION_SAVE,
+		  "Cancel",
+		  GTK_RESPONSE_CANCEL,
+		  "Save",
+		  GTK_RESPONSE_ACCEPT,
+		  NULL
 		);
 
+	GtkFileChooser *chooser = GTK_FILE_CHOOSER(dialog);
+	gtk_file_chooser_set_do_overwrite_confirmation(chooser, TRUE); /* huh? */
+	gtk_file_chooser_set_current_name(chooser, default_out_file);
 	gint response = gtk_dialog_run(GTK_DIALOG(dialog));
 
 	if (response == GTK_RESPONSE_ACCEPT)
 	{
-		GtkFileChooser *chooser = GTK_FILE_CHOOSER(dialog);
-		char *sim_file = gtk_file_chooser_get_filename(chooser);
-		// TODO: pop-up warning for invalid file
-		out_file_name = std::string(sim_file);
-		g_free(sim_file);
+		char *out_file_c_str = gtk_file_chooser_get_filename(chooser);
+		out_file_std_str = std::string(out_file_c_str);
+		g_free(out_file_c_str);
 	}
-
+	else
+	{
+		fprintf(stderr, "%s\n", err_msg.c_str());
+		gtk_widget_destroy(dialog);
+		return;
+	}
 	gtk_widget_destroy(dialog);
-
+	(control->*on_file_save_func)(out_file_std_str);
 }
 
 static void on_load_experiment_file(GtkWidget *widget, Control *control)
 {
-		std::string expt_filename = "";
-		load_file(widget, control, expt_filename);
-		if (expt_filename == "")
-		{
-			fprintf(stderr, "[ERROR]: Could not open experiment file.\n");
-			return;
-		}
-		control->init_experiment(expt_filename);
+	load_file(widget, control, &Control::init_experiment, "[ERROR]: Could not open experiment file.");
 }
 
 static void on_load_sim_file(GtkWidget *widget, Control *control)
 {
-		std::string in_sim_filename = "";
-		load_file(widget, control, in_sim_filename);
-		if (in_sim_filename == "")
-		{
-			fprintf(stderr, "[ERROR]: Could not open simulation file.\n");
-			return;
-		}
-		// set input state file name for saving state after each trial
-		control->inSimFileName = in_sim_filename;
-		control->init_sim(in_sim_filename);
+	//std::string in_sim_filename = "";
+	load_file(widget, control, &Control::init_sim, "[ERROR]: Could not open simulation file.");
+	// set input state file name for saving state after each trial
+	//control->inSimFileName = in_sim_filename;
 }
 
 static void on_save_state(GtkWidget *widget, Control *control)
 {
-	GtkWidget *dialog = gtk_file_chooser_dialog_new
-		(
-		  "Save File",
-		  NULL, /* no parent window is fine for now */
-		  GTK_FILE_CHOOSER_ACTION_SAVE,
-		  "Cancel",
-		  GTK_RESPONSE_CANCEL,
-		  "Save",
-		  GTK_RESPONSE_ACCEPT,
-		  NULL
-		);
-
-	GtkFileChooser *chooser = GTK_FILE_CHOOSER(dialog);
-	gtk_file_chooser_set_do_overwrite_confirmation(chooser, TRUE); /* huh? */
-
-	gtk_file_chooser_set_current_name(chooser, DEFAULT_STATE_FILE_NAME);
-
-	gint response = gtk_dialog_run(GTK_DIALOG(dialog));
-
-	if (response == GTK_RESPONSE_ACCEPT)
-	{
-		char *sim_state_file = gtk_file_chooser_get_filename(chooser);
-		// TODO: pop-up warning for invalid file
-		control->save_sim_state_to_file(std::string(sim_state_file));
-		g_free(sim_state_file);
-	}
-	gtk_widget_destroy(dialog);
+	save_file(widget, control, &Control::save_sim_state_to_file, "[ERROR]: Could not save state file.", DEFAULT_STATE_FILE_NAME);
 }
 
 static void on_save_pfpc_weights(GtkWidget *widget, Control *control)
 {
-	// before we make the file chooser dialog, should determine whether we can even do this operation
-	GtkWidget *dialog = gtk_file_chooser_dialog_new
-		(
-		  "Save File",
-		  NULL, /* no parent window is fine for now */
-		  GTK_FILE_CHOOSER_ACTION_SAVE,
-		  "Cancel",
-		  GTK_RESPONSE_CANCEL,
-		  "Save",
-		  GTK_RESPONSE_ACCEPT,
-		  NULL
-		);
-
-	GtkFileChooser *chooser = GTK_FILE_CHOOSER(dialog);
-	gtk_file_chooser_set_do_overwrite_confirmation(chooser, TRUE); /* huh? */
-
-	gtk_file_chooser_set_current_name(chooser, DEFAULT_PFPC_WEIGHT_NAME);
-
-	gint response = gtk_dialog_run(GTK_DIALOG(dialog));
-
-	if (response == GTK_RESPONSE_ACCEPT)
-	{
-		char *pfpc_weights_file = gtk_file_chooser_get_filename(chooser);
-		// TODO: pop-up warning for invalid file
-		control->save_pfpc_weights_to_file(std::string(pfpc_weights_file));
-		g_free(pfpc_weights_file);
-	}
-	gtk_widget_destroy(dialog);
+	save_file(widget, control, &Control::save_pfpc_weights_to_file, "[ERROR]: Could not save pf-pc weights to file.", DEFAULT_PFPC_WEIGHT_NAME);
 }
 
 static void on_load_pfpc_weights(GtkWidget *widget, Control *control)
 {
-		std::string pfpc_weights_filename = "";
-		load_file(widget, control, pfpc_weights_filename);
-		if (pfpc_weights_filename == "")
-		{
-			fprintf(stderr, "[ERROR]: Could not open pf-pc weights file.\n");
-			return;
-		}
-		control->load_pfpc_weights_from_file(pfpc_weights_filename);
+	load_file(widget, control, &Control::load_pfpc_weights_from_file, "[ERROR]: Could not open pf-pc weights file.");
 }
 
 static void on_save_mfdcn_weights(GtkWidget *widget, Control *control)
 {
-	// before we make the file chooser dialog, should determine whether we can even do this operation
-	GtkWidget *dialog = gtk_file_chooser_dialog_new
-		(
-		  "Save File",
-		  NULL, /* no parent window is fine for now */
-		  GTK_FILE_CHOOSER_ACTION_SAVE,
-		  "Cancel",
-		  GTK_RESPONSE_CANCEL,
-		  "Save",
-		  GTK_RESPONSE_ACCEPT,
-		  NULL
-		);
-
-	GtkFileChooser *chooser = GTK_FILE_CHOOSER(dialog);
-	gtk_file_chooser_set_do_overwrite_confirmation(chooser, TRUE); /* huh? */
-
-	gtk_file_chooser_set_current_name(chooser, DEFAULT_MFDCN_WEIGHT_NAME);
-
-	gint response = gtk_dialog_run(GTK_DIALOG(dialog));
-
-	if (response == GTK_RESPONSE_ACCEPT)
-	{
-		char *mfdcn_weights_file = gtk_file_chooser_get_filename(chooser);
-		// TODO: pop-up warning for invalid file
-		control->save_mfdcn_weights_to_file(std::string(mfdcn_weights_file));
-		g_free(mfdcn_weights_file);
-	}
-	gtk_widget_destroy(dialog);
+	save_file(widget, control, &Control::save_mfdcn_weights_to_file, "[ERROR]: Could not save mf-dcn weights to file.", DEFAULT_MFDCN_WEIGHT_NAME);
 } 
 
 static void on_load_mfdcn_weights(GtkWidget *widget, Control *control)
 {
-		std::string mfdcn_weights_filename = "";
-		load_file(widget, control, mfdcn_weights_filename);
-		if (mfdcn_weights_filename == "")
-		{
-			fprintf(stderr, "[ERROR]: Could not open pf-pc weights file.\n");
-			return;
-		}
-		control->load_mfdcn_weights_from_file(mfdcn_weights_filename);
+	load_file(widget, control, &Control::load_mfdcn_weights_from_file, "[ERROR]: Could not open mf-dcn weights file.");
+}
+
+static void on_save_gr_psth(GtkWidget *widget, Control *control)
+{
+	save_file(widget, control, &Control::save_gr_psth_to_file, "[ERROR]: Could not save gr psth to file.", DEFAULT_GR_PSTH_FILE_NAME);
+} 
+
+static void on_save_go_psth(GtkWidget *widget, Control *control)
+{
+	save_file(widget, control, &Control::save_go_psth_to_file, "[ERROR]: Could not save go psth to file.", DEFAULT_GO_PSTH_FILE_NAME);
+} 
+
+static void on_save_pc_psth(GtkWidget *widget, Control *control)
+{
+	save_file(widget, control, &Control::save_pc_psth_to_file, "[ERROR]: Could not save pc psth to file.", DEFAULT_PC_PSTH_FILE_NAME);
+} 
+
+static void on_save_nc_psth(GtkWidget *widget, Control *control)
+{
+	save_file(widget, control, &Control::save_nc_psth_to_file, "[ERROR]: Could not save nc psth to file.", DEFAULT_NC_PSTH_FILE_NAME);
+} 
+
+static void on_save_io_psth(GtkWidget *widget, Control *control)
+{
+	save_file(widget, control, &Control::save_io_psth_to_file, "[ERROR]: Could not save io psth to file.", DEFAULT_IO_PSTH_FILE_NAME);
+} 
+
+static void on_save_bc_psth(GtkWidget *widget, Control *control)
+{
+	save_file(widget, control, &Control::save_bc_psth_to_file, "[ERROR]: Could not save bc psth to file.", DEFAULT_BC_PSTH_FILE_NAME);
+} 
+
+static void on_save_sc_psth(GtkWidget *widget, Control *control)
+{
+	save_file(widget, control, &Control::save_sc_psth_to_file, "[ERROR]: Could not save sc psth to file.", DEFAULT_SC_PSTH_FILE_NAME);
+}
+
+static void on_save_mf_psth(GtkWidget *widget, Control *control)
+{
+	save_file(widget, control, &Control::save_mf_psth_to_file, "[ERROR]: Could not save mf psth to file.", DEFAULT_MF_PSTH_FILE_NAME);
 }
 
 //FIXME: below is a stop-gap solution. should be more careful with destroy callback
@@ -518,6 +491,8 @@ static void on_toggle_run(GtkWidget *widget, struct gui *gui)
 				gui->ctrl_ptr->run_state = IN_RUN_NO_PAUSE;
 				gtk_widget_show(gui->normal_buttons[1].widget);
 				gui->ctrl_ptr->runTrials(0, 0, 0, 0, gui);
+				gtk_button_set_label(GTK_BUTTON(widget), "Run");
+				gtk_widget_hide(gui->normal_buttons[1].widget);
 				break;
 			case IN_RUN_NO_PAUSE:
 				gtk_button_set_label(GTK_BUTTON(widget), "Continue");
@@ -528,17 +503,6 @@ static void on_toggle_run(GtkWidget *widget, struct gui *gui)
 				gui->ctrl_ptr->run_state = IN_RUN_NO_PAUSE;
 				break;
 		}
-		//if (gui->ctrl_ptr->terminate)
-		//{
-		//	std::cout << "[INFO] Finished running trials in "
-		//	          << (float) time / CLOCKS_PER_SEC << "s." << std::endl;
-		//   gtk_main_quit();
-		//}
-		//else
-		//{
-		//	std::cout << "[INFO] Finished running all trials in "
-		//	          << (float) time / CLOCKS_PER_SEC << "s." << std::endl;
-		//}
 	}
 	else
 	{
@@ -694,8 +658,8 @@ static void draw_pc_plot(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 	// nc point color
 	cairo_set_source_rgb(cr, 0.0, 1.0, 0.0);
 	
-	float nc_offset = -64.0;
-	float nc_scale  = 0.65;
+	float nc_offset = -72.0;
+	float nc_scale  = 0.55;
 
 	for (int i = 0; i < control->PSTHColSize; i++)
 	{
@@ -1140,8 +1104,8 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 							{"Save GR", gtk_menu_item_new(),
 								{
 									"activate",
-									G_CALLBACK(null_callback),
-									NULL,
+									G_CALLBACK(on_save_gr_psth),
+									control,
 									false
 								},
 								{}
@@ -1149,8 +1113,8 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 							{"Save GO", gtk_menu_item_new(),
 								{
 									"activate",
-									G_CALLBACK(null_callback),
-									NULL,
+									G_CALLBACK(on_save_go_psth),
+									control,
 									false
 								},
 								{}
@@ -1158,17 +1122,17 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 							{"Save PC", gtk_menu_item_new(),
 								{
 									"activate",
-									G_CALLBACK(null_callback),
-									NULL,
+									G_CALLBACK(on_save_pc_psth),
+									control,
 									false
 								},
 								{}
 							},
-							{"Save DN", gtk_menu_item_new(),
+							{"Save DCN", gtk_menu_item_new(),
 								{
 									"activate",
-									G_CALLBACK(null_callback),
-									NULL,
+									G_CALLBACK(on_save_nc_psth),
+									control,
 									false
 								},
 								{}
@@ -1176,8 +1140,8 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 							{"Save CF", gtk_menu_item_new(),
 								{
 									"activate",
-									G_CALLBACK(null_callback),
-									NULL,
+									G_CALLBACK(on_save_io_psth),
+									control,
 									false
 								},
 								{}
@@ -1185,8 +1149,8 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 							{"Save BC", gtk_menu_item_new(),
 								{
 									"activate",
-									G_CALLBACK(null_callback),
-									NULL,
+									G_CALLBACK(on_save_bc_psth),
+									control,
 									false
 								},
 								{}
@@ -1194,8 +1158,8 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 							{"Save SC", gtk_menu_item_new(),
 								{
 									"activate",
-									G_CALLBACK(null_callback),
-									NULL,
+									G_CALLBACK(on_save_sc_psth),
+									control,
 									false
 								},
 								{}
@@ -1203,8 +1167,8 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 							{"Save MF", gtk_menu_item_new(),
 								{
 									"activate",
-									G_CALLBACK(null_callback),
-									NULL,
+									G_CALLBACK(on_save_mf_psth),
+									control,
 									false
 								},
 								{}
