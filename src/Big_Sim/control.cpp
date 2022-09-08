@@ -27,32 +27,15 @@ std::string getFileBasename(std::string fullFilePath)
 	return (dot != std::string::npos) ? fullFilePath.substr(0, dot) : fullFilePath;
 }
 
-Control::Control(enum vis_mode sim_vis_mode)
-{
-	this->sim_vis_mode = sim_vis_mode;
-}
-
 Control::Control(parsed_build_file &p_file)
 {
 	if (!con_params_populated) populate_con_params(p_file);
 	if (!act_params_populated) populate_act_params(p_file);
-	if (!simState) simState = new CBMState(numMZones);
-	if (!simCore) simCore = new CBMSimCore(simState, gpuIndex, gpuP2);
-	if (!mfFreq)
-	{
-		mfFreq = new ECMFPopulation(num_mf, mfRandSeed, CSTonicMFFrac, CSPhasicMFFrac,
-			  contextMFFrac, nucCollFrac, bgFreqMin, csbgFreqMin, contextFreqMin, 
-			  tonicFreqMin, phasicFreqMin, bgFreqMax, csbgFreqMax, contextFreqMax, 
-			  tonicFreqMax, phasicFreqMax, collaterals_off, fracImport, secondCS, fracOverlap);
-	}
-	if (!mfs)
-	{
-		mfs = new PoissonRegenCells(num_mf, mfRandSeed, threshDecayTau, msPerTimeStep,
-			  	numMZones, num_nc);
-	}
-	if (!internal_arrays_initialized) initialize_rast_internal();
-	if (!output_arrays_initialized) initializeOutputArrays();
-	if (!spike_sums_initialized) initialize_spike_sums();
+}
+
+Control::Control(enum vis_mode sim_vis_mode)
+{
+	this->sim_vis_mode = sim_vis_mode;
 }
 
 Control::Control(char ***argv, enum vis_mode sim_vis_mode)
@@ -101,15 +84,9 @@ Control::~Control()
 	if (spike_sums_initialized) delete_spike_sums();
 }
 
-void Control::build_sim(parsed_build_file &p_file)
+void Control::build_sim()
 {
-	// not sure if we want to save mfFreq and mfs in the simulation file
-	if (!(con_params_populated && act_params_populated && simState))
-	{
-		populate_con_params(p_file);
-		populate_act_params(p_file);
-		simState = new CBMState(numMZones);
-	}
+	if (!simState) simState = new CBMState(numMZones);
 }
 
 void Control::init_sim_state(std::string stateFile)
@@ -369,15 +346,24 @@ void Control::initializeOutputArrays()
 	output_arrays_initialized = true;
 }
 
-void Control::runExperiment()
+void Control::runExperiment(struct gui *gui)
 {
 	float medTrials;
 	clock_t timer;
 	
-	int rasterCounter = 0;
 	int goSpkCounter[num_go] = {0};
 
-	for (int trial = 0; trial < expt.num_trials; trial++)
+	//gen_gr_sample(gr_indices, 4096, num_gr);
+
+	//FILE *fp = NULL;
+	//if (sim_vis_mode == TUI)
+	//{
+	//	init_tty(&fp); 
+	//}
+	
+	if (gui == NULL) run_state = IN_RUN_NO_PAUSE;
+	trial = 0;
+	while (trial < expt.num_trials && run_state != NOT_IN_RUN)
 	{
 		std::string trialName = expt.trials[trial].TrialName;
 
@@ -388,7 +374,6 @@ void Control::runExperiment()
 		int useUS     = expt.trials[trial].USuse;
 		int onsetUS   = expt.trials[trial].USonset;
 		
-		timer = clock();
 		int PSTHCounter = 0;
 		float gGRGO_sum = 0;
 		float gMFGO_sum = 0;
@@ -397,6 +382,7 @@ void Control::runExperiment()
 
 		std::cout << "[INFO]: Trial number: " << trial + 1 << std::endl;
 
+		timer = clock();
 		for (int ts = 0; ts < trialTime; ts++)
 		{
 			if (useUS && ts == onsetUS) /* deliver the US */
@@ -441,34 +427,50 @@ void Control::runExperiment()
 				std::cout << "[INFO]: Mean gMFGO   = " << gMFGO_sum / (num_go * (offsetCS - onsetCS)) << std::endl;
 				std::cout << "[INFO]: GR:MF ratio  = " << gGRGO_sum / gMFGO_sum << std::endl;
 			}
+			
+			/* data collection */
+			if (ts >= onsetCS - msPreCS && ts < offsetCS + msPostCS)
+			{
+				fill_rast_internal(PSTHCounter);
+				PSTHCounter++;
+			}
 
-			if (sim_vis_mode == GUI)
+			if (gui != NULL)
 			{
 				if (gtk_events_pending()) gtk_main_iteration();
 			}
+			// else if (sim_vis_mode == TUI) process_input(&fp, ts, trial+1); /* process user input from kb */
 		}
-		
 		timer = clock() - timer;
 		std::cout << "[INFO]: '" << trialName << "' took " << (float)timer / CLOCKS_PER_SEC << "s." << std::endl;
 		
-		if (sim_vis_mode == GUI)
+		if (gui != NULL)
 		{
-			if (sim_is_paused)
+			// for now, compute the mean and median firing rates for all cells if win is visible
+			// if (firing_rates_win_visible(gui))
+			// {
+			// calculate_firing_rates();
+			// gdk_threads_add_idle((GSourceFunc)update_fr_labels, gui);
+			// }
+			if (run_state == IN_RUN_PAUSE)
 			{
 				std::cout << "[INFO]: Simulation is paused at end of trial " << trial+1 << "." << std::endl;
-				while(true)
+				while(run_state == IN_RUN_PAUSE)
 				{
-					// Weird edge case not taken into account: if there are events pending after user hits continue...
-					if (gtk_events_pending() || sim_is_paused) gtk_main_iteration();
-					else
-					{
-						std::cout << "[INFO]: Continuing..." << std::endl;
-						break;
-					}
+					if (gtk_events_pending()) gtk_main_iteration();
 				}
+				std::cout << "[INFO]: Continuing..." << std::endl;
 			}
+			// reset_spike_sums();
 		}
+		// fillOutputArrays();
+		trial++;
 	}
+	if (run_state == NOT_IN_RUN) std::cout << "[INFO]: Simulation terminated." << std::endl;
+	else if (run_state == IN_RUN_NO_PAUSE) std::cout << "[INFO]: Simulation Completed." << std::endl;
+	// if (sim_vis_mode == TUI) reset_tty(&fp); /* reset the tty for later use */
+	// saveOutputArraysToFile(0, 0, local_time);
+	run_state = NOT_IN_RUN;
 }
 
 void gen_gr_sample(int gr_indices[], int sample_size, int data_size)
@@ -487,153 +489,6 @@ void gen_gr_sample(int gr_indices[], int sample_size, int data_size)
 		} 
 	}
 }
-
-void Control::runTrials(struct gui *gui)
-{
-	int preTrialNumber   = homeoTuningTrials + granuleActDetectTrials;
-	int numTotalTrials   = preTrialNumber + numTrainingTrials;  
-
-	float medTrials;
-	std::time_t curr_time = std::time(nullptr);
-	std::tm *local_time = std::localtime(&curr_time);
-	clock_t timer;
-	int rasterCounter = 0;
-	int goSpkCounter[num_go] = {0};
-
-	gen_gr_sample(gr_indices, 4096, num_gr);
-
-	//FILE *fp = NULL;
-	//if (sim_vis_mode == TUI)
-	//{
-	//	init_tty(&fp);
-	//}
-
-	if (gui == NULL) run_state = IN_RUN_NO_PAUSE;
-	trial = 0;
-	while (trial < numTotalTrials && run_state != NOT_IN_RUN)
-	{
-		timer = clock();
-		
-		// re-initialize spike counter vector
-		std::fill(goSpkCounter, goSpkCounter + num_go, 0);
-
-		int PSTHCounter = 0;
-		float gGRGO_sum = 0;
-		float gMFGO_sum = 0;
-		float gGOGR_sum = 0;
-		float gMFGR_sum = 0;
-
-		std::cout << "[INFO]: Trial number: " << trial + 1 << std::endl;
-
-		// Homeostatic plasticity trials
-		if (trial >= homeoTuningTrials)
-		{
-			for (int tts = 0; tts < trialTime; tts++)
-			{
-				if (tts == csStart + csLength)
-				{
-					// Deliver US 
-					simCore->updateErrDrive(0, 0.3);
-				}
-				if (tts < csStart || tts >= csStart + csLength)
-				{
-					// Background MF activity in the Pre and Post CS period
-					mfAP = mfs->calcPoissActivity(mfFreq->getMFBG(),
-							simCore->getMZoneList());
-				}
-				else if (tts >= csStart && tts < csStart + csPhasicSize) 
-				{
-					// Phasic MF activity during the CS for a duration set in control.h 
-					mfAP = mfs->calcPoissActivity(mfFreq->getMFFreqInCSPhasic(),
-							simCore->getMZoneList());
-				}
-				else
-				{
-					// Tonic MF activity during the CS period
-					mfAP = mfs->calcPoissActivity(mfFreq->getMFInCSTonicA(),
-							simCore->getMZoneList());
-				}
-
-				bool *isTrueMF = mfs->calcTrueMFs(mfFreq->getMFBG());
-				simCore->updateTrueMFs(isTrueMF); /* two unnecessary fnctn calls: isTrueMF doesn't change its value! */
-				simCore->updateMFInput(mfAP);
-				simCore->calcActivity(spillFrac);
-				
-				//if (gui != NULL) update_spike_sums(tts);
-
-				if (tts >= csStart && tts < csStart + csLength)
-				{
-					// TODO: refactor so that we do not export vars, instead we calc sum inside inputNet
-					// e.g. simCore->updategGRGOSum(gGRGOSum); <- call by reference
-					// even better: simCore->updateGSum<Granule, Golgi>(gGRGOSum); <- granule and golgi are their own cell objs
-					mfgoG  = simCore->getInputNet()->exportgSum_MFGO();
-					grgoG  = simCore->getInputNet()->exportgSum_GRGO();
-					goSpks = simCore->getInputNet()->exportAPGO();
-				
-					for (int i = 0; i < num_go; i++)
-					{
-							goSpkCounter[i] += goSpks[i];
-							gGRGO_sum       += grgoG[i];
-							gMFGO_sum       += mfgoG[i];
-					}
-				}
-				if (tts == csStart + csLength)
-				{
-					countGOSpikes(goSpkCounter, medTrials);
-					std::cout << "[INFO]: Mean gGRGO   = " << gGRGO_sum / (num_go * csLength) << std::endl;
-					std::cout << "[INFO]: Mean gMFGO   = " << gMFGO_sum / (num_go * csLength) << std::endl;
-					std::cout << "[INFO]: GR:MF ratio  = " << gGRGO_sum / gMFGO_sum << std::endl;
-				}
-
-				if (trial >= preTrialNumber && tts >= csStart-msPreCS &&
-						tts < csStart + csLength + msPostCS)
-				{
-					fill_rast_internal(PSTHCounter);
-					PSTHCounter++;
-					rasterCounter++;
-				}
-
-				if (gui != NULL)
-				{
-					if (gtk_events_pending()) gtk_main_iteration(); // place this here?
-				}
-				//else if (sim_vis_mode == TUI) process_input(&fp, tts, trial + 1); /* process user input from kb */
-			}
-		}
-		timer = clock() - timer;
-		std::cout << "[INFO]: Trial time seconds: " << (float)timer / CLOCKS_PER_SEC << std::endl;
-
-		// check the event queue after every iteration
-		if (gui != NULL)
-		{
-			// for now, compute the mean and median firing rates for all cells regardless
-			//if (firing_rates_win_visible(gui))
-			//{
-			//	calculate_firing_rates();
-			//	gdk_threads_add_idle((GSourceFunc)update_fr_labels, gui);
-			//}
-			if (run_state == IN_RUN_PAUSE)
-			{
-				std::cout << "[INFO]: Simulation is paused at end of trial " << trial+1 << "." << std::endl;
-				while(run_state == IN_RUN_PAUSE)
-				{
-					if (gtk_events_pending()) gtk_main_iteration();
-				}
-				std::cout << "[INFO]: Continuing..." << std::endl;
-			}
-			//reset_spike_sums();
-		}
-		//fillOutputArrays();
-		trial++;
-	}
-	// debug statement
-	if (run_state == NOT_IN_RUN) std::cout << "[INFO]: Simulation terminated." << std::endl;
-	else if (run_state == IN_RUN_NO_PAUSE) std::cout << "[INFO]: Simulation Completed." << std::endl;
-	//if (sim_vis_mode == TUI) reset_tty(&fp); /* reset the tty for later use */
-	//saveOutputArraysToFile(0, 0, local_time);
-	run_state = NOT_IN_RUN;
-}
-
 
 void Control::saveOutputArraysToFile(int goRecipParam, int trial, std::tm *local_time)
 {

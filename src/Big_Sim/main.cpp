@@ -28,7 +28,6 @@ int main(int argc, char **argv)
 
 	parsed_build_file p_file;
 	Control *control = NULL;
-	//std::string in_sim_file = "";
 	std::string out_sim_file = "";
 	int exit_status = -1;
 
@@ -36,8 +35,8 @@ int main(int argc, char **argv)
 	{
 		case BUILD:
 			parse_build_args(&argv, p_file);
-			control = new Control(NO_VIS);
-			control->build_sim(p_file);
+			control = new Control(p_file);
+			control->build_sim();
 			get_out_sim_file(BUILD_OUT_SIM_FILE, &argv, out_sim_file);
 			control->save_sim_to_file(out_sim_file);
 			exit_status = 0;
@@ -58,8 +57,8 @@ int main(int argc, char **argv)
 			switch (sim_vis_mode)
 			{
 				case TUI:
-					control->runTrials(NULL);
-					//control->runExperiment();
+					//control->runTrials(NULL);
+					control->runExperiment(NULL);
 					get_out_sim_file(RUN_OUT_SIM_FILE, &argv, out_sim_file);
 					control->save_sim_to_file(out_sim_file);
 					exit_status = 0;

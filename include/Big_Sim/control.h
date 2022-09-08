@@ -49,8 +49,8 @@ enum sim_run_state {NOT_IN_RUN, IN_RUN_NO_PAUSE, IN_RUN_PAUSE};
 class Control 
 {
 	public:
-		Control(enum vis_mode sim_vis_mode);
 		Control(parsed_build_file &p_file);
+		Control(enum vis_mode sim_vis_mode);
 		Control(char ***argv, enum vis_mode sim_vis_mode);
 		~Control();
 
@@ -65,9 +65,6 @@ class Control
 		bool internal_arrays_initialized = false; /* temporary, going to refactor soon */
 		bool output_arrays_initialized = false; 
 		bool spike_sums_initialized = false;
-		bool terminate = false;
-		bool in_run = false;
-		bool sim_is_paused = false;
 		enum sim_run_state run_state = NOT_IN_RUN; 
 		std::string inStateFileName = "";
 		std::string inSimFileName = "";
@@ -78,17 +75,10 @@ class Control
 		// params that I do not know how to categorize
 		float goMin = 0.26; 
 		float spillFrac = 0.15; // go->gr synapse, part of build
-
-		// weight parameters
-		//float weightScale = 0.9; // was 0.3275 before 08/09/2022
-		//float mfgoW = 0.00350 * weightScale;
-		//float grgoW = 0.0007 * weightScale; // was 0.00056 before 08/09/2022
-		//float gogrW = 0.017; // was 0.01050 before 08/09/2022
-		//float gogoW = 0.01250;
 		float inputStrength = 0.0;
 
 		// sim params -> TODO: place in simcore
-		int gpuIndex = 2;
+		int gpuIndex = 0;
 		int gpuP2    = 2;
 
 		// Training Parameters -> TODO: deprecate in gui runExperiment
@@ -228,7 +218,7 @@ class Control
 		//ct_uint8_t *goSpkCount_Trial;
 		const ct_uint8_t* goSpks; 
 
-		void build_sim(parsed_build_file &p_file);
+		void build_sim();
 		
 		void init_sim_state(std::string stateFile); // TODO: deprecate
 		void init_experiment(std::string in_expt_filename);
@@ -253,9 +243,7 @@ class Control
 		void initialize_spike_sums();
 		void initialize_rast_internal();
 		void initializeOutputArrays();
-		void runExperiment();
-
-		void runTrials(struct gui *gui); // TODO: deprecate
+		void runExperiment(struct gui *gui);
 
 		void saveOutputArraysToFile(int goRecipParam, int trial, std::tm *local_time);
 

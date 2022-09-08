@@ -490,7 +490,7 @@ static void on_toggle_run(GtkWidget *widget, struct gui *gui)
 				gtk_button_set_label(GTK_BUTTON(widget), "Pause");
 				gui->ctrl_ptr->run_state = IN_RUN_NO_PAUSE;
 				gtk_widget_show(gui->normal_buttons[1].widget);
-				gui->ctrl_ptr->runTrials(gui);
+				gui->ctrl_ptr->runExperiment(gui);
 				gtk_button_set_label(GTK_BUTTON(widget), "Run");
 				gtk_widget_hide(gui->normal_buttons[1].widget);
 				break;
@@ -633,9 +633,6 @@ static void draw_pc_plot(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 	float pc_w_to_pixel_scale_y = -da.height / (9.5 * len_scale_y); // 6  //60.0 50.0 40.0 30.0 20.0 6.0
 	float pc_w_to_pixel_scale_x = da.width / (float)control->PSTHColSize;
 
-	std::cout << pc_w_to_pixel_scale_y << std::endl;
-	std::cout << pc_w_to_pixel_scale_x << std::endl;
-
 	cairo_scale(cr, pc_w_to_pixel_scale_x, -pc_w_to_pixel_scale_y);
 	cairo_translate(cr, 0, 17.0); // 22 //53.5 50 50 50 40 -40
 
@@ -765,12 +762,8 @@ static void generate_pc_plot(GtkWidget *widget,
 
 static void on_quit(GtkWidget *widget, Control *control)
 {
-	if (control->in_run)
-	{
-		control->in_run = false;
-		control->terminate = true;
-	}
-	else gtk_main_quit();
+	control->run_state = NOT_IN_RUN;
+	gtk_main_quit();
 }
 
 static void on_gr_raster(GtkWidget *widget, Control *control)
