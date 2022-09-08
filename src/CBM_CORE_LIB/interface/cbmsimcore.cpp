@@ -130,7 +130,7 @@ void CBMSimCore::syncCUDA(std::string title)
 	}
 }
 
-void CBMSimCore::calcActivity(float mfgoW, float gogrW, float grgoW, float gogoW, float spillFrac)
+void CBMSimCore::calcActivity(float spillFrac)
 {
 	cudaError_t error;
 	syncCUDA("1");
@@ -239,7 +239,7 @@ void CBMSimCore::calcActivity(float mfgoW, float gogrW, float grgoW, float gogoW
 #ifdef NO_ASYNC
 	syncCUDA("2b");
 #endif
-	inputNet->runUpdateGOInGRCUDA(streams, 1, gogrW);
+	inputNet->runUpdateGOInGRCUDA(streams, 1);
 #ifdef NO_ASYNC
 	syncCUDA("2c");
 #endif
@@ -309,7 +309,7 @@ void CBMSimCore::calcActivity(float mfgoW, float gogrW, float grgoW, float gogoW
 	syncCUDA("2ib");
 #endif
 
-	inputNet->calcGOActivities(mfgoW, gogrW, grgoW, gogoW); // TODO: remove gogrW and gogoW: don't use???
+	inputNet->calcGOActivities(); 
 #ifdef NO_ASYNC
 	syncCUDA("2ic");
 #endif
@@ -336,7 +336,7 @@ void CBMSimCore::calcActivity(float mfgoW, float gogrW, float grgoW, float gogoW
 	syncCUDA("2ih");
 #endif
 
-	inputNet->updateGOtoGROutParameters(gogrW, spillFrac);
+	inputNet->updateGOtoGROutParameters(spillFrac);
 #ifdef NO_ASYNC
 	syncCUDA("2ii");
 #endif

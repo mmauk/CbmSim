@@ -80,19 +80,19 @@ class Control
 		float spillFrac = 0.15; // go->gr synapse, part of build
 
 		// weight parameters
-		float weightScale = 0.9; // was 0.3275 before 08/09/2022
-		float mfgoW = 0.00350 * weightScale;
-		float grgoW = 0.0007 * weightScale; // was 0.00056 before 08/09/2022
-		float gogrW = 0.017; // was 0.01050 before 08/09/2022
-		float gogoW = 0.01250;
+		//float weightScale = 0.9; // was 0.3275 before 08/09/2022
+		//float mfgoW = 0.00350 * weightScale;
+		//float grgoW = 0.0007 * weightScale; // was 0.00056 before 08/09/2022
+		//float gogrW = 0.017; // was 0.01050 before 08/09/2022
+		//float gogoW = 0.01250;
 		float inputStrength = 0.0;
 
 		// sim params -> TODO: place in simcore
-		int gpuIndex = 0;
+		int gpuIndex = 2;
 		int gpuP2    = 2;
 
 		// Training Parameters -> TODO: deprecate in gui runExperiment
-		int numTrainingTrials      = 1000;
+		int numTrainingTrials      = 10;
 		int homeoTuningTrials      = 0;
 		int granuleActDetectTrials = 0;
 
@@ -103,7 +103,7 @@ class Control
 		int csStart = 2000; // was 1500 (08/09/2022)
 		int csPhasicSize = 50;
 
-		int csLength = 2000; // was 500 (08/09/2022)
+		int csLength = 2000; 
 
 		// mzone stuff -> TODO: place in build file down the road
 		int numMZones = 1; 
@@ -253,11 +253,11 @@ class Control
 		void initialize_spike_sums();
 		void initialize_rast_internal();
 		void initializeOutputArrays();
-		void runExperiment(experiment &experiment);
+		void runExperiment();
 
-		void runTrials(int simNum, float GOGR, float GRGO, float MFGO, struct gui *gui); // TODO: deprecate
+		void runTrials(struct gui *gui); // TODO: deprecate
 
-		void saveOutputArraysToFile(int goRecipParam, int trial, std::tm *local_time, int simNum);
+		void saveOutputArraysToFile(int goRecipParam, int trial, std::tm *local_time);
 
 		void countGOSpikes(int *goSpkCounter, float &medTrials);
 		void update_spike_sums(int tts);

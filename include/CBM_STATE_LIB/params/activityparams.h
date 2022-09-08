@@ -153,6 +153,11 @@ extern float threshMaxIO;
 extern float threshMaxNC;
 extern float threshMaxPC;
 extern float threshMaxSC;
+extern float weightScale;
+extern float rawGRGOW;
+extern float rawMFGOW;
+extern float gogrW;
+extern float gogoW;
 
 /* derived act params */
 extern float numTSinMFHist;
@@ -198,6 +203,8 @@ extern float gDecPCtoNC;
 extern float gLeakNC;
 extern float threshDecNC;
 extern float gLeakBC;
+extern float grgoW;
+extern float mfgoW;
 
 void populate_act_params(parsed_build_file &p_file);
 void read_act_params(std::fstream &in_param_buf);

@@ -457,7 +457,7 @@ void InNet::updateMFActivties(const ct_uint8_t *actInMF)
 	}
 }
 
-void InNet::calcGOActivities(float mfgoW, float gogrW, float grgoW, float gogoW)
+void InNet::calcGOActivities()
 {
 	//50ms
 	for (int i = 0; i < num_go; i++)
@@ -601,15 +601,15 @@ void InNet::updateMFtoGOOut()
 	}
 }
 
-void InNet::updateGOtoGROutParameters(float GOGR, float spillFrac)
+void InNet::updateGOtoGROutParameters(float spillFrac)
 {
 
 	// TODO: place these in the build file as well
-	float scalerGOGR = GOGR * gIncFracSpilloverGOtoGR * 1.4;
+	float scalerGOGR = gogrW * gIncFracSpilloverGOtoGR * 1.4;
 	float halfShift = 12.0;//shift;
 	float steepness = 20.0;//steep; 
 	float recoveryRate = 1 / recoveryTauGO;
-	float baselvl = spillFrac * GOGR;
+	float baselvl = spillFrac * gogrW;
 
 #pragma omp parallel
 	{
@@ -880,7 +880,7 @@ void InNet::runUpdateUBCInGRCUDA(cudaStream_t **sts, int streamN) {}
 
 void InNet::runUpdateUBCInGRDepressionCUDA(cudaStream_t **sts, int streamN) {}
 
-void InNet::runUpdateGOInGRCUDA(cudaStream_t **sts, int streamN, float GOGR)
+void InNet::runUpdateGOInGRCUDA(cudaStream_t **sts, int streamN)
 {
 	cudaError_t error;
 	for(int i=0; i<numGPUs; i++)
@@ -890,7 +890,7 @@ void InNet::runUpdateGOInGRCUDA(cudaStream_t **sts, int streamN, float GOGR)
 				num_go, apGOGPU[i], dynamicAmpGOGRGPU[i], gIGRGPU[i], gIGRGPUP[i],
 				grConGOOutGRGPU[i], grConGOOutGRGPUP[i],
 				numGOInPerGRGPU[i], gIGRSumGPU[i], gIDirectGPU[i], gISpilloverGPU[i], 
-				gDirectDecGOtoGR, GOGR, gIncFracSpilloverGOtoGR, gSpilloverDecGOtoGR);
+				gDirectDecGOtoGR, gogrW, gIncFracSpilloverGOtoGR, gSpilloverDecGOtoGR);
 #ifdef DEBUGOUT
 		error=cudaGetLastError();
 		cerr<<"runUpdateGOInGRCUDA: kernel launch for gpu #"<<i<<

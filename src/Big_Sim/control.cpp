@@ -369,38 +369,39 @@ void Control::initializeOutputArrays()
 	output_arrays_initialized = true;
 }
 
-void Control::runExperiment(experiment &experiment)
+void Control::runExperiment()
 {
 	float medTrials;
-	std::time_t curr_time = std::time(nullptr);
-	std::tm *local_time = std::localtime(&curr_time);
 	clock_t timer;
 	
 	int rasterCounter = 0;
 	int goSpkCounter[num_go] = {0};
 
-	for (int trial = 0; trial < experiment.num_trials; trial++)
+	for (int trial = 0; trial < expt.num_trials; trial++)
 	{
-		std::string trialName = experiment.trials[trial].TrialName;
+		std::string trialName = expt.trials[trial].TrialName;
 
-		int useCS     = experiment.trials[trial].CSuse;
-		int onsetCS   = experiment.trials[trial].CSonset;
-		int offsetCS  = experiment.trials[trial].CSoffset;
-		int percentCS = experiment.trials[trial].CSpercent;
-		int useUS     = experiment.trials[trial].USuse;
-		int onsetUS   = experiment.trials[trial].USonset;
+		int useCS     = expt.trials[trial].CSuse;
+		int onsetCS   = expt.trials[trial].CSonset;
+		int offsetCS  = expt.trials[trial].CSoffset;
+		int percentCS = expt.trials[trial].CSpercent;
+		int useUS     = expt.trials[trial].USuse;
+		int onsetUS   = expt.trials[trial].USonset;
 		
 		timer = clock();
 		int PSTHCounter = 0;
 		float gGRGO_sum = 0;
 		float gMFGO_sum = 0;
+
 		memset(goSpkCounter, 0, num_go * sizeof(int));
+
+		std::cout << "[INFO]: Trial number: " << trial + 1 << std::endl;
 
 		for (int ts = 0; ts < trialTime; ts++)
 		{
 			if (useUS && ts == onsetUS) /* deliver the US */
 			{
-				simCore->updateErrDrive(0, 0.0);
+				simCore->updateErrDrive(0, 0.3);
 			}
 			if (ts < onsetCS || ts >= offsetCS)
 			{
@@ -409,22 +410,14 @@ void Control::runExperiment(experiment &experiment)
 			}
 			if (ts >= onsetCS && ts < offsetCS)
 			{
-				if (useCS)
-				{
-					mfAP = mfs->calcPoissActivity(mfFreq->getMFInCSTonicA(),
-						  simCore->getMZoneList());
-				}
-				else
-				{
-					mfAP = mfs->calcPoissActivity(mfFreq->getMFBG(),
-						  simCore->getMZoneList());
-				}
+				mfAP = (useCS == 1) ? mfs->calcPoissActivity(mfFreq->getMFInCSTonicA(), simCore->getMZoneList())
+									: mfs->calcPoissActivity(mfFreq->getMFBG(), simCore->getMZoneList());
 			}
 			
 			bool *isTrueMF = mfs->calcTrueMFs(mfFreq->getMFBG());
 			simCore->updateTrueMFs(isTrueMF);
 			simCore->updateMFInput(mfAP);
-			simCore->calcActivity(mfgoW, gogrW, grgoW, gogoW, spillFrac); 
+			simCore->calcActivity(spillFrac); 
 
 			if (ts >= onsetCS && ts < offsetCS)
 			{
@@ -444,9 +437,9 @@ void Control::runExperiment(experiment &experiment)
 			if (ts == offsetCS)
 			{
 				countGOSpikes(goSpkCounter, medTrials);
-				std::cout << "mean gGRGO   = " << gGRGO_sum / (num_go * (offsetCS - onsetCS)) << std::endl;
-				std::cout << "mean gMFGO   = " << gMFGO_sum / (num_go * (offsetCS - onsetCS)) << std::endl;
-				std::cout << "GR:MF ratio  = " << gGRGO_sum / gMFGO_sum << std::endl;
+				std::cout << "[INFO]: Mean gGRGO   = " << gGRGO_sum / (num_go * (offsetCS - onsetCS)) << std::endl;
+				std::cout << "[INFO]: Mean gMFGO   = " << gMFGO_sum / (num_go * (offsetCS - onsetCS)) << std::endl;
+				std::cout << "[INFO]: GR:MF ratio  = " << gGRGO_sum / gMFGO_sum << std::endl;
 			}
 
 			if (sim_vis_mode == GUI)
@@ -456,14 +449,13 @@ void Control::runExperiment(experiment &experiment)
 		}
 		
 		timer = clock() - timer;
-		std::cout << "[INFO]: " << trialName << " took " << (float)timer / CLOCKS_PER_SEC << "s."
-				  << std::endl;
+		std::cout << "[INFO]: '" << trialName << "' took " << (float)timer / CLOCKS_PER_SEC << "s." << std::endl;
 		
 		if (sim_vis_mode == GUI)
 		{
 			if (sim_is_paused)
 			{
-				std::cout << "[INFO]: Simulation is paused at end of trial " << trial << "." << std::endl;
+				std::cout << "[INFO]: Simulation is paused at end of trial " << trial+1 << "." << std::endl;
 				while(true)
 				{
 					// Weird edge case not taken into account: if there are events pending after user hits continue...
@@ -496,7 +488,7 @@ void gen_gr_sample(int gr_indices[], int sample_size, int data_size)
 	}
 }
 
-void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO, struct gui *gui)
+void Control::runTrials(struct gui *gui)
 {
 	int preTrialNumber   = homeoTuningTrials + granuleActDetectTrials;
 	int numTotalTrials   = preTrialNumber + numTrainingTrials;  
@@ -509,10 +501,6 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO, struct g
 	int goSpkCounter[num_go] = {0};
 
 	gen_gr_sample(gr_indices, 4096, num_gr);
-
-	GOGR = 0.017;
-	GRGO = 0.0007 * 0.9;
-	MFGO = 0.00350 * 0.9;
 
 	//FILE *fp = NULL;
 	//if (sim_vis_mode == TUI)
@@ -569,7 +557,7 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO, struct g
 				bool *isTrueMF = mfs->calcTrueMFs(mfFreq->getMFBG());
 				simCore->updateTrueMFs(isTrueMF); /* two unnecessary fnctn calls: isTrueMF doesn't change its value! */
 				simCore->updateMFInput(mfAP);
-				simCore->calcActivity(MFGO, GOGR, GRGO, gogoW, spillFrac);
+				simCore->calcActivity(spillFrac);
 				
 				//if (gui != NULL) update_spike_sums(tts);
 
@@ -642,12 +630,12 @@ void Control::runTrials(int simNum, float GOGR, float GRGO, float MFGO, struct g
 	if (run_state == NOT_IN_RUN) std::cout << "[INFO]: Simulation terminated." << std::endl;
 	else if (run_state == IN_RUN_NO_PAUSE) std::cout << "[INFO]: Simulation Completed." << std::endl;
 	//if (sim_vis_mode == TUI) reset_tty(&fp); /* reset the tty for later use */
-	//saveOutputArraysToFile(0, 0, local_time, 0);
+	//saveOutputArraysToFile(0, 0, local_time);
 	run_state = NOT_IN_RUN;
 }
 
 
-void Control::saveOutputArraysToFile(int goRecipParam, int trial, std::tm *local_time, int simNum)
+void Control::saveOutputArraysToFile(int goRecipParam, int trial, std::tm *local_time)
 {
 	//std::cout << "Filling MF files..." << std::endl;
 	//std::string allMFRasterFileName = OUTPUT_DATA_PATH + "allMFRaster.bin";

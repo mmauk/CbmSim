@@ -145,6 +145,11 @@ float threshMaxIO                = 0.0;
 float threshMaxNC                = 0.0;
 float threshMaxPC                = 0.0;
 float threshMaxSC                = 0.0;
+float weightScale                = 0.0; 
+float rawGRGOW                   = 0.0;
+float rawMFGOW                   = 0.0;
+float gogrW                      = 0.0;
+float gogoW                      = 0.0;
 
 /* derived act params */
 float numTSinMFHist       = 0.0; 
@@ -190,6 +195,8 @@ float gDecPCtoNC          = 0.0;
 float gLeakNC             = 0.0; 
 float threshDecNC         = 0.0; 
 float gLeakBC             = 0.0; 
+float grgoW               = 0.0;
+float mfgoW               = 0.0;
 
 void populate_act_params(parsed_build_file &p_file)
 {
@@ -324,6 +331,11 @@ void populate_act_params(parsed_build_file &p_file)
 	threshMaxNC                = std::stof(p_file.parsed_sections["activity"].param_map["threshMaxNC"].value); 
 	threshMaxPC                = std::stof(p_file.parsed_sections["activity"].param_map["threshMaxPC"].value); 
 	threshMaxSC                = std::stof(p_file.parsed_sections["activity"].param_map["threshMaxSC"].value); 
+	weightScale                = std::stof(p_file.parsed_sections["activity"].param_map["weightScale"].value); 
+	rawGRGOW                   = std::stof(p_file.parsed_sections["activity"].param_map["rawGRGOW"].value); 
+	rawMFGOW                   = std::stof(p_file.parsed_sections["activity"].param_map["rawMFGOW"].value); 
+	gogrW                      = std::stof(p_file.parsed_sections["activity"].param_map["gogrW"].value); 
+	gogoW                      = std::stof(p_file.parsed_sections["activity"].param_map["gogoW"].value); 
 
 	/* derived act params */
 	numTSinMFHist       = msPerHistBinMF / msPerTimeStep;
@@ -369,6 +381,8 @@ void populate_act_params(parsed_build_file &p_file)
 	gLeakNC             = rawGLeakNC / (6 - msPerTimeStep);
 	threshDecNC         = 1 - exp(-msPerTimeStep / threshDecTauNC);
 	gLeakBC             = rawGLeakBC;
+	grgoW               = rawGRGOW * weightScale;
+	mfgoW               = rawMFGOW * weightScale;
 
 	act_params_populated = true;
 }
@@ -506,7 +520,13 @@ void read_act_params(std::fstream &in_param_buf)
 	in_param_buf.read((char *)&threshMaxNC, sizeof(float));
 	in_param_buf.read((char *)&threshMaxPC, sizeof(float));
 	in_param_buf.read((char *)&threshMaxSC, sizeof(float));
+	in_param_buf.read((char *)&weightScale, sizeof(float));
+	in_param_buf.read((char *)&rawGRGOW, sizeof(float));
+	in_param_buf.read((char *)&rawMFGOW, sizeof(float));
+	in_param_buf.read((char *)&gogrW, sizeof(float));
+	in_param_buf.read((char *)&gogoW, sizeof(float));
 
+	/* derived params */
 	in_param_buf.read((char *)&numTSinMFHist, sizeof(float));
 	in_param_buf.read((char *)&gLeakGO, sizeof(float));
 	in_param_buf.read((char *)&gDecMFtoGO, sizeof(float));
@@ -550,6 +570,8 @@ void read_act_params(std::fstream &in_param_buf)
 	in_param_buf.read((char *)&gLeakNC, sizeof(float));
 	in_param_buf.read((char *)&threshDecNC, sizeof(float));
 	in_param_buf.read((char *)&gLeakBC, sizeof(float));
+	in_param_buf.read((char *)&grgoW, sizeof(float));
+	in_param_buf.read((char *)&mfgoW, sizeof(float));
 
 	act_params_populated = true;
 }
@@ -687,6 +709,11 @@ void write_act_params(std::fstream &out_param_buf)
 	out_param_buf.write((char *)&threshMaxNC, sizeof(float));
 	out_param_buf.write((char *)&threshMaxPC, sizeof(float));
 	out_param_buf.write((char *)&threshMaxSC, sizeof(float));
+	out_param_buf.write((char *)&weightScale, sizeof(float));
+	out_param_buf.write((char *)&rawGRGOW, sizeof(float));
+	out_param_buf.write((char *)&rawMFGOW, sizeof(float));
+	out_param_buf.write((char *)&gogrW, sizeof(float));
+	out_param_buf.write((char *)&gogoW, sizeof(float));
 
 	/* derived act params */
 	out_param_buf.write((char *)&numTSinMFHist, sizeof(float));
@@ -732,5 +759,7 @@ void write_act_params(std::fstream &out_param_buf)
 	out_param_buf.write((char *)&gLeakNC, sizeof(float));
 	out_param_buf.write((char *)&threshDecNC, sizeof(float));
 	out_param_buf.write((char *)&gLeakBC, sizeof(float));
+	out_param_buf.write((char *)&grgoW, sizeof(float));
+	out_param_buf.write((char *)&mfgoW, sizeof(float));
 }
 

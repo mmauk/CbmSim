@@ -248,7 +248,7 @@ static void on_firing_rates_window(GtkWidget *widget, struct gui *gui)
 	gtk_widget_show_all(gui->frw.window);
 }
 
-void update_weight(GtkWidget *spin_button, float *weight)
+static void on_update_weight(GtkWidget *spin_button, float *weight)
 {
 	*weight = gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button));
 }
@@ -260,184 +260,184 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 		.grid = gtk_grid_new(),
 		.tuning_buttons = {
 			{
-				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
+				gtk_adjustment_new(gIncDirectMFtoGR, 0.0, 1.0, 0.0001, 0.1, 0.0),
 				NULL, 1, 0,
 				{
 					NULL, "MF-GR", 0, 0
 				},
 				{
 					"activate",
-					G_CALLBACK(update_weight),
+					G_CALLBACK(on_update_weight),
 					&gIncDirectMFtoGR,
 					false
 				}
 			},
 			{
-				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
+				gtk_adjustment_new(gIncMFtoGO, 0.0, 1.0, 0.0001, 0.1, 0.0),
 				NULL, 1, 1,
 				{
 					NULL, "MF-GO", 0, 1
 				},
 				{
 					"activate",
-					G_CALLBACK(null_callback),
-					NULL,
+					G_CALLBACK(on_update_weight),
+					&gIncMFtoGO,
 					false
 				}
 			},
 			{
-				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
+				gtk_adjustment_new(gIncGRtoGO, 0.0, 1.0, 0.0001, 0.1, 0.0),
 				NULL, 1, 2,
 				{
 					NULL, "GR-GO", 0, 2
 				},
 				{
 					"activate",
-					G_CALLBACK(null_callback),
-					NULL,
+					G_CALLBACK(on_update_weight),
+					&gIncGRtoGO,
 					false
 				}
 			},
 			{
-				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
+				gtk_adjustment_new(gIncDirectGOtoGR, 0.0, 1.0, 0.01, 0.1, 0.0),
 				NULL, 1, 3,
 				{
 					NULL, "GO-GR", 0, 3
 				},
 				{
 					"activate",
-					G_CALLBACK(null_callback),
-					NULL,
+					G_CALLBACK(on_update_weight),
+					&gIncDirectGOtoGR,
 					false
 				}
 			},
 			{
-				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
+				gtk_adjustment_new(gGABAIncGOtoGO, 0.0, 1.0, 0.01, 0.1, 0.0),
 				NULL, 3, 0,
 				{
 					NULL, "GO-GO", 2, 0
 				},
 				{
 					"activate",
-					G_CALLBACK(null_callback),
-					NULL,
+					G_CALLBACK(on_update_weight),
+					&gGABAIncGOtoGO,
 					false
 				}
 			},
 			{
-				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
+				gtk_adjustment_new(gIncGRtoPC, 0.0, 1.0, 0.000001, 0.1, 0.0),
 				NULL, 3, 1,
 				{
 					NULL, "GR-PC", 2, 1
 				},
 				{
 					"activate",
-					G_CALLBACK(null_callback),
-					NULL,
+					G_CALLBACK(on_update_weight),
+					&gIncGRtoPC,
 					false
 				}
 			},
 			{
-				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
+				gtk_adjustment_new(gIncGRtoSC, 0.0, 1.0, 0.001, 0.1, 0.0),
 				NULL, 3, 2,
 				{
 					NULL, "GR-SC", 2, 2
 				},
 				{
 					"activate",
-					G_CALLBACK(null_callback),
-					NULL,
+					G_CALLBACK(on_update_weight),
+					&gIncGRtoSC,
 					false
 				}
 			},
 			{
-				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
+				gtk_adjustment_new(gIncGRtoBC, 0.0, 1.0, 0.001, 0.1, 0.0),
 				NULL, 3, 3,
 				{
 					NULL, "GR-BC", 2, 3
 				},
 				{
 					"activate",
-					G_CALLBACK(null_callback),
-					NULL,
+					G_CALLBACK(on_update_weight),
+					&gIncGRtoBC,
 					false
 				}
 			},
 			{
-				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
+				gtk_adjustment_new(gIncSCtoPC, 0.0, 1.0, 0.0001, 0.1, 0.0),
 				NULL, 5, 0,
 				{
 					NULL, "SC-PC", 4, 0
 				},
 				{
 					"activate",
-					G_CALLBACK(null_callback),
-					NULL,
+					G_CALLBACK(on_update_weight),
+					&gIncSCtoPC,
 					false
 				}
 			},
 			{
-				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
+				gtk_adjustment_new(gIncBCtoPC, 0.0, 1.0, 0.0001, 0.1, 0.0),
 				NULL, 5, 1,
 				{
 					NULL, "BC-PC", 4, 1
 				},
 				{
 					"activate",
-					G_CALLBACK(null_callback),
-					NULL,
+					G_CALLBACK(on_update_weight),
+					&gIncBCtoPC,
 					false
 				}
 			},
 			{
-				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
+				gtk_adjustment_new(gIncPCtoBC, 0.0, 1.0, 0.01, 0.1, 0.0),
 				NULL, 5, 2,
 				{
 					NULL, "PC-BC", 4, 2
 				},
 				{
 					"activate",
-					G_CALLBACK(null_callback),
-					NULL,
+					G_CALLBACK(on_update_weight),
+					&gIncPCtoBC,
 					false
 				}
 			},
 			{
-				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
+				gtk_adjustment_new(gIncAvgPCtoNC, 0.0, 1.0, 0.1, 0.1, 0.0),
 				NULL, 5, 3,
 				{
 					NULL, "PC-DCN", 4, 3
 				},
 				{
 					"activate",
-					G_CALLBACK(null_callback),
-					NULL,
+					G_CALLBACK(on_update_weight),
+					&gIncAvgPCtoNC,
 					false
 				}
 			},
 			{
-				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
+				gtk_adjustment_new(gAMPAIncMFtoNC, 0.0, 1.0, 0.1, 0.1, 0.0),
 				NULL, 7, 0,
 				{
 					NULL, "MF-DCN", 6, 0
 				},
 				{
 					"activate",
-					G_CALLBACK(null_callback),
-					NULL,
+					G_CALLBACK(on_update_weight),
+					&gAMPAIncMFtoNC,
 					false
 				}
 			},
 			{
-				gtk_adjustment_new(0.035, 0.0, 1.0, 0.001, 0.1, 0.0),
+				gtk_adjustment_new(gIncNCtoIO, 0.0, 1.0, 0.001, 0.1, 0.0),
 				NULL, 7, 1,
 				{
 					NULL, "DCN-IO", 6, 1
 				},
 				{
 					"activate",
-					G_CALLBACK(null_callback),
-					NULL,
+					G_CALLBACK(on_update_weight),
+					&gIncNCtoIO,
 					false
 				}
 			}
@@ -490,7 +490,7 @@ static void on_toggle_run(GtkWidget *widget, struct gui *gui)
 				gtk_button_set_label(GTK_BUTTON(widget), "Pause");
 				gui->ctrl_ptr->run_state = IN_RUN_NO_PAUSE;
 				gtk_widget_show(gui->normal_buttons[1].widget);
-				gui->ctrl_ptr->runTrials(0, 0, 0, 0, gui);
+				gui->ctrl_ptr->runTrials(gui);
 				gtk_button_set_label(GTK_BUTTON(widget), "Run");
 				gtk_widget_hide(gui->normal_buttons[1].widget);
 				break;
@@ -632,6 +632,9 @@ static void draw_pc_plot(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 	float len_scale_y = threshRestPC - threshMaxPC;
 	float pc_w_to_pixel_scale_y = -da.height / (9.5 * len_scale_y); // 6  //60.0 50.0 40.0 30.0 20.0 6.0
 	float pc_w_to_pixel_scale_x = da.width / (float)control->PSTHColSize;
+
+	std::cout << pc_w_to_pixel_scale_y << std::endl;
+	std::cout << pc_w_to_pixel_scale_x << std::endl;
 
 	cairo_scale(cr, pc_w_to_pixel_scale_x, -pc_w_to_pixel_scale_y);
 	cairo_translate(cr, 0, 17.0); // 22 //53.5 50 50 50 40 -40

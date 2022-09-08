@@ -64,12 +64,12 @@ public:
 	const float* exportgSum_GRGO();
 
 	void updateMFActivties(const ct_uint8_t *actInMF);
-	void calcGOActivities(float mfgoW, float gogrW, float grgoW, float gogoW);
+	void calcGOActivities();
 	void calcSCActivities();
 
 	void updateMFtoGROut();
 	void updateMFtoGOOut();
-	void updateGOtoGROutParameters(float GOGR, float spillFrac);
+	void updateGOtoGROutParameters(float spillFrac);
 	void updateGOtoGOOut();
 	void resetMFHist(unsigned long t);
 
@@ -93,7 +93,7 @@ public:
 	void runUpdateUBCInGRDepressionCUDA(cudaStream_t **sts, int streamN);
 	void runUpdateUBCInGRCUDA(cudaStream_t **sts, int streamN);
 	
-	void runUpdateGOInGRCUDA(cudaStream_t **sts, int streamN, float GOGR);
+	void runUpdateGOInGRCUDA(cudaStream_t **sts, int streamN);
 	void runUpdateGOInGRDepressionCUDA(cudaStream_t **sts, int streamN);
 	void runUpdateGOInGRDynamicSpillCUDA(cudaStream_t **sts, int streamN);
 	void runUpdatePFBCSCOutCUDA(cudaStream_t **sts, int streamN);
