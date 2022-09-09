@@ -498,8 +498,7 @@ void InNet::calcGOActivities()
 					+ as->gGRGO_NMDA[i]) * tempVGO
 				- (as->vCoupleGO[i] * tempVGO);
 
-		
-		if (tempVGO > threshMaxGO) tempVGO = threshMaxGO;
+		tempVGO = threshMaxGO * (tempVGO > threshMaxGO) + tempVGO * (threshMaxGO > tempVGO); /* TODO: test whether gives same results as branched case */
 		
 		as->apGO[i]    = tempVGO > as->threshCurGO[i];
 		as->apBufGO[i] = (as->apBufGO[i] << 1) | (as->apGO[i] * 0x00000001);

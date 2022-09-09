@@ -289,7 +289,7 @@ void Control::initialize_rast_internal()
 {
 	all_mf_rast_internal    = allocate2DArray<ct_uint8_t>(num_mf, PSTHColSize);
 	all_go_rast_internal    = allocate2DArray<ct_uint8_t>(num_go, PSTHColSize);
-	sample_gr_rast_internal = allocate2DArray<ct_uint8_t>(num_gr / 2, PSTHColSize);
+	sample_gr_rast_internal = allocate2DArray<ct_uint8_t>(4096, PSTHColSize);
 	all_pc_rast_internal    = allocate2DArray<ct_uint8_t>(num_pc, PSTHColSize);
 	all_nc_rast_internal    = allocate2DArray<ct_uint8_t>(num_nc, PSTHColSize);
 	all_sc_rast_internal    = allocate2DArray<ct_uint8_t>(num_sc, PSTHColSize);
@@ -307,7 +307,7 @@ void Control::initializeOutputArrays()
 {
 	all_mf_rast_size    = num_mf * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
 	all_go_rast_size    = num_go * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
-	sample_gr_rast_size = (num_gr / 2) * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
+	sample_gr_rast_size = 4096 * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
 	all_pc_rast_size    = num_pc * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
 	all_nc_rast_size    = num_nc * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
 	all_sc_rast_size    = num_sc * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
@@ -451,7 +451,7 @@ void Control::runExperiment(struct gui *gui)
 	if (run_state == NOT_IN_RUN) std::cout << "[INFO]: Simulation terminated." << std::endl;
 	else if (run_state == IN_RUN_NO_PAUSE) std::cout << "[INFO]: Simulation Completed." << std::endl;
 	// if (sim_vis_mode == TUI) reset_tty(&fp); /* reset the tty for later use */
-	saveOutputArraysToFile();
+	//saveOutputArraysToFile();
 	run_state = NOT_IN_RUN;
 }
 
@@ -601,7 +601,7 @@ void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
 void Control::fill_rast_internal(int PSTHCounter)
 {
 	const ct_uint8_t* goSpks = simCore->getInputNet()->exportAPGO();
-	//const ct_uint8_t* grSpks = simCore->getInputNet()->exportAPGR();
+	//const ct_uint8_t* grSpks = simCore->getInputNet()->exportAPGR(); /* reading from gpu mem to non-pinned host mem is slow! just calling this slows down by ~30% ! */
 	const ct_uint8_t* pcSpks = simCore->getMZoneList()[0]->exportAPPC();
 	const ct_uint8_t* ncSpks = simCore->getMZoneList()[0]->exportAPNC();
 	//const ct_uint8_t* scSpks = simCore->getInputNet()->exportAPSC();
@@ -622,7 +622,7 @@ void Control::fill_rast_internal(int PSTHCounter)
 		all_go_rast_internal[i][PSTHCounter] = goSpks[i];
 	}
 
-	//for (int i = 0; i < num_gr / 2; i++)
+	//for (int i = 0; i < 4096; i++)
 	//{
 	//	sample_gr_rast_internal[i][PSTHCounter] = grSpks[i];
 	//}
@@ -660,7 +660,7 @@ void Control::reset_rast_internal()
 {
 	memset(all_mf_rast_internal[0], '\000', num_mf * PSTHColSize * sizeof(ct_uint8_t));
 	memset(all_go_rast_internal[0], '\000', num_go * PSTHColSize * sizeof(ct_uint8_t));
-	memset(sample_gr_rast_internal[0], '\000', (num_gr / 2) * PSTHColSize * sizeof(ct_uint8_t));
+	memset(sample_gr_rast_internal[0], '\000', 4096 * PSTHColSize * sizeof(ct_uint8_t));
 	memset(all_pc_rast_internal[0], '\000', num_mf * PSTHColSize * sizeof(ct_uint8_t));
 	memset(all_nc_rast_internal[0], '\000', num_mf * PSTHColSize * sizeof(ct_uint8_t));
 	memset(all_sc_rast_internal[0], '\000', num_mf * PSTHColSize * sizeof(ct_uint8_t));
@@ -673,7 +673,7 @@ void Control::fillOutputArrays()
 	uint32_t offset = trial * PSTHColSize / BITS_PER_BYTE;
 	//pack_2d_byte_array(all_mf_rast_internal, num_mf, PSTHColSize, allMFRaster, offset);
 	pack_2d_byte_array(all_go_rast_internal, num_go, PSTHColSize, allGORaster, offset);
-	//pack_2d_byte_array(sample_gr_rast_internal, num_gr / 2, PSTHColSize, sampleGRRaster, offset);
+	//pack_2d_byte_array(sample_gr_rast_internal, 4096, PSTHColSize, sampleGRRaster, offset);
 	//pack_2d_byte_array(all_pc_rast_internal, num_pc, PSTHColSize, allPCRaster, offset);
 	//pack_2d_byte_array(all_nc_rast_internal, num_nc, PSTHColSize, allNCRaster, offset);
 	//pack_2d_byte_array(all_sc_rast_internal, num_sc, PSTHColSize, allSCRaster, offset);
