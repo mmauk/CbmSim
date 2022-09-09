@@ -690,7 +690,7 @@ void InNetConnectivityState::connectGRGO()
 		gr_go_input_sum += numpGOfromGRtoGO[i];
 	}
 
-	std::cout << "[INFO]: Total number of granule to golgi inputs: " << gr_go_input_sum << std::endl;
+	std::cout << "[INFO]: GR-GO average convergence: " << gr_go_input_sum / (float)num_go << std::endl;
 
 	int gr_go_output_sum = 0;
 
@@ -699,7 +699,7 @@ void InNetConnectivityState::connectGRGO()
 		gr_go_output_sum += numpGRfromGRtoGO[i];
 	}
 
-	std::cout << "[INFO]: Total number of granule to golgi outputs: " << gr_go_output_sum << std::endl;
+	std::cout << "[INFO]: GR-GO average divergence: " << gr_go_output_sum / (float)num_gr << std::endl;
 }
 
 void InNetConnectivityState::connectGOGL(CRandomSFMT &randGen)
@@ -1152,13 +1152,18 @@ void InNetConnectivityState::translateMFGL()
 	}	
 
 	int grMFInputCounter = 0;
-	
 	for (int i = 0; i < num_gr; i++)
 	{
 		grMFInputCounter += numpGRfromMFtoGR[i];
 	}
+	std::cout << "[INFO]: MF-GR average convergence: " << grMFInputCounter  / (float)num_gr << std::endl;
 
-	std::cout << "[INFO]: Total MF inputs: " << grMFInputCounter << std::endl;
+	int grMFOutputCounter = 0;
+	for (int i = 0; i < num_mf; i++)
+	{
+		grMFOutputCounter += numpMFfromMFtoGR[i];
+	}
+	std::cout << "[INFO]: MF-GR average divergence: " << grMFOutputCounter / (float)num_mf << std::endl;
 
 	// Mossy fiber to Golgi
 	for (int i = 0; i < num_go; i++)
@@ -1179,6 +1184,15 @@ void InNetConnectivityState::translateMFGL()
 			}
 		}
 	}
+
+	int goMFInputCounter = 0;
+	for (int i = 0; i < num_go; i++) goMFInputCounter += numpGOfromMFtoGO[i];
+	std::cout << "[INFO]: MF-GO average convergence: " << goMFInputCounter  / (float)num_go << std::endl;
+
+	int goMFOutputCounter = 0;
+	for (int i = 0; i < num_mf; i++) goMFOutputCounter += numpMFfromMFtoGO[i];
+	std::cout << "[INFO]: MF-GO average divergence: " << goMFOutputCounter / (float)num_mf << std::endl;
+
 }
 
 void InNetConnectivityState::translateGOGL()
@@ -1203,11 +1217,13 @@ void InNetConnectivityState::translateGOGL()
 			}
 		}
 	}
-	int totalGOGR = 0;
-	for (int i = 0; i < num_gr; i++) totalGOGR += numpGRfromGOtoGR[i];
-	
-	std::cout << "[INFO]: Total golgi to granule connections: " << totalGOGR << std::endl;
-	std::cout << "[INFO]: Average number of golgi to granule connections per granule: " << (float)totalGOGR / (float)num_gr << std::endl;
+	int goGRInputCounter = 0;
+	for (int i = 0; i < num_gr; i++) goGRInputCounter += numpGRfromGOtoGR[i];
+	std::cout << "[INFO]: GO-GR average convergence: " << goGRInputCounter / (float)num_gr << std::endl;
+
+	int goGROutputCounter = 0;
+	for (int i = 0; i < num_go; i++) goGROutputCounter += numpGOfromGOtoGR[i];
+	std::cout << "[INFO]: GO-GR average divergence: " << goGROutputCounter / (float)num_go << std::endl;
 }
 
 void InNetConnectivityState::assignGRDelays(unsigned int msPerStep)

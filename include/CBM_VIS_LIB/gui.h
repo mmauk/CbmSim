@@ -30,8 +30,8 @@
 
 /* tuning window constants */
 #define NUM_TUNING_BUTTONS 14
-#define DEFAULT_TUNING_WINDOW_WIDTH 600
-#define DEFAULT_TUNING_WINDOW_HEIGHT 160
+#define DEFAULT_TUNING_WINDOW_WIDTH 800 
+#define DEFAULT_TUNING_WINDOW_HEIGHT 200
 
 /* raster window constants */
 #define DEFAULT_RASTER_WINDOW_WIDTH 540
@@ -104,6 +104,7 @@ struct tuning_button
 	GtkWidget *widget;
 	gint col;
 	gint row;
+	int digits_to_display;
 	struct tuning_button_label label;
 	struct signal signal;
 

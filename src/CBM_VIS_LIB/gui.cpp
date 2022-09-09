@@ -253,6 +253,7 @@ static void on_update_weight(GtkWidget *spin_button, float *weight)
 	*weight = gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button));
 }
 
+
 static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 {
 	struct tuning_window tw = {
@@ -261,7 +262,7 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 		.tuning_buttons = {
 			{
 				gtk_adjustment_new(gIncDirectMFtoGR, 0.0, 1.0, 0.0001, 0.1, 0.0),
-				NULL, 1, 0,
+				NULL, 1, 0, 4,
 				{
 					NULL, "MF-GR", 0, 0
 				},
@@ -274,7 +275,7 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 			},
 			{
 				gtk_adjustment_new(gIncMFtoGO, 0.0, 1.0, 0.0001, 0.1, 0.0),
-				NULL, 1, 1,
+				NULL, 1, 1, 4, 
 				{
 					NULL, "MF-GO", 0, 1
 				},
@@ -287,7 +288,7 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 			},
 			{
 				gtk_adjustment_new(gIncGRtoGO, 0.0, 1.0, 0.0001, 0.1, 0.0),
-				NULL, 1, 2,
+				NULL, 1, 2, 4,
 				{
 					NULL, "GR-GO", 0, 2
 				},
@@ -300,7 +301,7 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 			},
 			{
 				gtk_adjustment_new(gIncDirectGOtoGR, 0.0, 1.0, 0.01, 0.1, 0.0),
-				NULL, 1, 3,
+				NULL, 1, 3, 2, 
 				{
 					NULL, "GO-GR", 0, 3
 				},
@@ -313,7 +314,7 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 			},
 			{
 				gtk_adjustment_new(gGABAIncGOtoGO, 0.0, 1.0, 0.01, 0.1, 0.0),
-				NULL, 3, 0,
+				NULL, 3, 0, 2,
 				{
 					NULL, "GO-GO", 2, 0
 				},
@@ -326,7 +327,7 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 			},
 			{
 				gtk_adjustment_new(gIncGRtoPC, 0.0, 1.0, 0.000001, 0.1, 0.0),
-				NULL, 3, 1,
+				NULL, 3, 1, 6,
 				{
 					NULL, "GR-PC", 2, 1
 				},
@@ -339,7 +340,7 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 			},
 			{
 				gtk_adjustment_new(gIncGRtoSC, 0.0, 1.0, 0.001, 0.1, 0.0),
-				NULL, 3, 2,
+				NULL, 3, 2, 3,
 				{
 					NULL, "GR-SC", 2, 2
 				},
@@ -352,7 +353,7 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 			},
 			{
 				gtk_adjustment_new(gIncGRtoBC, 0.0, 1.0, 0.001, 0.1, 0.0),
-				NULL, 3, 3,
+				NULL, 3, 3, 3,
 				{
 					NULL, "GR-BC", 2, 3
 				},
@@ -364,8 +365,8 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 				}
 			},
 			{
-				gtk_adjustment_new(gIncSCtoPC, 0.0, 1.0, 0.0001, 0.1, 0.0),
-				NULL, 5, 0,
+				gtk_adjustment_new(gIncSCtoPC, 0.0, 1.0, 0.00001, 0.1, 0.0),
+				NULL, 5, 0, 5,
 				{
 					NULL, "SC-PC", 4, 0
 				},
@@ -377,8 +378,8 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 				}
 			},
 			{
-				gtk_adjustment_new(gIncBCtoPC, 0.0, 1.0, 0.0001, 0.1, 0.0),
-				NULL, 5, 1,
+				gtk_adjustment_new(gIncBCtoPC, 0.0, 1.0, 0.00001, 0.1, 0.0),
+				NULL, 5, 1, 5,
 				{
 					NULL, "BC-PC", 4, 1
 				},
@@ -391,7 +392,7 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 			},
 			{
 				gtk_adjustment_new(gIncPCtoBC, 0.0, 1.0, 0.01, 0.1, 0.0),
-				NULL, 5, 2,
+				NULL, 5, 2, 2,
 				{
 					NULL, "PC-BC", 4, 2
 				},
@@ -403,8 +404,8 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 				}
 			},
 			{
-				gtk_adjustment_new(gIncAvgPCtoNC, 0.0, 1.0, 0.1, 0.1, 0.0),
-				NULL, 5, 3,
+				gtk_adjustment_new(gIncAvgPCtoNC, 0.0, 1.0, 0.001, 0.1, 0.0),
+				NULL, 5, 3, 3,
 				{
 					NULL, "PC-DCN", 4, 3
 				},
@@ -416,8 +417,8 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 				}
 			},
 			{
-				gtk_adjustment_new(gAMPAIncMFtoNC, 0.0, 1.0, 0.1, 0.1, 0.0),
-				NULL, 7, 0,
+				gtk_adjustment_new(gAMPAIncMFtoNC, 0.0, 1.0, 0.001, 0.1, 0.0),
+				NULL, 7, 0, 3,
 				{
 					NULL, "MF-DCN", 6, 0
 				},
@@ -429,8 +430,8 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 				}
 			},
 			{
-				gtk_adjustment_new(gIncNCtoIO, 0.0, 1.0, 0.001, 0.1, 0.0),
-				NULL, 7, 1,
+				gtk_adjustment_new(gIncNCtoIO, 0.0, 1.0, 0.0001, 0.1, 0.0),
+				NULL, 7, 1, 4,
 				{
 					NULL, "DCN-IO", 6, 1
 				},
@@ -468,7 +469,7 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 						b->label.row, 1, 1);
 
 		// set button
-		b->widget = gtk_spin_button_new(b->adjustment, 0.001, 3);
+		b->widget = gtk_spin_button_new(b->adjustment, 0.01, b->digits_to_display);
 		gtk_widget_set_hexpand(b->widget, true);
 		gtk_widget_set_vexpand(b->widget, true);
 		gtk_grid_attach(GTK_GRID(tw.grid), b->widget, b->col, b->row, 1, 1);

@@ -27,10 +27,10 @@ void pack_byte_array(uint8_t *byte_arr,
 
 // TODO: DEBUG
 void pack_2d_byte_array(uint8_t **byte_arr_2d,
-					 const uint32_t byte_arr_num_rows,
-					 const uint32_t byte_arr_num_cols,
-					 uint8_t *packed_byte_arr,
-					 uint32_t offset)
+						const uint32_t byte_arr_num_rows,
+						const uint32_t byte_arr_num_cols,
+						uint8_t *packed_byte_arr,
+						uint32_t offset)
 {
 	uint8_t *packed_byte_arr_cpy = packed_byte_arr + offset;
 	for (uint32_t i = 0; i < byte_arr_num_rows; i++)

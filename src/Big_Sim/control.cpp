@@ -89,24 +89,6 @@ void Control::build_sim()
 	if (!simState) simState = new CBMState(numMZones);
 }
 
-void Control::init_sim_state(std::string stateFile)
-{
-	if (!con_params_populated)
-	{
-		fprintf(stderr, "[ERROR]: Trying to initialize state without first connectivity params.\n");
-		fprintf(stderr, "[ERROR]: (Hint: Load a connectivity parameter file first then load the state.\n");
-		return;
-	}
-	if (!act_params_populated)
-	{
-		fprintf(stderr, "[ERROR]: Trying to initialize state without first initializing activity params.\n");
-		fprintf(stderr, "[ERROR]: (Hint: Load an activity parameter file first then load the state.\n");
-		return;
-	}
-	if (!simState) simState = new CBMState(numMZones, stateFile);
-	else fprintf(stderr, "[ERROR]: State already initialized.\n");
-}
-
 void Control::init_experiment(std::string in_expt_filename)
 {
 	std::cout << "[INFO]: Loading Experiment file..." << std::endl;
@@ -142,29 +124,20 @@ void Control::init_sim(std::string in_sim_filename)
 
 void Control::save_sim_state_to_file(std::string outStateFile)
 {
-	if (!(con_params_populated && act_params_populated && simState))
+	if (!(con_params_populated && act_params_populated && simState && simCore))
 	{
 		fprintf(stderr, "[ERROR]: Trying to write an uninitialized state to file.\n");
-		fprintf(stderr, "[ERROR]: (Hint: Try loading activity parameter file and initializing the state first.)\n");
+		fprintf(stderr, "[ERROR]: (Hint: Try loading a sim file first.)\n");
 		return;
 	}
 	std::fstream outStateFileBuffer(outStateFile.c_str(), std::ios::out | std::ios::binary);
-	if (simCore)
-	{
-		// if we have simCore, save from simcore else save from state.
-		// this covers both edge case scenarios of if the user wants to save to
-		// file an initialized bunny or if the user is using the gui and forgot 
-		// to save to file after initializing state, but wants to do so after 
-		// initializing simcore.
-		simCore->writeState(outStateFileBuffer);
-	}
-	else simState->writeState(outStateFileBuffer); 
+	simCore->writeState(outStateFileBuffer);
 	outStateFileBuffer.close();
 }
 
 void Control::save_sim_to_file(std::string outSimFile)
 {
-	if (!(con_params_populated && act_params_populated && simState))
+	if (!(con_params_populated && act_params_populated && simState && simCore))
 	{
 		fprintf(stderr, "[ERROR]: Trying to write an uninitialized simulation to file.\n");
 		fprintf(stderr, "[ERROR]: (Hint: Try loading a build file first.)\n");
@@ -173,8 +146,7 @@ void Control::save_sim_to_file(std::string outSimFile)
 	std::fstream outSimFileBuffer(outSimFile.c_str(), std::ios::out | std::ios::binary);
 	write_con_params(outSimFileBuffer);
 	write_act_params(outSimFileBuffer);
-	if (simCore) simCore->writeState(outSimFileBuffer);
-	else simState->writeState(outSimFileBuffer); 
+	simCore->writeState(outSimFileBuffer);
 	outSimFileBuffer.close();
 }
 
@@ -333,6 +305,15 @@ void Control::initialize_rast_internal()
 
 void Control::initializeOutputArrays()
 {
+	all_mf_rast_size    = num_mf * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
+	all_go_rast_size    = num_go * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
+	sample_gr_rast_size = (num_gr / 2) * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
+	all_pc_rast_size    = num_pc * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
+	all_nc_rast_size    = num_nc * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
+	all_sc_rast_size    = num_sc * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
+	all_bc_rast_size    = num_bc * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
+	all_io_rast_size    = num_io * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
+
 	allMFRaster = (ct_uint8_t *)calloc(all_mf_rast_size, sizeof(ct_uint8_t));
 	allGORaster = (ct_uint8_t *)calloc(all_go_rast_size, sizeof(ct_uint8_t));
 	sampleGRRaster = (ct_uint8_t *)calloc(sample_gr_rast_size, sizeof(ct_uint8_t));
@@ -350,7 +331,7 @@ void Control::runExperiment(struct gui *gui)
 {
 	float medTrials;
 	clock_t timer;
-	
+
 	int goSpkCounter[num_go] = {0};
 
 	//gen_gr_sample(gr_indices, 4096, num_gr);
@@ -404,6 +385,7 @@ void Control::runExperiment(struct gui *gui)
 			simCore->updateTrueMFs(isTrueMF);
 			simCore->updateMFInput(mfAP);
 			simCore->calcActivity(spillFrac); 
+			// update_spike_sums(ts);
 
 			if (ts >= onsetCS && ts < offsetCS)
 			{
@@ -413,9 +395,9 @@ void Control::runExperiment(struct gui *gui)
 			
 				for (int i = 0; i < num_go; i++)
 				{
-						goSpkCounter[i] += goSpks[i];
-						gGRGO_sum       += grgoG[i];
-						gMFGO_sum       += mfgoG[i];
+					goSpkCounter[i] += goSpks[i];
+					gGRGO_sum       += grgoG[i];
+					gMFGO_sum       += mfgoG[i];
 				}
 			}
 			
@@ -463,13 +445,13 @@ void Control::runExperiment(struct gui *gui)
 			}
 			// reset_spike_sums();
 		}
-		// fillOutputArrays();
+		fillOutputArrays();
 		trial++;
 	}
 	if (run_state == NOT_IN_RUN) std::cout << "[INFO]: Simulation terminated." << std::endl;
 	else if (run_state == IN_RUN_NO_PAUSE) std::cout << "[INFO]: Simulation Completed." << std::endl;
 	// if (sim_vis_mode == TUI) reset_tty(&fp); /* reset the tty for later use */
-	// saveOutputArraysToFile(0, 0, local_time);
+	saveOutputArraysToFile();
 	run_state = NOT_IN_RUN;
 }
 
@@ -490,15 +472,15 @@ void gen_gr_sample(int gr_indices[], int sample_size, int data_size)
 	}
 }
 
-void Control::saveOutputArraysToFile(int goRecipParam, int trial, std::tm *local_time)
+void Control::saveOutputArraysToFile()
 {
 	//std::cout << "Filling MF files..." << std::endl;
 	//std::string allMFRasterFileName = OUTPUT_DATA_PATH + "allMFRaster.bin";
 	//write2DCharArray(allMFRasterFileName, allMFRaster, num_mf, rasterColumnSize);
 
-	//std::cout << "Filling GO files..." << std::endl;
-	//std::string allGORasterFileName = OUTPUT_DATA_PATH + "allGORaster.bin";
-	//write2DCharArray(allGORasterFileName, allGORaster, num_go, rasterColumnSize);
+	std::cout << "[INFO]: Filling GO files..." << std::endl;
+	std::string allGORasterFileName = OUTPUT_DATA_PATH + "allGORaster.bin";
+	save_go_psth_to_file(allGORasterFileName);
 
 	//std::cout << "Filling GR files..." << std::endl;
 	//std::string sampleGRRasterFileName = OUTPUT_DATA_PATH + "sampleGRRaster.bin";
@@ -618,7 +600,7 @@ void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
 
 void Control::fill_rast_internal(int PSTHCounter)
 {
-	//const ct_uint8_t* goSpks = simCore->getInputNet()->exportAPGO();
+	const ct_uint8_t* goSpks = simCore->getInputNet()->exportAPGO();
 	//const ct_uint8_t* grSpks = simCore->getInputNet()->exportAPGR();
 	const ct_uint8_t* pcSpks = simCore->getMZoneList()[0]->exportAPPC();
 	const ct_uint8_t* ncSpks = simCore->getMZoneList()[0]->exportAPNC();
@@ -635,10 +617,10 @@ void Control::fill_rast_internal(int PSTHCounter)
 	//	all_mf_rast_internal[i][PSTHCounter] = mfAP[i];
 	//}
 
-	//for (int i = 0; i < num_go; i++)
-	//{
-	//	all_go_rast_internal[i][PSTHCounter] = goSpks[i];
-	//}
+	for (int i = 0; i < num_go; i++)
+	{
+		all_go_rast_internal[i][PSTHCounter] = goSpks[i];
+	}
 
 	//for (int i = 0; i < num_gr / 2; i++)
 	//{
@@ -689,14 +671,14 @@ void Control::reset_rast_internal()
 void Control::fillOutputArrays()
 {
 	uint32_t offset = trial * PSTHColSize / BITS_PER_BYTE;
-	pack_2d_byte_array(all_mf_rast_internal, num_mf, PSTHColSize, allMFRaster, offset);
+	//pack_2d_byte_array(all_mf_rast_internal, num_mf, PSTHColSize, allMFRaster, offset);
 	pack_2d_byte_array(all_go_rast_internal, num_go, PSTHColSize, allGORaster, offset);
-	pack_2d_byte_array(sample_gr_rast_internal, num_gr / 2, PSTHColSize, sampleGRRaster, offset);
-	pack_2d_byte_array(all_pc_rast_internal, num_pc, PSTHColSize, allPCRaster, offset);
-	pack_2d_byte_array(all_nc_rast_internal, num_nc, PSTHColSize, allNCRaster, offset);
-	pack_2d_byte_array(all_sc_rast_internal, num_sc, PSTHColSize, allSCRaster, offset);
-	pack_2d_byte_array(all_bc_rast_internal, num_bc, PSTHColSize, allBCRaster, offset);
-	pack_2d_byte_array(all_io_rast_internal, num_io, PSTHColSize, allIORaster, offset);
+	//pack_2d_byte_array(sample_gr_rast_internal, num_gr / 2, PSTHColSize, sampleGRRaster, offset);
+	//pack_2d_byte_array(all_pc_rast_internal, num_pc, PSTHColSize, allPCRaster, offset);
+	//pack_2d_byte_array(all_nc_rast_internal, num_nc, PSTHColSize, allNCRaster, offset);
+	//pack_2d_byte_array(all_sc_rast_internal, num_sc, PSTHColSize, allSCRaster, offset);
+	//pack_2d_byte_array(all_bc_rast_internal, num_bc, PSTHColSize, allBCRaster, offset);
+	//pack_2d_byte_array(all_io_rast_internal, num_io, PSTHColSize, allIORaster, offset);
 }
 
 // TODO: 1) find better place to put this 2) generalize
@@ -749,6 +731,7 @@ void Control::deleteOutputArrays()
 	free(allSCRaster);
 	free(allBCRaster);
 	free(allIORaster);
+
 	delete[] sample_pfpc_syn_weights;
 }
 

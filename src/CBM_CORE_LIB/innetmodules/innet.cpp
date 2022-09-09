@@ -317,13 +317,6 @@ void InNet::writeToState()
 	}
 }
 
-// wtf is this why does it not return numgpus
-void getnumGPUs()
-{
-	cout << "NUMGPUS = " << endl;
-//	cout << numGPUs << endl;
-}
-
 //void InNet::grStim(int startGRStim, int numGRStim)
 //{
 //	// might be a useless operation. would the state of these arrays
@@ -459,7 +452,6 @@ void InNet::updateMFActivties(const ct_uint8_t *actInMF)
 
 void InNet::calcGOActivities()
 {
-	//50ms
 	for (int i = 0; i < num_go; i++)
 	{
 		sumGRInputGO[i] = 0;
@@ -473,7 +465,7 @@ void InNet::calcGOActivities()
 	for (int i = 0; i < num_go; i++)
 	{
 		float tempVGO = as->vGO[i];
-		float gLeakGO = 0.02;
+
 		//NMDA Low
 		float gNMDAIncGRGO = (0.00000082263 * tempVGO * tempVGO * tempVGO)
 						   + (0.00021653 * tempVGO * tempVGO)
@@ -498,16 +490,15 @@ void InNet::calcGOActivities()
 		as->gGRGO_NMDA[i] = sumGRInputGO[i] * ((grgoW * as->synWscalerGRtoGO[i]) * 0.6 * gNMDAIncGRGO)
 						  + as->gGRGO_NMDA[i] * gDecayMFtoGONMDA;
 		
-		as->threshCurGO[i] = as->threshCurGO[i]
-						   + (threshRestGO - as->threshCurGO[i]) * threshDecGO;
+		as->threshCurGO[i] += (threshRestGO - as->threshCurGO[i]) * threshDecGO;
 		
-		tempVGO = tempVGO
-				+ (gLeakGO * (eLeakGO - tempVGO))
+		tempVGO += (gLeakGO * (eLeakGO - tempVGO))
 				+ (as->gSum_GOGO[i] * (eGABAGO - tempVGO))
 				- (as->gSum_MFGO[i] + as->gGRGO[i] + as->gNMDAMFGO[i]
 					+ as->gGRGO_NMDA[i]) * tempVGO
 				- (as->vCoupleGO[i] * tempVGO);
 
+		
 		if (tempVGO > threshMaxGO) tempVGO = threshMaxGO;
 		
 		as->apGO[i]    = tempVGO > as->threshCurGO[i];

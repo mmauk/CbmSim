@@ -63,7 +63,7 @@ class Control
 
 		enum vis_mode sim_vis_mode = NO_VIS;
 		bool internal_arrays_initialized = false; /* temporary, going to refactor soon */
-		bool output_arrays_initialized = false; 
+		bool output_arrays_initialized = false;
 		bool spike_sums_initialized = false;
 		enum sim_run_state run_state = NOT_IN_RUN; 
 		std::string inStateFileName = "";
@@ -82,7 +82,7 @@ class Control
 		int gpuP2    = 2;
 
 		// Training Parameters -> TODO: deprecate in gui runExperiment
-		int numTrainingTrials      = 10;
+		int numTrainingTrials      = 100;
 		int homeoTuningTrials      = 0;
 		int granuleActDetectTrials = 0;
 
@@ -170,14 +170,15 @@ class Control
 		ct_uint8_t **all_bc_rast_internal;
 		ct_uint8_t **all_io_rast_internal;
 
-		ct_uint32_t all_mf_rast_size    = num_mf * rasterColumnSize / BITS_PER_BYTE;
-		ct_uint32_t all_go_rast_size    = num_go * rasterColumnSize / BITS_PER_BYTE;
-		ct_uint32_t sample_gr_rast_size = (num_gr / 2) * rasterColumnSize / BITS_PER_BYTE;
-		ct_uint32_t all_pc_rast_size    = num_pc * rasterColumnSize / BITS_PER_BYTE;
-		ct_uint32_t all_nc_rast_size    = num_nc * rasterColumnSize / BITS_PER_BYTE;
-		ct_uint32_t all_sc_rast_size    = num_sc * rasterColumnSize / BITS_PER_BYTE;
-		ct_uint32_t all_bc_rast_size    = num_bc * rasterColumnSize / BITS_PER_BYTE;
-		ct_uint32_t all_io_rast_size    = num_io * rasterColumnSize / BITS_PER_BYTE;
+		/* initialized within initializeOutputArrays */
+		ct_uint32_t all_mf_rast_size;   
+		ct_uint32_t all_go_rast_size;
+		ct_uint32_t sample_gr_rast_size;
+		ct_uint32_t all_pc_rast_size;  
+		ct_uint32_t all_nc_rast_size;  
+		ct_uint32_t all_sc_rast_size;  
+		ct_uint32_t all_bc_rast_size;  
+		ct_uint32_t all_io_rast_size; 
 
 		ct_uint8_t *allMFRaster;
 		ct_uint8_t *allGORaster;
@@ -220,11 +221,10 @@ class Control
 
 		void build_sim();
 		
-		void init_sim_state(std::string stateFile); // TODO: deprecate
 		void init_experiment(std::string in_expt_filename);
 		void init_sim(std::string in_sim_filename);
 
-		void save_sim_state_to_file(std::string outStateFile); 
+		void save_sim_state_to_file(std::string outStateFile); /* TODO: deprecate, what else do we use for? */
 		void save_sim_to_file(std::string outSimFile);
 		void save_pfpc_weights_to_file(std::string out_pfpc_file);
 		void load_pfpc_weights_from_file(std::string in_pfpc_file);
@@ -245,7 +245,7 @@ class Control
 		void initializeOutputArrays();
 		void runExperiment(struct gui *gui);
 
-		void saveOutputArraysToFile(int goRecipParam, int trial, std::tm *local_time);
+		void saveOutputArraysToFile();
 
 		void countGOSpikes(int *goSpkCounter, float &medTrials);
 		void update_spike_sums(int tts);

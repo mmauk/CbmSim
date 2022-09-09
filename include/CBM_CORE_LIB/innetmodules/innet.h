@@ -24,7 +24,7 @@
 #include <cuda_runtime.h>
 #include "stdDefinitions/pstdint.h"
 #include "memoryMgmt/dynamic2darray.h"
-#include "params/connectivityparams.h" /* reverted back to read-in conparams 07/25/2022 */
+#include "params/connectivityparams.h" 
 #include "params/activityparams.h"
 #include "state/innetconnectivitystate.h"
 #include "state/innetactivitystate.h"
@@ -39,7 +39,6 @@ public:
 	~InNet();
 
 	void writeToState();
-	void getnumGPUs();
 
 	const ct_uint8_t* exportAPGO();
 	const ct_uint8_t* exportAPMF();
@@ -172,12 +171,10 @@ protected:
 
 	int **numMFperGR;
 	int **numUBCperGR;
-	//
 	//end gpu related variables
 
-	//---------golgi cell variables
+	//golgi cell variables
 	//gpu related variables
-	//GPU parameters
 
 	ct_uint32_t **apGOH;
 	ct_uint32_t **grInputGOSumH;
@@ -195,7 +192,6 @@ protected:
 	ct_uint32_t **grInputBCSumGPU;
 	ct_uint32_t **grInputBCSumH;
 
-
 	ct_uint32_t **apGOGPU;
 	ct_uint32_t **grInputGOGPU;
 	ct_uint32_t **grInputGOSumGPU;
@@ -212,9 +208,9 @@ protected:
 
 	float *sumInputGOGABASynDepGO;
 	float tempGIncGRtoGO;
-	//---------end golgi cell variables
+	//end golgi cell variables
 
-	//---------granule cell variables
+	//granule cell variables
 	float **gMFGRT;
 	float **gUBCGRT;
 	float **gGOGRT;
@@ -301,41 +297,38 @@ protected:
 	size_t *grConUBCOutGRGPUP;
 	
 	//end gpu variables
+	//end granule cell variables
 
-	//---------end granule cell variables
-
-	//--------stellate cell variables
-
-	//gpu related variables
+	//stellate cell variables
 	//host variables
 	ct_uint32_t *inputSumPFSCH;
 	//end host variables
 
+	//gpu related variables
 	ct_uint32_t **inputPFSCGPU;
 	size_t *inputPFSCGPUP;
 	ct_uint32_t **inputSumPFSCGPU;
 	//end gpu related variables
 
-	//------------ end stellate cell variables
+	//end stellate cell variables
 
-	//-----------basket cell variables
-	//gpu related variables
+	//basket cell variables
 	//host variables
 	ct_uint32_t *inputSumPFBCH;
 
-	//device variables
+	//gpu related variables
 	ct_uint32_t **inputPFBCGPU;
 	size_t *inputPFBCGPUP;
 	ct_uint32_t **inputSumPFBCGPU;
 	//end gpu related variables
-	//-----------end basket cell variables
+	//end basket cell variables
 
-	virtual void initCUDA();
-	virtual void initMFCUDA();
-	virtual void initGRCUDA();
-	virtual void initGOCUDA();
-	virtual void initBCCUDA();
-	virtual void initSCCUDA();
+	void initCUDA();
+	void initMFCUDA();
+	void initGRCUDA();
+	void initGOCUDA();
+	void initBCCUDA();
+	void initSCCUDA();
 
 private:
 	template<typename Type>
