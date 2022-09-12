@@ -92,10 +92,7 @@ static void on_load_experiment_file(GtkWidget *widget, Control *control)
 
 static void on_load_sim_file(GtkWidget *widget, Control *control)
 {
-	//std::string in_sim_filename = "";
 	load_file(widget, control, &Control::init_sim, "[ERROR]: Could not open simulation file.");
-	// set input state file name for saving state after each trial
-	//control->inSimFileName = in_sim_filename;
 }
 
 static void on_save_state(GtkWidget *widget, Control *control)

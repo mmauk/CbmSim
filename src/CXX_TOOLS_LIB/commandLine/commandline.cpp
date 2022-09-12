@@ -214,18 +214,12 @@ void parse_build_args(char ***argv, parsed_build_file &p_file)
 
 /*
  * Implementation Notes:
- *     parses an input file, interpreted as an experiment file, from somewhere in argv.
- *     This function essentially 'wraps' parse_experiment_file by allowing the user to
- *     only supply the address of the argv array, instead of having to specify which argument
- *     is supposed to be the experiment file, and prepending the input data path to the raw argument.
- *     This is done as a matter of expediency and taste and can be removed in favour of calling
- *     parse_experiment_file directly.
+ *     gets the input experiment file from argv by prepending the full input file path to it.
  *
  */
-void parse_experiment_args(char ***argv, experiment &exper)
+void get_in_expt_file(char ***argv, std::string &in_file)
 {
-	std::string full_trial_file_path = INPUT_DATA_PATH + std::string((*argv)[EXPERIMENT_FILE]);
-	parse_experiment_file(full_trial_file_path, exper);
+	in_file = INPUT_DATA_PATH + std::string((*argv)[EXPERIMENT_FILE]);
 }
 
 /*

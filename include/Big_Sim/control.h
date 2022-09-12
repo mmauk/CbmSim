@@ -66,8 +66,6 @@ class Control
 		bool output_arrays_initialized = false;
 		bool spike_sums_initialized = false;
 		enum sim_run_state run_state = NOT_IN_RUN; 
-		std::string inStateFileName = "";
-		std::string inSimFileName = "";
 
 		const float *grgoG, *mfgoG, *gogrG, *mfgrG;
 		const ct_uint8_t *mfAP;

@@ -33,7 +33,7 @@ int main(int argc, char **argv)
 
 	switch (sim_run_mode)
 	{
-		case BUILD:
+		case BUILD: /* parse build file, build sim, save to file and exit */
 			parse_build_args(&argv, p_file);
 			control = new Control(p_file);
 			control->build_sim();
@@ -44,10 +44,10 @@ int main(int argc, char **argv)
 		case RUN:
 			switch (sim_user_mode)
 			{
-				case FRIENDLY:
+				case FRIENDLY: /* you have to load everything in yourself, but you only enter the command */
 					control = new Control(GUI);
 					break;
-				case VETERAN:
+				case VETERAN: /* you have to know the name of every input file when invoking on cmdline */
 					control = new Control(&argv, sim_vis_mode); 
 					break;
 				case NO_USER_MODE:
@@ -57,7 +57,6 @@ int main(int argc, char **argv)
 			switch (sim_vis_mode)
 			{
 				case TUI:
-					//control->runTrials(NULL);
 					control->runExperiment(NULL);
 					get_out_sim_file(RUN_OUT_SIM_FILE, &argv, out_sim_file);
 					control->save_sim_to_file(out_sim_file);

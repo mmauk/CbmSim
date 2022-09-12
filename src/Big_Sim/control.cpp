@@ -40,33 +40,12 @@ Control::Control(enum vis_mode sim_vis_mode)
 
 Control::Control(char ***argv, enum vis_mode sim_vis_mode)
 {
-	parse_experiment_args(argv, expt); 
+	std::string in_expt_filename = "";
 	std::string in_sim_filename = "";
+	get_in_expt_file(argv, in_expt_filename);
 	get_in_sim_file(argv, in_sim_filename);
-	std::fstream sim_file_buf(in_sim_filename.c_str(), std::ios::in | std::ios::binary);
-
-	if (!con_params_populated) read_con_params(sim_file_buf);
-	if (!act_params_populated) read_act_params(sim_file_buf);
-	if (!simState) simState = new CBMState(numMZones, sim_file_buf);
-	if (!simCore) simCore = new CBMSimCore(simState, gpuIndex, gpuP2);
-	if (!mfFreq)
-	{
-		mfFreq = new ECMFPopulation(num_mf, mfRandSeed,
-			  CSTonicMFFrac, CSPhasicMFFrac, contextMFFrac, nucCollFrac,
-			  bgFreqMin, csbgFreqMin, contextFreqMin, tonicFreqMin, phasicFreqMin, bgFreqMax,
-			  csbgFreqMax, contextFreqMax, tonicFreqMax, phasicFreqMax, collaterals_off,
-			  fracImport, secondCS, fracOverlap);
-	}
-	if (!mfs)
-	{
-		mfs = new PoissonRegenCells(num_mf, mfRandSeed,
-				threshDecayTau, msPerTimeStep, numMZones, num_nc);
-	}
-	if (!internal_arrays_initialized) initialize_rast_internal();
-	if (!output_arrays_initialized) initializeOutputArrays();
-	if (!spike_sums_initialized) initialize_spike_sums();
-	sim_file_buf.close();
-
+	init_experiment(in_expt_filename);
+	init_sim(in_sim_filename);
 	this->sim_vis_mode = sim_vis_mode;
 }
 
@@ -91,13 +70,14 @@ void Control::build_sim()
 
 void Control::init_experiment(std::string in_expt_filename)
 {
-	std::cout << "[INFO]: Loading Experiment file..." << std::endl;
+	std::cout << "[INFO]: Loading Experiment file...\n";
 	parse_experiment_file(in_expt_filename, expt);
-	std::cout << "[INFO]: Finished loading Experiment file." << std::endl;
+	std::cout << "[INFO]: Finished loading Experiment file.\n";
 }
 
 void Control::init_sim(std::string in_sim_filename)
 {
+	std::cout << "[INFO]: Initializing simulation...\n";
 	std::fstream sim_file_buf(in_sim_filename.c_str(), std::ios::in | std::ios::binary);
 	if (!con_params_populated) read_con_params(sim_file_buf);
 	if (!act_params_populated) read_act_params(sim_file_buf);
@@ -120,6 +100,7 @@ void Control::init_sim(std::string in_sim_filename)
 	if (!output_arrays_initialized) initializeOutputArrays();
 	if (!spike_sums_initialized) initialize_spike_sums();
 	sim_file_buf.close();
+	std::cout << "[INFO]: Simulation initialized.\n";
 }
 
 void Control::save_sim_state_to_file(std::string outStateFile)
@@ -361,7 +342,7 @@ void Control::runExperiment(struct gui *gui)
 
 		memset(goSpkCounter, 0, num_go * sizeof(int));
 
-		std::cout << "[INFO]: Trial number: " << trial + 1 << std::endl;
+		std::cout << "[INFO]: Trial number: " << trial + 1 << "\n";
 
 		timer = clock();
 		for (int ts = 0; ts < trialTime; ts++)
@@ -385,7 +366,7 @@ void Control::runExperiment(struct gui *gui)
 			simCore->updateTrueMFs(isTrueMF);
 			simCore->updateMFInput(mfAP);
 			simCore->calcActivity(spillFrac); 
-			// update_spike_sums(ts);
+			//update_spike_sums(ts);
 
 			if (ts >= onsetCS && ts < offsetCS)
 			{
@@ -405,9 +386,9 @@ void Control::runExperiment(struct gui *gui)
 			if (ts == offsetCS)
 			{
 				countGOSpikes(goSpkCounter, medTrials);
-				std::cout << "[INFO]: Mean gGRGO   = " << gGRGO_sum / (num_go * (offsetCS - onsetCS)) << std::endl;
-				std::cout << "[INFO]: Mean gMFGO   = " << gMFGO_sum / (num_go * (offsetCS - onsetCS)) << std::endl;
-				std::cout << "[INFO]: GR:MF ratio  = " << gGRGO_sum / gMFGO_sum << std::endl;
+				std::cout << "[INFO]: Mean gGRGO   = " << gGRGO_sum / (num_go * (offsetCS - onsetCS)) << "\n";
+				std::cout << "[INFO]: Mean gMFGO   = " << gMFGO_sum / (num_go * (offsetCS - onsetCS)) << "\n";
+				std::cout << "[INFO]: GR:MF ratio  = " << gGRGO_sum / gMFGO_sum << "\n";
 			}
 			
 			/* data collection */
@@ -424,32 +405,32 @@ void Control::runExperiment(struct gui *gui)
 			// else if (sim_vis_mode == TUI) process_input(&fp, ts, trial+1); /* process user input from kb */
 		}
 		timer = clock() - timer;
-		std::cout << "[INFO]: '" << trialName << "' took " << (float)timer / CLOCKS_PER_SEC << "s." << std::endl;
+		std::cout << "[INFO]: '" << trialName << "' took " << (float)timer / CLOCKS_PER_SEC << "s.\n";
 		
 		if (gui != NULL)
 		{
 			// for now, compute the mean and median firing rates for all cells if win is visible
-			// if (firing_rates_win_visible(gui))
-			// {
-			// calculate_firing_rates();
-			// gdk_threads_add_idle((GSourceFunc)update_fr_labels, gui);
-			// }
+			//if (firing_rates_win_visible(gui))
+			//{
+			//	calculate_firing_rates();
+			//	gdk_threads_add_idle((GSourceFunc)update_fr_labels, gui);
+			//}
 			if (run_state == IN_RUN_PAUSE)
 			{
-				std::cout << "[INFO]: Simulation is paused at end of trial " << trial+1 << "." << std::endl;
+				std::cout << "[INFO]: Simulation is paused at end of trial " << trial+1 << ".\n";
 				while(run_state == IN_RUN_PAUSE)
 				{
 					if (gtk_events_pending()) gtk_main_iteration();
 				}
-				std::cout << "[INFO]: Continuing..." << std::endl;
+				std::cout << "[INFO]: Continuing...\n";
 			}
-			// reset_spike_sums();
+			//reset_spike_sums();
 		}
 		fillOutputArrays();
 		trial++;
 	}
-	if (run_state == NOT_IN_RUN) std::cout << "[INFO]: Simulation terminated." << std::endl;
-	else if (run_state == IN_RUN_NO_PAUSE) std::cout << "[INFO]: Simulation Completed." << std::endl;
+	if (run_state == NOT_IN_RUN) std::cout << "[INFO]: Simulation terminated.\n";
+	else if (run_state == IN_RUN_NO_PAUSE) std::cout << "[INFO]: Simulation Completed.\n";
 	// if (sim_vis_mode == TUI) reset_tty(&fp); /* reset the tty for later use */
 	//saveOutputArraysToFile();
 	run_state = NOT_IN_RUN;
@@ -478,17 +459,19 @@ void Control::saveOutputArraysToFile()
 	//std::string allMFRasterFileName = OUTPUT_DATA_PATH + "allMFRaster.bin";
 	//write2DCharArray(allMFRasterFileName, allMFRaster, num_mf, rasterColumnSize);
 
-	std::cout << "[INFO]: Filling GO files..." << std::endl;
+	std::cout << "[INFO]: Filling GO file..." << std::endl;
 	std::string allGORasterFileName = OUTPUT_DATA_PATH + "allGORaster.bin";
 	save_go_psth_to_file(allGORasterFileName);
+	std::cout << "[INFO]: Done filling GO file." << std::endl;
 
 	//std::cout << "Filling GR files..." << std::endl;
 	//std::string sampleGRRasterFileName = OUTPUT_DATA_PATH + "sampleGRRaster.bin";
 	//write2DCharArray(sampleGRRasterFileName, sampleGRRaster, 4096, rasterColumnSize);
 
-	//std::cout << "Filling PC files..." << std::endl;
-	//std::string allPCRasterFileName = OUTPUT_DATA_PATH + "allPCRaster.bin";
-	//write2DCharArray(allPCRasterFileName, allPCRaster, num_pc, rasterColumnSize);
+	std::cout << "[INFO]: Filling PC file..." << std::endl;
+	std::string allPCRasterFileName = OUTPUT_DATA_PATH + "allPCRaster.bin";
+	save_pc_psth_to_file(allPCRasterFileName);
+	std::cout << "[INFO]: Done filling PC file." << std::endl;
 
 	//std::cout << "Filling NC files..." << std::endl;
 	//std::string allNCRasterFileName = OUTPUT_DATA_PATH + "allNCRaster.bin";
@@ -670,11 +653,11 @@ void Control::reset_rast_internal()
 
 void Control::fillOutputArrays()
 {
-	uint32_t offset = trial * PSTHColSize / BITS_PER_BYTE;
+	uint32_t offset_common = trial * PSTHColSize / BITS_PER_BYTE;
 	//pack_2d_byte_array(all_mf_rast_internal, num_mf, PSTHColSize, allMFRaster, offset);
-	pack_2d_byte_array(all_go_rast_internal, num_go, PSTHColSize, allGORaster, offset);
+	pack_2d_byte_array(all_go_rast_internal, num_go, PSTHColSize, allGORaster, offset_common * num_go);
 	//pack_2d_byte_array(sample_gr_rast_internal, 4096, PSTHColSize, sampleGRRaster, offset);
-	//pack_2d_byte_array(all_pc_rast_internal, num_pc, PSTHColSize, allPCRaster, offset);
+	pack_2d_byte_array(all_pc_rast_internal, num_pc, PSTHColSize, allPCRaster, offset_common * num_pc);
 	//pack_2d_byte_array(all_nc_rast_internal, num_nc, PSTHColSize, allNCRaster, offset);
 	//pack_2d_byte_array(all_sc_rast_internal, num_sc, PSTHColSize, allSCRaster, offset);
 	//pack_2d_byte_array(all_bc_rast_internal, num_bc, PSTHColSize, allBCRaster, offset);

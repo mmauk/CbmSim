@@ -27,8 +27,8 @@ void pack_byte_array(uint8_t *byte_arr,
 
 // TODO: DEBUG
 void pack_2d_byte_array(uint8_t **byte_arr_2d,
-						const uint32_t byte_arr_num_rows,
-						const uint32_t byte_arr_num_cols,
+						const uint32_t byte_arr_num_rows, /* num cells */
+						const uint32_t byte_arr_num_cols, /* per trial time steps */
 						uint8_t *packed_byte_arr,
 						uint32_t offset)
 {
@@ -36,7 +36,7 @@ void pack_2d_byte_array(uint8_t **byte_arr_2d,
 	for (uint32_t i = 0; i < byte_arr_num_rows; i++)
 	{
 		pack_byte_array(byte_arr_2d[i], byte_arr_num_cols, packed_byte_arr_cpy);
-		packed_byte_arr_cpy += byte_arr_num_cols;
+		packed_byte_arr_cpy += (byte_arr_num_cols / 8);
 	}
 }
 

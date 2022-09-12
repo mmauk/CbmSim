@@ -102,14 +102,11 @@ void validate_args_and_set_modes(int *argc, char ***argv,
 void parse_build_args(char ***argv, parsed_build_file &p_file);
 
 /*
- * Description:
- *     Parses the given experiment file into the experiment structure, defined in 
- *     experiment_file.h. It is assumed that this function will be called in some 
- *     branch relating to run mode. For more information on how an experiment file
- *     is parsed, please look at experiment_file.h and experiment_file.cpp.
+ * Assigns the full input experiment file path name to in_file. Assumes the file
+ * is contained in the correct order within *argv. Should be called after validate_args_and_set_modes
  *
  */
-void parse_experiment_args(char ***argv, experiment &exper);
+void get_in_expt_file(char ***argv, std::string &in_file);
 
 /*
  * Description:
