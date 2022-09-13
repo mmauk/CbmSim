@@ -71,36 +71,63 @@ void Control::build_sim()
 void Control::init_experiment(std::string in_expt_filename)
 {
 	std::cout << "[INFO]: Loading Experiment file...\n";
+	if (experiment_initialized && curr_expt_file_name != in_expt_filename) reset_experiment(expt);
 	parse_experiment_file(in_expt_filename, expt);
+	experiment_initialized = true;
+	curr_expt_file_name = in_expt_filename;
 	std::cout << "[INFO]: Finished loading Experiment file.\n";
 }
 
 void Control::init_sim(std::string in_sim_filename)
 {
+	//if (sim_initialized) 
+	//{
+	//	if (curr_sim_file_name != in_sim_filename)
+	//	{
+	//		std::cout << "[INFO]: Deallocating previous simulation...\n";
+	//		this->~Control();
+	//		std::cout << "[INFO]: Finished deallocating previous simulation.\n";
+	//	}
+	//	else
+	//	{
+	//		std::cout << "[ERROR]: Trying to load in an already initialized file.\n";
+	//		return;
+	//	}
+	//}
 	std::cout << "[INFO]: Initializing simulation...\n";
 	std::fstream sim_file_buf(in_sim_filename.c_str(), std::ios::in | std::ios::binary);
-	if (!con_params_populated) read_con_params(sim_file_buf);
-	if (!act_params_populated) read_act_params(sim_file_buf);
-	if (!simState) simState = new CBMState(numMZones, sim_file_buf);
-	if (!simCore) simCore = new CBMSimCore(simState, gpuIndex, gpuP2);
-	if (!mfFreq)
-	{
-		mfFreq = new ECMFPopulation(num_mf, mfRandSeed,
-			  CSTonicMFFrac, CSPhasicMFFrac, contextMFFrac, nucCollFrac,
-			  bgFreqMin, csbgFreqMin, contextFreqMin, tonicFreqMin, phasicFreqMin, bgFreqMax,
-			  csbgFreqMax, contextFreqMax, tonicFreqMax, phasicFreqMax, collaterals_off,
-			  fracImport, secondCS, fracOverlap);
-	}
-	if (!mfs)
-	{
-		mfs = new PoissonRegenCells(num_mf, mfRandSeed,
-				threshDecayTau, msPerTimeStep, numMZones, num_nc);
-	}
-	if (!internal_arrays_initialized) initialize_rast_internal();
-	if (!output_arrays_initialized) initializeOutputArrays();
-	if (!spike_sums_initialized) initialize_spike_sums();
+	read_con_params(sim_file_buf);
+	read_act_params(sim_file_buf);
+	simState = new CBMState(numMZones, sim_file_buf);
+	simCore  = new CBMSimCore(simState, gpuIndex, gpuP2);
+	mfFreq   = new ECMFPopulation(num_mf, mfRandSeed, CSTonicMFFrac, CSPhasicMFFrac,
+								  contextMFFrac, nucCollFrac, bgFreqMin, csbgFreqMin,
+								  contextFreqMin, tonicFreqMin, phasicFreqMin, bgFreqMax,
+								  csbgFreqMax, contextFreqMax, tonicFreqMax, phasicFreqMax,
+								  collaterals_off, fracImport, secondCS, fracOverlap);
+	mfs = new PoissonRegenCells(num_mf, mfRandSeed, threshDecayTau, msPerTimeStep, numMZones, num_nc);
+	initialize_rast_internal();
+	initializeOutputArrays();
+	initialize_spike_sums();
 	sim_file_buf.close();
+	sim_initialized = true;
+	curr_sim_file_name = in_sim_filename;
 	std::cout << "[INFO]: Simulation initialized.\n";
+}
+
+void Control::reset_sim(std::string in_sim_filename)
+{
+	std::fstream sim_file_buf(in_sim_filename.c_str(), std::ios::in | std::ios::binary);
+	read_con_params(sim_file_buf);
+	read_act_params(sim_file_buf);
+	simState->readState(sim_file_buf);
+	// TODO: simCore, mfFreq, mfs
+	
+	reset_rast_internal();
+	resetOutputArrays();
+	reset_spike_sums();
+	sim_file_buf.close();
+	curr_sim_file_name = in_sim_filename;
 }
 
 void Control::save_sim_state_to_file(std::string outStateFile)
@@ -436,6 +463,43 @@ void Control::runExperiment(struct gui *gui)
 	run_state = NOT_IN_RUN;
 }
 
+void Control::reset_spike_sums()
+{
+		for (int i = 0; i < NUM_CELL_TYPES; i++)
+		{
+			spike_sums[i].cs_spike_sum = 0;
+			spike_sums[i].non_cs_spike_sum = 0;
+			memset((void *)(spike_sums[i].non_cs_spike_counter), 0, spike_sums[i].num_cells * sizeof(ct_uint32_t));
+			memset((void *)(spike_sums[i].cs_spike_counter), 0, spike_sums[i].num_cells * sizeof(ct_uint32_t));
+		}
+}
+
+void Control::reset_rast_internal()
+{
+	memset(all_mf_rast_internal[0], '\000', num_mf * PSTHColSize * sizeof(ct_uint8_t));
+	memset(all_go_rast_internal[0], '\000', num_go * PSTHColSize * sizeof(ct_uint8_t));
+	memset(sample_gr_rast_internal[0], '\000', 4096 * PSTHColSize * sizeof(ct_uint8_t));
+	memset(all_pc_rast_internal[0], '\000', num_mf * PSTHColSize * sizeof(ct_uint8_t));
+	memset(all_nc_rast_internal[0], '\000', num_mf * PSTHColSize * sizeof(ct_uint8_t));
+	memset(all_sc_rast_internal[0], '\000', num_mf * PSTHColSize * sizeof(ct_uint8_t));
+	memset(all_bc_rast_internal[0], '\000', num_mf * PSTHColSize * sizeof(ct_uint8_t));
+	memset(all_io_rast_internal[0], '\000', num_mf * PSTHColSize * sizeof(ct_uint8_t));
+}
+
+void Control::resetOutputArrays()
+{
+	memset(allMFRaster, '\000', all_mf_rast_size * sizeof(ct_uint8_t));
+	memset(allGORaster, '\000', all_go_rast_size * sizeof(ct_uint8_t));
+	memset(sampleGRRaster, '\000', sample_gr_rast_size * sizeof(ct_uint8_t));
+	memset(allPCRaster, '\000', all_pc_rast_size * sizeof(ct_uint8_t));
+	memset(allNCRaster, '\000', all_nc_rast_size * sizeof(ct_uint8_t));
+	memset(allSCRaster, '\000', all_sc_rast_size * sizeof(ct_uint8_t));
+	memset(allBCRaster, '\000', all_bc_rast_size * sizeof(ct_uint8_t));
+	memset(allIORaster, '\000', all_io_rast_size * sizeof(ct_uint8_t));
+
+	memset(sample_pfpc_syn_weights, 0.0, 4096 * sizeof(float));
+}
+
 void gen_gr_sample(int gr_indices[], int sample_size, int data_size)
 {
 	CRandomSFMT0 randGen(0); // replace seed later
@@ -525,17 +589,6 @@ void Control::update_spike_sums(int tts)
 			}
 		}
 	}
-}
-
-void Control::reset_spike_sums()
-{
-		for (int i = 0; i < NUM_CELL_TYPES; i++)
-		{
-			spike_sums[i].cs_spike_sum = 0;
-			spike_sums[i].non_cs_spike_sum = 0;
-			memset((void *)(spike_sums[i].non_cs_spike_counter), 0, spike_sums[i].num_cells * sizeof(ct_uint32_t));
-			memset((void *)(spike_sums[i].cs_spike_counter), 0, spike_sums[i].num_cells * sizeof(ct_uint32_t));
-		}
 }
 
 
@@ -637,18 +690,6 @@ void Control::fill_rast_internal(int PSTHCounter)
 		all_io_rast_internal[i][PSTHCounter] = ioSpks[i];
 		all_io_vm_rast_internal[i][PSTHCounter] = vm_io[i];
 	}
-}
-
-void Control::reset_rast_internal()
-{
-	memset(all_mf_rast_internal[0], '\000', num_mf * PSTHColSize * sizeof(ct_uint8_t));
-	memset(all_go_rast_internal[0], '\000', num_go * PSTHColSize * sizeof(ct_uint8_t));
-	memset(sample_gr_rast_internal[0], '\000', 4096 * PSTHColSize * sizeof(ct_uint8_t));
-	memset(all_pc_rast_internal[0], '\000', num_mf * PSTHColSize * sizeof(ct_uint8_t));
-	memset(all_nc_rast_internal[0], '\000', num_mf * PSTHColSize * sizeof(ct_uint8_t));
-	memset(all_sc_rast_internal[0], '\000', num_mf * PSTHColSize * sizeof(ct_uint8_t));
-	memset(all_bc_rast_internal[0], '\000', num_mf * PSTHColSize * sizeof(ct_uint8_t));
-	memset(all_io_rast_internal[0], '\000', num_mf * PSTHColSize * sizeof(ct_uint8_t));
 }
 
 void Control::fillOutputArrays()

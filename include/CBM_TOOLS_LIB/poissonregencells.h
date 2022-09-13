@@ -22,6 +22,7 @@
 class PoissonRegenCells
 {
 public:
+	PoissonRegenCells();
 	PoissonRegenCells(unsigned int numCells, int randSeed, float threshDecayTau, float msPerTimeStep, 
 		unsigned int numZones, unsigned int numNC, float sigma=0);
 	~PoissonRegenCells();
@@ -30,7 +31,6 @@ public:
 	const ct_uint8_t* calcPoissActivity(const float *freqencies, MZone **mZoneList, int ispikei = 18); 
 	bool* calcTrueMFs(const float *freqencies);
 private:
-	PoissonRegenCells();
 	void prepCollaterals(int rSeed);
 
 	std::normal_distribution<float> *normDist;
@@ -55,7 +55,6 @@ private:
 	int spikeTimer = 0;
 
 	bool *isTrueMF;
-
 };
 
 #endif /* POISSONREGENCELLS_H_ */

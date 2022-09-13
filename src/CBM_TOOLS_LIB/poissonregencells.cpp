@@ -95,8 +95,8 @@ void PoissonRegenCells::prepCollaterals(int rSeed)
 
 	delete[] tempNCs;
 	delete[] tempMZs;
-	
 }
+
 const ct_uint8_t* PoissonRegenCells::calcThreshActivity(const float *frequencies, MZone **mZoneList)
 {
 	int countColls = 0;

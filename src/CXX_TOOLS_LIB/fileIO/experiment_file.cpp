@@ -14,6 +14,15 @@
 #include <sstream>
 #include "fileIO/experiment_file.h"
 
+void reset_experiment(experiment &experiment)
+{
+	for (int i = 0; i < experiment.num_trials; i++)
+	{
+		experiment.trials[i] = {};
+	}
+	experiment.num_trials = 0;
+}
+
 /*
  * Implementation Notes:
  *     This function first loops through the file, obtaining each line and placing

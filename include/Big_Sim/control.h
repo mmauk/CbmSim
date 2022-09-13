@@ -62,11 +62,16 @@ class Control
 		PoissonRegenCells *mfs = NULL;
 
 		enum vis_mode sim_vis_mode = NO_VIS;
+		bool experiment_initialized = false;
+		bool sim_initialized = false;
+
 		bool internal_arrays_initialized = false; /* temporary, going to refactor soon */
 		bool output_arrays_initialized = false;
 		bool spike_sums_initialized = false;
 		enum sim_run_state run_state = NOT_IN_RUN; 
 
+		std::string curr_expt_file_name = "";
+		std::string curr_sim_file_name  = "";
 		const float *grgoG, *mfgoG, *gogrG, *mfgrG;
 		const ct_uint8_t *mfAP;
 
@@ -221,6 +226,7 @@ class Control
 		
 		void init_experiment(std::string in_expt_filename);
 		void init_sim(std::string in_sim_filename);
+		void reset_sim(std::string in_sim_filename);
 
 		void save_sim_state_to_file(std::string outStateFile); /* TODO: deprecate, what else do we use for? */
 		void save_sim_to_file(std::string outSimFile);
@@ -243,14 +249,16 @@ class Control
 		void initializeOutputArrays();
 		void runExperiment(struct gui *gui);
 
+		void reset_spike_sums();
+		void reset_rast_internal();
+		void resetOutputArrays();
+
 		void saveOutputArraysToFile();
 
 		void countGOSpikes(int *goSpkCounter, float &medTrials);
 		void update_spike_sums(int tts);
-		void reset_spike_sums();
 		void calculate_firing_rates();
 		void fill_rast_internal(int PSTHCounter);
-		void reset_rast_internal();
 		void fillOutputArrays();
 
 		// this should be in CXX Tools or 2D array...

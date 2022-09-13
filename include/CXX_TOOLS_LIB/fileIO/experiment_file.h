@@ -52,13 +52,20 @@ struct experiment_info /* this struct is only used in the function parse_trials 
 	int BlockTrialCount[32];    // number of trials in each block
 };
 
-struct experiment /* a structure which includes the number of trials, convenient for later processing */
+typedef struct /* a structure which includes the number of trials, convenient for later processing */
 {
 	int num_trials;
 	trial trials[MAX_NUM_TRIALS];
-};
+}
+experiment;
 
-typedef struct experiment experiment;
+/*
+ * Description:
+ *     resets all trial attribs to their value-initialized values and sets the number of expt
+ *     trials to zero.
+ *
+ */
+void reset_experiment(experiment &experiment);
 
 /*
  * Description:
