@@ -395,7 +395,7 @@ void Control::runExperiment(struct gui *gui)
 			simCore->updateTrueMFs(isTrueMF);
 			simCore->updateMFInput(mfAP);
 			simCore->calcActivity(spillFrac); 
-			//update_spike_sums(ts);
+			update_spike_sums(ts);
 
 			if (ts >= onsetCS && ts < offsetCS)
 			{
@@ -439,11 +439,11 @@ void Control::runExperiment(struct gui *gui)
 		if (gui != NULL)
 		{
 			// for now, compute the mean and median firing rates for all cells if win is visible
-			//if (firing_rates_win_visible(gui))
-			//{
-			//	calculate_firing_rates();
-			//	gdk_threads_add_idle((GSourceFunc)update_fr_labels, gui);
-			//}
+			if (firing_rates_win_visible(gui))
+			{
+				calculate_firing_rates();
+				gdk_threads_add_idle((GSourceFunc)update_fr_labels, gui);
+			}
 			if (run_state == IN_RUN_PAUSE)
 			{
 				std::cout << "[INFO]: Simulation is paused at end of trial " << trial+1 << ".\n";
@@ -453,15 +453,15 @@ void Control::runExperiment(struct gui *gui)
 				}
 				std::cout << "[INFO]: Continuing...\n";
 			}
-			//reset_spike_sums();
+			reset_spike_sums();
 		}
-		fillOutputArrays();
+		//fillOutputArrays();
 		trial++;
 	}
 	if (run_state == NOT_IN_RUN) std::cout << "[INFO]: Simulation terminated.\n";
 	else if (run_state == IN_RUN_NO_PAUSE) std::cout << "[INFO]: Simulation Completed.\n";
 	// if (sim_vis_mode == TUI) reset_tty(&fp); /* reset the tty for later use */
-	saveOutputArraysToFile();
+	//saveOutputArraysToFile();
 	run_state = NOT_IN_RUN;
 }
 

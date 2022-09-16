@@ -219,9 +219,6 @@ InNet::~InNet()
 	{
 		cudaSetDevice(i + gpuIndStart);
 
-		cudaFreeHost(grInputBCSumH[i]);
-		cudaFree(grInputBCGPU[i]);
-		cudaFree(grInputBCSumGPU[i]);
 		
 		cudaFree(inputPFBCGPU[i]);
 		cudaFree(inputSumPFBCGPU[i]);
@@ -229,10 +226,6 @@ InNet::~InNet()
 		cudaDeviceSynchronize();
 	}
 
-	delete[] grInputBCGPU;
-	delete[] grInputBCGPUP;
-	delete[] grInputBCSumGPU;
-	delete[] grInputBCSumH;
 	
 	delete[] inputPFBCGPU;
 	delete[] inputPFBCGPUP;
@@ -403,11 +396,6 @@ ct_uint64_t** InNet::getHistGRGPUPointer()
 ct_uint32_t** InNet::getGRInputGOSumHPointer()
 {
 	return grInputGOSumH;
-}
-
-ct_uint32_t** InNet::getGRInputBCSumHPointer()
-{
-	return grInputBCSumH;
 }
 
 const float* InNet::exportGESumGR()
@@ -750,16 +738,6 @@ void InNet::runSumGRGOOutCUDA(cudaStream_t **sts, int streamN)
 				updateGRGOOutNumGRRows, grInputGOGPU[i], grInputGOGPUP[i], grInputGOSumGPU[i]);
 	}
 }
-void InNet::runSumGRBCOutCUDA(cudaStream_t **sts, int streamN)
-{
-	cudaError_t error;
-	for(int i=0; i<numGPUs; i++)
-	{
-		error=cudaSetDevice(i+gpuIndStart);
-		callSumGRBCOutKernel(sts[i][streamN], sumGRBCOutNumBlocks, sumGRBCOutNumBCPerB,
-				updateGRBCOutNumGRRows, grInputBCGPU[i], grInputBCGPUP[i], grInputBCSumGPU[i]);
-	}
-}
 
 void InNet::cpyDepAmpMFHosttoGPUCUDA(cudaStream_t **sts, int streamN)
 {
@@ -957,24 +935,6 @@ void InNet::runUpdateGROutGOCUDA(cudaStream_t **sts, int streamN)
 	}
 }
 
-void InNet::runUpdateGROutBCCUDA(cudaStream_t **sts, int streamN)
-{
-	cudaError_t error;
-	for(int i=0; i<numGPUs; i++)
-	{
-		error=cudaSetDevice(i+gpuIndStart);
-		callUpdateGROutBCKernel(sts[i][streamN], updateGRBCOutNumGRRows, updateGRBCOutNumGRPerR,
-				num_bc, apBufGRGPU[i], grInputBCGPU[i], grInputBCGPUP[i],
-				delayBCMasksGRGPU[i], delayBCMasksGRGPUP[i],
-				grConGROutBCGPU[i], grConGROutBCGPUP[i], numBCOutPerGRGPU[i]);
-#ifdef DEBUGOUT
-		error=cudaGetLastError();
-		cerr<<"runUpdateGROutBCCUDA: kernel launch for gpu #"<<i<<
-				": "<<cudaGetErrorString(error)<<endl;
-#endif
-	}
-}
-
 void InNet::cpyPFBCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN)
 {
 	cudaError_t error;
@@ -1020,25 +980,6 @@ void InNet::cpyGRGOSumGPUtoHostCUDA(cudaStream_t **sts, int streamN, ct_uint32_t
 		error=cudaSetDevice(i+gpuIndStart);
 
 		error=cudaMemcpyAsync(grInputGOSumHost[i], grInputGOSumGPU[i], num_go * sizeof(ct_uint32_t),
-				cudaMemcpyDeviceToHost, sts[i][streamN]);
-	}
-}
-
-void InNet::cpyGRBCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN)
-{
-
-	cpyGRBCSumGPUtoHostCUDA(sts, streamN, grInputBCSumH);
-}
-
-void InNet::cpyGRBCSumGPUtoHostCUDA(cudaStream_t **sts,
-	int streamN, ct_uint32_t **grInputBCSumHost)
-{
-	cudaError_t error;
-	for(int i=0; i<numGPUs; i++)
-	{
-		error=cudaSetDevice(i+gpuIndStart);
-
-		error=cudaMemcpyAsync(grInputBCSumHost[i], grInputBCSumGPU[i], num_bc*sizeof(ct_uint32_t),
 				cudaMemcpyDeviceToHost, sts[i][streamN]);
 	}
 }
@@ -1471,10 +1412,6 @@ void InNet::initGOCUDA()
 }
 void InNet::initBCCUDA()
 {
-	grInputBCGPU    = new ct_uint32_t*[numGPUs];
-	grInputBCGPUP   = new size_t[numGPUs];
-	grInputBCSumGPU = new ct_uint32_t*[numGPUs];
-	grInputBCSumH   = new ct_uint32_t*[numGPUs];
 	
 	inputPFBCGPU    = new ct_uint32_t*[numGPUs];
 	inputPFBCGPUP   = new size_t[numGPUs];
@@ -1491,10 +1428,6 @@ void InNet::initBCCUDA()
 	for (int i = 0; i < numGPUs; i++)
 	{
 		cudaSetDevice(i + gpuIndStart);
-		cudaMallocHost((void **)&grInputBCSumH[i], num_bc * sizeof(ct_uint32_t));
-		cudaMallocPitch((void **)&grInputBCGPU[i], (size_t *)&grInputBCGPUP[i],
-			num_bc * sizeof(ct_uint32_t), updateGRBCOutNumGRRows);
-		cudaMalloc((void **)&grInputBCSumGPU[i], num_bc * sizeof(ct_uint32_t));
 
 		cudaMallocPitch((void **)&inputPFBCGPU[i], (size_t *)&inputPFBCGPUP[i],
 			num_p_bc_from_gr_to_bc * sizeof(ct_uint32_t), num_bc / numGPUs);
@@ -1509,13 +1442,6 @@ void InNet::initBCCUDA()
 	for (int i = 0; i < numGPUs; i++)
 	{
 		cudaSetDevice(i + gpuIndStart);
-		cudaMemset(grInputBCSumH[i], 0, num_bc * sizeof(ct_uint32_t));
-		for (int j = 0; j < updateGRBCOutNumGRRows; j++)
-		{
-			cudaMemset(((char *)grInputBCGPU[i]+j*grInputBCGPUP[i]),
-				0, num_bc * sizeof(ct_uint32_t));
-		}
-		cudaMemset(grInputBCSumGPU[i], 0, num_bc * sizeof(ct_uint32_t));
 
 		for (int j = 0; j < num_bc / numGPUs; j++)
 		{

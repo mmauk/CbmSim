@@ -240,20 +240,13 @@ void MZone::calcPCActivities()
 	}
 }
 
-void MZone::calcBCActivities(ct_uint32_t **pfInput)
+void MZone::calcBCActivities()
 {
 #pragma omp parallel
 	{
 #pragma omp for
 		for (int i = 0; i < num_bc; i++)
 		{
-			int totalPFInput = 0;
-
-			for (int j = 0; j < numGPUs; j++)
-			{
-				totalPFInput += pfInput[j][i];
-			}
-			
 			as->gPFBC[i] = as->gPFBC[i] + sumPFBCInput[i] * gIncGRtoBC;
 			as->gPFBC[i] = as->gPFBC[i] * gDecGRtoBC;
 			as->gPCBC[i] = as->gPCBC[i] + as->inputPCBC[i] * gIncPCtoBC;

@@ -49,7 +49,7 @@ public:
 	void updatePFBCSum(const ct_uint32_t *pfBCSum);
 
 	void calcPCActivities();
-	void calcBCActivities(ct_uint32_t **pfInput);
+	void calcBCActivities();
 	void calcIOActivities();
 	void calcNCActivities();
 

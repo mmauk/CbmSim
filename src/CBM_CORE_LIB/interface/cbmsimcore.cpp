@@ -224,7 +224,7 @@ void CBMSimCore::calcActivity(float spillFrac)
 		zones[i]->updateSCActivities(inputNet->exportAPSC());
 		zones[i]->updatePFBCSum(inputNet->exportPFBCSum());
 		zones[i]->calcPCActivities();
-		zones[i]->calcBCActivities(inputNet->getGRInputBCSumHPointer());
+		zones[i]->calcBCActivities();
 	}
 
 	inputNet->calcSCActivities();
