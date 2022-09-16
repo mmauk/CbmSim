@@ -175,7 +175,6 @@ void CBMSimCore::calcActivity(float spillFrac)
 #endif
 
 	// Only allow plasticty once HomeoTuning in GCL is complete
-	//if (curTime < 1000 * 5000)
 	for (int i = 0; i < numZones; i++)
 	{
 		zones[i]->runPFPCPlastCUDA(streams, 1, curTime);

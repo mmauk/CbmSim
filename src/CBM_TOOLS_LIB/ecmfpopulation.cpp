@@ -27,7 +27,7 @@ ECMFPopulation::ECMFPopulation(int numMF, int randSeed, float fracCSTMF, float f
 	this->turnOffColls = turnOffColls;
 	this->numMF = numMF;
 
-	mfFreqBG 		 = new float[numMF];
+	mfFreqBG         = new float[numMF];
 	mfFreqInCSPhasic = new float[numMF];
 	mfFreqInCSTonicA = new float[numMF];
 	mfFreqInCSTonicB = new float[numMF];
@@ -61,7 +61,7 @@ ECMFPopulation::ECMFPopulation(int numMF, int randSeed, float fracCSTMF, float f
 	numCSTMFA = numCSTMF;
 
 	if (secondCS) numCSTMFB = numCSTMF; 
-	else numCSTMFB = 0;	
+	else numCSTMFB = 0;
     	
 	numCSPMF    = fracCSPMF * numMF;
 	numCtxtMF   = fracCtxtMF * numMF;
@@ -100,7 +100,7 @@ ECMFPopulation::ECMFPopulation(int numMF, int randSeed, float fracCSTMF, float f
 		tonicASum 	  += isCSTonicA[i];
 		tonicBSum 	  += isCSTonicB[i];
 		importSum 	  += isImport[i];
-		anySum 		  += isAny[i];
+		anySum 		  += isAny[i]; /* wouldn't this be the whole population? */
 	}
 
     for (int i = 0; i < numMF; i++)
@@ -125,7 +125,7 @@ ECMFPopulation::ECMFPopulation(int numMF, int randSeed, float fracCSTMF, float f
 
 			mfFreqInCSPhasic[i] = randGen.Random()*(csPFreqMax - csPFreqMin) + csPFreqMin;
         }
-		else if (isCollateral[i] && !turnOffColls)
+		else if (isCollateral[i] && !turnOffColls) /* confusing: is an afferent to the dcn. why treat collaterals as recurrent dcn->mf feedback? */
 		{
 			mfFreqBG[i] 		= -1;
 			mfFreqInCSTonicA[i] = -1;

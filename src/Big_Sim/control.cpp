@@ -105,7 +105,7 @@ void Control::init_sim(std::string in_sim_filename)
 								  contextFreqMin, tonicFreqMin, phasicFreqMin, bgFreqMax,
 								  csbgFreqMax, contextFreqMax, tonicFreqMax, phasicFreqMax,
 								  collaterals_off, fracImport, secondCS, fracOverlap);
-	mfs = new PoissonRegenCells(num_mf, mfRandSeed, threshDecayTau, msPerTimeStep, numMZones, num_nc);
+	mfs = new PoissonRegenCells(mfRandSeed, threshDecayTau, numMZones);
 	initialize_rast_internal();
 	initializeOutputArrays();
 	initialize_spike_sums();
@@ -132,20 +132,21 @@ void Control::reset_sim(std::string in_sim_filename)
 
 void Control::save_sim_state_to_file(std::string outStateFile)
 {
-	if (!(con_params_populated && act_params_populated && simState && simCore))
+	if (!(con_params_populated && act_params_populated && simState))
 	{
 		fprintf(stderr, "[ERROR]: Trying to write an uninitialized state to file.\n");
 		fprintf(stderr, "[ERROR]: (Hint: Try loading a sim file first.)\n");
 		return;
 	}
 	std::fstream outStateFileBuffer(outStateFile.c_str(), std::ios::out | std::ios::binary);
-	simCore->writeState(outStateFileBuffer);
+	if (!simCore) simState->writeState(outStateFileBuffer);
+	else simCore->writeState(outStateFileBuffer);
 	outStateFileBuffer.close();
 }
 
 void Control::save_sim_to_file(std::string outSimFile)
 {
-	if (!(con_params_populated && act_params_populated && simState && simCore))
+	if (!(con_params_populated && act_params_populated && simState))
 	{
 		fprintf(stderr, "[ERROR]: Trying to write an uninitialized simulation to file.\n");
 		fprintf(stderr, "[ERROR]: (Hint: Try loading a build file first.)\n");
@@ -154,7 +155,8 @@ void Control::save_sim_to_file(std::string outSimFile)
 	std::fstream outSimFileBuffer(outSimFile.c_str(), std::ios::out | std::ios::binary);
 	write_con_params(outSimFileBuffer);
 	write_act_params(outSimFileBuffer);
-	simCore->writeState(outSimFileBuffer);
+	if (!simCore) simState->writeState(outSimFileBuffer);
+	else simCore->writeState(outSimFileBuffer);
 	outSimFileBuffer.close();
 }
 
@@ -389,7 +391,7 @@ void Control::runExperiment(struct gui *gui)
 									: mfs->calcPoissActivity(mfFreq->getMFBG(), simCore->getMZoneList());
 			}
 			
-			bool *isTrueMF = mfs->calcTrueMFs(mfFreq->getMFBG());
+			bool *isTrueMF = mfs->calcTrueMFs(mfFreq->getMFBG()); /* only used for mfdcn plasticity */
 			simCore->updateTrueMFs(isTrueMF);
 			simCore->updateMFInput(mfAP);
 			simCore->calcActivity(spillFrac); 
@@ -459,7 +461,7 @@ void Control::runExperiment(struct gui *gui)
 	if (run_state == NOT_IN_RUN) std::cout << "[INFO]: Simulation terminated.\n";
 	else if (run_state == IN_RUN_NO_PAUSE) std::cout << "[INFO]: Simulation Completed.\n";
 	// if (sim_vis_mode == TUI) reset_tty(&fp); /* reset the tty for later use */
-	//saveOutputArraysToFile();
+	saveOutputArraysToFile();
 	run_state = NOT_IN_RUN;
 }
 
@@ -523,10 +525,10 @@ void Control::saveOutputArraysToFile()
 	//std::string allMFRasterFileName = OUTPUT_DATA_PATH + "allMFRaster.bin";
 	//write2DCharArray(allMFRasterFileName, allMFRaster, num_mf, rasterColumnSize);
 
-	std::cout << "[INFO]: Filling GO file..." << std::endl;
-	std::string allGORasterFileName = OUTPUT_DATA_PATH + "allGORaster.bin";
-	save_go_psth_to_file(allGORasterFileName);
-	std::cout << "[INFO]: Done filling GO file." << std::endl;
+	//std::cout << "[INFO]: Filling GO file..." << std::endl;
+	//std::string allGORasterFileName = OUTPUT_DATA_PATH + "allGORaster.bin";
+	//save_go_psth_to_file(allGORasterFileName);
+	//std::cout << "[INFO]: Done filling GO file." << std::endl;
 
 	//std::cout << "Filling GR files..." << std::endl;
 	//std::string sampleGRRasterFileName = OUTPUT_DATA_PATH + "sampleGRRaster.bin";
@@ -537,9 +539,10 @@ void Control::saveOutputArraysToFile()
 	save_pc_psth_to_file(allPCRasterFileName);
 	std::cout << "[INFO]: Done filling PC file." << std::endl;
 
-	//std::cout << "Filling NC files..." << std::endl;
-	//std::string allNCRasterFileName = OUTPUT_DATA_PATH + "allNCRaster.bin";
-	//write2DCharArray(allNCRasterFileName, allNCRaster, num_nc, rasterColumnSize);
+	std::cout << "[INFO]: Filling NC files..." << std::endl;
+	std::string allNCRasterFileName = OUTPUT_DATA_PATH + "allNCRaster.bin";
+	save_nc_psth_to_file(allNCRasterFileName);
+	std::cout << "[INFO]: Done filling NC file." << std::endl;
 
 	//std::cout << "Filling SC files..." << std::endl;
 	//std::string allSCRasterFileName = OUTPUT_DATA_PATH + "allSCRaster.bin";
@@ -699,7 +702,7 @@ void Control::fillOutputArrays()
 	pack_2d_byte_array(all_go_rast_internal, num_go, PSTHColSize, allGORaster, offset_common * num_go);
 	//pack_2d_byte_array(sample_gr_rast_internal, 4096, PSTHColSize, sampleGRRaster, offset);
 	pack_2d_byte_array(all_pc_rast_internal, num_pc, PSTHColSize, allPCRaster, offset_common * num_pc);
-	//pack_2d_byte_array(all_nc_rast_internal, num_nc, PSTHColSize, allNCRaster, offset);
+	pack_2d_byte_array(all_nc_rast_internal, num_nc, PSTHColSize, allNCRaster, offset_common * num_nc);
 	//pack_2d_byte_array(all_sc_rast_internal, num_sc, PSTHColSize, allSCRaster, offset);
 	//pack_2d_byte_array(all_bc_rast_internal, num_bc, PSTHColSize, allBCRaster, offset);
 	//pack_2d_byte_array(all_io_rast_internal, num_io, PSTHColSize, allIORaster, offset);

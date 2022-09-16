@@ -15,19 +15,19 @@
 #include <math.h>
 #include <limits.h>
 
-#include <stdDefinitions/pstdint.h>
-#include <randGenerators/sfmt.h>
-#include <mzonemodules/mzone.h>
+#include "stdDefinitions/pstdint.h"
+#include "randGenerators/sfmt.h"
+#include "mzonemodules/mzone.h"
+#include "params/connectivityparams.h"
+#include "params/activityparams.h"
 
 class PoissonRegenCells
 {
 public:
 	PoissonRegenCells();
-	PoissonRegenCells(unsigned int numCells, int randSeed, float threshDecayTau, float msPerTimeStep, 
-		unsigned int numZones, unsigned int numNC, float sigma=0);
+	PoissonRegenCells(int randSeed, float threshDecayTau, unsigned int numZones, float sigma=0);
 	~PoissonRegenCells();
 
-	const ct_uint8_t* calcThreshActivity(const float *freqencies, MZone **mZoneList); 
 	const ct_uint8_t* calcPoissActivity(const float *freqencies, MZone **mZoneList, int ispikei = 18); 
 	bool* calcTrueMFs(const float *freqencies);
 private:
@@ -40,18 +40,13 @@ private:
 
 	unsigned int nThreads;
 
-	unsigned int nCells;
 	unsigned int numZones;
-	unsigned int numNC; 
-	float msPerTS;
 	float sPerTS;
-	float threshDecay;
 	float sigma;
 
 	ct_uint8_t *aps;
-	float *threshs;
-	unsigned int *dnCellIndex;
-	unsigned int *mZoneIndex;
+	ct_uint32_t *dnCellIndex;
+	ct_uint32_t *mZoneIndex;
 	int spikeTimer = 0;
 
 	bool *isTrueMF;

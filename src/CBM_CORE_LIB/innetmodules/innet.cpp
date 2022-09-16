@@ -380,7 +380,7 @@ const float* InNet::exportSumGOInputGO()
 
 const ct_uint32_t* InNet::exportPFBCSum()
 {
-	return (const ct_uint32_t *) inputSumPFBCH;
+	return (const ct_uint32_t *)inputSumPFBCH;
 }
 
 ct_uint32_t** InNet::getApBufGRGPUPointer()
@@ -1551,7 +1551,7 @@ void InNet::initSCCUDA()
 
 		cudaDeviceSynchronize();
 	}
-	std::cerr << "[INFO]: Finished BC variable cuda allocation - Last Error: "
+	std::cerr << "[INFO]: Finished SC variable cuda allocation - Last Error: "
 	     	  << cudaGetErrorString(cudaGetLastError()) << std::endl;
 
 	// initialize SC vars

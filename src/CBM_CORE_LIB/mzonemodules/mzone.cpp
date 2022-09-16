@@ -335,13 +335,13 @@ float gDecay = exp(-1.0 / 20.0);
 			int inputPCNCSum;
 			int inputMFNCSum;
 
-			gMFNMDASum   = 0;
+			gMFNMDASum   = 0; /* dont use: ask Joe about */
 			gMFAMPASum   = 0;
 			inputMFNCSum = 0;
 
 			for (int j = 0; j < num_p_nc_from_mf_to_nc; j++)
 			{
-				inputMFNCSum += as->inputMFNC[i * num_p_nc_from_mf_to_nc + j];
+				inputMFNCSum += as->inputMFNC[i * num_p_nc_from_mf_to_nc + j]; /* dont use */
 
 				as->gMFAMPANC[i * num_p_nc_from_mf_to_nc + j] = as->gMFAMPANC[i * num_p_nc_from_mf_to_nc + j]
 				   * gDecay + (gAMPAIncMFtoNC * as->inputMFNC[i * num_p_nc_from_mf_to_nc + j]
@@ -351,8 +351,7 @@ float gDecay = exp(-1.0 / 20.0);
 
 			gMFNMDASum = gMFNMDASum * msPerTimeStep / ((float)num_p_nc_from_mf_to_nc);
 			gMFAMPASum = gMFAMPASum * msPerTimeStep / ((float)num_p_nc_from_mf_to_nc);
-			gMFNMDASum = gMFNMDASum * -as->vNC[i] / 80.0f;
-
+			gMFNMDASum = gMFNMDASum * -as->vNC[i] / 80.0f; 
 			gPCNCSum = 0;
 			inputPCNCSum = 0;
 
@@ -366,10 +365,10 @@ float gDecay = exp(-1.0 / 20.0);
 				gPCNCSum += as->gPCNC[i * num_p_nc_from_pc_to_nc + j];
 
 			}
+
 			gPCNCSum = gPCNCSum * msPerTimeStep / ((float)num_p_nc_from_pc_to_nc);
-			
-			as->vNC[i] = as->vNC[i] + gLeakNC * (eLeakNC - as->vNC[i]) -
-					(gMFNMDASum + gMFAMPASum) * as->vNC[i] + gPCNCSum * (ePCtoNC - as->vNC[i]);
+			as->vNC[i] = as->vNC[i] + gLeakNC * (eLeakNC - as->vNC[i])
+					   - (gMFNMDASum + gMFAMPASum) * as->vNC[i] + gPCNCSum * (ePCtoNC - as->vNC[i]);
 			
 			as->threshNC[i] = as->threshNC[i] + threshDecNC * (threshRestNC - as->threshNC[i]);
 			as->apNC[i] = as->vNC[i] > as->threshNC[i];
