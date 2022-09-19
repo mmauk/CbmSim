@@ -8,24 +8,10 @@
 #ifndef INNET_H_
 #define INNET_H_
 
-#ifdef INTELCC
-#include <mathimf.h>
-#else //otherwise use standard math library
-#include <math.h>
-#endif
-
-#include <string.h>
-#include <sstream>
-#include <iostream>
-#include <fstream>
-#include <memory>
 #include <omp.h>
 #include <cuda.h>
-#include <cuda_runtime.h>
+
 #include "stdDefinitions/pstdint.h"
-#include "memoryMgmt/dynamic2darray.h"
-#include "params/connectivityparams.h" 
-#include "params/activityparams.h"
 #include "state/innetconnectivitystate.h"
 #include "state/innetactivitystate.h"
 #include "cuda/kernels.h"
@@ -34,8 +20,7 @@ class InNet
 {
 public:
 	InNet();
-	InNet(InNetConnectivityState *cs, InNetActivityState *as,
-		int gpuIndStart, int numGPUs);
+	InNet(InNetConnectivityState *cs, InNetActivityState *as, int gpuIndStart, int numGPUs);
 	~InNet();
 
 	void writeToState();
@@ -132,7 +117,6 @@ protected:
 	float **depAmpUBCH;
 	float **depAmpUBCGPU;
 	float **depAmpUBCGRGPU;
-	
 
 	//mossy fibers
 	const ct_uint8_t *apMFOut;

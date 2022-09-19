@@ -5,6 +5,13 @@
  *      Author: consciousness
  */
 
+#include <iostream>
+#include <algorithm> /* std::fill */
+
+#include "fileIO/rawbytesrw.h"
+#include "randGenerators/sfmt.h"
+#include "params/connectivityparams.h"
+#include "params/activityparams.h"
 #include "state/mzoneactivitystate.h"
 
 MZoneActivityState::MZoneActivityState() {}
@@ -35,13 +42,12 @@ void MZoneActivityState::writeState(std::fstream &outfile)
 
 void MZoneActivityState::allocateMemory()
 {
+	// stellate cells
 	apSC           = std::make_unique<ct_uint8_t[]>(num_sc);
 	apBufSC        = std::make_unique<ct_uint32_t[]>(num_sc);
 	gPFSC          = std::make_unique<float[]>(num_sc);
 	threshSC       = std::make_unique<float[]>(num_sc);
 	vSC            = std::make_unique<float[]>(num_sc);
-	// Not used.
-	// inputSumPFSC   = std::make_unique<ct_uint32_t[]>(num_sc);
 
 	// basket cells
 	apBC      = std::make_unique<ct_uint8_t[]>(num_bc);
@@ -143,7 +149,6 @@ void MZoneActivityState::stateRW(bool read, std::fstream &file)
 	rawBytesRW((char *)gPFSC.get(), num_sc * sizeof(float), read, file);
 	rawBytesRW((char *)threshSC.get(), num_sc * sizeof(float), read, file);
 	rawBytesRW((char *)vSC.get(), num_sc * sizeof(float), read, file);
-	//rawBytesRW((char *)inputSumPFSC.get(), num_sc * sizeof(ct_uint32_t), read, file);
 
 	// basket cells
 	rawBytesRW((char *)apBC.get(), num_bc * sizeof(ct_uint8_t), read, file);

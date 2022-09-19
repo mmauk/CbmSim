@@ -5,6 +5,15 @@
  *      Author: consciousness
  */
 
+#include <algorithm>
+#include <iostream>
+#include <limits.h>
+
+#include "fileIO/rawbytesrw.h"
+#include "memoryMgmt/dynamic2darray.h"
+#include "randGenerators/sfmt.h"
+#include "params/connectivityparams.h"
+#include "params/activityparams.h"
 #include "state/mzoneconnectivitystate.h"
 
 MZoneConnectivityState::MZoneConnectivityState(int randSeed)

@@ -9,18 +9,7 @@
 #define MZONECONNECTIVITYSTATE_H_
 
 #include <fstream>
-#include <iostream>
-#include <algorithm>
-#include <string.h>
-#include <math.h>
-#include <limits.h>
-
-#include "fileIO/rawbytesrw.h"
 #include "stdDefinitions/pstdint.h"
-#include "randGenerators/sfmt.h"
-#include "memoryMgmt/dynamic2darray.h"
-#include "params/connectivityparams.h"
-#include "params/activityparams.h"
 
 class MZoneConnectivityState
 {

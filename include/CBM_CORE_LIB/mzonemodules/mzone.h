@@ -8,25 +8,9 @@
 #ifndef MZONE_H_
 #define MZONE_H_
 
-#ifdef INTELCC
-#include <mathimf.h>
-#else //otherwise use standard math library
-#include <math.h>
-#endif
-
-#include <vector>
-#include <sstream>
-#include <iostream>
-#include <fstream>
-#include <string.h>
-#include <memory>
 #include <cuda.h>
-#include <cuda_runtime.h>
+
 #include "stdDefinitions/pstdint.h"
-#include "randGenerators/sfmt.h"
-#include "memoryMgmt/dynamic2darray.h"
-#include "params/connectivityparams.h"
-#include "params/activityparams.h"
 #include "state/mzoneconnectivitystate.h"
 #include "state/mzoneactivitystate.h"
 #include "cuda/kernels.h"
@@ -132,10 +116,6 @@ private:
 	bool *isTrueMF;
 
 	//stellate cell variables
-	//const ct_uint8_t *apSCInput;
-
-	/* ====== FROM INNET ====== */
-	//stellate cell variables
 	//host variables
 	ct_uint32_t *inputSumPFSCH;
 	//end host variables
@@ -146,7 +126,6 @@ private:
 	ct_uint32_t **inputSumPFSCGPU;
 	//end gpu related variables
 	//end stellate cell variables
-	/* ====== FROM INNET ====== */
 
 	//basket cell variables
 	//host variables

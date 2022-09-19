@@ -5,7 +5,15 @@
  *   Author: consciousness
  *
  */
+#include <math.h>
+#include <iostream>
 
+#include <fstream>
+#include "params/connectivityparams.h"
+#include "params/activityparams.h"
+#include "memoryMgmt/dynamic2darray.h"
+#include "randGenerators/sfmt.h"
+#include "fileIO/rawbytesrw.h"
 #include "mzonemodules/mzone.h"
 
 MZone::MZone() {}

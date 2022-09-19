@@ -9,14 +9,8 @@
 #define MZONEACTIVITYSTATE_H_
 
 #include <fstream>
-#include <iostream>
-#include <algorithm> /* std::fill */
 #include <memory> /* unique_ptr, make_unique */
-#include "fileIO/rawbytesrw.h"
 #include "stdDefinitions/pstdint.h"
-#include "randGenerators/sfmt.h"
-#include "params/connectivityparams.h"
-#include "params/activityparams.h"
 
 class MZoneActivityState
 {
@@ -36,7 +30,6 @@ public:
 	std::unique_ptr<float[]> gPFSC{nullptr};
 	std::unique_ptr<float[]> threshSC{nullptr};
 	std::unique_ptr<float[]> vSC{nullptr};
-	//std::unique_ptr<ct_uint32_t[]> inputSumPFSC{nullptr};
 
 	//basket cells
 	std::unique_ptr<ct_uint8_t[]> apBC{nullptr};

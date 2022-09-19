@@ -6,9 +6,13 @@
  *      Author: consciousness
  */
 
-#include "innetmodules/innet.h"
+#include <math.h>
+#include <iostream>
 
-using namespace std;
+#include "params/connectivityparams.h" 
+#include "params/activityparams.h"
+#include "memoryMgmt/dynamic2darray.h"
+#include "innetmodules/innet.h"
 
 InNet::InNet() {}
 
@@ -836,30 +840,30 @@ void InNet::initCUDA()
 	int maxNumGPUs;
 
 	error = cudaGetDeviceCount(&maxNumGPUs);
-	cerr<<"CUDA number of devices: "<<maxNumGPUs<<", "<<cudaGetErrorString(error)<<endl;
-	cerr<<"number of devices used: "<<numGPUs<<" starting at GPU# "<<gpuIndStart<<endl;
+	std::cerr << "CUDA number of devices: " << maxNumGPUs << ", "<< cudaGetErrorString(error) << std::endl;
+	std::cerr << "number of devices used: " << numGPUs << " starting at GPU# " << gpuIndStart << std::endl;
 
 	numGRPerGPU = num_gr / numGPUs;
 	calcGRActNumGRPerB = 512;
-	calcGRActNumBlocks=numGRPerGPU/calcGRActNumGRPerB;
+	calcGRActNumBlocks = numGRPerGPU / calcGRActNumGRPerB;
 
 	updateGRGOOutNumGRPerR = 512 * (num_go > 512) + num_go * (num_go <= 512);
-	updateGRGOOutNumGRRows=numGRPerGPU/updateGRGOOutNumGRPerR;
+	updateGRGOOutNumGRRows = numGRPerGPU / updateGRGOOutNumGRPerR;
 
-	sumGRGOOutNumGOPerB=1024*(num_go>1024)+num_go*(num_go<=1024);
-	sumGRGOOutNumBlocks=num_go/sumGRGOOutNumGOPerB;
+	sumGRGOOutNumGOPerB = 1024 * (num_go > 1024) + num_go * (num_go <= 1024);
+	sumGRGOOutNumBlocks = num_go / sumGRGOOutNumGOPerB;
 
-	updateMFInGRNumGRPerB=1024*(num_mf>1024)+(num_mf<=1024)*num_mf;
-	updateMFInGRNumBlocks=numGRPerGPU/updateMFInGRNumGRPerB;
+	updateMFInGRNumGRPerB = 1024 * (num_mf > 1024) + (num_mf <= 1024) * num_mf;
+	updateMFInGRNumBlocks = numGRPerGPU / updateMFInGRNumGRPerB;
 
-	updateUBCInGRNumGRPerB=1024*(num_ubc>1024)+(num_ubc<=1024)*num_ubc;
-	updateUBCInGRNumBlocks=numGRPerGPU/updateUBCInGRNumGRPerB;
+	updateUBCInGRNumGRPerB = 1024 * (num_ubc > 1024) + (num_ubc <= 1024) * num_ubc;
+	updateUBCInGRNumBlocks = numGRPerGPU / updateUBCInGRNumGRPerB;
 
-	updateGOInGRNumGRPerB=1024*(num_go>=1024)+(num_go<1024)*num_go;
-	updateGOInGRNumBlocks=numGRPerGPU/updateGOInGRNumGRPerB;
+	updateGOInGRNumGRPerB = 1024 * (num_go >= 1024) + (num_go < 1024) * num_go;
+	updateGOInGRNumBlocks = numGRPerGPU / updateGOInGRNumGRPerB;
 
-	updateGRHistNumGRPerB=1024;
-	updateGRHistNumBlocks=numGRPerGPU/updateGRHistNumGRPerB;
+	updateGRHistNumGRPerB = 1024;
+	updateGRHistNumBlocks = numGRPerGPU / updateGRHistNumGRPerB;
 
 	std::cout << "[INFO]: Initializing per-cell cuda vars..." << std::endl;
 	
