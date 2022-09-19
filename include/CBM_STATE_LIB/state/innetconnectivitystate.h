@@ -20,12 +20,13 @@
 #include "memoryMgmt/dynamic2darray.h"
 #include "randGenerators/sfmt.h"
 #include "params/connectivityparams.h"
+#include "params/activityparams.h"
 
 class InNetConnectivityState
 {
 public:
 	InNetConnectivityState();
-	InNetConnectivityState(unsigned int msPerStep, int randSeed);
+	InNetConnectivityState(int randSeed);
 	InNetConnectivityState(std::fstream &infile);
 	~InNetConnectivityState();
 
@@ -75,7 +76,6 @@ public:
 	float **pGOCoupInGOGOCCoeff;
 
 	//granule
-	ct_uint32_t *pGRDelayMaskfromGRtoBSP;
 	int *numpGRfromGLtoGR;
 	int **pGRfromGLtoGR;
 	int *numpGRfromGRtoGO;
@@ -100,7 +100,7 @@ protected:
 	void connectGOGO_GJ(CRandomSFMT &randGen);
 	void translateMFGL();
 	void translateGOGL();
-	void assignGRDelays(unsigned int msPerStep);
+	void assignGRDelays();
 };
 
 #endif /* INNETCONNECTIVITYSTATE_H_ */

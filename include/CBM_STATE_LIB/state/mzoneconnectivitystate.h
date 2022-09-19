@@ -20,6 +20,7 @@
 #include "randGenerators/sfmt.h"
 #include "memoryMgmt/dynamic2darray.h"
 #include "params/connectivityparams.h"
+#include "params/activityparams.h"
 
 class MZoneConnectivityState
 {
@@ -31,6 +32,9 @@ public:
 
 	void readState(std::fstream &infile);
 	void writeState(std::fstream &outfile);
+
+	//granule cells
+	ct_uint32_t *pGRDelayMaskfromGRtoBSP;
 
 	//basket cells
 	ct_uint32_t **pBCfromBCtoPC;
@@ -62,7 +66,8 @@ private:
 	void initializeVals();
 	void deallocMemory();
 	void stateRW(bool read, std::fstream &file);
-	
+
+	void assignGRDelays();
 	void connectBCtoPC();
 	void connectPCtoBC();
 	void connectSCtoPC();

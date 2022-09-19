@@ -79,7 +79,7 @@ CBMState::~CBMState()
 
 void CBMState::newState(unsigned int nZones, int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed)
 {
-	innetConState  = new InNetConnectivityState(msPerTimeStep, innetCRSeed);
+	innetConState  = new InNetConnectivityState(innetCRSeed);
 	mzoneConStates = new MZoneConnectivityState*[nZones];
 	innetActState  = new InNetActivityState();
 	mzoneActStates = new MZoneActivityState*[nZones];

@@ -35,8 +35,8 @@ class MZone
 {
 public:
 	MZone();
-	MZone(MZoneConnectivityState *cs, MZoneActivityState *as, int randSeed, ct_uint32_t **actBufGRGPU,
-			ct_uint32_t **delayMaskGRGPU, ct_uint64_t **histGRGPU, int gpuIndStart, int numGPUs);
+	MZone(MZoneConnectivityState *cs, MZoneActivityState *as, int randSeed, ct_uint32_t **apBufGRGPU,
+			ct_uint64_t **histGRGPU, int gpuIndStart, int numGPUs);
 	~MZone();
 
 	void writeToState();
@@ -45,10 +45,9 @@ public:
 	void setErrDrive(float errDriveRelative);
 	void updateMFActivities(const ct_uint8_t *actMF);
 	void updateTrueMFs(bool *trueMF);
-	void updateSCActivities(const ct_uint8_t *actSC);
-	void updatePFBCSum(const ct_uint32_t *pfBCSum);
 
 	void calcPCActivities();
+	void calcSCActivities();
 	void calcBCActivities();
 	void calcIOActivities();
 	void calcNCActivities();
@@ -66,10 +65,19 @@ public:
 	void cpyPFPCSumCUDA(cudaStream_t **sts, int streamN);
 	void runPFPCPlastCUDA(cudaStream_t **sts, int streamN, unsigned long t);
 
+	void runSumPFSCCUDA(cudaStream_t **sts, int streamN);
+	void cpyPFSCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN);
+
+	void runUpdatePFBCSCOutCUDA(cudaStream_t **sts, int streamN);
+
+	void runSumPFBCCUDA(cudaStream_t **sts, int streamN);
+	void cpyPFBCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN);
+
 	void setGRPCPlastSteps(float ltdStep, float ltpStep);
 	void resetGRPCPlastSteps();
 
 	const ct_uint8_t* exportAPNC();
+	const ct_uint8_t* exportAPSC();
 	const ct_uint8_t* exportAPBC();
 	const ct_uint8_t* exportAPPC();
 	const ct_uint8_t* exportAPIO();
@@ -107,16 +115,49 @@ private:
 	unsigned int updatePFPCSynWNumGRPerB;
 	unsigned int updatePFPCSynWNumBlocks;
 
+	unsigned int updatePFBCSCNumGRPerB;
+	unsigned int updatePFBCSCNumBlocks;
+
+	/* ======== not used ====== */
+	unsigned int updateGRBCOutNumGRPerR;
+	unsigned int updateGRBCOutNumGRRows;
+
+	unsigned int sumGRBCOutNumBCPerB;
+	unsigned int sumGRBCOutNumBlocks;
+	/* ======== not used ====== */
+
 	//mossy fiber variables
 	const ct_uint8_t *apMFInput;
 	//const ct_uint8_t *histMFInput;
 	bool *isTrueMF;
 
 	//stellate cell variables
-	const ct_uint8_t *apSCInput;
+	//const ct_uint8_t *apSCInput;
+
+	/* ====== FROM INNET ====== */
+	//stellate cell variables
+	//host variables
+	ct_uint32_t *inputSumPFSCH;
+	//end host variables
+
+	//gpu related variables
+	ct_uint32_t **inputPFSCGPU;
+	size_t *inputPFSCGPUP;
+	ct_uint32_t **inputSumPFSCGPU;
+	//end gpu related variables
+	//end stellate cell variables
+	/* ====== FROM INNET ====== */
 
 	//basket cell variables
-	const ct_uint32_t *sumPFBCInput;
+	//host variables
+	ct_uint32_t *inputSumPFBCH;
+
+	//gpu related variables
+	ct_uint32_t **inputPFBCGPU;
+	size_t *inputPFBCGPUP;
+	ct_uint32_t **inputSumPFBCGPU;
+	//end gpu related variables
+	//end basket cell variables
 
 	//purkinje cell variables
 	float **pfSynWeightPCGPU;
@@ -127,8 +168,8 @@ private:
 	float *inputSumPFPCMZH;
 
 	ct_uint32_t **apBufGRGPU;
-	ct_uint32_t **delayBCPCSCMaskGRGPU;
-	ct_uint64_t **historyGRGPU;
+	ct_uint32_t **delayMaskGRGPU;
+	ct_uint64_t **histGRGPU;
 
 	//IO cell variables
 	float *pfPCPlastStepIO;
@@ -136,6 +177,8 @@ private:
 	float tempGRPCLTPStep;
 
 	void initCUDA();
+	void initBCCUDA();
+	void initSCCUDA();
 	void testReduction();
 };
 

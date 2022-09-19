@@ -151,15 +151,15 @@ void CBMSimCore::calcActivity(float spillFrac)
 #ifdef NO_ASYNC
 	syncCUDA("1b");
 #endif
-
-	inputNet->runSumPFBCCUDA(streams, 2);
-
+	for (int i = 0; i < numZones; i++)
+	{
+		zones[i]->runSumPFBCCUDA(streams, 2);
+		zones[i]->runSumPFSCCUDA(streams, 3);
+	}
 
 #ifdef NO_ASYNC
 	syncCUDA("1c");
 #endif
-
-	inputNet->runSumPFSCCUDA(streams, 3);
 	
 #ifdef NO_ASYNC
 	syncCUDA("1d");
@@ -221,13 +221,10 @@ void CBMSimCore::calcActivity(float spillFrac)
 
 	for (int i = 0; i < numZones; i++)
 	{
-		zones[i]->updateSCActivities(inputNet->exportAPSC());
-		zones[i]->updatePFBCSum(inputNet->exportPFBCSum());
 		zones[i]->calcPCActivities();
+		zones[i]->calcSCActivities();
 		zones[i]->calcBCActivities();
 	}
-
-	inputNet->calcSCActivities();
 	
 	syncCUDA("2");
 
@@ -265,12 +262,12 @@ void CBMSimCore::calcActivity(float spillFrac)
 	{
 		zones[i]->runPFPCOutCUDA(streams, i + 2);
 		zones[i]->cpyPFPCSumCUDA(streams, i + 2);
+		zones[i]->runUpdatePFBCSCOutCUDA(streams, i + 4); // adding i might break things in future
 	}
 #ifdef NO_ASYNC
 	syncCUDA("2g");
 #endif
 
-	inputNet->runUpdatePFBCSCOutCUDA(streams, 4);
 #ifdef NO_ASYNC
 	syncCUDA("2h");
 #endif
@@ -284,12 +281,16 @@ void CBMSimCore::calcActivity(float spillFrac)
 	syncCUDA("2i");
 #endif
 
-		inputNet->cpyPFBCSumGPUtoHostCUDA(streams, 5);
+	for (int i = 0; i < numZones; i++)
+	{
+		zones[i]->cpyPFBCSumGPUtoHostCUDA(streams, 5);
+		zones[i]->cpyPFSCSumGPUtoHostCUDA(streams, 3);
+	}
+
 #ifdef NO_ASYNC
 	syncCUDA("2j");
 #endif
 
-		inputNet->cpyPFSCSumGPUtoHostCUDA(streams, 3);
 #ifdef NO_ASYNC
 	syncCUDA("2k");
 #endif
@@ -501,8 +502,7 @@ void CBMSimCore::construct(CBMState *state,
 		// same thing for zones as with innet
 		zones[i] = new MZone(state->getMZoneConStateInternal(i),
 			state->getMZoneActStateInternal(i), mzoneRSeed[i], inputNet->getApBufGRGPUPointer(),
-			inputNet->getDelayBCPCSCMaskGPUPointer(), inputNet->getHistGRGPUPointer(),
-			this->gpuIndStart, numGPUs);
+			inputNet->getHistGRGPUPointer(), this->gpuIndStart, numGPUs);
 	}
 	std::cout << "Mzone construction complete" << std::endl;
 	

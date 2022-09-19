@@ -6,7 +6,7 @@
  */
 #include "state/innetconnectivitystate.h"
 
-InNetConnectivityState::InNetConnectivityState(unsigned int msPerStep, int randSeed)
+InNetConnectivityState::InNetConnectivityState(int randSeed)
 {
 	CRandomSFMT0 randGen(randSeed);
 
@@ -41,7 +41,7 @@ InNetConnectivityState::InNetConnectivityState(unsigned int msPerStep, int randS
 	translateGOGL();
 
 	std::cout << "[INFO]: Assigning GR delays" << std::endl;
-	assignGRDelays(msPerStep);
+	assignGRDelays();
 
 	std::cout << "[INFO]: Finished making innet connections." << std::endl;
 }
@@ -120,9 +120,6 @@ void InNetConnectivityState::allocateMemory()
 
 	pGOCoupOutGOGOCCoeff = allocate2DArray<float>(num_go, num_p_go_to_go_gj);
 	pGOCoupInGOGOCCoeff  = allocate2DArray<float>(num_go, num_p_go_to_go_gj);
-
-	//granule
-	pGRDelayMaskfromGRtoBSP = new ct_uint32_t[num_gr];
 
 	numpGRfromGLtoGR = new int[num_gr];
 	pGRfromGLtoGR    = allocate2DArray<int>(num_gr, max_num_p_gr_from_gl_to_gr);
@@ -211,8 +208,6 @@ void InNetConnectivityState::initializeVals()
 	std::fill(pGOCoupInGOGOCCoeff[0], pGOCoupInGOGOCCoeff[0]
 		+ num_go * num_p_go_to_go_gj, 0.0);
 
-	std::fill(pGRDelayMaskfromGRtoBSP, pGRDelayMaskfromGRtoBSP + num_gr, 0);
-
 	std::fill(numpGRfromGLtoGR, numpGRfromGLtoGR + num_gr, 0);
 	std::fill(pGRfromGLtoGR[0], pGRfromGLtoGR[0]
 		+ num_gr * max_num_p_gr_from_gl_to_gr, 0);
@@ -278,7 +273,6 @@ void InNetConnectivityState::deallocMemory()
 	delete2DArray<float>(pGOCoupInGOGOCCoeff);
 
 	// granule
-	delete[] pGRDelayMaskfromGRtoBSP;
 	delete[] numpGRfromGLtoGR;
 	delete2DArray<int>(pGRfromGLtoGR);
 	delete[] numpGRfromGRtoGO;
@@ -359,9 +353,6 @@ void InNetConnectivityState::stateRW(bool read, std::fstream &file)
 		num_go * num_p_go_to_go_gj * sizeof(float), read, file);
 	rawBytesRW((char *)pGOCoupInGOGOCCoeff[0],
 		num_go * num_p_go_to_go_gj * sizeof(float), read, file);
-
-	//granule
-	rawBytesRW((char *)pGRDelayMaskfromGRtoBSP, num_gr * sizeof(ct_uint32_t), read, file);
 
 	rawBytesRW((char *)numpGRfromGLtoGR, num_gr * sizeof(int), read, file);
 	rawBytesRW((char *)pGRfromGLtoGR[0],
@@ -1226,18 +1217,15 @@ void InNetConnectivityState::translateGOGL()
 	std::cout << "[INFO]: GO-GR average divergence: " << goGROutputCounter / (float)num_go << std::endl;
 }
 
-void InNetConnectivityState::assignGRDelays(unsigned int msPerStep)
+void InNetConnectivityState::assignGRDelays()
 {
 	for (int i = 0; i < num_gr; i++)
 	{
 		//calculate x coordinate of GR position
 		int grPosX = i % gr_x;
 
-		//calculate distance of GR to BC, PC, and SC, and assign time delay.
-		int grBCPCSCDist = abs((int)(gr_x / 2 - grPosX));
-		pGRDelayMaskfromGRtoBSP[i] = 0x1 << (int)((grBCPCSCDist / gr_pf_vel_in_gr_x_per_t_step
-			+ gr_af_delay_in_t_step) / msPerStep);
-
+		// calculate distance of GR (assume soma) to GO apical dendrites (aa + pf distance)
+		// and assign time delay
 		for (int j = 0; j < numpGRfromGRtoGO[i]; j++)
 		{
 			int goPosX = (pGRfromGRtoGO[i][j] % go_x) * ((float)gr_x / go_x);
@@ -1249,7 +1237,7 @@ void InNetConnectivityState::assignGRDelays(unsigned int msPerStep)
 				else dfromGRtoGO = grPosX + gr_x - goPosX;
 			}
 			pGRDelayMaskfromGRtoGO[i][j] = 0x1<< (int)((dfromGRtoGO / gr_pf_vel_in_gr_x_per_t_step 
-				+ gr_af_delay_in_t_step) / msPerStep);
+				+ gr_af_delay_in_t_step) / msPerTimeStep);
 		}
 	}
 }

@@ -82,15 +82,6 @@ public:
 	std::unique_ptr<float[]> gKCaGR{nullptr};
 	std::unique_ptr<ct_uint64_t[]> historyGR{nullptr};
 
-	// TODO: MOVE SC CELLS to mzoneactivitystate.... :pogO:
-	//stellate cells
-	std::unique_ptr<ct_uint8_t[]> apSC{nullptr};
-	std::unique_ptr<ct_uint32_t[]> apBufSC{nullptr};
-	std::unique_ptr<float[]> gPFSC{nullptr};
-	std::unique_ptr<float[]> threshSC{nullptr};
-	std::unique_ptr<float[]> vSC{nullptr};
-	//std::unique_ptr<ct_uint32_t[]> inputSumPFSC{nullptr};
-
 private:
 	void stateRW(bool read, std::fstream &file);
 	void allocateMemory();

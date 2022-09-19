@@ -30,6 +30,14 @@ public:
 	void readState(std::fstream &infile);
 	void writeState(std::fstream &outfile);
 
+	//stellate cells
+	std::unique_ptr<ct_uint8_t[]> apSC{nullptr};
+	std::unique_ptr<ct_uint32_t[]> apBufSC{nullptr};
+	std::unique_ptr<float[]> gPFSC{nullptr};
+	std::unique_ptr<float[]> threshSC{nullptr};
+	std::unique_ptr<float[]> vSC{nullptr};
+	//std::unique_ptr<ct_uint32_t[]> inputSumPFSC{nullptr};
+
 	//basket cells
 	std::unique_ptr<ct_uint8_t[]> apBC{nullptr};
 	std::unique_ptr<ct_uint32_t[]> apBufBC{nullptr};
@@ -43,7 +51,7 @@ public:
 	std::unique_ptr<ct_uint8_t[]> apPC{nullptr};
 	std::unique_ptr<ct_uint32_t[]> apBufPC{nullptr};
 	std::unique_ptr<ct_uint32_t[]> inputBCPC{nullptr};
-	std::unique_ptr<ct_uint8_t[]> inputSCPC{nullptr};
+	std::unique_ptr<ct_uint32_t[]> inputSCPC{nullptr};
 	std::unique_ptr<float[]> pfSynWeightPC{nullptr};
 	std::unique_ptr<float[]> inputSumPFPC{nullptr};
 	std::unique_ptr<float[]> gPFPC{nullptr};

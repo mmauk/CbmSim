@@ -60,7 +60,7 @@ InNet::~InNet()
 	delete[] sumGRInputGO;
 	delete[] sumInputGOGABASynDepGO;
 
-	// MF CUDA	
+	// MF CUDA
 	for (int i = 0; i < numGPUs; i++)
 	{
 		cudaSetDevice(i + gpuIndStart);
@@ -106,12 +106,8 @@ InNet::~InNet()
 		cudaFree(gISpilloverGPU[i]);
 		cudaFree(apBufGRGPU[i]);
 		cudaFree(threshGRGPU[i]);
-		cudaFree(delayBCPCSCMaskGRGPU[i]);
 		cudaFree(delayGOMasksGRGPU[i]);
 		
-		cudaFree(grConGROutBCGPU[i]);
-		cudaFree(delayBCMasksGRGPU[i]);
-		cudaFree(numBCOutPerGRGPU[i]);
 		cudaFree(grConGROutGOGPU[i]);
 		cudaFree(numGOOutPerGRGPU[i]);
 		cudaFree(grConGOOutGRGPU[i]);
@@ -155,14 +151,7 @@ InNet::~InNet()
 
 	delete[] delayGOMasksGRGPU;
 	delete[] delayGOMasksGRGPUP;
-	delete[] delayBCPCSCMaskGRGPU;
 
-	delete[] delayBCMasksGRGPU;
-	delete[] delayBCMasksGRGPUP;
-	delete[] grConGROutBCGPU;
-	delete[] grConGROutBCGPUP;
-	delete[] numBCOutPerGRGPU;
-	
 	delete[] numGOOutPerGRGPU;
 	delete[] grConGROutGOGPU;
 	delete[] grConGROutGOGPUP;
@@ -209,46 +198,6 @@ InNet::~InNet()
 	delete[] dynamicAmpGOGPU;
 
 	delete[] counter;
-
-	//bc
-	cudaSetDevice(gpuIndStart);
-	cudaFreeHost(inputSumPFBCH);
-
-	cudaDeviceSynchronize();
-	for (int i = 0; i < numGPUs; i++)
-	{
-		cudaSetDevice(i + gpuIndStart);
-
-		
-		cudaFree(inputPFBCGPU[i]);
-		cudaFree(inputSumPFBCGPU[i]);
-
-		cudaDeviceSynchronize();
-	}
-
-	
-	delete[] inputPFBCGPU;
-	delete[] inputPFBCGPUP;
-	delete[] inputSumPFBCGPU;
-
-	//sc
-	cudaSetDevice(gpuIndStart);
-	cudaFreeHost(inputSumPFSCH);
-
-	cudaDeviceSynchronize();
-	for (int i = 0; i < numGPUs; i++)
-	{
-		cudaSetDevice(i+gpuIndStart);
-
-		cudaFree(inputPFSCGPU[i]);
-		cudaFree(inputSumPFSCGPU[i]);
-
-		cudaDeviceSynchronize();
-	}
-
-	delete[] inputPFSCGPU;
-	delete[] inputPFSCGPUP;
-	delete[] inputSumPFSCGPU;
 
 	std::cout << "[INFO]: Finished deleting innet gpu arrays." << std::endl;
 }
@@ -350,11 +299,6 @@ const ct_uint8_t* InNet::exportAPMF()
 	return (const ct_uint8_t *)apMFOut;
 }
 
-const ct_uint8_t* InNet::exportAPSC()
-{
-	return (const ct_uint8_t *)as->apSC.get();
-}
-
 const ct_uint8_t* InNet::exportAPGR()
 {
 	cudaError_t error = getGRGPUData<ct_uint8_t>(outputGRGPU, outputGRH);
@@ -371,19 +315,9 @@ const float* InNet::exportSumGOInputGO()
 	return (const float *)sumInputGOGABASynDepGO;
 }
 
-const ct_uint32_t* InNet::exportPFBCSum()
-{
-	return (const ct_uint32_t *)inputSumPFBCH;
-}
-
 ct_uint32_t** InNet::getApBufGRGPUPointer()
 {
 	return apBufGRGPU;
-}
-
-ct_uint32_t** InNet::getDelayBCPCSCMaskGPUPointer()
-{
-	return delayBCPCSCMaskGRGPU;
 }
 
 // YIKES this should be deprecated: control class should not be able
@@ -504,27 +438,6 @@ void InNet::calcGOActivities()
 		for (int j = 0; j < numGPUs; j++)
 		{
 			apGOH[j][i] = as->apGO[i];
-		}
-	}
-}
-
-void InNet::calcSCActivities()
-{
-#pragma omp parallel
-	{
-#pragma omp for
-		for (int i = 0; i < num_sc; i++)
-		{
-			as->gPFSC[i] = as->gPFSC[i] + inputSumPFSCH[i] * gIncGRtoSC;
-			as->gPFSC[i] = as->gPFSC[i] * gDecGRtoSC;
-
-			as->vSC[i] = as->vSC[i] + gLeakSC * (eLeakSC - as->vSC[i]) - as->gPFSC[i] * as->vSC[i];
-
-			as->apSC[i] = (as->vSC[i] > as->threshSC[i]);
-			as->apBufSC[i] = (as->apBufSC[i] << 1) | (as->apSC[i] * 0x00000001);
-
-			as->threshSC[i] = as->threshSC[i] + threshDecSC * (threshRestSC - as->threshSC[i]);
-			as->threshSC[i] = as->apSC[i] * threshMaxSC + (!as->apSC[i]) * as->threshSC[i];
 		}
 	}
 }
@@ -692,40 +605,6 @@ void InNet::runGRActivitiesCUDA(cudaStream_t **sts, int streamN)
 				": "<<cudaGetErrorString(error)<<endl;
 #endif
 		}
-}
-
-void InNet::runSumPFBCCUDA(cudaStream_t **sts, int streamN)
-{
-	cudaError_t error;
-	for(int i=0; i<numGPUs; i++)
-	{
-		error=cudaSetDevice(i+gpuIndStart);
-		callSumKernel<ct_uint32_t, true, false>
-		(sts[i][streamN], inputPFBCGPU[i], inputPFBCGPUP[i],
-				inputSumPFBCGPU[i], 1, num_bc/numGPUs, 1, num_p_bc_from_gr_to_bc);
-#ifdef DEBUGOUT
-		error=cudaGetLastError();
-		cerr<<"runSumPFBCCUDA: kernel launch for gpu #"<<i<<
-				": "<<cudaGetErrorString(error)<<endl;
-#endif
-	}
-}
-
-void InNet::runSumPFSCCUDA(cudaStream_t **sts, int streamN)
-{
-	cudaError_t error;
-	for(int i=0; i<numGPUs; i++)
-	{
-		error=cudaSetDevice(i+gpuIndStart);
-		callSumKernel<ct_uint32_t, true, false>
-		(sts[i][streamN], inputPFSCGPU[i], inputPFSCGPUP[i],
-				inputSumPFSCGPU[i], 1, num_sc/numGPUs, 1, num_p_sc_from_gr_to_sc);
-#ifdef DEBUGOUT
-		error=cudaGetLastError();
-		cerr<<"runSumPFBCCUDA: kernel launch for gpu #"<<i<<
-				": "<<cudaGetErrorString(error)<<endl;
-#endif
-	}
 }
 
 void InNet::runSumGRGOOutCUDA(cudaStream_t **sts, int streamN)
@@ -900,23 +779,6 @@ void InNet::runUpdateGOInGRDynamicSpillCUDA(cudaStream_t **sts, int streamN)
 	}
 }
 
-void InNet::runUpdatePFBCSCOutCUDA(cudaStream_t **sts, int streamN)
-{
-	cudaError_t error;
-	for(int i=0; i<numGPUs; i++)
-	{
-		error=cudaSetDevice(i+gpuIndStart);
-		callUpdatePFBCSCOutKernel(sts[i][streamN], updatePFBCSCNumBlocks, updatePFBCSCNumGRPerB,
-				apBufGRGPU[i], delayBCPCSCMaskGRGPU[i],
-				inputPFBCGPU[i], inputPFBCGPUP[i], num_p_bc_from_gr_to_bc_p2, 
-				inputPFSCGPU[i], inputPFSCGPUP[i], num_p_sc_from_gr_to_sc_p2); 
-#ifdef DEBUGOUT
-		error=cudaGetLastError();
-		cerr<<"runUpdatePFBCSCOutCUDA: kernel launch for gpu #"<<i<<
-				": "<<cudaGetErrorString(error)<<endl;
-#endif
-	}
-}
 void InNet::runUpdateGROutGOCUDA(cudaStream_t **sts, int streamN)
 {
 	cudaError_t error;
@@ -930,38 +792,6 @@ void InNet::runUpdateGROutGOCUDA(cudaStream_t **sts, int streamN)
 #ifdef DEBUGOUT
 		error=cudaGetLastError();
 		cerr<<"runUpdateGROutGOCUDA: kernel launch for gpu #"<<i<<
-				": "<<cudaGetErrorString(error)<<endl;
-#endif
-	}
-}
-
-void InNet::cpyPFBCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN)
-{
-	cudaError_t error;
-	for(int i=0; i<numGPUs; i++)
-	{
-		error=cudaSetDevice(i+gpuIndStart);
-		error=cudaMemcpyAsync(&inputSumPFBCH[num_bc * i / numGPUs], inputSumPFBCGPU[i],
-				num_bc / numGPUs * sizeof(ct_uint32_t),
-				cudaMemcpyDeviceToHost, sts[i][streamN]);
-#ifdef DEBUGOUT
-		cerr<<"cpyPFBCSumGPUtoHostCUDA: async copy for gpu #"<<i<<
-				": "<<cudaGetErrorString(error)<<endl;
-#endif
-	}
-}
-
-void InNet::cpyPFSCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN)
-{
-	cudaError_t error;
-	for(int i=0; i<numGPUs; i++)
-	{
-		error=cudaSetDevice(i+gpuIndStart);
-		error=cudaMemcpyAsync(&inputSumPFSCH[num_sc * i / numGPUs], inputSumPFSCGPU[i],
-				num_sc / numGPUs * sizeof(ct_uint32_t),
-				cudaMemcpyDeviceToHost, sts[i][streamN]);
-#ifdef DEBUGOUT
-		cerr<<"cpyPFSCSumGPUtoHostCUDA: async copy for gpu #"<<i<<
 				": "<<cudaGetErrorString(error)<<endl;
 #endif
 	}
@@ -1009,7 +839,7 @@ void InNet::initCUDA()
 	cerr<<"CUDA number of devices: "<<maxNumGPUs<<", "<<cudaGetErrorString(error)<<endl;
 	cerr<<"number of devices used: "<<numGPUs<<" starting at GPU# "<<gpuIndStart<<endl;
 
-	numGRPerGPU=num_gr / numGPUs;
+	numGRPerGPU = num_gr / numGPUs;
 	calcGRActNumGRPerB = 512;
 	calcGRActNumBlocks=numGRPerGPU/calcGRActNumGRPerB;
 
@@ -1028,19 +858,8 @@ void InNet::initCUDA()
 	updateGOInGRNumGRPerB=1024*(num_go>=1024)+(num_go<1024)*num_go;
 	updateGOInGRNumBlocks=numGRPerGPU/updateGOInGRNumGRPerB;
 
-	updateGRBCOutNumGRPerR=512*(num_bc>512)+num_bc*(num_bc<=512);
-	updateGRBCOutNumGRRows=numGRPerGPU/updateGRBCOutNumGRPerR;
-	
-	sumGRBCOutNumBCPerB=1024*(num_bc>1024)+num_bc*(num_bc<=1024);
-	sumGRBCOutNumBlocks=num_bc/sumGRBCOutNumBCPerB;
-		
-	updatePFBCSCNumGRPerB=512;
-	updatePFBCSCNumBlocks=numGRPerGPU/updatePFBCSCNumGRPerB;
-
 	updateGRHistNumGRPerB=1024;
 	updateGRHistNumBlocks=numGRPerGPU/updateGRHistNumGRPerB;
-
-
 
 	std::cout << "[INFO]: Initializing per-cell cuda vars..." << std::endl;
 	
@@ -1053,13 +872,6 @@ void InNet::initCUDA()
 	initGOCUDA();
 	std::cerr << "[INFO]: Initialized GO CUDA - Last error: "
 	    	  << cudaGetErrorString(cudaGetLastError()) << std::endl;
-	initBCCUDA();
-	std::cerr << "[INFO]: Initialized BC CUDA - Last error: "
-	    	  << cudaGetErrorString(cudaGetLastError()) << std::endl;
-	initSCCUDA();
-	std::cerr << "[INFO]: Initialized SC CUDA - Last error: "
-	    	  << cudaGetErrorString(cudaGetLastError()) << std::endl;
-
 	std::cout << "[INFO]: Finished initializing per-cell cuda vars." << std::endl;
 }
 
@@ -1131,14 +943,7 @@ void InNet::initGRCUDA()
 
 	delayGOMasksGRGPU	 = new ct_uint32_t*[numGPUs];
 	delayGOMasksGRGPUP	 = new size_t[numGPUs];
-	delayBCPCSCMaskGRGPU = new ct_uint32_t*[numGPUs];
 	
-	delayBCMasksGRGPU  = new ct_uint32_t*[numGPUs];
-	delayBCMasksGRGPUP = new size_t[numGPUs];
-	grConGROutBCGPU	   = new ct_uint32_t*[numGPUs];
-	grConGROutBCGPUP   = new size_t[numGPUs];
-	numBCOutPerGRGPU   = new ct_int32_t*[numGPUs];
-
 	numGOOutPerGRGPU = new ct_int32_t*[numGPUs];
 	grConGROutGOGPU  = new ct_uint32_t*[numGPUs];
 	grConGROutGOGPUP = new size_t[numGPUs];
@@ -1195,15 +1000,7 @@ void InNet::initGRCUDA()
 		//variables for conduction delays
 		cudaMallocPitch((void **)&delayGOMasksGRGPU[i], (size_t *)&delayGOMasksGRGPUP[i],
 			numGRPerGPU * sizeof(ct_uint32_t), max_num_p_gr_from_gr_to_go);
-		cudaMalloc((void **)&delayBCPCSCMaskGRGPU[i], numGRPerGPU * sizeof(ct_uint32_t));
 		//end conduction delay
-
-		//New Basket Cell stuff
-		cudaMallocPitch((void **)&delayBCMasksGRGPU[i], (size_t *)&delayBCMasksGRGPUP[i],
-			numGRPerGPU * sizeof(ct_uint32_t), num_bc);
-		cudaMallocPitch((void **)&grConGROutBCGPU[i], (size_t *)&grConGROutBCGPUP[i],
-			numGRPerGPU * sizeof(ct_uint32_t), num_bc);
-		cudaMalloc((void **)&numBCOutPerGRGPU[i], numGRPerGPU * sizeof(ct_int32_t));
 
 		//connectivity
 		cudaMalloc((void **)&numGOOutPerGRGPU[i], numGRPerGPU*sizeof(ct_int32_t));
@@ -1326,9 +1123,6 @@ void InNet::initGRCUDA()
 		cudaMemcpy(numGOInPerGRGPU[i], &(cs->numpGRfromGOtoGR[cpyStartInd]),
 			cpySize * sizeof(ct_int32_t), cudaMemcpyHostToDevice);
 		
-		cudaMemcpy(delayBCPCSCMaskGRGPU[i], &(cs->pGRDelayMaskfromGRtoBSP[cpyStartInd]),
-			cpySize * sizeof(ct_uint32_t), cudaMemcpyHostToDevice);
-
 		cudaMemcpy(numMFInPerGRGPU[i], &(cs->numpGRfromMFtoGR[cpyStartInd]),
 			cpySize * sizeof(int), cudaMemcpyHostToDevice);
 
@@ -1409,92 +1203,6 @@ void InNet::initGOCUDA()
 		cudaDeviceSynchronize();
 	}
 	std::cout << "[INFO]: Finished initializing GO cuda variables..." << std::endl;
-}
-void InNet::initBCCUDA()
-{
-	
-	inputPFBCGPU    = new ct_uint32_t*[numGPUs];
-	inputPFBCGPUP   = new size_t[numGPUs];
-	inputSumPFBCGPU = new ct_uint32_t*[numGPUs];
-
-	//allocate host memory
-	std::cout << "[INFO]: Allocating BC cuda variables..." << std::endl;
-	cudaSetDevice(gpuIndStart);
-	cudaHostAlloc((void **)&inputSumPFBCH, num_bc*sizeof(ct_uint32_t), cudaHostAllocPortable);
-	cudaMemset(inputSumPFBCH, 0, num_bc * sizeof(ct_uint32_t));
-
-	cudaDeviceSynchronize();
-
-	for (int i = 0; i < numGPUs; i++)
-	{
-		cudaSetDevice(i + gpuIndStart);
-
-		cudaMallocPitch((void **)&inputPFBCGPU[i], (size_t *)&inputPFBCGPUP[i],
-			num_p_bc_from_gr_to_bc * sizeof(ct_uint32_t), num_bc / numGPUs);
-		cudaMalloc((void **)&inputSumPFBCGPU[i], num_bc / numGPUs * sizeof(ct_uint32_t));
-		cudaDeviceSynchronize();
-	}		
-	std::cerr << "[INFO]: Finished BC variable cuda allocation - Last Error: "
-	     	  << cudaGetErrorString(cudaGetLastError()) << std::endl;
-
-	// initialize BC vars
-	std::cout << "[INFO]: Initializing BC cuda variables..." << std::endl;
-	for (int i = 0; i < numGPUs; i++)
-	{
-		cudaSetDevice(i + gpuIndStart);
-
-		for (int j = 0; j < num_bc / numGPUs; j++)
-		{
-			cudaMemset(((char *)inputPFBCGPU[i] + j * inputPFBCGPUP[i]), 0,
-				num_p_bc_from_gr_to_bc * sizeof(ct_uint32_t));
-		}
-		cudaMemset(inputSumPFBCGPU[i], 0, num_bc / numGPUs*sizeof(ct_uint32_t));
-		cudaDeviceSynchronize();
-	}
-	std::cout << "[INFO]: Finished initializing BC cuda variables..." << std::endl;
-}
-
-void InNet::initSCCUDA()
-{
-	inputPFSCGPU    = new ct_uint32_t*[numGPUs];
-	inputPFSCGPUP   = new size_t[numGPUs];
-	inputSumPFSCGPU = new ct_uint32_t*[numGPUs];
-
-	//allocate host memory
-	std::cout << "[INFO]: Allocating SC cuda variables..." << std::endl;
-	cudaSetDevice(gpuIndStart);
-	cudaHostAlloc((void **)&inputSumPFSCH, num_sc * sizeof(ct_uint32_t), cudaHostAllocPortable);
-	cudaMemset(inputSumPFSCH, 0, num_sc * sizeof(ct_uint32_t));
-
-	cudaDeviceSynchronize();
-
-	for (int i = 0; i < numGPUs; i++)
-	{
-		cudaSetDevice(i + gpuIndStart);
-		cudaMallocPitch((void **)&inputPFSCGPU[i], (size_t *)&inputPFSCGPUP[i],
-				num_p_sc_from_gr_to_sc * sizeof(ct_uint32_t), num_sc / numGPUs);
-		cudaMalloc((void **)&inputSumPFSCGPU[i], num_sc / numGPUs * sizeof(ct_uint32_t));
-
-		cudaDeviceSynchronize();
-	}
-	std::cerr << "[INFO]: Finished SC variable cuda allocation - Last Error: "
-	     	  << cudaGetErrorString(cudaGetLastError()) << std::endl;
-
-	// initialize SC vars
-	std::cout << "[INFO]: Initializing SC cuda variables..." << std::endl;
-	for (int i = 0; i < numGPUs; i++)
-	{
-		cudaSetDevice(i + gpuIndStart);
-		for(int j =0; j < num_sc / numGPUs; j++)
-		{
-			cudaMemset(((char *)inputPFSCGPU[i] + j * inputPFSCGPUP[i]), 0,
-					num_p_sc_from_gr_to_sc * sizeof(ct_uint32_t));
-		}
-		cudaMemset(inputSumPFSCGPU[i], 0, num_sc / numGPUs * sizeof(ct_uint32_t));
-
-		cudaDeviceSynchronize();
-	}
-	std::cout << "[INFO]: Finished initializing SC cuda variables..." << std::endl;
 }
 
 /* =========================== PRIVATE FUNCTIONS ============================= */

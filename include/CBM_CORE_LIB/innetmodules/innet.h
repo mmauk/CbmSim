@@ -42,16 +42,13 @@ public:
 
 	const ct_uint8_t* exportAPGO();
 	const ct_uint8_t* exportAPMF();
-	const ct_uint8_t* exportAPSC();
 	const ct_uint8_t* exportAPGR();
 
 	const ct_uint32_t* exportSumGRInputGO();
 	const float* exportSumGOInputGO();
 
-	const ct_uint32_t* exportPFBCSum();
-
+	// used when initializing mzone
 	ct_uint32_t** getApBufGRGPUPointer();
-	ct_uint32_t** getDelayBCPCSCMaskGPUPointer();
 	ct_uint64_t** getHistGRGPUPointer();
 
 	ct_uint32_t** getGRInputGOSumHPointer();
@@ -63,7 +60,6 @@ public:
 
 	void updateMFActivties(const ct_uint8_t *actInMF);
 	void calcGOActivities();
-	void calcSCActivities();
 
 	void updateMFtoGROut();
 	void updateMFtoGOOut();
@@ -72,8 +68,6 @@ public:
 	void resetMFHist(unsigned long t);
 
 	void runGRActivitiesCUDA(cudaStream_t **sts, int streamN);
-	void runSumPFBCCUDA(cudaStream_t **sts, int streamN);
-	void runSumPFSCCUDA(cudaStream_t **sts, int streamN);
 	void runSumGRGOOutCUDA(cudaStream_t **sts, int streamN);
 	void cpyDepAmpMFHosttoGPUCUDA(cudaStream_t **sts, int streamN);
 	void cpyAPMFHosttoGPUCUDA(cudaStream_t **sts, int streamN);
@@ -93,12 +87,9 @@ public:
 	void runUpdateGOInGRCUDA(cudaStream_t **sts, int streamN);
 	void runUpdateGOInGRDepressionCUDA(cudaStream_t **sts, int streamN);
 	void runUpdateGOInGRDynamicSpillCUDA(cudaStream_t **sts, int streamN);
-	void runUpdatePFBCSCOutCUDA(cudaStream_t **sts, int streamN);
 	
 	void runUpdateGROutGOCUDA(cudaStream_t **sts, int streamN);
 	
-	void cpyPFBCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN);
-	void cpyPFSCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN);
 	void cpyGRGOSumGPUtoHostCUDA(cudaStream_t **sts, int streamN);
 	void cpyGRGOSumGPUtoHostCUDA(cudaStream_t **sts, int streamN,
 		ct_uint32_t **grInputGOSumHost);
@@ -122,9 +113,6 @@ protected:
 	unsigned int sumGRGOOutNumGOPerB;
 	unsigned int sumGRGOOutNumBlocks;
 	
-	unsigned int sumGRBCOutNumBCPerB;
-	unsigned int sumGRBCOutNumBlocks;
-
 	unsigned int updateMFInGRNumGRPerB;
 	unsigned int updateMFInGRNumBlocks;
 	
@@ -134,12 +122,6 @@ protected:
 	unsigned int updateGOInGRNumGRPerB;
 	unsigned int updateGOInGRNumBlocks;
 	
-	unsigned int updateGRBCOutNumGRPerR;
-	unsigned int updateGRBCOutNumGRRows;
-
-	unsigned int updatePFBCSCNumGRPerB;
-	unsigned int updatePFBCSCNumBlocks;
-
 	unsigned int updateGRHistNumGRPerB;
 	unsigned int updateGRHistNumBlocks;
 
@@ -228,7 +210,6 @@ protected:
 	float **gUBC_EDirectGPU;
 	float **gUBC_ESpilloverGPU;
 
-
 	float **gIGRGPU;
 	size_t *gIGRGPUP;
 	float **gIGRSumGPU;
@@ -248,9 +229,6 @@ protected:
 	//conduction delays
 	ct_uint32_t **delayGOMasksGRGPU;
 	size_t *delayGOMasksGRGPUP;
-	ct_uint32_t **delayBCPCSCMaskGRGPU;
-	ct_uint32_t **delayBCMasksGRGPU;
-	size_t *delayBCMasksGRGPUP;
 
 	//connectivity
 	int contVar       = 1;
@@ -265,10 +243,6 @@ protected:
 	ct_uint32_t **grConGROutGOGPU;
 	size_t *grConGROutGOGPUP;
 	
-	ct_int32_t  **numBCOutPerGRGPU;
-	ct_uint32_t **grConGROutBCGPU;
-	size_t *grConGROutBCGPUP;
-
 	ct_int32_t  **numGOInPerGRGPU;
 	ct_uint32_t **grConGOOutGRGPU;
 	size_t *grConGOOutGRGPUP;
@@ -285,35 +259,10 @@ protected:
 	//end gpu variables
 	//end granule cell variables
 
-	//stellate cell variables
-	//host variables
-	ct_uint32_t *inputSumPFSCH;
-	//end host variables
-
-	//gpu related variables
-	ct_uint32_t **inputPFSCGPU;
-	size_t *inputPFSCGPUP;
-	ct_uint32_t **inputSumPFSCGPU;
-	//end gpu related variables
-
-	//end stellate cell variables
-
-	//basket cell variables
-	//host variables
-	ct_uint32_t *inputSumPFBCH;
-
-	//gpu related variables
-	ct_uint32_t **inputPFBCGPU;
-	size_t *inputPFBCGPUP;
-	ct_uint32_t **inputSumPFBCGPU;
-	//end gpu related variables
-	//end basket cell variables
-
 	void initCUDA();
 	void initMFCUDA();
 	void initGRCUDA();
 	void initGOCUDA();
-	void initBCCUDA();
 	void initSCCUDA();
 
 private:

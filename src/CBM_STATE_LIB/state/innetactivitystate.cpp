@@ -85,14 +85,6 @@ void InNetActivityState::stateRW(bool read, std::fstream &file)
 	rawBytesRW((char *)vGR.get(), num_gr * sizeof(float), read, file);
 	rawBytesRW((char *)gKCaGR.get(), num_gr * sizeof(float), read, file);
 	rawBytesRW((char *)historyGR.get(), num_gr * sizeof(ct_uint64_t), read, file);
-
-	rawBytesRW((char *)apSC.get(), num_sc * sizeof(ct_uint8_t), read, file);
-	rawBytesRW((char *)apBufSC.get(), num_sc * sizeof(ct_uint32_t), read, file);
-	rawBytesRW((char *)gPFSC.get(), num_sc * sizeof(float), read, file);
-	rawBytesRW((char *)threshSC.get(), num_sc * sizeof(float), read, file);
-	rawBytesRW((char *)vSC.get(), num_sc * sizeof(float), read, file);
-
-	//rawBytesRW((char *)inputSumPFSC.get(), num_sc * sizeof(ct_uint32_t), read, file);
 }
 
 void InNetActivityState::allocateMemory()
@@ -141,14 +133,6 @@ void InNetActivityState::allocateMemory()
 	vGR            = std::make_unique<float[]>(num_gr);
 	gKCaGR         = std::make_unique<float[]>(num_gr);
 	historyGR      = std::make_unique<ct_uint64_t[]>(num_gr);
-
-	apSC           = std::make_unique<ct_uint8_t[]>(num_sc);
-	apBufSC        = std::make_unique<ct_uint32_t[]>(num_sc);
-	gPFSC          = std::make_unique<float[]>(num_sc);
-	threshSC       = std::make_unique<float[]>(num_sc);
-	vSC            = std::make_unique<float[]>(num_sc);
-	// Not used.
-	// inputSumPFSC   = std::make_unique<ct_uint32_t[]>(num_sc);
 }
 
 void InNetActivityState::initializeVals()
@@ -169,10 +153,5 @@ void InNetActivityState::initializeVals()
 	// gr
 	std::fill(threshGR.get(), threshGR.get() + num_gr, threshRestGR);
 	std::fill(vGR.get(), vGR.get() + num_gr, eLeakGR);
-
-	// sc
-	// NOTE: no need to explicitly init apSC: false is the default value made by make_unique
-	std::fill(threshSC.get(), threshSC.get() + num_sc, threshRestSC);
-	std::fill(vSC.get(), vSC.get() + num_sc, eLeakSC);
 }
 

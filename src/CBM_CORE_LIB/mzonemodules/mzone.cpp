@@ -1,22 +1,21 @@
 /*
  * mzone.cpp
  *
- *  Created on: Jun 14, 2011
- *      Author: consciousness
+ *   Created on: Jun 14, 2011
+ *   Author: consciousness
+ *
  */
 
 #include "mzonemodules/mzone.h"
 
 MZone::MZone() {}
 
-MZone::MZone(MZoneConnectivityState *cs, MZoneActivityState *as, int randSeed, ct_uint32_t **actBufGRGPU,
-		ct_uint32_t **delayMaskGRGPU, ct_uint64_t **histGRGPU, int gpuIndStart, int numGPUs)
+MZone::MZone(MZoneConnectivityState *cs, MZoneActivityState *as, int randSeed, ct_uint32_t **apBufGRGPU,
+			 ct_uint64_t **histGRGPU, int gpuIndStart, int numGPUs)
 {
 	randGen = new CRandomSFMT0(randSeed);
 
-	// as with innet, shallow-copying all (for now). Thus, important
-	// that only the caller deletes these items AND that this object
-	// goes out of scope before the caller
+	// shallow copies. caller owns the data.
 	this->cs = cs; 
 	this->as = as; 
 
@@ -24,9 +23,11 @@ MZone::MZone(MZoneConnectivityState *cs, MZoneActivityState *as, int randSeed, c
 	// consider ownership: who should own these guys? maybe they should be global to both
 	// innet and mzone (so within cbmsimcore) and fed in as const args to the respective
 	// functions that call update kernels (06/16/2022)
-	apBufGRGPU           = actBufGRGPU;
-	delayBCPCSCMaskGRGPU = delayMaskGRGPU;
-	historyGRGPU         = histGRGPU;
+
+	this->apBufGRGPU     = apBufGRGPU;
+	this->histGRGPU      = histGRGPU;
+
+	delayMaskGRGPU = new ct_uint32_t*[numGPUs];
 
 	pfSynWeightPCLinear = new float[num_gr];
 	pfPCPlastStepIO     = new float[num_io];
@@ -59,16 +60,58 @@ MZone::~MZone()
 	{
 		cudaSetDevice(i + gpuIndStart);
 		//free cuda device memory
+		cudaFree(delayMaskGRGPU[i]);
 		cudaFree(pfSynWeightPCGPU[i]);
 		cudaFree(inputPFPCGPU[i]);
 		cudaFree(inputSumPFPCMZGPU[i]);
 		cudaDeviceSynchronize();
 	}
 
+	delete[] delayMaskGRGPU;
 	delete[] pfSynWeightPCGPU;
 	delete[] inputPFPCGPU;
 	delete[] inputPFPCGPUPitch;
 	delete[] inputSumPFPCMZGPU;
+
+	//sc
+	cudaSetDevice(gpuIndStart);
+	cudaFreeHost(inputSumPFSCH);
+
+	cudaDeviceSynchronize();
+	for (int i = 0; i < numGPUs; i++)
+	{
+		cudaSetDevice(i+gpuIndStart);
+
+		cudaFree(inputPFSCGPU[i]);
+		cudaFree(inputSumPFSCGPU[i]);
+
+		cudaDeviceSynchronize();
+	}
+
+	delete[] inputPFSCGPU;
+	delete[] inputPFSCGPUP;
+	delete[] inputSumPFSCGPU;
+
+	//bc
+	cudaSetDevice(gpuIndStart);
+	cudaFreeHost(inputSumPFBCH);
+
+	cudaDeviceSynchronize();
+	for (int i = 0; i < numGPUs; i++)
+	{
+		cudaSetDevice(i + gpuIndStart);
+
+		
+		cudaFree(inputPFBCGPU[i]);
+		cudaFree(inputSumPFBCGPU[i]);
+
+		cudaDeviceSynchronize();
+	}
+	
+	delete[] inputPFBCGPU;
+	delete[] inputPFBCGPUP;
+	delete[] inputSumPFBCGPU;
+
 	std::cout << "[INFO]: Finished deleting mzone gpu arrays." << std::endl;
 }
 
@@ -86,6 +129,17 @@ void MZone::initCUDA()
 			num_p_pc_from_gr_to_pc * (num_p_pc_from_gr_to_pc <= 512);
 	updatePFPCSynWNumBlocks = num_p_pc_from_gr_to_pc / updatePFPCSynWNumGRPerB;
 
+	updatePFBCSCNumGRPerB = 512;
+	updatePFBCSCNumBlocks = numGRPerGPU / updatePFBCSCNumGRPerB;
+
+	/* ======== not used ====== */
+	updateGRBCOutNumGRPerR=512*(num_bc>512)+num_bc*(num_bc<=512);
+	updateGRBCOutNumGRRows=numGRPerGPU/updateGRBCOutNumGRPerR;
+
+	sumGRBCOutNumBCPerB=1024*(num_bc>1024)+num_bc*(num_bc<=1024);
+	sumGRBCOutNumBlocks=num_bc/sumGRBCOutNumBCPerB;
+	/* ======== not used ====== */
+
 	cudaSetDevice(0 + gpuIndStart);
 	//allocate host cuda memory
 	cudaHostAlloc((void **)&inputSumPFPCMZH, num_pc * sizeof(float), cudaHostAllocPortable);
@@ -96,6 +150,8 @@ void MZone::initCUDA()
 	{
 		inputSumPFPCMZH[i] = 0;
 	}
+
+	
 
 	for (int i = 0; i < num_pc; i++)
 	{
@@ -113,11 +169,16 @@ void MZone::initCUDA()
 
 	for (int i = 0; i < numGPUs; i++)
 	{
-		int cpyStartInd;
-
-		cpyStartInd = i * numGRPerGPU;
-
+		int cpyStartInd = i * numGRPerGPU;
+		int cpySize     = numGRPerGPU;
 		cudaSetDevice(i + gpuIndStart);
+
+		// conduction delay variables
+		cudaMalloc((void **)&delayMaskGRGPU[i], numGRPerGPU * sizeof(ct_uint32_t));
+		// TODO: put the delay mask info into mzoneconnectivitystate
+		cudaMemcpy(delayMaskGRGPU[i], &(cs->pGRDelayMaskfromGRtoBSP[cpyStartInd]),
+			cpySize * sizeof(ct_uint32_t), cudaMemcpyHostToDevice);
+
 		//allocate device cuda memory
 		cudaMalloc((void **)&pfSynWeightPCGPU[i], numGRPerGPU * sizeof(float));
 		cudaMallocPitch((void **)&inputPFPCGPU[i], (size_t *)&inputPFPCGPUPitch[i],
@@ -138,9 +199,102 @@ void MZone::initCUDA()
 
 		cudaDeviceSynchronize();
 	}
+	initBCCUDA();
+	std::cerr << "[INFO]: Initialized BC CUDA - Last error: "
+	    	  << cudaGetErrorString(cudaGetLastError()) << std::endl;
+	initSCCUDA();
+	std::cerr << "[INFO]: Initialized SC CUDA - Last error: "
+	    	  << cudaGetErrorString(cudaGetLastError()) << std::endl;
 	
 	testReduction();
 	std::cout << "Finished Test." << std::endl;
+}
+
+void MZone::initBCCUDA()
+{
+	
+	inputPFBCGPU    = new ct_uint32_t*[numGPUs];
+	inputPFBCGPUP   = new size_t[numGPUs];
+	inputSumPFBCGPU = new ct_uint32_t*[numGPUs];
+
+	//allocate host memory
+	std::cout << "[INFO]: Allocating BC cuda variables..." << std::endl;
+	cudaSetDevice(gpuIndStart);
+	cudaHostAlloc((void **)&inputSumPFBCH, num_bc*sizeof(ct_uint32_t), cudaHostAllocPortable);
+	cudaMemset(inputSumPFBCH, 0, num_bc * sizeof(ct_uint32_t));
+
+	cudaDeviceSynchronize();
+
+	for (int i = 0; i < numGPUs; i++)
+	{
+		cudaSetDevice(i + gpuIndStart);
+
+		cudaMallocPitch((void **)&inputPFBCGPU[i], (size_t *)&inputPFBCGPUP[i],
+			num_p_bc_from_gr_to_bc * sizeof(ct_uint32_t), num_bc / numGPUs);
+		cudaMalloc((void **)&inputSumPFBCGPU[i], num_bc / numGPUs * sizeof(ct_uint32_t));
+		cudaDeviceSynchronize();
+	}		
+	std::cerr << "[INFO]: Finished BC variable cuda allocation - Last Error: "
+	     	  << cudaGetErrorString(cudaGetLastError()) << std::endl;
+
+	// initialize BC vars
+	std::cout << "[INFO]: Initializing BC cuda variables..." << std::endl;
+	for (int i = 0; i < numGPUs; i++)
+	{
+		cudaSetDevice(i + gpuIndStart);
+
+		for (int j = 0; j < num_bc / numGPUs; j++)
+		{
+			cudaMemset(((char *)inputPFBCGPU[i] + j * inputPFBCGPUP[i]), 0,
+				num_p_bc_from_gr_to_bc * sizeof(ct_uint32_t));
+		}
+		cudaMemset(inputSumPFBCGPU[i], 0, num_bc / numGPUs*sizeof(ct_uint32_t));
+		cudaDeviceSynchronize();
+	}
+	std::cout << "[INFO]: Finished initializing BC cuda variables..." << std::endl;
+}
+
+void MZone::initSCCUDA()
+{
+	inputPFSCGPU    = new ct_uint32_t*[numGPUs];
+	inputPFSCGPUP   = new size_t[numGPUs];
+	inputSumPFSCGPU = new ct_uint32_t*[numGPUs];
+
+	//allocate host memory
+	std::cout << "[INFO]: Allocating SC cuda variables..." << std::endl;
+	cudaSetDevice(gpuIndStart);
+	cudaHostAlloc((void **)&inputSumPFSCH, num_sc * sizeof(ct_uint32_t), cudaHostAllocPortable);
+	cudaMemset(inputSumPFSCH, 0, num_sc * sizeof(ct_uint32_t));
+
+	cudaDeviceSynchronize();
+
+	for (int i = 0; i < numGPUs; i++)
+	{
+		cudaSetDevice(i + gpuIndStart);
+		cudaMallocPitch((void **)&inputPFSCGPU[i], (size_t *)&inputPFSCGPUP[i],
+				num_p_sc_from_gr_to_sc * sizeof(ct_uint32_t), num_sc / numGPUs);
+		cudaMalloc((void **)&inputSumPFSCGPU[i], num_sc / numGPUs * sizeof(ct_uint32_t));
+
+		cudaDeviceSynchronize();
+	}
+	std::cerr << "[INFO]: Finished SC variable cuda allocation - Last Error: "
+	     	  << cudaGetErrorString(cudaGetLastError()) << std::endl;
+
+	// initialize SC vars
+	std::cout << "[INFO]: Initializing SC cuda variables..." << std::endl;
+	for (int i = 0; i < numGPUs; i++)
+	{
+		cudaSetDevice(i + gpuIndStart);
+		for(int j =0; j < num_sc / numGPUs; j++)
+		{
+			cudaMemset(((char *)inputPFSCGPU[i] + j * inputPFSCGPUP[i]), 0,
+					num_p_sc_from_gr_to_sc * sizeof(ct_uint32_t));
+		}
+		cudaMemset(inputSumPFSCGPU[i], 0, num_sc / numGPUs * sizeof(ct_uint32_t));
+
+		cudaDeviceSynchronize();
+	}
+	std::cout << "[INFO]: Finished initializing SC cuda variables..." << std::endl;
 }
 
 void MZone::writeToState()
@@ -187,16 +341,6 @@ void MZone::updateTrueMFs(bool *trueMF)
 	isTrueMF = trueMF;
 }
 
-void MZone::updateSCActivities(const ct_uint8_t *actSC)
-{
-	apSCInput = actSC;
-}
-
-void MZone::updatePFBCSum(const ct_uint32_t *pfBCSum)
-{
-	sumPFBCInput = pfBCSum;
-}
-
 void MZone::calcPCActivities()
 {
 #pragma omp parallel
@@ -204,38 +348,46 @@ void MZone::calcPCActivities()
 #pragma omp for
 		for (int i = 0; i < num_pc; i++)
 		{
-			float gSCPCSum;
+			as->gPFPC[i] += inputSumPFPCMZH[i] * gIncGRtoPC;
+			as->gPFPC[i] *= gDecGRtoPC;
+			as->gBCPC[i] += as->inputBCPC[i] * gIncBCtoPC;
+			as->gBCPC[i] *= gDecBCtoPC;
+			as->gSCPC[i] += as->inputSCPC[i] * gIncSCtoPC;
+			as->gSCPC[i] *= gDecSCtoPC;
 
-			as->gPFPC[i] = as->gPFPC[i] + inputSumPFPCMZH[i] * gIncGRtoPC;
-			as->gPFPC[i] = as->gPFPC[i] * gDecGRtoPC;
-			as->gBCPC[i] = as->gBCPC[i] + as->inputBCPC[i] * gIncBCtoPC;
-			as->gBCPC[i] = as->gBCPC[i] * gDecBCtoPC;
+			as->vPC[i] += (gLeakPC * (eLeakPC - as->vPC[i]))
+						- (as->gPFPC[i] * as->vPC[i])
+						+ (as->gBCPC[i] * (eBCtoPC - as->vPC[i]))
+						+ (as->gSCPC[i] * (eSCtoPC - as->vPC[i]));
 
-			gSCPCSum = 0;
+			as->threshPC[i] += threshDecPC * (threshRestPC - as->threshPC[i]);
 
-			for (int j = 0; j < num_p_pc_from_sc_to_pc; j++)
-			{
-				as->gSCPC[i * num_p_pc_from_sc_to_pc + j] = as->gSCPC[i * num_p_pc_from_sc_to_pc + j]
-				   + gIncSCtoPC * (1 - as->gSCPC[i * num_p_pc_from_sc_to_pc + j])
-				   * as->inputSCPC[i * num_p_pc_from_sc_to_pc + j];
-				as->gSCPC[i * num_p_pc_from_sc_to_pc + j] = as->gSCPC[i * num_p_pc_from_sc_to_pc + j]
-				   * gDecSCtoPC;
-				gSCPCSum += as->gSCPC[i * num_p_pc_from_sc_to_pc + j];
-			}
-
-			as->vPC[i] = as->vPC[i] +
-					(gLeakPC * (eLeakPC - as->vPC[i])) -
-					(as->gPFPC[i] * as->vPC[i]) +
-					(as->gBCPC[i] * (eBCtoPC - as->vPC[i])) +
-					(gSCPCSum * (eSCtoPC - as->vPC[i]));
-
-			as->threshPC[i] = as->threshPC[i] + (threshDecPC * (threshRestPC - as->threshPC[i]));
-
-			as->apPC[i] = as->vPC[i] > as->threshPC[i];
+			as->apPC[i]    = as->vPC[i] > as->threshPC[i];
 			as->apBufPC[i] = (as->apBufPC[i] << 1) | (as->apPC[i] * 0x00000001);
 
 			as->threshPC[i] = as->apPC[i] * threshMaxPC + (!as->apPC[i]) * as->threshPC[i];
-			as->pcPopAct = as->pcPopAct + as->apPC[i];
+			as->pcPopAct   += as->apPC[i];
+		}
+	}
+}
+
+void MZone::calcSCActivities()
+{
+#pragma omp parallel
+	{
+#pragma omp for
+		for (int i = 0; i < num_sc; i++)
+		{
+			as->gPFSC[i] = as->gPFSC[i] + inputSumPFSCH[i] * gIncGRtoSC;
+			as->gPFSC[i] = as->gPFSC[i] * gDecGRtoSC;
+
+			as->vSC[i] = as->vSC[i] + gLeakSC * (eLeakSC - as->vSC[i]) - as->gPFSC[i] * as->vSC[i];
+
+			as->apSC[i] = (as->vSC[i] > as->threshSC[i]);
+			as->apBufSC[i] = (as->apBufSC[i] << 1) | (as->apSC[i] * 0x00000001);
+
+			as->threshSC[i] = as->threshSC[i] + threshDecSC * (threshRestSC - as->threshSC[i]);
+			as->threshSC[i] = as->apSC[i] * threshMaxSC + (!as->apSC[i]) * as->threshSC[i];
 		}
 	}
 }
@@ -247,7 +399,7 @@ void MZone::calcBCActivities()
 #pragma omp for
 		for (int i = 0; i < num_bc; i++)
 		{
-			as->gPFBC[i] = as->gPFBC[i] + sumPFBCInput[i] * gIncGRtoBC;
+			as->gPFBC[i] = as->gPFBC[i] + inputSumPFBCH[i] * gIncGRtoBC;
 			as->gPFBC[i] = as->gPFBC[i] * gDecGRtoBC;
 			as->gPCBC[i] = as->gPCBC[i] + as->inputPCBC[i] * gIncPCtoBC;
 			as->gPCBC[i] = as->gPCBC[i] * gDecPCtoBC;
@@ -419,10 +571,13 @@ void MZone::updateBCPCOut()
 	
 	for (int i = 0; i < num_bc; i++)
 	{
-		if (as->apBC[i])
+		if (as->apBC[i]) 
 		{
 			for (int j = 0; j < num_p_bc_from_bc_to_pc; j++)
 			{
+				/* if there is a bc spike, obtain the pcs that this connects with
+				 * and increment the input that the pc gets 
+				 */
 				as->inputBCPC[cs->pBCfromBCtoPC[i][j]]++;
 			}
 		}
@@ -432,11 +587,16 @@ void MZone::updateBCPCOut()
 void MZone::updateSCPCOut()
 {
 #pragma omp parallel for
-	for (int i = 0; i < num_pc; i++)
+	for (int i = 0; i < num_pc; i++) as->inputSCPC[i] = 0;
+
+	for (int i = 0; i < num_sc; i++)
 	{
-		for (int j = 0; j < num_p_pc_from_sc_to_pc; j++)
+		if (as->apSC[i])
 		{
-			as->inputSCPC[i * num_p_pc_from_sc_to_pc + j] = apSCInput[cs->pPCfromSCtoPC[i][j]];
+			for (int j = 0; j < num_p_sc_from_sc_to_pc; j++)
+			{
+				as->inputSCPC[cs->pSCfromSCtoPC[i][j]]++;
+			}
 		}
 	}
 }
@@ -569,7 +729,7 @@ void MZone::runPFPCOutCUDA(cudaStream_t **sts, int streamN)
 	{
 		cudaSetDevice(i + gpuIndStart);
 		callUpdatePFPCOutKernel(sts[i][streamN], updatePFPCNumBlocks, updatePFPCNumGRPerB,
-				apBufGRGPU[i], delayBCPCSCMaskGRGPU[i], pfSynWeightPCGPU[i], inputPFPCGPU[i],
+				apBufGRGPU[i], delayMaskGRGPU[i], pfSynWeightPCGPU[i], inputPFPCGPU[i],
 				inputPFPCGPUPitch[i], num_p_pc_from_gr_to_pc_p2);
 	}
 }
@@ -648,10 +808,94 @@ void MZone::runPFPCPlastCUDA(cudaStream_t **sts, int streamN, unsigned long t)
 			}
 			callUpdatePFPCPlasticityIOKernel(sts[curGPUInd][streamN + curIOInd],
 					updatePFPCSynWNumBlocks, updatePFPCSynWNumGRPerB, pfSynWeightPCGPU[curGPUInd],
-					historyGRGPU[curGPUInd], grPCHistCheckBinIO, curGROffset, pfPCPlastStepIO[curIOInd]);
+					histGRGPU[curGPUInd], grPCHistCheckBinIO, curGROffset, pfPCPlastStepIO[curIOInd]);
 
 			curGROffset += num_p_pc_from_gr_to_pc;
 		}
+	}
+}
+
+void MZone::runSumPFSCCUDA(cudaStream_t **sts, int streamN)
+{
+	cudaError_t error;
+	for(int i=0; i<numGPUs; i++)
+	{
+		error=cudaSetDevice(i+gpuIndStart);
+		callSumKernel<ct_uint32_t, true, false>
+		(sts[i][streamN], inputPFSCGPU[i], inputPFSCGPUP[i],
+				inputSumPFSCGPU[i], 1, num_sc/numGPUs, 1, num_p_sc_from_gr_to_sc);
+#ifdef DEBUGOUT
+		error=cudaGetLastError();
+		cerr<<"runSumPFSCCUDA: kernel launch for gpu #"<<i<<
+				": "<<cudaGetErrorString(error)<<endl;
+#endif
+	}
+}
+
+void MZone::cpyPFSCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN)
+{
+	cudaError_t error;
+	for(int i=0; i<numGPUs; i++)
+	{
+		error=cudaSetDevice(i+gpuIndStart);
+		error=cudaMemcpyAsync(&inputSumPFSCH[num_sc * i / numGPUs], inputSumPFSCGPU[i],
+				num_sc / numGPUs * sizeof(ct_uint32_t),
+				cudaMemcpyDeviceToHost, sts[i][streamN]);
+#ifdef DEBUGOUT
+		cerr<<"cpyPFSCSumGPUtoHostCUDA: async copy for gpu #"<<i<<
+				": "<<cudaGetErrorString(error)<<endl;
+#endif
+	}
+}
+
+void MZone::runUpdatePFBCSCOutCUDA(cudaStream_t **sts, int streamN)
+{
+	cudaError_t error;
+	for(int i=0; i<numGPUs; i++)
+	{
+		error=cudaSetDevice(i+gpuIndStart);
+		callUpdatePFBCSCOutKernel(sts[i][streamN], updatePFBCSCNumBlocks, updatePFBCSCNumGRPerB,
+				apBufGRGPU[i], delayMaskGRGPU[i],
+				inputPFBCGPU[i], inputPFBCGPUP[i], num_p_bc_from_gr_to_bc_p2, 
+				inputPFSCGPU[i], inputPFSCGPUP[i], num_p_sc_from_gr_to_sc_p2); 
+#ifdef DEBUGOUT
+		error=cudaGetLastError();
+		cerr<<"runUpdatePFBCSCOutCUDA: kernel launch for gpu #"<<i<<
+				": "<<cudaGetErrorString(error)<<endl;
+#endif
+	}
+}
+
+void MZone::runSumPFBCCUDA(cudaStream_t **sts, int streamN)
+{
+	cudaError_t error;
+	for(int i=0; i<numGPUs; i++)
+	{
+		error=cudaSetDevice(i+gpuIndStart);
+		callSumKernel<ct_uint32_t, true, false>
+		(sts[i][streamN], inputPFBCGPU[i], inputPFBCGPUP[i],
+				inputSumPFBCGPU[i], 1, num_bc/numGPUs, 1, num_p_bc_from_gr_to_bc);
+#ifdef DEBUGOUT
+		error=cudaGetLastError();
+		cerr<<"runSumPFBCCUDA: kernel launch for gpu #"<<i<<
+				": "<<cudaGetErrorString(error)<<endl;
+#endif
+	}
+}
+
+void MZone::cpyPFBCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN)
+{
+	cudaError_t error;
+	for(int i=0; i<numGPUs; i++)
+	{
+		error=cudaSetDevice(i+gpuIndStart);
+		error=cudaMemcpyAsync(&inputSumPFBCH[num_bc * i / numGPUs], inputSumPFBCGPU[i],
+				num_bc / numGPUs * sizeof(ct_uint32_t),
+				cudaMemcpyDeviceToHost, sts[i][streamN]);
+#ifdef DEBUGOUT
+		cerr<<"cpyPFBCSumGPUtoHostCUDA: async copy for gpu #"<<i<<
+				": "<<cudaGetErrorString(error)<<endl;
+#endif
 	}
 }
 
@@ -698,6 +942,11 @@ void MZone::load_mfdcn_weights_from_file(std::fstream &in_file_buf)
 const ct_uint8_t* MZone::exportAPNC()
 {
 	return (const ct_uint8_t *)as->apNC.get();
+}
+
+const ct_uint8_t* MZone::exportAPSC()
+{
+	return (const ct_uint8_t *)as->apSC.get();
 }
 
 const ct_uint8_t* MZone::exportAPBC()

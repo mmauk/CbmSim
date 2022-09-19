@@ -22,7 +22,7 @@ MODULE_CXX_FLAGS = -m64 -pipe -std=c++14 -O3 -fPIC
 INCPATH          = -I. -I$(ROOT)include/Big_Sim -I/usr/local/cuda/include -I$(ROOT)include/CBM_CORE_LIB -I$(ROOT)include/CBM_DATA_LIB \
                    -I$(ROOT)include/CBM_STATE_LIB -I$(ROOT)include/CBM_TOOLS_LIB -I$(ROOT)include/CBM_VIS_LIB -I$(ROOT)include/CXX_TOOLS_LIB 
 
-INCPATH          += $(shell pkg-config --cflags gtk+-3.0)
+INCPATH         += $(shell pkg-config --cflags gtk+-3.0)
 LIBS             = -L/usr/local/cuda/lib64 -L/usr/lib64 -L/opt/cuda/lib64 -lcudart
 LIBS            += $(shell pkg-config --libs gtk+-3.0)
 LINK             = g++

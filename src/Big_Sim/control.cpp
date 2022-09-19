@@ -395,7 +395,7 @@ void Control::runExperiment(struct gui *gui)
 			simCore->updateTrueMFs(isTrueMF);
 			simCore->updateMFInput(mfAP);
 			simCore->calcActivity(spillFrac); 
-			update_spike_sums(ts);
+			//update_spike_sums(ts);
 
 			if (ts >= onsetCS && ts < offsetCS)
 			{
@@ -439,11 +439,11 @@ void Control::runExperiment(struct gui *gui)
 		if (gui != NULL)
 		{
 			// for now, compute the mean and median firing rates for all cells if win is visible
-			if (firing_rates_win_visible(gui))
-			{
-				calculate_firing_rates();
-				gdk_threads_add_idle((GSourceFunc)update_fr_labels, gui);
-			}
+			//if (firing_rates_win_visible(gui))
+			//{
+			//	calculate_firing_rates();
+			//	gdk_threads_add_idle((GSourceFunc)update_fr_labels, gui);
+			//}
 			if (run_state == IN_RUN_PAUSE)
 			{
 				std::cout << "[INFO]: Simulation is paused at end of trial " << trial+1 << ".\n";
@@ -453,15 +453,15 @@ void Control::runExperiment(struct gui *gui)
 				}
 				std::cout << "[INFO]: Continuing...\n";
 			}
-			reset_spike_sums();
+			//reset_spike_sums();
 		}
-		//fillOutputArrays();
+		fillOutputArrays();
 		trial++;
 	}
 	if (run_state == NOT_IN_RUN) std::cout << "[INFO]: Simulation terminated.\n";
 	else if (run_state == IN_RUN_NO_PAUSE) std::cout << "[INFO]: Simulation Completed.\n";
 	// if (sim_vis_mode == TUI) reset_tty(&fp); /* reset the tty for later use */
-	//saveOutputArraysToFile();
+	saveOutputArraysToFile();
 	run_state = NOT_IN_RUN;
 }
 
@@ -534,23 +534,25 @@ void Control::saveOutputArraysToFile()
 	//std::string sampleGRRasterFileName = OUTPUT_DATA_PATH + "sampleGRRaster.bin";
 	//write2DCharArray(sampleGRRasterFileName, sampleGRRaster, 4096, rasterColumnSize);
 
-	std::cout << "[INFO]: Filling PC file..." << std::endl;
-	std::string allPCRasterFileName = OUTPUT_DATA_PATH + "allPCRaster.bin";
-	save_pc_psth_to_file(allPCRasterFileName);
-	std::cout << "[INFO]: Done filling PC file." << std::endl;
+	//std::cout << "[INFO]: Filling PC file..." << std::endl;
+	//std::string allPCRasterFileName = OUTPUT_DATA_PATH + "allPCRaster.bin";
+	//save_pc_psth_to_file(allPCRasterFileName);
+	//std::cout << "[INFO]: Done filling PC file." << std::endl;
 
-	std::cout << "[INFO]: Filling NC files..." << std::endl;
-	std::string allNCRasterFileName = OUTPUT_DATA_PATH + "allNCRaster.bin";
-	save_nc_psth_to_file(allNCRasterFileName);
-	std::cout << "[INFO]: Done filling NC file." << std::endl;
+	//std::cout << "[INFO]: Filling NC files..." << std::endl;
+	//std::string allNCRasterFileName = OUTPUT_DATA_PATH + "allNCRaster.bin";
+	//save_nc_psth_to_file(allNCRasterFileName);
+	//std::cout << "[INFO]: Done filling NC file." << std::endl;
 
-	//std::cout << "Filling SC files..." << std::endl;
-	//std::string allSCRasterFileName = OUTPUT_DATA_PATH + "allSCRaster.bin";
-	//write2DCharArray(allSCRasterFileName, allSCRaster, num_sc, rasterColumnSize);
+	std::cout << "Filling SC files..." << std::endl;
+	std::string allSCRasterFileName = OUTPUT_DATA_PATH + "allSCRaster.bin";
+	save_sc_psth_to_file(allSCRasterFileName);
+	std::cout << "[INFO]: Done filling SC file." << std::endl;
 
-	//std::cout << "Filling BC files..." << std::endl;
-	//std::string allBCRasterFileName = OUTPUT_DATA_PATH + "allBCRaster.bin";
-	//write2DCharArray(allBCRasterFileName, allBCRaster, num_bc, rasterColumnSize);
+	std::cout << "Filling BC files..." << std::endl;
+	std::string allBCRasterFileName = OUTPUT_DATA_PATH + "allBCRaster.bin";
+	save_bc_psth_to_file(allBCRasterFileName);
+	std::cout << "[INFO]: Done filling BC file." << std::endl;
 
 	//std::cout << "Filling IO files..." << std::endl;
 	//std::string allIORasterFileName = OUTPUT_DATA_PATH + "allIORaster.bin";
@@ -563,7 +565,7 @@ void Control::update_spike_sums(int tts)
 	cell_spikes[GR]  = simCore->getInputNet()->exportAPGR();
 	cell_spikes[GO]  = simCore->getInputNet()->exportAPGO();
 	cell_spikes[BC]  = simCore->getMZoneList()[0]->exportAPBC();
-	cell_spikes[SC]  = simCore->getInputNet()->exportAPSC();
+	cell_spikes[SC]  = simCore->getMZoneList()[0]->exportAPSC();
 	cell_spikes[PC]  = simCore->getMZoneList()[0]->exportAPPC();
 	cell_spikes[IO]  = simCore->getMZoneList()[0]->exportAPIO();
 	cell_spikes[DCN] = simCore->getMZoneList()[0]->exportAPNC();
@@ -639,12 +641,12 @@ void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
 
 void Control::fill_rast_internal(int PSTHCounter)
 {
-	const ct_uint8_t* goSpks = simCore->getInputNet()->exportAPGO();
+	//const ct_uint8_t* goSpks = simCore->getInputNet()->exportAPGO();
 	//const ct_uint8_t* grSpks = simCore->getInputNet()->exportAPGR(); /* reading from gpu mem to non-pinned host mem is slow! just calling this slows down by ~30% ! */
 	const ct_uint8_t* pcSpks = simCore->getMZoneList()[0]->exportAPPC();
 	const ct_uint8_t* ncSpks = simCore->getMZoneList()[0]->exportAPNC();
-	//const ct_uint8_t* scSpks = simCore->getInputNet()->exportAPSC();
-	//const ct_uint8_t* bcSpks = simCore->getMZoneList()[0]->exportAPBC();
+	const ct_uint8_t* scSpks = simCore->getMZoneList()[0]->exportAPSC();
+	const ct_uint8_t* bcSpks = simCore->getMZoneList()[0]->exportAPBC();
 	const ct_uint8_t* ioSpks = simCore->getMZoneList()[0]->exportAPIO();
 
 	const float* vm_pc = simCore->getMZoneList()[0]->exportVmPC();
@@ -656,10 +658,10 @@ void Control::fill_rast_internal(int PSTHCounter)
 	//	all_mf_rast_internal[i][PSTHCounter] = mfAP[i];
 	//}
 
-	for (int i = 0; i < num_go; i++)
-	{
-		all_go_rast_internal[i][PSTHCounter] = goSpks[i];
-	}
+	//for (int i = 0; i < num_go; i++)
+	//{
+	//	all_go_rast_internal[i][PSTHCounter] = goSpks[i];
+	//}
 
 	//for (int i = 0; i < 4096; i++)
 	//{
@@ -678,15 +680,15 @@ void Control::fill_rast_internal(int PSTHCounter)
 		all_nc_vm_rast_internal[i][PSTHCounter] = vm_nc[i];
 	}
 
-	//for (int i = 0; i < num_sc; i++)
-	//{
-	//	all_sc_rast_internal[i][PSTHCounter] = scSpks[i];
-	//}
+	for (int i = 0; i < num_sc; i++)
+	{
+		all_sc_rast_internal[i][PSTHCounter] = scSpks[i];
+	}
 
-	//for (int i = 0; i < num_bc; i++)
-	//{
-	//	all_bc_rast_internal[i][PSTHCounter] = bcSpks[i];
-	//}
+	for (int i = 0; i < num_bc; i++)
+	{
+		all_bc_rast_internal[i][PSTHCounter] = bcSpks[i];
+	}
 
 	for (int i = 0; i < num_io; i++)
 	{
@@ -699,12 +701,12 @@ void Control::fillOutputArrays()
 {
 	uint32_t offset_common = trial * PSTHColSize / BITS_PER_BYTE;
 	//pack_2d_byte_array(all_mf_rast_internal, num_mf, PSTHColSize, allMFRaster, offset);
-	pack_2d_byte_array(all_go_rast_internal, num_go, PSTHColSize, allGORaster, offset_common * num_go);
+	//pack_2d_byte_array(all_go_rast_internal, num_go, PSTHColSize, allGORaster, offset_common * num_go);
 	//pack_2d_byte_array(sample_gr_rast_internal, 4096, PSTHColSize, sampleGRRaster, offset);
-	pack_2d_byte_array(all_pc_rast_internal, num_pc, PSTHColSize, allPCRaster, offset_common * num_pc);
-	pack_2d_byte_array(all_nc_rast_internal, num_nc, PSTHColSize, allNCRaster, offset_common * num_nc);
-	//pack_2d_byte_array(all_sc_rast_internal, num_sc, PSTHColSize, allSCRaster, offset);
-	//pack_2d_byte_array(all_bc_rast_internal, num_bc, PSTHColSize, allBCRaster, offset);
+	//pack_2d_byte_array(all_pc_rast_internal, num_pc, PSTHColSize, allPCRaster, offset_common * num_pc);
+	//pack_2d_byte_array(all_nc_rast_internal, num_nc, PSTHColSize, allNCRaster, offset_common * num_nc);
+	pack_2d_byte_array(all_sc_rast_internal, num_sc, PSTHColSize, allSCRaster, offset_common * num_sc);
+	pack_2d_byte_array(all_bc_rast_internal, num_bc, PSTHColSize, allBCRaster, offset_common * num_bc);
 	//pack_2d_byte_array(all_io_rast_internal, num_io, PSTHColSize, allIORaster, offset);
 }
 

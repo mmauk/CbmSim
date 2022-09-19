@@ -35,6 +35,14 @@ void MZoneActivityState::writeState(std::fstream &outfile)
 
 void MZoneActivityState::allocateMemory()
 {
+	apSC           = std::make_unique<ct_uint8_t[]>(num_sc);
+	apBufSC        = std::make_unique<ct_uint32_t[]>(num_sc);
+	gPFSC          = std::make_unique<float[]>(num_sc);
+	threshSC       = std::make_unique<float[]>(num_sc);
+	vSC            = std::make_unique<float[]>(num_sc);
+	// Not used.
+	// inputSumPFSC   = std::make_unique<ct_uint32_t[]>(num_sc);
+
 	// basket cells
 	apBC      = std::make_unique<ct_uint8_t[]>(num_bc);
 	apBufBC   = std::make_unique<ct_uint32_t[]>(num_bc);
@@ -48,12 +56,12 @@ void MZoneActivityState::allocateMemory()
 	apPC          = std::make_unique<ct_uint8_t[]>(num_pc);
 	apBufPC       = std::make_unique<ct_uint32_t[]>(num_pc);
 	inputBCPC     = std::make_unique<ct_uint32_t[]>(num_pc);
-	inputSCPC     = std::make_unique<ct_uint8_t[]>(num_pc * num_p_pc_from_sc_to_pc);
+	inputSCPC     = std::make_unique<ct_uint32_t[]>(num_pc);
 	pfSynWeightPC = std::make_unique<float[]>(num_pc * num_p_pc_from_gr_to_pc);
 	inputSumPFPC  = std::make_unique<float[]>(num_pc);
 	gPFPC         = std::make_unique<float[]>(num_pc);
 	gBCPC         = std::make_unique<float[]>(num_pc);
-	gSCPC         = std::make_unique<float[]>(num_pc * num_p_pc_from_sc_to_pc);
+	gSCPC         = std::make_unique<float[]>(num_pc);
 	vPC           = std::make_unique<float[]>(num_pc);
 	threshPC      = std::make_unique<float[]>(num_pc);
 	histPCPopAct = std::make_unique<ct_uint32_t[]>(numPopHistBinsPC);
@@ -86,9 +94,12 @@ void MZoneActivityState::initializeVals(int randSeed)
 	//uncomment for actual runs 
 	//CRandomSFMT0 randGen(randSeed);
 
-	/* NOTE: I only fill those arrays whose initial values are intended to be nonzero, as
-	 * std::make_unique performs value initialization on Type[] template arguments. - S.G.
-	 */
+	// only actively initializing those arrays whose initial values we want
+	// differ from the default initilizer value
+
+	// sc
+	std::fill(threshSC.get(), threshSC.get() + num_sc, threshRestSC);
+	std::fill(vSC.get(), vSC.get() + num_sc, eLeakSC);
 
 	// bc
 	std::fill(threshBC.get(), threshBC.get() + num_bc, threshRestBC);
@@ -126,6 +137,14 @@ void MZoneActivityState::initializeVals(int randSeed)
 
 void MZoneActivityState::stateRW(bool read, std::fstream &file)
 {
+	// stellate cells
+	rawBytesRW((char *)apSC.get(), num_sc * sizeof(ct_uint8_t), read, file);
+	rawBytesRW((char *)apBufSC.get(), num_sc * sizeof(ct_uint32_t), read, file);
+	rawBytesRW((char *)gPFSC.get(), num_sc * sizeof(float), read, file);
+	rawBytesRW((char *)threshSC.get(), num_sc * sizeof(float), read, file);
+	rawBytesRW((char *)vSC.get(), num_sc * sizeof(float), read, file);
+	//rawBytesRW((char *)inputSumPFSC.get(), num_sc * sizeof(ct_uint32_t), read, file);
+
 	// basket cells
 	rawBytesRW((char *)apBC.get(), num_bc * sizeof(ct_uint8_t), read, file);
 	rawBytesRW((char *)apBufBC.get(), num_bc * sizeof(ct_uint32_t), read, file);
@@ -139,15 +158,13 @@ void MZoneActivityState::stateRW(bool read, std::fstream &file)
 	rawBytesRW((char *)apPC.get(), num_pc * sizeof(ct_uint8_t), read, file);
 	rawBytesRW((char *)apBufPC.get(), num_pc * sizeof(ct_uint32_t), read, file);
 	rawBytesRW((char *)inputBCPC.get(), num_pc * sizeof(ct_uint32_t), read, file);
-	rawBytesRW((char *)inputSCPC.get(),
-		num_pc * num_p_pc_from_sc_to_pc * sizeof(ct_uint8_t), read, file);
+	rawBytesRW((char *)inputSCPC.get(), num_pc * sizeof(ct_uint32_t), read, file);
 	rawBytesRW((char *)pfSynWeightPC.get(),
 		num_pc * num_p_pc_from_gr_to_pc * sizeof(float), read, file);
 	rawBytesRW((char *)inputSumPFPC.get(), num_pc * sizeof(float), read, file);
 	rawBytesRW((char *)gPFPC.get(), num_pc * sizeof(float), read, file);
 	rawBytesRW((char *)gBCPC.get(), num_pc * sizeof(float), read, file);
-	rawBytesRW((char *)gSCPC.get(),
-		num_pc * num_p_pc_from_sc_to_pc * sizeof(float), read, file);
+	rawBytesRW((char *)gSCPC.get(), num_pc * sizeof(float), read, file);
 	rawBytesRW((char *)vPC.get(), num_pc * sizeof(float), read, file);
 	rawBytesRW((char *)threshPC.get(), num_pc * sizeof(float), read, file);
 	rawBytesRW((char *)histPCPopAct.get(), numPopHistBinsPC * sizeof(ct_uint32_t), read, file);

@@ -13,6 +13,8 @@ MZoneConnectivityState::MZoneConnectivityState(int randSeed)
 	allocateMemory();
 	initializeVals();
 	std::cout << "[INFO]: Initializing mzone connections..." << std::endl;
+	std::cout << "[INFO]: Assigning GR delays" << std::endl;
+	assignGRDelays();
 	std::cout << "[INFO]: Connecting BC to PC" << std::endl;
 	connectBCtoPC();
 	std::cout << "[INFO]: Connecting PC to BC" << std::endl;
@@ -52,6 +54,9 @@ void MZoneConnectivityState::writeState(std::fstream &outfile)
 
 void MZoneConnectivityState::allocateMemory()
 {
+	//granule cells
+	pGRDelayMaskfromGRtoBSP = new ct_uint32_t[num_gr];
+
 	//basket cells
 	pBCfromBCtoPC  = allocate2DArray<ct_uint32_t>(num_bc, num_p_bc_from_bc_to_pc);
 	pBCfromPCtoBC  = allocate2DArray<ct_uint32_t>(num_bc, num_p_bc_from_pc_to_bc);
@@ -80,6 +85,9 @@ void MZoneConnectivityState::allocateMemory()
 
 void MZoneConnectivityState::initializeVals()
 {
+	// granule cells
+	std::fill(pGRDelayMaskfromGRtoBSP, pGRDelayMaskfromGRtoBSP + num_gr, 0);
+
 	// basket cells
 	std::fill(pBCfromBCtoPC[0], pBCfromBCtoPC[0]
 			+ num_bc * num_p_bc_from_bc_to_pc, 0);
@@ -121,6 +129,9 @@ void MZoneConnectivityState::initializeVals()
 
 void MZoneConnectivityState::deallocMemory()
 {
+	// granule cells
+	delete[] pGRDelayMaskfromGRtoBSP;
+
 	// basket cells
 	delete2DArray<ct_uint32_t>(pBCfromBCtoPC);
 	delete2DArray<ct_uint32_t>(pBCfromPCtoBC);
@@ -149,6 +160,9 @@ void MZoneConnectivityState::deallocMemory()
 
 void MZoneConnectivityState::stateRW(bool read, std::fstream &file)
 {
+	// granule cells
+	rawBytesRW((char *)pGRDelayMaskfromGRtoBSP, num_gr * sizeof(ct_uint32_t), read, file);
+
 	// basket cells
 	rawBytesRW((char *)pBCfromBCtoPC[0], num_bc * num_p_bc_from_bc_to_pc * sizeof(ct_uint32_t), read, file);
 	rawBytesRW((char *)pBCfromPCtoBC[0], num_bc * num_p_bc_from_pc_to_bc * sizeof(ct_uint32_t), read, file);
@@ -173,6 +187,22 @@ void MZoneConnectivityState::stateRW(bool read, std::fstream &file)
 	rawBytesRW((char *)pIOfromNCtoIO[0], num_io * num_p_io_from_nc_to_io * sizeof(ct_uint32_t), read, file);
 	rawBytesRW((char *)pIOInIOIO[0], num_io * num_p_io_in_io_to_io * sizeof(ct_uint32_t), read, file);
 	rawBytesRW((char *)pIOOutIOIO[0], num_io * num_p_io_out_io_to_io * sizeof(ct_uint32_t), read, file);
+}
+
+void MZoneConnectivityState::assignGRDelays()
+{
+	for (int i = 0; i < num_gr; i++)
+	{
+		// calculate x coordinate of GR position
+		int grPosX = i % gr_x;
+
+		// calculate distance of GR (assume soma) to BC, PC, and SC (aa + pf distance)
+		// and assign time delay.
+		int grBCPCSCDist = abs((int)(gr_x / 2 - grPosX));
+		pGRDelayMaskfromGRtoBSP[i] = 0x1 << (int)((grBCPCSCDist / gr_pf_vel_in_gr_x_per_t_step
+			+ gr_af_delay_in_t_step) / msPerTimeStep);
+		
+	}
 }
 
 void MZoneConnectivityState::connectBCtoPC()
