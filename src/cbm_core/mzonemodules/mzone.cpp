@@ -351,84 +351,71 @@ void MZone::updateTrueMFs(bool *trueMF)
 
 void MZone::calcPCActivities()
 {
-#pragma omp parallel
+	for (int i = 0; i < num_pc; i++)
 	{
-#pragma omp for
-		for (int i = 0; i < num_pc; i++)
-		{
-			as->gPFPC[i] += inputSumPFPCMZH[i] * gIncGRtoPC;
-			as->gPFPC[i] *= gDecGRtoPC;
-			as->gBCPC[i] += as->inputBCPC[i] * gIncBCtoPC;
-			as->gBCPC[i] *= gDecBCtoPC;
-			as->gSCPC[i] += as->inputSCPC[i] * gIncSCtoPC;
-			as->gSCPC[i] *= gDecSCtoPC;
+		as->gPFPC[i] += inputSumPFPCMZH[i] * gIncGRtoPC;
+		as->gPFPC[i] *= gDecGRtoPC;
+		as->gBCPC[i] += as->inputBCPC[i] * gIncBCtoPC;
+		as->gBCPC[i] *= gDecBCtoPC;
+		as->gSCPC[i] += as->inputSCPC[i] * gIncSCtoPC;
+		as->gSCPC[i] *= gDecSCtoPC;
 
-			as->vPC[i] += (gLeakPC * (eLeakPC - as->vPC[i]))
-						- (as->gPFPC[i] * as->vPC[i])
-						+ (as->gBCPC[i] * (eBCtoPC - as->vPC[i]))
-						+ (as->gSCPC[i] * (eSCtoPC - as->vPC[i]));
+		as->vPC[i] += (gLeakPC * (eLeakPC - as->vPC[i]))
+					- (as->gPFPC[i] * as->vPC[i])
+					+ (as->gBCPC[i] * (eBCtoPC - as->vPC[i]))
+					+ (as->gSCPC[i] * (eSCtoPC - as->vPC[i]));
 
-			as->threshPC[i] += threshDecPC * (threshRestPC - as->threshPC[i]);
+		as->threshPC[i] += threshDecPC * (threshRestPC - as->threshPC[i]);
 
-			as->apPC[i]    = as->vPC[i] > as->threshPC[i];
-			as->apBufPC[i] = (as->apBufPC[i] << 1) | (as->apPC[i] * 0x00000001);
+		as->apPC[i]    = as->vPC[i] > as->threshPC[i];
+		as->apBufPC[i] = (as->apBufPC[i] << 1) | (as->apPC[i] * 0x00000001);
 
-			as->threshPC[i] = as->apPC[i] * threshMaxPC + (!as->apPC[i]) * as->threshPC[i];
-			as->pcPopAct   += as->apPC[i];
-		}
+		as->threshPC[i] = as->apPC[i] * threshMaxPC + (!as->apPC[i]) * as->threshPC[i];
+		as->pcPopAct   += as->apPC[i];
 	}
 }
 
 void MZone::calcSCActivities()
 {
-#pragma omp parallel
+	for (int i = 0; i < num_sc; i++)
 	{
-#pragma omp for
-		for (int i = 0; i < num_sc; i++)
-		{
-			as->gPFSC[i] = as->gPFSC[i] + inputSumPFSCH[i] * gIncGRtoSC;
-			as->gPFSC[i] = as->gPFSC[i] * gDecGRtoSC;
+		as->gPFSC[i] = as->gPFSC[i] + inputSumPFSCH[i] * gIncGRtoSC;
+		as->gPFSC[i] = as->gPFSC[i] * gDecGRtoSC;
 
-			as->vSC[i] = as->vSC[i] + gLeakSC * (eLeakSC - as->vSC[i]) - as->gPFSC[i] * as->vSC[i];
+		as->vSC[i] = as->vSC[i] + gLeakSC * (eLeakSC - as->vSC[i]) - as->gPFSC[i] * as->vSC[i];
 
-			as->apSC[i] = (as->vSC[i] > as->threshSC[i]);
-			as->apBufSC[i] = (as->apBufSC[i] << 1) | (as->apSC[i] * 0x00000001);
+		as->apSC[i] = (as->vSC[i] > as->threshSC[i]);
+		as->apBufSC[i] = (as->apBufSC[i] << 1) | (as->apSC[i] * 0x00000001);
 
-			as->threshSC[i] = as->threshSC[i] + threshDecSC * (threshRestSC - as->threshSC[i]);
-			as->threshSC[i] = as->apSC[i] * threshMaxSC + (!as->apSC[i]) * as->threshSC[i];
-		}
+		as->threshSC[i] = as->threshSC[i] + threshDecSC * (threshRestSC - as->threshSC[i]);
+		as->threshSC[i] = as->apSC[i] * threshMaxSC + (!as->apSC[i]) * as->threshSC[i];
 	}
 }
 
 void MZone::calcBCActivities()
 {
-#pragma omp parallel
+	for (int i = 0; i < num_bc; i++)
 	{
-#pragma omp for
-		for (int i = 0; i < num_bc; i++)
-		{
-			as->gPFBC[i] = as->gPFBC[i] + inputSumPFBCH[i] * gIncGRtoBC;
-			as->gPFBC[i] = as->gPFBC[i] * gDecGRtoBC;
-			as->gPCBC[i] = as->gPCBC[i] + as->inputPCBC[i] * gIncPCtoBC;
-			as->gPCBC[i] = as->gPCBC[i] * gDecPCtoBC;
+		as->gPFBC[i] = as->gPFBC[i] + inputSumPFBCH[i] * gIncGRtoBC;
+		as->gPFBC[i] = as->gPFBC[i] * gDecGRtoBC;
+		as->gPCBC[i] = as->gPCBC[i] + as->inputPCBC[i] * gIncPCtoBC;
+		as->gPCBC[i] = as->gPCBC[i] * gDecPCtoBC;
 
-			as->vBC[i] = as->vBC[i] +
-					(gLeakBC * (eLeakBC - as->vBC[i])) -
-					(as->gPFBC[i] * as->vBC[i]) +
-					(as->gPCBC[i] * (ePCtoBC - as->vBC[i]));
+		as->vBC[i] = as->vBC[i] +
+				(gLeakBC * (eLeakBC - as->vBC[i])) -
+				(as->gPFBC[i] * as->vBC[i]) +
+				(as->gPCBC[i] * (ePCtoBC - as->vBC[i]));
 
-			as->threshBC[i] = as->threshBC[i] + threshDecBC * (threshRestBC - as->threshBC[i]);
-			as->apBC[i] = as->vBC[i] > as->threshBC[i];
-			as->apBufBC[i] = (as->apBufBC[i] << 1) | (as->apBC[i] * 0x00000001);
+		as->threshBC[i] = as->threshBC[i] + threshDecBC * (threshRestBC - as->threshBC[i]);
+		as->apBC[i] = as->vBC[i] > as->threshBC[i];
+		as->apBufBC[i] = (as->apBufBC[i] << 1) | (as->apBC[i] * 0x00000001);
 
-			as->threshBC[i] = as->apBC[i] * threshMaxBC + (!as->apBC[i]) * (as->threshBC[i]);
-		}
+		as->threshBC[i] = as->apBC[i] * threshMaxBC + (!as->apBC[i]) * (as->threshBC[i]);
 	}
 }
 
 void MZone::calcIOActivities()
 {
-#pragma omp parallel for
 	clock_t t;
 	t = clock();
 	srand(t);
@@ -462,7 +449,7 @@ void MZone::calcIOActivities()
 				as->errDrive + gNoise;
 
 		as->apIO[i] = as->vIO[i] > as->threshIO[i];
-		as->apBufIO[i] = (as->apBufIO[i] << 1) |(as->apIO[i] * 0x00000001);
+		as->apBufIO[i] = (as->apBufIO[i] << 1) | (as->apIO[i] * 0x00000001);
 
 		as->threshIO[i] = threshMaxIO * as->apIO[i] +
 				(!as->apIO[i]) * (as->threshIO[i] + threshDecIO * (threshRestIO - as->threshIO[i]));
@@ -475,60 +462,58 @@ void MZone::calcNCActivities()
 //TODO: make function calcActivities which takes in the parameters which vary dep
 //		on the type of activity that is being calculated. Else this is redundant  
 float gDecay = exp(-1.0 / 20.0); 
+// 1) my value of gAMPAIncMFtoNC is 0.283, Joe's is 2.35.
+// std::cout << "[DEBUG]: gAMPAIncMFtoNC: " << gAMPAIncMFtoNC << "\n"; 
 
-#pragma omp parallel
+	for (int i = 0; i < num_nc; i++)
 	{
-#pragma omp for
-		for (int i = 0; i < num_nc; i++)
+		float gMFNMDASum;
+		float gMFAMPASum;
+		float gPCNCSum;
+
+		int inputPCNCSum;
+		int inputMFNCSum;
+
+		gMFNMDASum   = 0; /* dont use: ask Joe about */
+		gMFAMPASum   = 0;
+		inputMFNCSum = 0;
+
+		for (int j = 0; j < num_p_nc_from_mf_to_nc; j++)
 		{
-			float gMFNMDASum;
-			float gMFAMPASum;
-			float gPCNCSum;
+			inputMFNCSum += as->inputMFNC[i * num_p_nc_from_mf_to_nc + j]; /* dont use */
 
-			int inputPCNCSum;
-			int inputMFNCSum;
-
-			gMFNMDASum   = 0; /* dont use: ask Joe about */
-			gMFAMPASum   = 0;
-			inputMFNCSum = 0;
-
-			for (int j = 0; j < num_p_nc_from_mf_to_nc; j++)
-			{
-				inputMFNCSum += as->inputMFNC[i * num_p_nc_from_mf_to_nc + j]; /* dont use */
-
-				as->gMFAMPANC[i * num_p_nc_from_mf_to_nc + j] = as->gMFAMPANC[i * num_p_nc_from_mf_to_nc + j]
-				   * gDecay + (gAMPAIncMFtoNC * as->inputMFNC[i * num_p_nc_from_mf_to_nc + j]
-					 * as->mfSynWeightNC[i * num_p_nc_from_mf_to_nc + j]);
-				gMFAMPASum += as->gMFAMPANC[i * num_p_nc_from_mf_to_nc + j];
-			}
-
-			gMFNMDASum = gMFNMDASum * msPerTimeStep / ((float)num_p_nc_from_mf_to_nc);
-			gMFAMPASum = gMFAMPASum * msPerTimeStep / ((float)num_p_nc_from_mf_to_nc);
-			gMFNMDASum = gMFNMDASum * -as->vNC[i] / 80.0f; 
-			gPCNCSum = 0;
-			inputPCNCSum = 0;
-
-			for (int j = 0; j < num_p_nc_from_pc_to_nc; j++)
-			{
-				inputPCNCSum += as->inputPCNC[i * num_p_nc_from_pc_to_nc + j];
-
-				as->gPCNC[i * num_p_nc_from_pc_to_nc + j] = as->gPCNC[i * num_p_nc_from_pc_to_nc + j] * gDecPCtoNC + 
-					as->inputPCNC[i * num_p_nc_from_pc_to_nc + j] * gIncAvgPCtoNC
-					* (1 - as->gPCNC[i * num_p_nc_from_pc_to_nc + j]);
-				gPCNCSum += as->gPCNC[i * num_p_nc_from_pc_to_nc + j];
-
-			}
-
-			gPCNCSum = gPCNCSum * msPerTimeStep / ((float)num_p_nc_from_pc_to_nc);
-			as->vNC[i] = as->vNC[i] + gLeakNC * (eLeakNC - as->vNC[i])
-					   - (gMFNMDASum + gMFAMPASum) * as->vNC[i] + gPCNCSum * (ePCtoNC - as->vNC[i]);
-			
-			as->threshNC[i] = as->threshNC[i] + threshDecNC * (threshRestNC - as->threshNC[i]);
-			as->apNC[i] = as->vNC[i] > as->threshNC[i];
-			as->apBufNC[i] = (as->apBufNC[i] << 1) | (as->apNC[i] * 0x00000001);
-
-			as->threshNC[i] = as->apNC[i] * threshMaxNC + (!as->apNC[i]) * as->threshNC[i];
+			as->gMFAMPANC[i * num_p_nc_from_mf_to_nc + j] = as->gMFAMPANC[i * num_p_nc_from_mf_to_nc + j]
+			   * gDecay + (gAMPAIncMFtoNC * as->inputMFNC[i * num_p_nc_from_mf_to_nc + j]
+				 * as->mfSynWeightNC[i * num_p_nc_from_mf_to_nc + j]);
+			gMFAMPASum += as->gMFAMPANC[i * num_p_nc_from_mf_to_nc + j];
 		}
+
+		gMFNMDASum = gMFNMDASum * msPerTimeStep / ((float)num_p_nc_from_mf_to_nc);
+		gMFAMPASum = gMFAMPASum * msPerTimeStep / ((float)num_p_nc_from_mf_to_nc);
+		gMFNMDASum = gMFNMDASum * -as->vNC[i] / 80.0f; 
+		gPCNCSum = 0;
+		inputPCNCSum = 0;
+
+		for (int j = 0; j < num_p_nc_from_pc_to_nc; j++)
+		{
+			inputPCNCSum += as->inputPCNC[i * num_p_nc_from_pc_to_nc + j];
+
+			as->gPCNC[i * num_p_nc_from_pc_to_nc + j] = as->gPCNC[i * num_p_nc_from_pc_to_nc + j] * gDecPCtoNC + 
+				as->inputPCNC[i * num_p_nc_from_pc_to_nc + j] * gIncAvgPCtoNC
+				* (1 - as->gPCNC[i * num_p_nc_from_pc_to_nc + j]);
+			gPCNCSum += as->gPCNC[i * num_p_nc_from_pc_to_nc + j];
+
+		}
+
+		gPCNCSum = gPCNCSum * msPerTimeStep / ((float)num_p_nc_from_pc_to_nc);
+		as->vNC[i] = as->vNC[i] + gLeakNC * (eLeakNC - as->vNC[i])
+				   - (gMFNMDASum + gMFAMPASum) * as->vNC[i] + gPCNCSum * (ePCtoNC - as->vNC[i]);
+		
+		as->threshNC[i] = as->threshNC[i] + threshDecNC * (threshRestNC - as->threshNC[i]);
+		as->apNC[i] = as->vNC[i] > as->threshNC[i];
+		as->apBufNC[i] = (as->apBufNC[i] << 1) | (as->apNC[i] * 0x00000001);
+
+		as->threshNC[i] = as->apNC[i] * threshMaxNC + (!as->apNC[i]) * as->threshNC[i];
 	}
 }
 
@@ -594,7 +579,6 @@ void MZone::updateBCPCOut()
 
 void MZone::updateSCPCOut()
 {
-#pragma omp parallel for
 	for (int i = 0; i < num_pc; i++) as->inputSCPC[i] = 0;
 
 	for (int i = 0; i < num_sc; i++)
@@ -613,7 +597,7 @@ void MZone::updateIOOut()
 {
 	for (int i = 0; i < num_io; i++)
 	{
-		as->pfPCPlastTimerIO[i] = (!as->apIO[i]) * (as->pfPCPlastTimerIO[i] +1 ) + as->apIO[i] * tsLTPEndAPIO;
+		as->pfPCPlastTimerIO[i] = (1 - as->apIO[i]) * (as->pfPCPlastTimerIO[i] + 1) + as->apIO[i] * tsLTPEndAPIO;
 		as->vCoupleIO[i] = 0;
 		for (int j = 0; j < num_p_io_in_io_to_io; j++)
 		{

@@ -30,10 +30,10 @@ NVCC       := nvcc
 NVCC_FLAGS := -arch=native -Xcompiler -fPIC -O3
 
 CPP       := g++
-CPP_FLAGS := -m64 -pipe -std=c++14 -O3 -fPIC
+CPP_FLAGS := -m64 -pipe -std=c++14 -fopenmp -O3 -fPIC
 
 LD       := g++
-LD_FLAGS := -m64 -O3
+LD_FLAGS := -m64 -fopenmp -O3
 
 CHK_DIR_EXISTS   := test -d
 MKDIR            := mkdir -p

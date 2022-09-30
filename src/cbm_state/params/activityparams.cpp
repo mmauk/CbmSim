@@ -340,7 +340,7 @@ void populate_act_params(parsed_build_file &p_file)
 
 	/* derived act params */
 	numTSinMFHist       = msPerHistBinMF / msPerTimeStep;
-	gLeakGO             = rawGLeakGO / (6 - msPerTimeStep);
+	gLeakGO             = rawGLeakGO; // / (6 - msPerTimeStep);
 	gDecMFtoGO          = exp(-msPerTimeStep / gDecTauMFtoGO);
 	gDecayMFtoGONMDA    = exp(-msPerTimeStep / gDecTauMFtoGONMDA);
 	gDecGRtoGO          = exp(-msPerTimeStep / gDecTauGRtoGO);
@@ -376,8 +376,8 @@ void populate_act_params(parsed_build_file &p_file)
 	grPCHistCheckBinIO  = abs(msLTPEndAPIO / msPerHistBinGR);
 	gmaxNMDADecMFtoNC   = exp(-msPerTimeStep / gmaxNMDADecTauMFtoNC);
 	gmaxAMPADecMFtoNC   = exp(-msPerTimeStep / gmaxAMPADecTauMFtoNC);
-	gNMDAIncMFtoNC      = 1 - exp(-msPerTimeStep / rawGMFNMDAIncNC);
-	gAMPAIncMFtoNC      = 1 - exp(-msPerTimeStep / rawGMFAMPAIncNC);
+	gNMDAIncMFtoNC      = rawGMFNMDAIncNC;//1 - exp(-msPerTimeStep / rawGMFNMDAIncNC); // modified 09/29/2022
+	gAMPAIncMFtoNC      = rawGMFAMPAIncNC;//1 - exp(-msPerTimeStep / rawGMFAMPAIncNC); // modified 09/29/2022
 	gDecPCtoNC          = exp(-msPerTimeStep / gDecTauPCtoNC);
 	gLeakNC             = rawGLeakNC / (6 - msPerTimeStep);
 	threshDecNC         = 1 - exp(-msPerTimeStep / threshDecTauNC);

@@ -84,19 +84,11 @@ class Control
 		int gpuIndex = 0;
 		int gpuP2    = 2;
 
-		// Training Parameters -> TODO: deprecate in gui runExperiment
-		int numTrainingTrials      = 100;
-		int homeoTuningTrials      = 0;
-		int granuleActDetectTrials = 0;
-
 		int trial = 0;
 		int msPreCS = 400; // was 1500 (08/09/2022)
 		int msPostCS = 400; // was 1000 (08/09/2022)
 
-		int csStart = 2000; // was 1500 (08/09/2022)
 		int csPhasicSize = 50;
-
-		int csLength = 2000; 
 
 		// mzone stuff -> TODO: place in build file down the road
 		int numMZones = 1; 
@@ -137,27 +129,8 @@ class Control
 		int trialTime = 5000; /* wild that this is here */
 	
 		// raster stuff -> TODO: place in experiment file down the road
-		// closer TODO: construct these within the runExperiment loop:
-		//              depends upon the trial
-		int PSTHColSize = csLength + msPreCS + msPostCS;
-		int rasterColumnSize = PSTHColSize * numTrainingTrials;
+		int PSTHColSize = 0;
 
-		//const ct_uint8_t* grSpks;
-		//const float *mfGO;
-		//const float *grGO;
-		//const float *goGO;
-		//float **grGOconductancePSTH;
-		//float **mfGOconductancePSTH;
-
-		//float **allGRGORaster;
-		//float **allGOGORaster;
-		//float **goGOgRaster;
-		//float **mfGOgRaster;
-		//float **grGOgPSTH; 
-
-		//ct_uint8_t **allMFPSTH;
-		//ct_uint8_t **activeGRPSTH;
-	
 		struct cell_spike_sums spike_sums[NUM_CELL_TYPES] = {{}};
 		struct cell_firing_rates firing_rates[NUM_CELL_TYPES] = {{}};
 		const ct_uint8_t *cell_spikes[NUM_CELL_TYPES];
@@ -198,28 +171,6 @@ class Control
 		float **all_nc_vm_rast_internal;
 		float **all_io_vm_rast_internal;
 
-		//TODO: get mfdcn weights too 
-		//ct_uint8_t **allGOPSTH;
-		//float **allGORaster_gogoG; 
-		//float **eyelidPos;
-		//float **activeGRgISum;
-
-		//float **allGOInhInput;
-		//float **allGOExInput;
-
-		//float **allGOgSumMFGO;
-		//float **allGOgSumGOGO;
-		//float **allGOgSumGRGO;
-		//float **allGOgGOGOcouple;
-		//float **allGOVoltage;
-		//ct_uint8_t *granuleCSSpkCount;
-		//ct_uint8_t **activeGRRaster;
-		//ct_uint8_t **preGRRaster;
-		//ct_uint8_t **preGRPSTHPreCS;
-		//ct_uint8_t **preGRPSTHCS;
-
-		//ct_uint8_t **allGORaster_Trial;
-		//ct_uint8_t *goSpkCount_Trial;
 		const ct_uint8_t* goSpks; 
 
 		void build_sim();
@@ -256,8 +207,8 @@ class Control
 		void saveOutputArraysToFile();
 
 		void countGOSpikes(int *goSpkCounter, float &medTrials);
-		void update_spike_sums(int tts);
-		void calculate_firing_rates();
+		void update_spike_sums(int tts, float onset_cs, float offset_cs);
+		void calculate_firing_rates(float onset_cs, float offset_cs);
 		void fill_rast_internal(int PSTHCounter);
 		void fillOutputArrays();
 

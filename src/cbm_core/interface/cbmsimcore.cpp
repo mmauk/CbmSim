@@ -326,6 +326,7 @@ void CBMSimCore::calcActivity(float spillFrac)
 #ifdef NO_ASYNC
 	syncCUDA("2if");
 #endif
+	
 	inputNet->updateGOtoGOOut();
 #ifdef NO_ASYNC
 	syncCUDA("2ig");

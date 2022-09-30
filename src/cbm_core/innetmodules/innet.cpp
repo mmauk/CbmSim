@@ -361,23 +361,20 @@ const float* InNet::exportgSum_GRGO()
 void InNet::updateMFActivties(const ct_uint8_t *actInMF)
 {
 	apMFOut = actInMF;
-#pragma omp parallel
+	for (int i = 0; i < num_mf; i++)
 	{
-#pragma omp for
-		for (int i = 0; i < num_mf; i++)
+		as->histMF[i] = as->histMF[i] || (actInMF[i] > 0);
+		for (int j = 0; j < numGPUs; j++)
 		{
-			as->histMF[i] = as->histMF[i] || (actInMF[i] > 0);
-			for (int j = 0; j < numGPUs; j++)
-			{
-				apMFH[j][i] = (actInMF[i] > 0);
-			}
-			as->apBufMF[i] = (as->apBufMF[i] << 1) | ((actInMF[i] > 0) * 0x00000001);
+			apMFH[j][i] = (actInMF[i] > 0);
 		}
+		as->apBufMF[i] = (as->apBufMF[i] << 1) | ((actInMF[i] > 0) * 0x00000001);
 	}
 }
 
 void InNet::calcGOActivities()
 {
+#pragma omp parallel for
 	for (int i = 0; i < num_go; i++)
 	{
 		sumGRInputGO[i] = 0;
@@ -385,11 +382,7 @@ void InNet::calcGOActivities()
 		{
 			sumGRInputGO[i] += grInputGOSumH[j][i];
 		}
-	}
 
-#pragma omp parallel for
-	for (int i = 0; i < num_go; i++)
-	{
 		float tempVGO = as->vGO[i];
 
 		//NMDA Low
@@ -403,7 +396,7 @@ void InNet::calcGOActivities()
 							+ (0.000089369 * tempVGO * tempVGO)
 							+ (0.0151 * tempVGO)
 							+ 0.7713; 
-	
+
 		as->gSum_MFGO[i] = (as->inputMFGO[i] * mfgoW)
 						 + as->gSum_MFGO[i] * gDecMFtoGO;
 		as->gSum_GOGO[i] = (as->inputGOGO[i] * gogoW * as->synWscalerGOtoGO[i])
@@ -424,21 +417,19 @@ void InNet::calcGOActivities()
 					+ as->gGRGO_NMDA[i]) * tempVGO
 				- (as->vCoupleGO[i] * tempVGO);
 
-		tempVGO = threshMaxGO * (tempVGO > threshMaxGO) + tempVGO * (threshMaxGO > tempVGO); /* TODO: test whether gives same results as branched case */
+		//tempVGO = threshMaxGO * (tempVGO > threshMaxGO) + tempVGO * (threshMaxGO > tempVGO); /* TODO: test whether gives same results as branched case */
+		if (tempVGO > threshMaxGO) tempVGO = threshMaxGO;
 		
 		as->apGO[i]    = tempVGO > as->threshCurGO[i];
 		as->apBufGO[i] = (as->apBufGO[i] << 1) | (as->apGO[i] * 0x00000001);
 
 		as->threshCurGO[i] = as->apGO[i] * threshMaxGO
-						   + (1-as->apGO[i]) * as->threshCurGO[i];
+						   + (1 - as->apGO[i]) * as->threshCurGO[i];
 
 		as->inputMFGO[i]  = 0;
 		as->inputGOGO[i]  = 0;
 		as->vGO[i]        = tempVGO;
-	}
 
-	for (int i = 0; i < num_go; i++)
-	{
 		for (int j = 0; j < numGPUs; j++)
 		{
 			apGOH[j][i] = as->apGO[i];
@@ -450,20 +441,14 @@ void InNet::updateMFtoGROut()
 {
 	float recoveryRate = 1 / recoveryTauMF;
 
-#pragma omp parallel
+	for (int i = 0; i < num_mf; i++)
 	{
-#pragma omp for
-		for (int i = 0; i < num_mf; i++)
+		as->depAmpMFGR[i] = apMFH[0][i] * as->depAmpMFGR[i] * fracDepMF
+		   + (!apMFH[0][i]) * (as->depAmpMFGR[i] + recoveryRate * (1 - as->depAmpMFGR[i])); 
+
+		for (int j = 0; j < numGPUs; j++)
 		{
-			as->depAmpMFGR[i] = apMFH[0][i] * as->depAmpMFGR[i] * fracDepMF
-			   + (!apMFH[0][i]) * (as->depAmpMFGR[i] + recoveryRate * (1 - as->depAmpMFGR[i])); 
-#pragma omp critical	
-			{
-				for (int j = 0; j < numGPUs; j++)
-				{
-					depAmpMFH[j][i] = as->depAmpMFGR[i];
-				}
-			}
+			depAmpMFH[j][i] = as->depAmpMFGR[i];
 		}
 	}
 }
@@ -471,26 +456,18 @@ void InNet::updateMFtoGROut()
 void InNet::updateMFtoGOOut()
 {
 	float recoveryRate = 1 / recoveryTauMF;
-
-#pragma omp parallel
+	for (int i = 0; i < num_mf; i++)
 	{
-#pragma omp for
-		for (int i = 0; i < num_mf; i++)
-		{
-			as->gi_MFtoGO[i] = apMFH[0][i] * gIncMFtoGO * as->depAmpMFGO[i]
-			   + as->gi_MFtoGO[i] * gDecMFtoGO; 
-			as->depAmpMFGO[i] = apMFH[0][i] * as->depAmpMFGO[i] * fracDepMF
-			   + (!apMFH[0][i]) * (as->depAmpMFGO[i] + recoveryRate * (1 - as->depAmpMFGO[i])); 
+		as->gi_MFtoGO[i] = apMFH[0][i] * gIncMFtoGO * as->depAmpMFGO[i]
+		   + as->gi_MFtoGO[i] * gDecMFtoGO; 
+		as->depAmpMFGO[i] = apMFH[0][i] * as->depAmpMFGO[i] * fracDepMF
+		   + (!apMFH[0][i]) * (as->depAmpMFGO[i] + recoveryRate * (1 - as->depAmpMFGO[i])); 
 
-			if (apMFH[0][i])
+		if (apMFH[0][i])
+		{
+			for (int j = 0; j < cs->numpMFfromMFtoGO[i]; j++)
 			{
-#pragma omp critical
-				{
-					for (int j = 0; j < cs->numpMFfromMFtoGO[i]; j++)
-					{
-						as->inputMFGO[cs->pMFfromMFtoGO[i][j]]++;
-					}
-				}
+				as->inputMFGO[cs->pMFfromMFtoGO[i][j]]++;
 			}
 		}
 	}
@@ -498,7 +475,6 @@ void InNet::updateMFtoGOOut()
 
 void InNet::updateGOtoGROutParameters(float spillFrac)
 {
-
 	// TODO: place these in the build file as well
 	float scalerGOGR = gogrW * gIncFracSpilloverGOtoGR * 1.4;
 	float halfShift = 12.0;//shift;
@@ -506,33 +482,24 @@ void InNet::updateGOtoGROutParameters(float spillFrac)
 	float recoveryRate = 1 / recoveryTauGO;
 	float baselvl = spillFrac * gogrW;
 
-#pragma omp parallel
+#pragma omp parallel for
+	for (int i = 0; i < num_go; i++)
 	{
-#pragma omp for
-		for (int i = 0; i < num_go; i++)
-		{			
-			as->depAmpGOGR[i] = 1;
+		as->depAmpGOGR[i] = 1;
 
-			as->dynamicAmpGOGR[i] = baselvl + (scalerGOGR * (1 / (1 + (exp((counter[i] - halfShift) / steepness)))));
-			counter[i] = (1 - as->apGO[i]) * counter[i] + 1; 
+		as->dynamicAmpGOGR[i] = baselvl + (scalerGOGR * (1 / (1 + (exp((counter[i] - halfShift) / steepness)))));
+		counter[i] = (1 - as->apGO[i]) * counter[i] + 1; 
 
-#pragma omp critical
-			{
-				for (int j = 0; j < numGPUs; j++)
-				{
-					depAmpGOH[j][i] = 1;
-					dynamicAmpGOH[j][i] = as->dynamicAmpGOGR[i];
-				}
-			}
+		for (int j = 0; j < numGPUs; j++)
+		{
+			depAmpGOH[j][i] = 1;
+			dynamicAmpGOH[j][i] = as->dynamicAmpGOGR[i];
 		}
 	}
 }
 
 void InNet::updateGOtoGOOut()
 {
-	float gjCoupleScaler = coupleRiRjRatioGO;
-	float recoveryRate = 1 / recoveryTauGO;
-
 #pragma omp parallel
 	{
 #pragma omp for
@@ -544,7 +511,7 @@ void InNet::updateGOtoGOOut()
 			as->depAmpGOGO[i] = 1;
 		}
 
-		// FIXME: Performance bottleneck: convert to branchless
+#pragma omp for
 		for (int i = 0; i < num_go; i++)
 		{
 			if (as->apGO[i])
@@ -557,17 +524,12 @@ void InNet::updateGOtoGOOut()
 		}
 
 #pragma omp for
-		for(int i=0; i<num_go; i++)
+		for (int i = 0; i < num_go; i++)
 		{
-			float threshCoupleGO;
-
-			as->vCoupleGO[i]=0;
-
-			threshCoupleGO=0;
-			for(int j=0; j<cs->numpGOCoupInGOGO[i]; j++)
+			for(int j = 0; j < cs->numpGOCoupInGOGO[i]; j++)
 			{
-				as->vCoupleGO[i] = as->vCoupleGO[i] + ((as->vGO[cs->pGOCoupInGOGO[i][j]] - as->vGO[i])
-					  * gjCoupleScaler * cs->pGOCoupInGOGOCCoeff[i][j]);
+				as->vCoupleGO[i] += (as->vGO[cs->pGOCoupInGOGO[i][j]] - as->vGO[i])
+					  * coupleRiRjRatioGO * cs->pGOCoupInGOGOCCoeff[i][j];
 			}
 		}
 	}
@@ -578,13 +540,9 @@ void InNet::resetMFHist(unsigned long t)
 	// why unsigned long?
 	if (t % (unsigned long)numTSinMFHist == 0)
 	{
-#pragma omp parallel
+		for(int i = 0; i < num_mf; i++)
 		{
-#pragma omp for
-			for(int i = 0; i < num_mf; i++)
-			{
-				as->histMF[i] = false;
-			}
+			as->histMF[i] = false;
 		}
 	}
 }

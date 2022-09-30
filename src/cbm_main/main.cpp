@@ -13,6 +13,7 @@
 #include <time.h>
 #include <iostream>
 #include <fstream>
+#include <omp.h>
 
 #include "control.h"
 #include "gui.h"
@@ -32,6 +33,8 @@ int main(int argc, char **argv)
 	std::string out_sim_file = "";
 	int exit_status = -1;
 
+	omp_set_num_threads(1); /* for 4 gpus, 8 is the sweet spot. Unsure for 2. */
+
 	switch (sim_run_mode)
 	{
 		case BUILD: /* parse build file, build sim, save to file and exit */
@@ -45,7 +48,7 @@ int main(int argc, char **argv)
 		case RUN:
 			switch (sim_user_mode)
 			{
-				case FRIENDLY: /* you have to load everything in yourself, but you only enter the command */
+				case FRIENDLY: /* you have to load everything in yourself in gui, but you only enter the command on cmdline */
 					control = new Control(GUI);
 					break;
 				case VETERAN: /* you have to know the name of every input file when invoking on cmdline */
@@ -59,8 +62,8 @@ int main(int argc, char **argv)
 			{
 				case TUI:
 					control->runExperiment(NULL);
-					get_out_sim_file(RUN_OUT_SIM_FILE, &argv, out_sim_file);
-					control->save_sim_to_file(out_sim_file);
+					//get_out_sim_file(RUN_OUT_SIM_FILE, &argv, out_sim_file);
+					//control->save_sim_to_file(out_sim_file);
 					exit_status = 0;
 					break;
 				case GUI:

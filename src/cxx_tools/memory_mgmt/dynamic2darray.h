@@ -29,8 +29,8 @@ template<typename Type> Type** allocate2DArray(unsigned int numRows, unsigned in
 
 template<typename Type> void delete2DArray(Type** array)
 {
-	free((void *)array[0]);
-	free((void **)array);
+	free(array[0]);
+	free(array);
 }
 
 inline bool validate2DfloatArray(float **array, unsigned int numElements)

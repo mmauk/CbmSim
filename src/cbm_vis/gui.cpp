@@ -100,6 +100,11 @@ static void on_save_state(GtkWidget *widget, Control *control)
 	save_file(widget, control, &Control::save_sim_state_to_file, "[ERROR]: Could not save state file.", DEFAULT_STATE_FILE_NAME);
 }
 
+static void on_save_sim(GtkWidget *widget, Control *control)
+{
+	save_file(widget, control, &Control::save_sim_to_file, "[ERROR]: Could not save sim file.", DEFAULT_SIM_FILE_NAME);
+}
+
 static void on_save_pfpc_weights(GtkWidget *widget, Control *control)
 {
 	save_file(widget, control, &Control::save_pfpc_weights_to_file, "[ERROR]: Could not save pf-pc weights to file.", DEFAULT_PFPC_WEIGHT_NAME);
@@ -122,42 +127,42 @@ static void on_load_mfdcn_weights(GtkWidget *widget, Control *control)
 
 static void on_save_gr_psth(GtkWidget *widget, Control *control)
 {
-	save_file(widget, control, &Control::save_gr_psth_to_file, "[ERROR]: Could not save gr psth to file.", DEFAULT_GR_PSTH_FILE_NAME);
+	save_file(widget, control, &Control::save_gr_psth_to_file, "[ERROR]: Could not save gr psth to file.", DEFAULT_GR_RASTER_FILE_NAME);
 } 
 
 static void on_save_go_psth(GtkWidget *widget, Control *control)
 {
-	save_file(widget, control, &Control::save_go_psth_to_file, "[ERROR]: Could not save go psth to file.", DEFAULT_GO_PSTH_FILE_NAME);
+	save_file(widget, control, &Control::save_go_psth_to_file, "[ERROR]: Could not save go psth to file.", DEFAULT_GO_RASTER_FILE_NAME);
 } 
 
 static void on_save_pc_psth(GtkWidget *widget, Control *control)
 {
-	save_file(widget, control, &Control::save_pc_psth_to_file, "[ERROR]: Could not save pc psth to file.", DEFAULT_PC_PSTH_FILE_NAME);
+	save_file(widget, control, &Control::save_pc_psth_to_file, "[ERROR]: Could not save pc psth to file.", DEFAULT_PC_RASTER_FILE_NAME);
 } 
 
 static void on_save_nc_psth(GtkWidget *widget, Control *control)
 {
-	save_file(widget, control, &Control::save_nc_psth_to_file, "[ERROR]: Could not save nc psth to file.", DEFAULT_NC_PSTH_FILE_NAME);
+	save_file(widget, control, &Control::save_nc_psth_to_file, "[ERROR]: Could not save nc psth to file.", DEFAULT_NC_RASTER_FILE_NAME);
 } 
 
 static void on_save_io_psth(GtkWidget *widget, Control *control)
 {
-	save_file(widget, control, &Control::save_io_psth_to_file, "[ERROR]: Could not save io psth to file.", DEFAULT_IO_PSTH_FILE_NAME);
+	save_file(widget, control, &Control::save_io_psth_to_file, "[ERROR]: Could not save io psth to file.", DEFAULT_IO_RASTER_FILE_NAME);
 } 
 
 static void on_save_bc_psth(GtkWidget *widget, Control *control)
 {
-	save_file(widget, control, &Control::save_bc_psth_to_file, "[ERROR]: Could not save bc psth to file.", DEFAULT_BC_PSTH_FILE_NAME);
+	save_file(widget, control, &Control::save_bc_psth_to_file, "[ERROR]: Could not save bc psth to file.", DEFAULT_BC_RASTER_FILE_NAME);
 } 
 
 static void on_save_sc_psth(GtkWidget *widget, Control *control)
 {
-	save_file(widget, control, &Control::save_sc_psth_to_file, "[ERROR]: Could not save sc psth to file.", DEFAULT_SC_PSTH_FILE_NAME);
+	save_file(widget, control, &Control::save_sc_psth_to_file, "[ERROR]: Could not save sc psth to file.", DEFAULT_SC_RASTER_FILE_NAME);
 }
 
 static void on_save_mf_psth(GtkWidget *widget, Control *control)
 {
-	save_file(widget, control, &Control::save_mf_psth_to_file, "[ERROR]: Could not save mf psth to file.", DEFAULT_MF_PSTH_FILE_NAME);
+	save_file(widget, control, &Control::save_mf_psth_to_file, "[ERROR]: Could not save mf psth to file.", DEFAULT_MF_RASTER_FILE_NAME);
 }
 
 //FIXME: below is a stop-gap solution. should be more careful with destroy callback
@@ -559,6 +564,22 @@ static void draw_raster(GtkWidget *drawing_area, cairo_t *cr, ct_uint32_t trial,
 	}
 } 
 
+static void draw_spatial_activity(GtkWidget *drawing_area, cairo_t *cr, Control *control)
+{
+	/*
+	 * the plan: 
+	 *     for cell coordinates x and y (in the square: [0, num_cell) x [0, num_cell)), if cell at (x, y)
+	 *     fires at time step t_i, draw a dot with alpha 1. for each time step after a spike, decrease alpha
+	 *     by a fixed amount.
+	 *
+	 *     for now, call either g_threads_add_idle or directly emit signal to re-draw every time step during a run.
+	 *     this allows for the view to animate at a reasonable pace (e.g. 60 fps) when it is up, and then run the 
+	 *     simulation at full speed when it is not. Useful for when you want to check network activity after a 
+	 *     certain number of training or forgetting trials
+	 *
+	 */
+}
+
 static void draw_gr_raster(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 {
 	/* 4096 gr raster sample size */
@@ -570,6 +591,7 @@ static void draw_go_raster(GtkWidget *drawing_area, cairo_t *cr, Control *contro
 	draw_raster(drawing_area, cr, control->trial, num_go, control->PSTHColSize, control->all_go_rast_internal);
 }
 
+/* weights plot */
 static void draw_pf_pc_plot(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 {
 	const float *pfpc_weights = control->simCore->getMZoneList()[0]->exportPFPCWeights();
@@ -628,11 +650,17 @@ static void draw_pc_plot(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 	        &da.height);
 
 	float len_scale_y = threshRestPC - threshMaxPC;
-	float pc_w_to_pixel_scale_y = -da.height / (9.5 * len_scale_y); // 6  //60.0 50.0 40.0 30.0 20.0 6.0
+	float pc_w_to_pixel_scale_y = -da.height / (9.5 * len_scale_y);
 	float pc_w_to_pixel_scale_x = da.width / (float)control->PSTHColSize;
 
 	cairo_scale(cr, pc_w_to_pixel_scale_x, -pc_w_to_pixel_scale_y);
-	cairo_translate(cr, 0, 17.0); // 22 //53.5 50 50 50 40 -40
+	cairo_translate(cr, 0, 17.0);
+
+	cairo_set_source_rgb(cr, 1.0, 1.0, 0.5);
+	cairo_rectangle(cr, control->msPreCS,
+		-17,
+		control->expt.trials[0].CSoffset - control->expt.trials[0].CSonset,
+		9.5 * len_scale_y);
 
 	// pc point color
 	cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
@@ -776,7 +804,6 @@ static void on_go_raster(GtkWidget *widget, Control *control)
 
 static void on_pc_window(GtkWidget *widget, Control *control)
 {
-	//generate_pfpc_plot(widget, draw_pf_pc_plot, control);
 	generate_pc_plot(widget, draw_pc_plot, control);
 }
 
@@ -1037,6 +1064,15 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 								},
 								{}
 							},
+							{"Save Sim", gtk_menu_item_new(),
+								{
+									"activate",
+									G_CALLBACK(on_save_sim),
+									control,
+									false
+								},
+								{}
+							},
 							{"", gtk_separator_menu_item_new(), {}, {}},
 							{"Quit", gtk_menu_item_new(),
 								{
@@ -1092,8 +1128,8 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 						}
 					}
 				},
-				{"PSTH", gtk_menu_item_new(), {},
-					{gtk_menu_new(), NUM_PSTH_MENU_ITEMS, new menu_item[NUM_PSTH_MENU_ITEMS]
+				{"Raster", gtk_menu_item_new(), {},
+					{gtk_menu_new(), NUM_RASTER_MENU_ITEMS, new menu_item[NUM_RASTER_MENU_ITEMS]
 						{
 							{"Save GR", gtk_menu_item_new(),
 								{

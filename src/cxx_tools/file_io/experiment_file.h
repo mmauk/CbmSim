@@ -15,7 +15,7 @@
 #define TRIAL_FILE_H_
 #include <string>
 
-#define MAX_NUM_TRIALS 1000
+#define MAX_NUM_TRIALS 1500
 
 struct trial /* data structure that holds info for up to 1000 trials */
 {
