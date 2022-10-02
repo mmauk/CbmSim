@@ -12,18 +12,19 @@ TARGET    := $(BUILD_DIR)cbm_sim
 INC_DIRS  := $(shell find $(SRC_DIR) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
-CUDA_INC_FLAGS := $(INC_FLAGS) $(shell pkgconf --cflags cuda)
-GTK_INC_FLAGS  := $(INC_FLAGS) $(shell pkgconf --cflags gtk+-3.0)
+ifeq ($(shell uname -rv | awk '{print $2}' | tr -d '#[:digit:]-'), 'Ubuntu')
+	CUDA_PKG_NAME   := cuda-11.7
+	CUDART_PKG_NAME := cudart-11.7
+else
+	CUDA_PKG_NAME   := cuda
+	CUDART_PKG_NAME := cudart
+endif
 
-LIB_FLAGS := $(shell pkgconf --libs gtk+-3.0)
-LIB_FLAGS += $(shell pkgconf --libs cudart)
+CUDA_INC_FLAGS := $(INC_FLAGS) $(shell pkg-config --cflags $(CUDA_PKG_NAME))
+GTK_INC_FLAGS  := $(INC_FLAGS) $(shell pkg-config --cflags gtk+-3.0)
 
-# Below is Ubuntu specific
-#CUDA_INC_FLAGS := $(INC_FLAGS) $(shell pkg-config --cflags cuda-11.7)
-#GTK_INC_FLAGS  := $(INC_FLAGS) $(shell pkg-config --cflags gtk+-3.0)
-
-#LIB_FLAGS := $(shell pkg-config --libs gtk+-3.0)
-#LIB_FLAGS += $(shell pkg-config --libs cudart-11.7)
+LIB_FLAGS := $(shell pkg-config --libs gtk+-3.0)
+LIB_FLAGS += $(shell pkg-config --libs $(CUDART_PKG_NAME))
 
 CUDA_SRCS := $(shell find $(SRC_DIR) -name "*.cu" | xargs -I {} basename {})
 CUDA_OBJS := $(CUDA_SRCS:%.cu=$(BUILD_DIR)%.o)
