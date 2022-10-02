@@ -656,11 +656,12 @@ static void draw_pc_plot(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 	cairo_scale(cr, pc_w_to_pixel_scale_x, -pc_w_to_pixel_scale_y);
 	cairo_translate(cr, 0, 17.0);
 
-	cairo_set_source_rgb(cr, 1.0, 1.0, 0.5);
+	cairo_set_source_rgb(cr, 0.075, 0.075, 0.075);
 	cairo_rectangle(cr, control->msPreCS,
 		-17,
 		control->expt.trials[0].CSoffset - control->expt.trials[0].CSonset,
 		9.5 * len_scale_y);
+	cairo_fill(cr);
 
 	// pc point color
 	cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
