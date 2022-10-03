@@ -13,7 +13,7 @@
 #define COMMAND_LINE_H_
 #include <string>
 
-#include "build_file.h"
+#include "file_parse.h"
 #include "experiment_file.h"
 
 /* ============================ CONSTANTS =============================== */

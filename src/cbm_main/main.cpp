@@ -19,8 +19,21 @@
 #include "gui.h"
 #include "commandline.h"
 #include "activityparams.h"
+#include "file_parse.h"
 
-int main(int argc, char **argv) 
+int main(int argc, char **argv)
+{
+	tokenized_file t_file;
+	lexed_file l_file;
+	parsed_expt_file e_file;
+
+	tokenize_file(std::string(argv[1]), t_file);
+	lex_tokenized_file(t_file, l_file);
+	parse_lexed_expt_file(l_file, e_file);
+	return 0;
+}
+
+int main2(int argc, char **argv) 
 {
 	enum vis_mode sim_vis_mode  = NO_VIS;
 	enum run_mode sim_run_mode  = NO_RUN;

@@ -1,3 +1,16 @@
+/*
+ * File: file_parse.h
+ * Author: Sean Gallogly
+ * Created on: 10/01/2022
+ * 
+ * Description:
+ *     This is the interface file for reading in a build file. It includes the 
+ *     structures, enums, and tables necessary to tokenize, lex, and parse a build
+ *     file. This file is more of a workflow and less of a class interface file in
+ *     that the end result of this process is to obtain a structure of type
+ *     parsed_file that contains all of the parameters that we need to build a 
+ *     simulation from scratch, akin to "generating" a new rabbit on the fly.
+ */
 #ifndef FILE_PARSE_H_
 #define FILE_PARSE_H_
 
@@ -5,6 +18,7 @@
 #include <vector>
 #include <map>
 #include <unordered_map>
+#include "pstdint.h"
 
 // lexemes of the build file ie the fundamental meanings behind each token
 typedef enum 
@@ -57,7 +71,7 @@ typedef struct
 typedef struct
 {
 	std::unordered_map<std::string, variable> param_map;
-} trial;
+} trial_2;
 
 typedef struct
 {
@@ -86,7 +100,7 @@ typedef struct
 
 typedef struct
 {
-	std::unordered_map<std::string, trial> trial_map;
+	std::unordered_map<std::string, trial_2> trial_map;
 	std::unordered_map<std::string, block> block_map;
 	std::unordered_map<std::string, session> session_map;
 	experiment_2 expt_info;
@@ -105,7 +119,7 @@ typedef struct
  */
 typedef struct
 {
-   std::vector<std::vector<lexed_token>> tokens;
+   std::vector<lexed_token> tokens;
 } lexed_file;
 
 typedef struct
@@ -126,7 +140,7 @@ typedef struct
  *     a tokenized file from it. See the above definition of tokenized_file.
  *
  */
-void tokenize_file(std::string b_file, tokenized_file &t_file);
+void tokenize_file(std::string in_file, tokenized_file &t_file);
 
 /*
  * Description:

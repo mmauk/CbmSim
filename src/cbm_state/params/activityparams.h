@@ -13,7 +13,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
-#include "build_file.h"
+#include "file_parse.h"
 #include "stdint.h"
 
 #define NUM_ACT_PARAMS 174
