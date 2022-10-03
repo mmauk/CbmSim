@@ -12,7 +12,7 @@ TARGET    := $(BUILD_DIR)cbm_sim
 INC_DIRS  := $(shell find $(SRC_DIR) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
-ifeq ($(shell uname -rv | awk '{print $2}' | tr -d '#[:digit:]-'), 'Ubuntu')
+ifeq ($(shell uname -rv | awk '{print $$2}' | tr -d '#[:digit:]-'), Ubuntu)
 	CUDA_PKG_NAME   := cuda-11.7
 	CUDART_PKG_NAME := cudart-11.7
 else
@@ -49,7 +49,7 @@ RMDIR            := rmdir
 
 RM               := rm -rf
 
-VPATH :=$(shell echo "${INC_DIRS}" | sed -e 's/ /:/g') 
+VPATH := $(shell echo "${INC_DIRS}" | sed -e 's/ /:/g') 
 
 $(BUILD_DIR)%.o: %.cu
 	$(NVCC) $(NVCC_FLAGS) $(CUDA_INC_FLAGS) -c $< -o $@
