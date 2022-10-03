@@ -1,34 +1,22 @@
-/*
- * File: build_file.h
- * Author: Sean Gallogly
- * Created on: 07/21/2022
- * 
- * Description:
- *     This is the interface file for reading in a build file. It includes the 
- *     structures, enums, and tables necessary to tokenize, lex, and parse a build
- *     file. This file is more of a workflow and less of a class interface file in
- *     that the end result of this process is to obtain a structure of type
- *     parsed_file that contains all of the parameters that we need to build a 
- *     simulation from scratch, akin to "generating" a new rabbit on the fly.
- */
-#ifndef BUILD_FILE_H_
-#define BUILD_FILE_H_
+#ifndef FILE_PARSE_H_
+#define FILE_PARSE_H_
 
 #include <string>
 #include <vector>
 #include <map>
 #include <unordered_map>
 
-/* ================================ TYPES AND CONSTANTS ================================= */
-
 // lexemes of the build file ie the fundamental meanings behind each token
 typedef enum 
 {
+	NONE,
 	BEGIN_MARKER, END_MARKER,
 	REGION,
 	REGION_TYPE,
 	TYPE_NAME,
 	VAR_IDENTIFIER, VAR_VALUE,
+	DEF, DEF_TYPE, DEF_TYPE_LABEL, 
+	NEW_LINE,
 	SINGLE_COMMENT,
 	DOUBLE_COMMENT_BEGIN, DOUBLE_COMMENT_END
 } lexeme;
@@ -47,6 +35,45 @@ typedef struct
 	std::string value;
 } variable;
 
+typedef struct
+{
+	std::string first;
+	std::string second;
+} pair;
+
+typedef struct 
+{
+	ct_uint32_t num_trials;
+	std::string *trial_names;
+	
+	ct_uint32_t *use_css;
+	ct_uint32_t *cs_onsets;
+	ct_uint32_t *cs_lens;
+	ct_uint32_t *cs_percents;
+	ct_uint32_t *use_uss;
+	ct_uint32_t *us_onsets;
+} trials_data;
+
+typedef struct
+{
+	std::unordered_map<std::string, variable> param_map;
+} trial;
+
+typedef struct
+{
+	std::vector<pair> trials;
+} block;
+
+typedef struct
+{
+	std::vector<pair> blocks;
+} session;
+
+typedef struct
+{
+	std::vector<pair> sessions;
+} experiment_2;
+
 /* 
  * a section within the build file that includes the label of the section
  * and the dictionary of parameters in that section
@@ -54,9 +81,16 @@ typedef struct
  */
 typedef struct
 {
-	std::string section_label;
 	std::unordered_map<std::string, variable> param_map;
-} parsed_section;
+} parsed_var_section;
+
+typedef struct
+{
+	std::unordered_map<std::string, trial> trial_map;
+	std::unordered_map<std::string, block> block_map;
+	std::unordered_map<std::string, session> session_map;
+	experiment_2 expt_info;
+} parsed_trial_section;
 
 // represents the entire file contents, broken up line-by-line, token-by-token
 typedef struct
@@ -74,18 +108,17 @@ typedef struct
    std::vector<std::vector<lexed_token>> tokens;
 } lexed_file;
 
-/*
- * represents everything that we wanted to get out of the file. Contains the file
- * type as well as all of the parsed sections.
- *
- */
 typedef struct
 {
 	std::string file_type_label;
-	std::map<std::string, parsed_section> parsed_sections;
+	std::map<std::string, parsed_var_section> parsed_var_sections;
 } parsed_build_file;
 
-/* ============================== FUNCTION DECLARATIONS ============================== */
+typedef struct
+{
+	parsed_trial_section parsed_trial_info;
+	std::map<std::string, parsed_var_section> parsed_var_sections;
+} parsed_expt_file;
 
 /*
  * Description:
@@ -106,17 +139,28 @@ void lex_tokenized_file(tokenized_file &t_file, lexed_file &l_file);
 /*
  * Description:
  *     takes a lexed file reference l_file and parses it, i.e. takes each lexeme
- *     and adds it to the correct entry in p_file.parsed_sections. See the above
+ *     and adds it to the correct entry in p_file.parsed_var_sections. See the above
  *     definition of parsed_build_file and parsed_section for more information.
  *
  */
 void parse_lexed_build_file(lexed_file &l_file, parsed_build_file &p_file);
 
-void print_tokenized_build_file(tokenized_file &t_file);
+/*
+ * Description:
+ *     takes a lexed file reference l_file and parses it, i.e. takes each lexeme
+ *     and adds it to the correct entry in either parsed_expt_file.parsed_trial_info or
+ *     parsed_expt_file.parsed_var_sections
+ *
+ */
+void parse_lexed_expt_file(lexed_file &l_file, parsed_expt_file &e_file);
 
-void print_lexed_build_file(lexed_file &l_file);
+void print_tokenized_file(tokenized_file &t_file);
+
+void print_lexed_file(lexed_file &l_file);
 
 void print_parsed_build_file(parsed_build_file &p_file);
 
-#endif /* BUILD_FILE_H_ */
+void print_parsed_expt_file(parsed_expt_file &e_file);
+
+#endif /* FILE_PARSE_H_ */
 

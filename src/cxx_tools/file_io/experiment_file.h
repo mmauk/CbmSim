@@ -14,6 +14,7 @@
 #ifndef TRIAL_FILE_H_
 #define TRIAL_FILE_H_
 #include <string>
+#include "pstdint.h"
 
 #define MAX_NUM_TRIALS 1500
 

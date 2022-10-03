@@ -72,8 +72,6 @@ class Control
 
 		std::string curr_expt_file_name = "";
 		std::string curr_sim_file_name  = "";
-		const float *grgoG, *mfgoG, *gogrG, *mfgrG;
-		const ct_uint8_t *mfAP;
 
 		// params that I do not know how to categorize
 		float goMin = 0.26; 
@@ -85,8 +83,6 @@ class Control
 		int gpuP2    = 2;
 
 		int trial = 0;
-		int msPreCS = 400; // was 1500 (08/09/2022)
-		int msPostCS = 400; // was 1000 (08/09/2022)
 
 		int csPhasicSize = 50;
 
@@ -128,8 +124,10 @@ class Control
 
 		int trialTime = 5000; /* wild that this is here */
 	
-		// raster stuff -> TODO: place in experiment file down the road
-		int PSTHColSize = 0;
+		// raster measurement params. 
+		int msPreCS = 400; // was 1500 (08/09/2022)
+		int msPostCS = 400; // was 1000 (08/09/2022)
+		int PSTHColSize = 0; // derived param, from msPreCS, msPostCS and csLength 
 
 		struct cell_spike_sums spike_sums[NUM_CELL_TYPES] = {{}};
 		struct cell_firing_rates firing_rates[NUM_CELL_TYPES] = {{}};
@@ -137,6 +135,8 @@ class Control
 
 		int gr_indices[4096] = {0};
 
+		const float *grgoG, *mfgoG, *gogrG, *mfgrG;
+		const ct_uint8_t *mfAP;
 		ct_uint8_t **all_mf_rast_internal;
 		ct_uint8_t **all_go_rast_internal;
 		ct_uint8_t **sample_gr_rast_internal;
@@ -145,6 +145,10 @@ class Control
 		ct_uint8_t **all_sc_rast_internal;
 		ct_uint8_t **all_bc_rast_internal;
 		ct_uint8_t **all_io_rast_internal;
+
+		float **all_pc_vm_rast_internal;
+		float **all_nc_vm_rast_internal;
+		float **all_io_vm_rast_internal;
 
 		/* initialized within initializeOutputArrays */
 		ct_uint32_t all_mf_rast_size;   
@@ -156,6 +160,7 @@ class Control
 		ct_uint32_t all_bc_rast_size;  
 		ct_uint32_t all_io_rast_size; 
 
+		/* output raster arrays */
 		ct_uint8_t *allMFRaster;
 		ct_uint8_t *allGORaster;
 		ct_uint8_t *sampleGRRaster;
@@ -166,10 +171,6 @@ class Control
 		ct_uint8_t *allIORaster;
 
 		float *sample_pfpc_syn_weights;
-
-		float **all_pc_vm_rast_internal;
-		float **all_nc_vm_rast_internal;
-		float **all_io_vm_rast_internal;
 
 		const ct_uint8_t* goSpks; 
 

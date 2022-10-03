@@ -1,17 +1,17 @@
 /*
- * File: build_file.cpp
+ * File: file_prase.cpp
  * Author: Sean Gallogly
- * Created on: 07/21/2022
+ * Created on: 10/02/2022
  *
  * Description:
- *     This file implements the function prototypes in fileIO/build_file.h
+ *     This file implements the function prototypes in file_parse.h
  */
 
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <regex>
-#include "build_file.h"
+#include "file_parse.h"
 
 // regex strings for matching variable identifiers and variable values
 const std::string var_id_regex_str = "[a-zA-Z_]{1}[a-zA-Z0-9_]*";
@@ -20,6 +20,7 @@ const std::string var_val_regex_str = "[+-]?([0-9]*[.])?[0-9]*([e][+-]?[0-9]+)?"
 // look-up table for lexemes, is used for printing lexemes to whatever stream you want
 std::map<lexeme, std::string> lex_string_look_up =
 {
+		{ NONE, "NONE" },
 		{ BEGIN_MARKER, "BEGIN_MARKER" },
 		{ END_MARKER, "END_MARKER"},
 		{ REGION, "REGION" },
@@ -27,6 +28,8 @@ std::map<lexeme, std::string> lex_string_look_up =
 		{ TYPE_NAME, "TYPE_NAME" },
 		{ VAR_IDENTIFIER, "VAR_IDENTIFIER" },
 		{ VAR_VALUE, "VAR_VALUE" },
+		{ DEF, "DEF" },
+		{ DEF_TYPE, "DEF_TYPE" },
 		{ SINGLE_COMMENT, "SINGLE_COMMENT" },
 		{ DOUBLE_COMMENT_BEGIN, "DOUBLE_COMMENT_BEGIN" },
 		{ DOUBLE_COMMENT_END, "DOUBLE_COMMENT_END" },
@@ -39,13 +42,21 @@ std::map<std::string, lexeme> token_defs =
 		{ "#end", END_MARKER },
 		{ "filetype", REGION },
 		{ "section", REGION },
-		{ "build", REGION_TYPE },
+		{ "build", REGION_TYPE }, // might be deprecated
 		{ "connectivity", REGION_TYPE },
 		{ "activity", REGION_TYPE },
+		{ "trial_defs", REGION_TYPE },
+		{ "mf_input", REGION_TYPE },
+		{ "act_param", REGION_TYPE },
 		{ "int", TYPE_NAME },
 		{ "float", TYPE_NAME },
 		{ "[a-zA-Z_]{1}[a-zA-Z0-9_]*", VAR_IDENTIFIER },
 		{ "[+-]?([0-9]*[.])?[0-9]*([e][+-]?[0-9]+)?", VAR_VALUE },
+		{ "def", DEF },
+		{ "trial", DEF_TYPE },
+		{ "block", DEF_TYPE },
+		{ "session", DEF_TYPE },
+		{ "experiment", DEF_TYPE },
 		{ "//", SINGLE_COMMENT },
 		{ "/*", DOUBLE_COMMENT_BEGIN },
 		{ "*/", DOUBLE_COMMENT_END },
@@ -148,7 +159,7 @@ void lex_tokenized_file(tokenized_file &t_file, lexed_file &l_file)
  */
 void parse_lexed_build_file(lexed_file &l_file, parsed_build_file &p_file)
 {
-	parsed_section curr_section = {};
+	parsed_var_section curr_section = {};
 	variable curr_variable = {};
 	auto line = l_file.tokens.begin();
 	while (line != l_file.tokens.end())
@@ -206,12 +217,216 @@ void parse_lexed_build_file(lexed_file &l_file, parsed_build_file &p_file)
 	}
 }
 
+void parse_def(auto ltp, lexed_file &l_file, parsed_expt_file &e_file,
+		std::string def_type, std::string def_label)
+{
+	pair curr_pair = {};
+	trial curr_trial = {};
+	block curr_block = {};
+	session curr_session = {};
+	lexeme prev_lex = NONE;
+	variable curr_var = {};
+	while (ltp->lex != END_MARKER)
+	{
+		switch (ltp->lex)
+		{
+			case TYPE_NAME:
+				if (def_type == "trial")
+				{
+					curr_var.type_name = ltp->raw_token;
+				}
+				else
+				{
+					// TODO: report error
+				}
+				break;
+			case VAR_IDENTIFIER:
+				if (def_type == "trial")
+				{
+					if (prev_lex != TYPE_NAME)
+					{
+						// TODO: report error
+					}
+					else curr_var.identifier = ltp->raw_token;
+				}
+				else
+				{
+					/* disgusting hack: inserts a 'shadow token'
+					 * so that if the prev identifier didnt include
+					 * a value immediately proceeding it, a value
+					 * is inserted into the vector to act as there
+					 * was one there!
+					 */
+					if (curr_pair.first != "")
+					{
+						lexed_token shadow_token = { VAR_VALUE, "1" };
+						ltp = l_file.tokens.insert(ltp, shadow_token);
+						ltp--;
+					}
+					else curr_pair.first = ltp->raw_token;
+				}
+				break;
+			case VAR_VALUE:
+				if (prev_lex != VAR_IDENTIFIER
+					&& prev_lex != NEW_LINE)
+				{
+					// TODO: report error
+				}
+				else
+				{
+					if (def_type == "trial")
+					{
+						curr_var.value = ltp->raw_token;
+						curr_trial.param_map[curr_var.identifier] = curr_var;
+						curr_var = {};
+					}
+					else
+					{
+						curr_pair.second = ltp->raw_token;
+						if (def_type == "block")
+						{
+							curr_block.trials.push_back(curr_pair);
+						}
+						else if (def_type == "session")
+						{
+							curr_session.blocks.push_back(curr_pair);
+						}
+						else if (def_type == "experiment")
+						{
+							curr_experiment.sessions.push_back(curr_pair);
+						}
+						curr_pair = {};
+					}
+				}
+				break;
+			case SINGLE_COMMENT:
+				while (ltp->lex != NEW_LINE) ltp++;
+			break;
+		}
+		prev_lex = ltp->lex;
+		ltp++;
+	}
+	if (def_type == "trial")
+	{
+		e_file.parsed_trial_info.trial_map[def_label] = curr_trial;
+	}
+	else if (def_type == "block")
+	{
+		e_file.parsed_trial_info.block_map[def_label] = curr_block;
+	}
+	else if (def_type == "session")
+	{
+		e_file.parsed_trial_info.session_map[def_label] = curr_session;
+	}
+}
+
+void parse_var_section(auto ltp, lexed_file &l_file, parsed_expt_file &e_file,
+		std::string region_type)
+{
+	parsed_var_section curr_section = {};
+	variable curr_var = {};
+	while (ltp->lex != END_MARKER)
+	{
+		if (ltp->lex == TYPE_NAME)
+		{
+			lexed_token next_lt = ltp + 1;
+			lexed_token second_next_lt = ltp + 2;
+			if (next_lt->lex == VAR_IDENTIFIER
+				&& second_next_lt->lex == VAR_VALUE)
+			{
+				curr_var.type_name  = ltp->raw_token;
+				curr_var.identifier = next_lt->raw_token;
+				curr_var.value      = second_next_lt->raw_token;
+
+				curr_section.param_map[next_lt->raw_token] = curr_var;
+				curr_var = {};
+				ltp += 2;
+			}
+		}
+		// TODO: fix lexing alg so we generate new line characters and place in between
+		// tokens
+		else if (ltp->lex == SINGLE_COMMENT)
+		{
+			while (ltp->lex != NEW_LINE) ltp++;
+		}
+		ltp++;
+	}
+	e_file.parsed_var_sections[region_type] = curr_section;
+}
+
+void parse_trial_section(auto ltp, lexed_file &l_file, parsed_expt_file &e_file)
+{
+	while (ltp->lex != END_MARKER) // parse this section
+	{
+		if (ltp->lex == DEF)
+		{
+			lexed_token next_lt = ltp + 1;
+			lexed_token second_next_lt = ltp + 2;
+			if (next_lt->lex == DEF_TYPE
+				&& second_next_lt->lex == VAR_IDENTIFIER)
+			{
+				parse_def(ltp+3, l_file, e_file, next_lt->raw_token, second_next_lt->raw_token);
+			}
+			else {} // TODO: report error
+		}
+		ltp++;
+	}
+}
+
+void parse_region(ltp, lexed_file &l_file, parsed_expt_file &e_file, std::string region_type)
+{
+	if (region_type == "mf_input"
+		|| region_type == "act_param")
+	{
+		parse_var_section(ltp, l_file, e_file, region_type);
+	}
+	else if (region_type == "trial_def")
+	{
+		parse_trial_section(ltp+3, l_file, e_file);
+	}
+	else
+	{
+		while (ltp->lex != END_MARKER)
+		{
+			next_lt = ltp+1;
+			second_next_lt  = ltp+2;
+			if (ltp->lex == BEGIN_MARKER
+				&& next_lt->lex == REGION
+				&& second_next_lt->lex == REGION_TYPE)
+			{
+				parse_region(ltp+3, l_file, e_file, second_next_lt->raw_token);
+			}
+			ltp++;
+		}
+	}
+}
+
+void parse_lexed_expt_file(lexed_file &l_file, parsed_expt_file &e_file)
+{
+	// assume for now lexed_file is just one long array of all lexed tokens
+	// NOTE: ltp stands for [l]exed [t]oken [p]ointer, not long-term potentiation!
+	auto ltp = l_file.tokens.begin();
+	lexed_token next_lt = std::next(ltp, 1);
+	lexed_token second_next_lt  = std::next(ltp, 2);
+	// parse the first region, ie the filetype region
+	if (ltp->lex == BEGIN_MARKER
+		&& next_lt->lex == REGION
+		&& second_next_lt->lex == REGION_TYPE)
+	{
+		parse_region(ltp + 3, l_file, e_file, second_next_lt->raw_token);
+	}
+	else
+	{
+		// TODO: report error
+	}
+}
+
 /*
  * Implementation Notes:
  *     Loops go brrrrrrr
  *
  */
-void print_tokenized_build_file(tokenized_file &t_file)
+void print_tokenized_file(tokenized_file &t_file)
 {
 	for (auto line : t_file.tokens)
 	{
@@ -223,7 +438,7 @@ void print_tokenized_build_file(tokenized_file &t_file)
 	}
 }
 
-void print_lexed_build_file(lexed_file &l_file)
+void print_lexed_file(lexed_file &l_file)
 {
 	for (auto line : l_file.tokens)
 	{
@@ -254,4 +469,8 @@ void print_parsed_build_file(parsed_build_file &p_file)
 	}
 }
 
+void print_parsed_expt_file(parsed_expt_file &e_file)
+{
+
+}
 

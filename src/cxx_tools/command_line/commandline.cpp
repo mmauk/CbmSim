@@ -207,8 +207,8 @@ void parse_build_args(char ***argv, parsed_build_file &p_file)
 
 	std::string full_build_file_path = INPUT_DATA_PATH + std::string((*argv)[BUILD_FILE]);
 
-	tokenize_build_file(full_build_file_path, t_file);
-	lex_tokenized_build_file(t_file, l_file);
+	tokenize_file(full_build_file_path, t_file);
+	lex_tokenized_file(t_file, l_file);
 	parse_lexed_build_file(l_file, p_file);
 }
 

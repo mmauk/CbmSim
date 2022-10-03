@@ -516,7 +516,6 @@ static void on_toggle_run(GtkWidget *widget, struct gui *gui)
 
 static void on_exit_sim(GtkWidget *widget, struct gui *gui)
 {
-	// TODO: change label of run button back to run
 	gtk_button_set_label(GTK_BUTTON(gui->normal_buttons[0].widget), "Run");
 	gui->ctrl_ptr->run_state = NOT_IN_RUN;
 	gtk_widget_hide(widget);
