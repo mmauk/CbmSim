@@ -2,7 +2,7 @@
 #include <gtk/gtk.h>
 
 #include "control.h"
-#include "build_file.h"
+#include "file_parse.h"
 #include "tty.h"
 #include "array_util.h"
 #include "gui.h" /* tenuous inclide at best :pogO: */

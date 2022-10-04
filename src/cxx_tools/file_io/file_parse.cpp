@@ -43,9 +43,10 @@ std::map<std::string, lexeme> token_defs =
 		{ "filetype", REGION },
 		{ "section", REGION },
 		{ "build", REGION_TYPE }, // might be deprecated
+		{ "run", REGION_TYPE },
 		{ "connectivity", REGION_TYPE },
 		{ "activity", REGION_TYPE },
-		{ "trial_defs", REGION_TYPE },
+		{ "trial_def", REGION_TYPE },
 		{ "mf_input", REGION_TYPE },
 		{ "act_param", REGION_TYPE },
 		{ "int", TYPE_NAME },
@@ -228,19 +229,22 @@ void parse_def(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, pars
 		}
 		prev_lex = ltp->lex;
 		ltp++;
+		// ensures a single identifier in a def block is added to the right structure
+		if (ltp->lex == END_MARKER
+			&& def_type != "trial"
+			&& curr_pair.first != ""
+			&& curr_pair.second == "")
+		{
+			curr_pair.second = "1";
+			if (def_type == "block") curr_block.trials.push_back(curr_pair);
+			else if (def_type == "session") curr_session.blocks.push_back(curr_pair);
+			else if (def_type == "experiment") e_file.parsed_trial_info.expt_info.sessions.push_back(curr_pair);
+		}
 	}
-	if (def_type == "trial")
-	{
-		e_file.parsed_trial_info.trial_map[def_label] = curr_trial;
-	}
-	else if (def_type == "block")
-	{
-		e_file.parsed_trial_info.block_map[def_label] = curr_block;
-	}
-	else if (def_type == "session")
-	{
-		e_file.parsed_trial_info.session_map[def_label] = curr_session;
-	}
+	if (def_type == "trial") e_file.parsed_trial_info.trial_map[def_label] = curr_trial;
+	
+	else if (def_type == "block") e_file.parsed_trial_info.block_map[def_label] = curr_block;
+	else if (def_type == "session") e_file.parsed_trial_info.session_map[def_label] = curr_session;
 }
 
 void parse_var_section(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, parsed_expt_file &e_file,

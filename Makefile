@@ -35,13 +35,13 @@ NON_CUDA_OBJS := $(NON_CUDA_SRCS:%.cpp=$(BUILD_DIR)%.o)
 OBJS := $(CUDA_OBJS) $(NON_CUDA_OBJS)
 
 NVCC       := nvcc
-NVCC_FLAGS := -arch=native -Xcompiler -fPIC -O3
+NVCC_FLAGS := -arch=native -Xcompiler -fPIC -g
 
 CPP       := g++-11
-CPP_FLAGS := -m64 -pipe -std=c++14 -fopenmp -O3 -fPIC
+CPP_FLAGS := -m64 -pipe -std=c++14 -fopenmp -g -fPIC
 
 LD       := g++-11
-LD_FLAGS := -m64 -fopenmp -O3
+LD_FLAGS := -m64 -fopenmp -g
 
 CHK_DIR_EXISTS   := test -d
 MKDIR            := mkdir -p
