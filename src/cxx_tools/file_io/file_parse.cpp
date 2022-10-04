@@ -344,20 +344,44 @@ void parse_lexed_expt_file(lexed_file &l_file, parsed_expt_file &e_file)
 {
 	// NOTE: ltp stands for [l]exed [t]oken [p]ointer, not long-term potentiation!
 	std::vector<lexed_token>::iterator ltp = l_file.tokens.begin();
+	// parse the first region, ie the filetype region
+	while (ltp->lex != BEGIN_MARKER)
+	{
+		if (ltp->lex == SINGLE_COMMENT)
+		{
+			while (ltp->lex != NEW_LINE) ltp++;
+		}
+		else if (ltp->lex != NEW_LINE)
+		{
+			std::cerr << "[IO_ERROR]: Unidentified token. Exiting...\n";
+			exit(1);
+		}
+		ltp++;
+	}
 	auto next_lt = std::next(ltp, 1);
 	auto second_next_lt  = std::next(ltp, 2);
-	// parse the first region, ie the filetype region
-	// FIXME: what if there are comments before begin?
-	if (ltp->lex == BEGIN_MARKER
-		&& next_lt->lex == REGION
-		&& second_next_lt->lex == REGION_TYPE)
+	if (next_lt->lex == REGION)
 	{
-		ltp += 4;
-		parse_region(ltp, l_file, e_file, second_next_lt->raw_token);
+		if (next_lt->raw_token != "filetype")
+		{
+			std::cerr << "[IO_ERROR]: First interpretable line does not specify filetype. Exiting...\n";
+			exit(2);
+		}
+		else if (second_next_lt->raw_token != "run")
+		{
+			std::cerr << "[IO_ERROR]: '" << second_next_lt->raw_token << "' does not indicate an experiment file. Exiting...\n";
+			exit(3);
+		}
+		else
+		{
+			ltp += 4;
+			parse_region(ltp, l_file, e_file, second_next_lt->raw_token);
+		}
 	}
 	else
 	{
-		// TODO: report error
+		std::cerr << "[IO_ERROR]: Unidentified token after '" << ltp->raw_token << "'. Exiting...\n";
+		exit(4);
 	}
 }
 
