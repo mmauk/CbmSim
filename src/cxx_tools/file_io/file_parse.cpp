@@ -482,8 +482,138 @@ void print_parsed_build_file(parsed_build_file &p_file)
 	//}
 }
 
+std::string var_to_str(variable &var)
+{
+	std::stringstream var_buf;
+	var_buf << "{ '" << var.type_name
+			<< "', '" << var.identifier
+			<< "', '" << var.value
+			<< "' }";
+	return var_buf.str();
+}
+
+std::string trial_2_to_str(trial_2 &trial)
+{
+	std::stringstream trial_2_buf;
+	trial_2_buf << "{\n";
+	for (auto iter = trial.param_map.begin();
+			iter != trial.param_map.end();
+			iter++)
+	{
+		trial_2_buf << var_to_str(iter->second);
+		trial_2_buf << "\n";
+	}
+	trial_2_buf << "}";
+	return trial_2_buf.str();
+}
+
+std::string pair_to_str(pair &pr)
+{
+	std::stringstream pr_buf;
+	pr_buf << "{ '" << pr.first
+		   << "', '" << pr.second
+		   << "' }";
+	return pr_buf.str();
+}
+
+std::string block_to_str(block &blk)
+{
+	std::stringstream blk_buf;
+	blk_buf << "{\n";
+	for (auto iter = blk.trials.begin();
+			iter != blk.trials.end();
+			iter++)
+	{
+		blk_buf << pair_to_str(*iter);
+		blk_buf << "\n";
+	}
+	blk_buf << "}";
+	return blk_buf.str();
+}
+
+std::string session_to_str(session &sess)
+{
+	std::stringstream sess_buf;
+	sess_buf << "{\n";
+	for (auto iter = sess.blocks.begin();
+			iter != sess.blocks.end();
+			iter++)
+	{
+		sess_buf << pair_to_str(*iter);
+		sess_buf << "\n";
+	}
+	sess_buf << "}";
+	return sess_buf.str();
+}
+
+std::string experiment_2_to_str(experiment_2 &expt)
+{
+	std::stringstream expt_buf;
+	expt_buf << "{\n";
+	for (auto iter = expt.sessions.begin();
+			iter != expt.sessions.end();
+			iter++)
+	{
+		expt_buf << pair_to_str(*iter);
+		expt_buf << "\n";
+	}
+	expt_buf << "}";
+	return expt_buf.str();
+}
+
+void print_parsed_trial_section(parsed_trial_section &pt_section)
+{
+	std::cout << "[ trial section: \n";
+	std::cout << "[ trial specification:\n";
+	for (auto iter = pt_section.trial_map.begin();
+			iter != pt_section.trial_map.end();
+			iter++)
+	{
+		std::cout << "[\n'" << iter->first << "', " << trial_2_to_str(iter->second) << "\n";
+	}
+	std::cout << "]\n";
+	std::cout << "[ block specification:\n";
+	for (auto iter = pt_section.block_map.begin();
+			iter != pt_section.block_map.end();
+			iter++)
+	{
+		std::cout << "[\n'" << iter->first << "', " << block_to_str(iter->second) << "\n";
+	}
+	std::cout << "]\n";
+	std::cout << "[ session specification:\n";
+	for (auto iter = pt_section.session_map.begin();
+			iter != pt_section.session_map.end();
+			iter++)
+	{
+		std::cout << "[\n'" << iter->first << "', " << session_to_str(iter->second) << "\n";
+	}
+	std::cout << "]\n";
+	std::cout << "[ experiment specification:\n";
+	std::cout << experiment_2_to_str(pt_section.expt_info) << "\n";
+	std::cout << "]\n";
+}
+
+void print_parsed_var_section(parsed_var_section &var_section)
+{
+	std::cout << "[ variable section: \n";
+	for (auto iter = var_section.param_map.begin();
+			iter != var_section.param_map.end();
+			iter++)
+	{
+		std::cout << var_to_str(iter->second);
+		std::cout << "\n";
+	}
+	std::cout << "]\n";
+}
+
 void print_parsed_expt_file(parsed_expt_file &e_file)
 {
-
+	print_parsed_trial_section(e_file.parsed_trial_info);
+	//for (auto iter = e_file.parsed_var_sections.begin();
+	//		iter != e_file.parsed_var_sections.end();
+	//		iter++)
+	//{
+	//	print_parsed_var_section(iter->second);
+	//}
 }
 
