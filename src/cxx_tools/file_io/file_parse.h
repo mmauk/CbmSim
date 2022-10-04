@@ -124,7 +124,6 @@ typedef struct
 
 typedef struct
 {
-	std::string file_type_label;
 	std::map<std::string, parsed_var_section> parsed_var_sections;
 } parsed_build_file;
 

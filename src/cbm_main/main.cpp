@@ -30,6 +30,7 @@ int main(int argc, char **argv)
 	tokenize_file(std::string(argv[1]), t_file);
 	lex_tokenized_file(t_file, l_file);
 	parse_lexed_expt_file(l_file, e_file);
+	print_parsed_expt_file(e_file);
 	return 0;
 }
 
