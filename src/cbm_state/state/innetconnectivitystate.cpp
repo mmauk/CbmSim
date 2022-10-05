@@ -4,7 +4,9 @@
  *  Created on: Nov 6, 2012
  *      Author: consciousness
  */
-#include "state/innetconnectivitystate.h"
+#include "connectivityparams.h"
+#include "innetconnectivitystate.h"
+
 
 InNetConnectivityState::InNetConnectivityState(int randSeed)
 {

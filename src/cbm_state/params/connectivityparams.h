@@ -122,6 +122,7 @@ extern int num_p_io_from_io_to_pc;
 extern int num_p_io_in_io_to_io;
 extern int num_p_io_out_io_to_io;
 
+extern float msPerTimeStep;
 extern float ampl_go_to_go;
 extern float std_dev_go_to_go;
 extern float p_recip_go_go;

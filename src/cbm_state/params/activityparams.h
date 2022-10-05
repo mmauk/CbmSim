@@ -111,7 +111,6 @@ extern float msLTPEndAPIO;
 extern float msLTPStartAPIO;
 extern float msPerHistBinGR;
 extern float msPerHistBinMF;
-extern float msPerTimeStep;
 extern float relPDecT0ofNCtoIO;
 extern float relPDecTSofNCtoIO;
 extern float relPDecTTofNCtoIO;

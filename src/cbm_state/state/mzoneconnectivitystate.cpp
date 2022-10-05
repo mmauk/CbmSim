@@ -13,7 +13,6 @@
 #include "dynamic2darray.h"
 #include "sfmt.h"
 #include "connectivityparams.h"
-#include "activityparams.h"
 #include "mzoneconnectivitystate.h"
 
 MZoneConnectivityState::MZoneConnectivityState(int randSeed)

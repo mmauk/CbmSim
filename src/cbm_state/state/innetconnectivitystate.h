@@ -20,8 +20,6 @@
 #include "pstdint.h"
 #include "dynamic2darray.h"
 #include "sfmt.h"
-#include "connectivityparams.h"
-#include "activityparams.h"
 
 class InNetConnectivityState
 {

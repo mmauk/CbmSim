@@ -28,27 +28,50 @@ std::string getFileBasename(std::string fullFilePath)
 	return (dot != std::string::npos) ? fullFilePath.substr(0, dot) : fullFilePath;
 }
 
-Control::Control(parsed_build_file &p_file)
+//Control::Control(parsed_build_file &p_file)
+//{
+//	if (!con_params_populated) populate_con_params(p_file);
+//	if (!act_params_populated) populate_act_params(p_file);
+//}
+
+Control::Control(parsed_commandline &p_cl)
 {
-	if (!con_params_populated) populate_con_params(p_file);
-	if (!act_params_populated) populate_act_params(p_file);
+	tokenized_file t_file;
+	lexed_file l_file;
+	if (!p_cl.build_file.empty())
+	{
+		parsed_build_file pb_file;
+		tokenize_file(p_cl.build_file, t_file);
+		lex_tokenized_file(t_file, l_file);
+		parse_lexed_build_file(l_file, pb_file);
+		if (!con_params_populated) populate_con_params(pb_file);
+	}
+	else if (!p_cl.experiment_file.empty())
+	{
+		parsed_expt_file pe_file;
+		tokenize_file(p_cl.experiment_file, t_file);
+		lex_tokenized_file(t_file, l_file);
+		parse_lexed_expt_file(l_file, pe_file);
+		// TODO: write translate_expt_file -> trial_info struct (more efficient)
+		init_sim(p_cl.input_sim_file);
+	}
 }
 
-Control::Control(enum vis_mode sim_vis_mode)
-{
-	this->sim_vis_mode = sim_vis_mode;
-}
+//Control::Control(enum vis_mode sim_vis_mode)
+//{
+//	this->sim_vis_mode = sim_vis_mode;
+//}
 
-Control::Control(char ***argv, enum vis_mode sim_vis_mode)
-{
-	std::string in_expt_filename = "";
-	std::string in_sim_filename = "";
-	get_in_expt_file(argv, in_expt_filename);
-	get_in_sim_file(argv, in_sim_filename);
-	init_experiment(in_expt_filename);
-	init_sim(in_sim_filename);
-	this->sim_vis_mode = sim_vis_mode;
-}
+//Control::Control(char ***argv, enum vis_mode sim_vis_mode)
+//{
+//	std::string in_expt_filename = "";
+//	std::string in_sim_filename = "";
+//	get_in_expt_file(argv, in_expt_filename);
+//	get_in_sim_file(argv, in_sim_filename);
+//	init_experiment(in_expt_filename);
+//	init_sim(in_sim_filename);
+//	this->sim_vis_mode = sim_vis_mode;
+//}
 
 Control::~Control()
 {
@@ -64,9 +87,9 @@ Control::~Control()
 	if (spike_sums_initialized) delete_spike_sums();
 }
 
-void Control::build_sim()
+void Control::build_sim(parsed_commandline &p_cl)
 {
-	if (!simState) simState = new CBMState(numMZones);
+	if (!simState) simState = new CBMState(numMZones, p_cl);
 }
 
 void Control::init_experiment(std::string in_expt_filename)
@@ -148,17 +171,18 @@ void Control::save_sim_state_to_file(std::string outStateFile)
 
 void Control::save_sim_to_file(std::string outSimFile)
 {
-	if (!(con_params_populated && act_params_populated && simState))
-	{
-		fprintf(stderr, "[ERROR]: Trying to write an uninitialized simulation to file.\n");
-		fprintf(stderr, "[ERROR]: (Hint: Try loading a build file first.)\n");
-		return;
-	}
 	std::fstream outSimFileBuffer(outSimFile.c_str(), std::ios::out | std::ios::binary);
-	write_con_params(outSimFileBuffer);
-	write_act_params(outSimFileBuffer);
-	if (!simCore) simState->writeState(outSimFileBuffer);
-	else simCore->writeState(outSimFileBuffer);
+	if (!p_cl.build_file.empty())
+	{
+		write_con_params(outSimFileBuffer);
+		simState->writeState(outSimFileBuffer);
+	}
+	else if (!p_cl.experiment_file.empty())
+	{
+		write_con_params(outSimFileBuffer);
+		write_act_params(outSimFileBuffer);
+		simCore->writeState(outSimFileBuffer);
+	}
 	outSimFileBuffer.close();
 }
 

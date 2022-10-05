@@ -50,11 +50,13 @@ class Control
 {
 	public:
 		Control(parsed_build_file &p_file);
+		Control(parsed_commandline &p_cl);
 		Control(enum vis_mode sim_vis_mode);
 		Control(char ***argv, enum vis_mode sim_vis_mode);
 		~Control();
 
 		// Objects
+	
 		experiment expt; // TODO: find a better scheme for this
 		CBMState *simState     = NULL;
 		CBMSimCore *simCore    = NULL;
@@ -70,6 +72,9 @@ class Control
 		bool spike_sums_initialized = false;
 		enum sim_run_state run_state = NOT_IN_RUN; 
 
+		std::string visual_mode = "";
+		std::string run_mode = "";
+		std::string curr_build_file_name = "";
 		std::string curr_expt_file_name = "";
 		std::string curr_sim_file_name  = "";
 
@@ -174,7 +179,7 @@ class Control
 
 		const ct_uint8_t* goSpks; 
 
-		void build_sim();
+		void build_sim(parsed_commandline &p_cl);
 		
 		void init_experiment(std::string in_expt_filename);
 		void init_sim(std::string in_sim_filename);

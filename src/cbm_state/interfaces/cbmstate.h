@@ -14,6 +14,7 @@
 #include <limits.h>
 
 #include "pstdint.h"
+#include "commandline.h"
 #include "innetconnectivitystate.h"
 #include "mzoneconnectivitystate.h"
 #include "innetactivitystate.h"
@@ -26,7 +27,7 @@ class CBMState
 {
 	public:
 		CBMState();
-		CBMState(unsigned int nZones);
+		CBMState(unsigned int nZones, parsed_commandline &p_cl);
 		// TODO: make a choice which of two below constructors want to keep
 		CBMState(unsigned int nZones, std::fstream & sim_file_buf);
 		CBMState(unsigned int nZones, std::string inFile);
@@ -48,13 +49,11 @@ class CBMState
 	private:
 		ct_uint32_t numZones;
 
-		InNetConnectivityState *innetConState;
-		MZoneConnectivityState **mzoneConStates;
+		InNetConnectivityState *innetConState = NULL;
+		MZoneConnectivityState **mzoneConStates = NULL;
 
-		InNetActivityState *innetActState;
-		MZoneActivityState **mzoneActStates;
-
-		void newState(unsigned int nZones, int innetCRSeed, int *mzoneCRSeed, int *mzoneARSeed);
+		InNetActivityState *innetActState = NULL;
+		MZoneActivityState **mzoneActStates = NULL;
 };
 
 #endif /* CBMSTATE_H_ */

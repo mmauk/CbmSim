@@ -11,6 +11,7 @@
 
 #include "rawbytesrw.h"
 #include "serialize.h"
+#include "connectivityparams.h"
 #include "activityparams.h"
 
 bool act_params_populated = false;
@@ -105,7 +106,6 @@ float msLTPEndAPIO               = 0.0;
 float msLTPStartAPIO             = 0.0;
 float msPerHistBinGR             = 0.0;
 float msPerHistBinMF             = 0.0;
-float msPerTimeStep              = 0.0;
 float relPDecT0ofNCtoIO          = 0.0;
 float relPDecTSofNCtoIO          = 0.0; 
 float relPDecTTofNCtoIO          = 0.0; 
@@ -291,7 +291,6 @@ void populate_act_params(parsed_build_file &p_file)
 	msLTPStartAPIO             = std::stof(p_file.parsed_var_sections["activity"].param_map["msLTPStartAPIO"].value); 
 	msPerHistBinGR             = std::stof(p_file.parsed_var_sections["activity"].param_map["msPerHistBinGR"].value); 
 	msPerHistBinMF             = std::stof(p_file.parsed_var_sections["activity"].param_map["msPerHistBinMF"].value); 
-	msPerTimeStep              = std::stof(p_file.parsed_var_sections["activity"].param_map["msPerTimeStep"].value); 
 	relPDecT0ofNCtoIO          = std::stof(p_file.parsed_var_sections["activity"].param_map["relPDecT0ofNCtoIO"].value); 
 	relPDecTSofNCtoIO          = std::stof(p_file.parsed_var_sections["activity"].param_map["relPDecTSofNCtoIO"].value); 
 	relPDecTTofNCtoIO          = std::stof(p_file.parsed_var_sections["activity"].param_map["relPDecTTofNCtoIO"].value); 
@@ -339,6 +338,7 @@ void populate_act_params(parsed_build_file &p_file)
 	gogoW                      = std::stof(p_file.parsed_var_sections["activity"].param_map["gogoW"].value); 
 
 	/* derived act params */
+	// assume that we have initialized conparams already, else will get float error
 	numTSinMFHist       = msPerHistBinMF / msPerTimeStep;
 	gLeakGO             = rawGLeakGO; // / (6 - msPerTimeStep);
 	gDecMFtoGO          = exp(-msPerTimeStep / gDecTauMFtoGO);
@@ -480,7 +480,6 @@ void read_act_params(std::fstream &in_param_buf)
 	in_param_buf.read((char *)&msLTPStartAPIO, sizeof(float));
 	in_param_buf.read((char *)&msPerHistBinGR, sizeof(float));
 	in_param_buf.read((char *)&msPerHistBinMF, sizeof(float));
-	in_param_buf.read((char *)&msPerTimeStep, sizeof(float));
 	in_param_buf.read((char *)&relPDecT0ofNCtoIO, sizeof(float));
 	in_param_buf.read((char *)&relPDecTSofNCtoIO, sizeof(float));
 	in_param_buf.read((char *)&relPDecTTofNCtoIO, sizeof(float));
@@ -669,7 +668,6 @@ void write_act_params(std::fstream &out_param_buf)
 	out_param_buf.write((char *)&msLTPStartAPIO, sizeof(float));
 	out_param_buf.write((char *)&msPerHistBinGR, sizeof(float));
 	out_param_buf.write((char *)&msPerHistBinMF, sizeof(float));
-	out_param_buf.write((char *)&msPerTimeStep, sizeof(float));
 	out_param_buf.write((char *)&relPDecT0ofNCtoIO, sizeof(float));
 	out_param_buf.write((char *)&relPDecTSofNCtoIO, sizeof(float));
 	out_param_buf.write((char *)&relPDecTTofNCtoIO, sizeof(float));
