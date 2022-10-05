@@ -59,7 +59,6 @@ typedef struct
 {
 	ct_uint32_t num_trials;
 	std::string *trial_names;
-	
 	ct_uint32_t *use_css;
 	ct_uint32_t *cs_onsets;
 	ct_uint32_t *cs_lens;

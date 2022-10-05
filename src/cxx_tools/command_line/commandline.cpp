@@ -52,7 +52,7 @@ std::string get_opt_param(std::vector<std::string> &token_buf, std::string opt)
 void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 {
 	std::vector<std::string> tokens;
-	// get command line args a vector for easier parsing.
+	// get command line args in a vector for easier parsing.
 	for (char** iter = *argv; iter != *argv + *argc; iter++)
 	{
 		tokens.push_back(std::string(*iter));
@@ -72,7 +72,9 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 		switch (opt_sum)
 		{
 			case 2:
-				// TODO: specify error and exit
+				std::cerr << "[IO_ERROR]: Specified both short and long command line option. You can specify only one\n"
+						  << "[IO_ERROR]: argumnet for each command line argument type. Exiting...\n";
+				exit(9);
 				break;
 			case 1:
 				this_opt = (first_opt_exist == 1) ? opt.first : opt.second;
@@ -104,6 +106,8 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 							div = curr_token_iter->find_first_of(',');
 							if (div == std::string::npos)
 							{
+								std::cerr << "[IO_ERROR]: Comma not given for raster argument '" << *curr_token_iter << "'. Exiting...\n";
+								exit(8);
 								// we have a problem, so exit
 							}
 							raster_code = curr_token_iter->substr(0, div);
@@ -119,7 +123,52 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 				break;
 		}
 	}
-	// second pass: validate parsed_commandline
+}
+
+void validate_commandline(parsed_commandline &p_cl)
+{
+	if (!p_cl.build_file.empty())
+	{
+		if (!p_cl.experiment_file.empty())
+		{
+			std::cerr << "[IO_ERROR]: Cannot specify both experiment and build file. Exiting.\n";
+			exit(5);
+		}
+		if (p_cl.output_sim_file.empty())
+		{
+			std::cout << "[INFO]: Output simulation file not specified. Using default value...\n";
+			p_cl.output_sim_file = DEFAULT_SIM_OUT_FILE; 
+		}
+		else p_cl.output_sim_file = INPUT_DATA_PATH + p_cl.output_sim_file;
+		if (!p_cl.vis_mode.empty() || !p_cl.input_sim_file.empty() || !p_cl.raster_files.empty())
+		{
+			std::cout << "[INFO]: Ignoring additional arguments in build mode.\n";
+		}
+	}
+	else if (!p_cl.experiment_file.empty())
+	{
+		if (!p_cl.build_file.empty())
+		{
+			std::cerr << "[IO_ERROR]: Cannot specify both build and experiment file. Exiting.\n";
+			exit(6);
+		}
+		if (!p_cl.output_sim_file.empty())
+		{
+			p_cl.output_sim_file = INPUT_DATA_PATH + p_cl.output_sim_file;
+		}
+		if (p_cl.vis_mode.empty())
+		{
+			std::cout << "[INFO]: Visual mode not specified in experiment mode. Setting to default value\n"
+					  << "[INFO]: of 'TUI'.\n";
+			p_cl.vis_mode = "TUI";
+		}
+	}
+	else
+	{
+		std::cerr << "[IO_ERROR]: Run mode not specified. You must provide either the {-b|--build} or {-e|--experiment}\n"
+				  << "[IO_ERROR]: arguments. Exiting...\n";
+		exit(7);
+	}
 }
 
 void print_parsed_commandline(parsed_commandline &p_cl)

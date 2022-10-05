@@ -56,6 +56,8 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl);
 
 void print_parsed_commandline(parsed_commandline &p_cl);
 
+void validate_commandline(parsed_commandline &p_cl);
+
 /* ============================ COMMANDLINE 2.0 =============================== */
 
 /* ======================= FUNCTION DECLARATIONS ======================= */
