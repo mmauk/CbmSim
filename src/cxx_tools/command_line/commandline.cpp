@@ -10,7 +10,74 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
+#include <utility>
 #include "commandline.h"
+#include "pstdint.h"
+
+/* ============================ COMMANDLINE 2.0 =============================== */
+
+const std::vector<std::pair<std::string, std::string>> command_line_opts{
+	{"-b", "--build"},
+	{"-e", "--experiment"},
+	{"-i", "--input"},
+	{"-o", "--output"},
+	{"-r", "--raster"}
+};
+
+// 1 for yes, 0 for no
+int cmd_opt_exists(std::vector<std::string> &token_buf, std::string opt)
+{
+
+}
+
+std::string get_opt_param(std::vector<std::string> &token_buf, std::string opt)
+{
+	auto tp;
+	tp = std::find(token_buf.begin(), token_buf.end(), opt);
+	if (tp != token_buf.end() && tp++ != token_buf.end())
+	{
+		return std::str(*tp);
+	}
+	return "";
+}
+
+void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
+{
+	std::vector<std::string> tokens;
+	// get command line args a vector for easier parsing.
+	for (char** iter = *argv; iter != *argv + *argc; iter++)
+	{
+		tokens.push_back(std::string(*iter));
+	}
+	std::unordered_map<std::string, std::string> arg_map;
+	// first pass: determine whether input opts are valid. and if so, select the option given.
+	for (auto iter : command_line_opts)
+	{
+		int first_opt = cmd_opt_exists(tokens, iter->first); 
+		int second_opt = cmd_opt_exists(tokens, iter->second);
+		int opt_sum = first_opt + second_opt;
+		std::string this_opt;
+		std::string this_param;
+		switch (opt_sum)
+		{
+			case 2:
+				// TODO: specify error and exit
+				break;
+			case 1:
+				this_opt = (first_opt == 1) ? iter->first : iter->second;
+				this_param = get_opt_param(tokens, this_opt);
+				// could we fill parsed_commandline from here?
+				break;
+			case 0;
+				continue;
+				break;
+		}
+		//arg_map[this_opt] = get_opt_param(tokens, this_opt);
+	}
+}
+
+/* ============================ COMMANDLINE 2.0 =============================== */
+
 
 /*
  * Implementation Notes:

@@ -16,6 +16,7 @@
 #include "file_parse.h"
 #include "experiment_file.h"
 
+
 /* ============================ CONSTANTS =============================== */
 
 const int BUILD_NUM_ARGS = 3;
@@ -25,8 +26,8 @@ const std::string INPUT_DATA_PATH = "../data/inputs/";
 const std::string OUTPUT_DATA_PATH = "../data/outputs/";
 const std::string DEFAULT_SIM_OUT_FILE = OUTPUT_DATA_PATH + "default_out_sim_file.sim";
 
-const std::string EXPERIMENT_FILE_FIRST_LINE = "#Begin filetype experiment";
-const std::string BUILD_FILE_FIRST_LINE      = "#begin filetype build";
+const std::string EXPERIMENT_FILE_FIRST_LINE = "begin filetype experiment";
+const std::string BUILD_FILE_FIRST_LINE      = "begin filetype build";
 
 
 /* =============================== ENUMS ================================ */
@@ -38,6 +39,23 @@ enum vis_mode {GUI, TUI, NO_VIS};
 enum run_mode {BUILD, RUN, NO_RUN};
 
 enum user_mode {FRIENDLY, VETERAN, NO_USER_MODE};
+
+/* ============================ COMMANDLINE 2.0 =============================== */
+
+typedef struct
+{
+	std::string vis_mode;
+	std::string run_mode;
+	std::string build_file;
+	std::string experiment_file;
+	std::string input_sim_file;
+	std::string output_sim_file;
+	std::map<std::string, std::string> raster_files;
+} parsed_commandline;
+
+void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl);
+
+/* ============================ COMMANDLINE 2.0 =============================== */
 
 /* ======================= FUNCTION DECLARATIONS ======================= */
 

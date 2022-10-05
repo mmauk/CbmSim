@@ -323,7 +323,6 @@ void parse_region(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, p
 		{
 			auto next_lt = std::next(ltp, 1);
 			auto second_next_lt  = std::next(ltp, 2);
-			// FIXME: what happens just before the end of the file?
 			if (ltp->lex == BEGIN_MARKER
 				&& next_lt->lex == REGION
 				&& second_next_lt->lex == REGION_TYPE)
@@ -385,7 +384,68 @@ void parse_lexed_expt_file(lexed_file &l_file, parsed_expt_file &e_file)
 	}
 }
 
-// TODO: rewrite
+void parse_var_section(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, parsed_build_file &b_file,
+		std::string region_type)
+{
+	parsed_var_section curr_section = {};
+	variable curr_var = {};
+	while (ltp->lex != END_MARKER)
+	{
+		if (ltp->lex == TYPE_NAME)
+		{
+			auto next_lt = std::next(ltp, 1);
+			auto second_next_lt = std::next(ltp, 2);
+			if (next_lt->lex == VAR_IDENTIFIER
+				&& second_next_lt->lex == VAR_VALUE)
+			{
+				curr_var.type_name  = ltp->raw_token;
+				curr_var.identifier = next_lt->raw_token;
+				curr_var.value      = second_next_lt->raw_token;
+
+				curr_section.param_map[next_lt->raw_token] = curr_var;
+				curr_var = {};
+				ltp += 2;
+			}
+		}
+		else if (ltp->lex == SINGLE_COMMENT)
+		{
+			while (ltp->lex != NEW_LINE) ltp++;
+		}
+		ltp++;
+	}
+	b_file.parsed_var_sections[region_type] = curr_section;
+}
+
+
+void parse_region(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, parsed_build_file &b_file,
+		std::string region_type)
+{
+	if (region_type == "connectivity")
+	{
+		parse_var_section(ltp, l_file, b_file, region_type);
+	}
+	else
+	{
+		while (ltp->lex != END_MARKER)
+		{
+			auto next_lt = std::next(ltp, 1);
+			auto second_next_lt  = std::next(ltp, 2);
+			if (ltp->lex == BEGIN_MARKER
+				&& next_lt->lex == REGION
+				&& second_next_lt->lex == REGION_TYPE)
+			{
+				ltp += 4;
+				parse_region(ltp, l_file, b_file, second_next_lt->raw_token);
+			}
+			else if (ltp->lex == SINGLE_COMMENT)
+			{
+				while (ltp->lex != NEW_LINE) ltp++;
+			}
+			ltp++;
+		}
+	}
+}
+
 /*
  * Implementation Notes:
  *     This function operates upon a lexed file, converting that file into a parsed file.
@@ -400,8 +460,49 @@ void parse_lexed_expt_file(lexed_file &l_file, parsed_expt_file &e_file)
  *     of finding when we are finished with a section.
  *
  */
-void parse_lexed_build_file(lexed_file &l_file, parsed_build_file &p_file)
+void parse_lexed_build_file(lexed_file &l_file, parsed_build_file &b_file)
 {
+	std::vector<lexed_token>::iterator ltp = l_file.tokens.begin();
+	// parse the first region, ie the filetype region
+	while (ltp->lex != BEGIN_MARKER)
+	{
+		if (ltp->lex == SINGLE_COMMENT)
+		{
+			while (ltp->lex != NEW_LINE) ltp++;
+		}
+		else if (ltp->lex != NEW_LINE)
+		{
+			std::cerr << "[IO_ERROR]: Unidentified token. Exiting...\n";
+			exit(1);
+		}
+		ltp++;
+	}
+	auto next_lt = std::next(ltp, 1);
+	auto second_next_lt  = std::next(ltp, 2);
+	if (next_lt->lex == REGION)
+	{
+		if (next_lt->raw_token != "filetype")
+		{
+			std::cerr << "[IO_ERROR]: First interpretable line does not specify filetype. Exiting...\n";
+			exit(2);
+		}
+		else if (second_next_lt->raw_token != "build")
+		{
+			std::cerr << "[IO_ERROR]: '" << second_next_lt->raw_token << "' does not indicate a build file. Exiting...\n";
+			exit(3);
+		}
+		else
+		{
+			ltp += 4;
+			parse_region(ltp, l_file, b_file, second_next_lt->raw_token);
+		}
+	}
+	else
+	{
+		std::cerr << "[IO_ERROR]: Unidentified token after '" << ltp->raw_token << "'. Exiting...\n";
+		exit(4);
+	}
+
 	//parsed_var_section curr_section = {};
 	//variable curr_variable = {};
 	//auto line = l_file.tokens.begin();
@@ -487,23 +588,6 @@ void print_lexed_file(lexed_file &l_file)
 		std::cout << token.raw_token << "'],\n";
 	}
 	std::cout << "]\n";
-}
-
-void print_parsed_build_file(parsed_build_file &p_file)
-{
-	//std::cout << "[ 'filetype', " << "'" << p_file.file_type_label << "'" << "]" << std::endl;
-	//for (auto p_section = p_file.parsed_sections.begin();
-	//		 p_section != p_file.parsed_sections.end();
-	//		 p_section++)
-	//{
-	//	std::cout << "[ 'section', " << "'" << p_section->first << "'" << "]" << std::endl;
-	//	for (auto iter = p_section->second.param_map.begin();
-	//			 iter != p_section->second.param_map.end();
-	//			 iter++)
-	//	{
-	//		std::cout << "[ '" << iter->second.type_name << "', '" << iter->second.identifier << "', '" << iter->second.value << "' ]" << std::endl;
-	//	}
-	//}
 }
 
 std::string var_to_str(variable &var)
@@ -633,11 +717,21 @@ void print_parsed_var_section(parsed_var_section &var_section)
 void print_parsed_expt_file(parsed_expt_file &e_file)
 {
 	print_parsed_trial_section(e_file.parsed_trial_info);
-	//for (auto iter = e_file.parsed_var_sections.begin();
-	//		iter != e_file.parsed_var_sections.end();
-	//		iter++)
-	//{
-	//	print_parsed_var_section(iter->second);
-	//}
+	for (auto iter = e_file.parsed_var_sections.begin();
+			iter != e_file.parsed_var_sections.end();
+			iter++)
+	{
+		print_parsed_var_section(iter->second);
+	}
+}
+
+void print_parsed_build_file(parsed_build_file &b_file)
+{
+	for (auto iter = b_file.parsed_var_sections.begin();
+			iter != b_file.parsed_var_sections.end();
+			iter++)
+	{
+		print_parsed_var_section(iter->second);
+	}
 }
 

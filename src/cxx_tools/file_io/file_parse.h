@@ -171,9 +171,9 @@ void print_tokenized_file(tokenized_file &t_file);
 
 void print_lexed_file(lexed_file &l_file);
 
-void print_parsed_build_file(parsed_build_file &p_file);
-
 void print_parsed_expt_file(parsed_expt_file &e_file);
+
+void print_parsed_build_file(parsed_build_file &b_file);
 
 #endif /* FILE_PARSE_H_ */
 

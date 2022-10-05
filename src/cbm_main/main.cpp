@@ -23,14 +23,22 @@
 
 int main(int argc, char **argv)
 {
-	tokenized_file t_file;
-	lexed_file l_file;
-	parsed_expt_file e_file;
+	//tokenized_file t_e_file;
+	//lexed_file l_e_file;
+	//parsed_expt_file e_file;
 
-	tokenize_file(std::string(argv[1]), t_file);
-	lex_tokenized_file(t_file, l_file);
-	parse_lexed_expt_file(l_file, e_file);
-	print_parsed_expt_file(e_file);
+	//tokenize_file(std::string(argv[1]), t_e_file);
+	//lex_tokenized_file(t_e_file, l_e_file);
+	//parse_lexed_expt_file(l_e_file, e_file);
+	//print_parsed_expt_file(e_file);
+
+	tokenized_file t_b_file;
+	lexed_file l_b_file;
+	parsed_build_file b_file;
+	tokenize_file(std::string(argv[1]), t_b_file);
+	lex_tokenized_file(t_b_file, l_b_file);
+	parse_lexed_build_file(l_b_file, b_file);
+	print_parsed_build_file(b_file);
 	return 0;
 }
 
