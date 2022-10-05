@@ -17,26 +17,34 @@
 /* ============================ COMMANDLINE 2.0 =============================== */
 
 const std::vector<std::pair<std::string, std::string>> command_line_opts{
-	{"-b", "--build"},
-	{"-e", "--experiment"},
-	{"-i", "--input"},
-	{"-o", "--output"},
-	{"-r", "--raster"}
+	{ "-v", "--visual" },
+	{ "-b", "--build" },
+	{ "-e", "--experiment" },
+	{ "-i", "--input" },
+	{ "-o", "--output" },
+	{ "-r", "--raster" }
 };
 
-// 1 for yes, 0 for no
+bool is_cmd_opt(std::string in_str)
+{
+	for (auto opt : command_line_opts)
+	{
+		if (in_str == opt.first || in_str == opt.second) return true;
+	}
+	return false;
+}
+
 int cmd_opt_exists(std::vector<std::string> &token_buf, std::string opt)
 {
-
+	return (std::find(token_buf.begin(), token_buf.end(), opt) != token_buf.end()) ? 1 : 0;
 }
 
 std::string get_opt_param(std::vector<std::string> &token_buf, std::string opt)
 {
-	auto tp;
-	tp = std::find(token_buf.begin(), token_buf.end(), opt);
+	auto tp = std::find(token_buf.begin(), token_buf.end(), opt);
 	if (tp != token_buf.end() && tp++ != token_buf.end())
 	{
-		return std::str(*tp);
+		return std::string(*tp);
 	}
 	return "";
 }
@@ -49,31 +57,84 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 	{
 		tokens.push_back(std::string(*iter));
 	}
-	std::unordered_map<std::string, std::string> arg_map;
-	// first pass: determine whether input opts are valid. and if so, select the option given.
-	for (auto iter : command_line_opts)
+	// first pass: get options and associated opt_params.
+	for (auto opt : command_line_opts)
 	{
-		int first_opt = cmd_opt_exists(tokens, iter->first); 
-		int second_opt = cmd_opt_exists(tokens, iter->second);
-		int opt_sum = first_opt + second_opt;
+		int first_opt_exist = cmd_opt_exists(tokens, opt.first); 
+		int second_opt_exist = cmd_opt_exists(tokens, opt.second);
+		int opt_sum = first_opt_exist + second_opt_exist;
 		std::string this_opt;
 		std::string this_param;
+		char opt_char_code;
+		std::vector<std::string>::iterator curr_token_iter;
+		size_t div;
+		std::string raster_code, raster_file_name;
 		switch (opt_sum)
 		{
 			case 2:
 				// TODO: specify error and exit
 				break;
 			case 1:
-				this_opt = (first_opt == 1) ? iter->first : iter->second;
+				this_opt = (first_opt_exist == 1) ? opt.first : opt.second;
+				// both give the same thing, it is a matter of which exists, the
+				// long or the short version.
+				opt_char_code = (first_opt_exist == 1) ? this_opt[1] : this_opt[2];
 				this_param = get_opt_param(tokens, this_opt);
-				// could we fill parsed_commandline from here?
+				curr_token_iter = std::find(tokens.begin(), tokens.end(), this_param);
+				switch (opt_char_code)
+				{
+					case 'v':
+						p_cl.vis_mode = this_param;
+						break;
+					case 'b':
+						p_cl.build_file = this_param;
+						break;
+					case 'e':
+						p_cl.experiment_file = this_param;
+						break;
+					case 'i':
+						p_cl.input_sim_file = this_param;
+						break;
+					case 'o':
+						p_cl.output_sim_file = this_param;
+						break;
+					case 'r':
+						while (curr_token_iter != tokens.end() && !is_cmd_opt(*curr_token_iter))
+						{
+							div = curr_token_iter->find_first_of(',');
+							if (div == std::string::npos)
+							{
+								// we have a problem, so exit
+							}
+							raster_code = curr_token_iter->substr(0, div);
+							raster_file_name = curr_token_iter->substr(div+1);
+							p_cl.raster_files[raster_code] = raster_file_name;
+							curr_token_iter++;
+						}
+						break;
+				}
 				break;
-			case 0;
+			case 0:
 				continue;
 				break;
 		}
-		//arg_map[this_opt] = get_opt_param(tokens, this_opt);
 	}
+	// second pass: validate parsed_commandline
+}
+
+void print_parsed_commandline(parsed_commandline &p_cl)
+{
+	std::cout << "{\n";
+	std::cout << "{ 'vis_mode', '" << p_cl.vis_mode << "' }\n";
+	std::cout << "{ 'build_file', '" << p_cl.build_file << "' }\n";
+	std::cout << "{ 'experiment_file', '" << p_cl.experiment_file << "' }\n";
+	std::cout << "{ 'input_sim_file', '" << p_cl.input_sim_file << "' }\n";
+	std::cout << "{ 'output_sim_file', '" << p_cl.output_sim_file << "' }\n";
+	for (auto pair : p_cl.raster_files)
+	{
+		std::cout << "{ '" << pair.first << "', '" << pair.second << "' }\n";
+	}
+	std::cout << "}\n";
 }
 
 /* ============================ COMMANDLINE 2.0 =============================== */

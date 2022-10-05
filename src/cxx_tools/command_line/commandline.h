@@ -45,7 +45,6 @@ enum user_mode {FRIENDLY, VETERAN, NO_USER_MODE};
 typedef struct
 {
 	std::string vis_mode;
-	std::string run_mode;
 	std::string build_file;
 	std::string experiment_file;
 	std::string input_sim_file;
@@ -54,6 +53,8 @@ typedef struct
 } parsed_commandline;
 
 void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl);
+
+void print_parsed_commandline(parsed_commandline &p_cl);
 
 /* ============================ COMMANDLINE 2.0 =============================== */
 
