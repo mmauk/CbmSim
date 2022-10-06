@@ -148,9 +148,9 @@ void parse_def(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, pars
 		std::string def_type, std::string def_label)
 {
 	pair curr_pair = {};
-	trial_2 curr_trial = {};
-	block curr_block = {};
-	session curr_session = {};
+	std::unordered_map<std::string, variable> curr_trial = {};
+	std::vector<pair> curr_block = {};
+	std::vector<pair> curr_session = {};
 	lexeme prev_lex = NONE;
 	variable curr_var = {};
 	while (ltp->lex != END_MARKER)
@@ -201,7 +201,7 @@ void parse_def(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, pars
 					if (def_type == "trial")
 					{
 						curr_var.value = ltp->raw_token;
-						curr_trial.param_map[curr_var.identifier] = curr_var;
+						curr_trial[curr_var.identifier] = curr_var;
 						curr_var = {};
 					}
 					else
@@ -209,15 +209,15 @@ void parse_def(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, pars
 						curr_pair.second = ltp->raw_token;
 						if (def_type == "block")
 						{
-							curr_block.trials.push_back(curr_pair);
+							curr_block.push_back(curr_pair);
 						}
 						else if (def_type == "session")
 						{
-							curr_session.blocks.push_back(curr_pair);
+							curr_session.push_back(curr_pair);
 						}
 						else if (def_type == "experiment")
 						{
-							e_file.parsed_trial_info.expt_info.sessions.push_back(curr_pair);
+							e_file.parsed_trial_info.experiment.push_back(curr_pair);
 						}
 						curr_pair = {};
 					}
@@ -236,9 +236,9 @@ void parse_def(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, pars
 			&& curr_pair.second == "")
 		{
 			curr_pair.second = "1";
-			if (def_type == "block") curr_block.trials.push_back(curr_pair);
-			else if (def_type == "session") curr_session.blocks.push_back(curr_pair);
-			else if (def_type == "experiment") e_file.parsed_trial_info.expt_info.sessions.push_back(curr_pair);
+			if (def_type == "block") curr_block.push_back(curr_pair);
+			else if (def_type == "session") curr_session.push_back(curr_pair);
+			else if (def_type == "experiment") e_file.parsed_trial_info.experiment.push_back(curr_pair);
 		}
 	}
 	if (def_type == "trial") e_file.parsed_trial_info.trial_map[def_label] = curr_trial;
@@ -510,9 +510,34 @@ void parse_lexed_build_file(lexed_file &l_file, parsed_build_file &b_file)
 
 void translate_parsed_expt_file(parsed_expt_file &pe_file, trials_data &td)
 {
-	// TODO: finish writing :)
+//	ct_uint32_t temp_num_trials = 1;
+//	for (auto sess_pair : pe_file.expt_info.sessions)
+//	{
+//		/* check if session is actually defined */
+//		if (pe_file.session_map.find(sess_pair.first) != pe_file.session_map.end())
+//		{
+//			temp_num_trials *= std::stoi(sess_pair.second);
+//			for (auto blk_pair : pe_file.session_map[sess_pair.first].blocks)
+//			{
+//				/* check if block is actually defined */
+//				if (pe_file.block_map.find(blk_pair.first) != pe_file.block_map.end())
+//				{
+//					temp_num_trials *= std::stoi(blk_pair.second);
+//					for (auto trial_pair : pe_file.block_map[blk_pair.first].trials)
+//					{
+//						/* check if trial is actually defined */
+//						if (pe_file.trial_map.find(trial_pair.first) != pe_file.trial_map.end())
+//						{
+//							temp_num_trials *= std::stoi(trial_pair.second);
+//						}
+//						
+//					}
+//				}
+//				
+//			}
+//		}
+//	}
 }
-
 
 /*
  * Implementation Notes:
@@ -624,34 +649,34 @@ std::string experiment_2_to_str(experiment_2 &expt)
 
 void print_parsed_trial_section(parsed_trial_section &pt_section)
 {
-	std::cout << "[ trial section: \n";
-	std::cout << "[ trial specification:\n";
-	for (auto iter = pt_section.trial_map.begin();
-			iter != pt_section.trial_map.end();
-			iter++)
-	{
-		std::cout << "[\n'" << iter->first << "', " << trial_2_to_str(iter->second) << "\n";
-	}
-	std::cout << "]\n";
-	std::cout << "[ block specification:\n";
-	for (auto iter = pt_section.block_map.begin();
-			iter != pt_section.block_map.end();
-			iter++)
-	{
-		std::cout << "[\n'" << iter->first << "', " << block_to_str(iter->second) << "\n";
-	}
-	std::cout << "]\n";
-	std::cout << "[ session specification:\n";
-	for (auto iter = pt_section.session_map.begin();
-			iter != pt_section.session_map.end();
-			iter++)
-	{
-		std::cout << "[\n'" << iter->first << "', " << session_to_str(iter->second) << "\n";
-	}
-	std::cout << "]\n";
-	std::cout << "[ experiment specification:\n";
-	std::cout << experiment_2_to_str(pt_section.expt_info) << "\n";
-	std::cout << "]\n";
+//	std::cout << "[ trial section: \n";
+//	std::cout << "[ trial specification:\n";
+//	for (auto iter = pt_section.trial_map.begin();
+//			iter != pt_section.trial_map.end();
+//			iter++)
+//	{
+//		std::cout << "[\n'" << iter->first << "', " << trial_2_to_str(iter->second) << "\n";
+//	}
+//	std::cout << "]\n";
+//	std::cout << "[ block specification:\n";
+//	for (auto iter = pt_section.block_map.begin();
+//			iter != pt_section.block_map.end();
+//			iter++)
+//	{
+//		std::cout << "[\n'" << iter->first << "', " << block_to_str(iter->second) << "\n";
+//	}
+//	std::cout << "]\n";
+//	std::cout << "[ session specification:\n";
+//	for (auto iter = pt_section.session_map.begin();
+//			iter != pt_section.session_map.end();
+//			iter++)
+//	{
+//		std::cout << "[\n'" << iter->first << "', " << session_to_str(iter->second) << "\n";
+//	}
+//	std::cout << "]\n";
+//	std::cout << "[ experiment specification:\n";
+//	std::cout << experiment_2_to_str(pt_section.expt_info) << "\n";
+//	std::cout << "]\n";
 }
 
 void print_parsed_var_section(parsed_var_section &var_section)

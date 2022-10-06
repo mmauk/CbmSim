@@ -97,12 +97,20 @@ typedef struct
 	std::unordered_map<std::string, variable> param_map;
 } parsed_var_section;
 
+//typedef struct
+//{
+//	std::unordered_map<std::string, trial_2> trial_map;
+//	std::unordered_map<std::string, block> block_map;
+//	std::unordered_map<std::string, session> session_map;
+//	experiment_2 expt_info;
+//} parsed_trial_section;
+
 typedef struct
 {
-	std::unordered_map<std::string, trial_2> trial_map;
-	std::unordered_map<std::string, block> block_map;
-	std::unordered_map<std::string, session> session_map;
-	experiment_2 expt_info;
+	std::unordered_map<std::string, std::unordered_map<std::string, variable>> trial_map;
+	std::unordered_map<std::string, std::vector<pair>> block_map;
+	std::unordered_map<std::string, std::vector<pair>> session_map;
+	std::vector<pair> experiment; // <-- pairs of session identifier and number of sessions
 } parsed_trial_section;
 
 // represents the entire file contents, broken up line-by-line, token-by-token
