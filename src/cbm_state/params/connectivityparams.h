@@ -131,6 +131,24 @@ extern float ampl_go_to_gl;
 extern float std_dev_go_to_gl_ml;
 extern float std_dev_go_to_gl_s;
 
+extern float eLeakGO;
+extern float threshRestGO;
+extern float eLeakGR; 
+extern float threshRestGR;
+
+extern float eLeakSC;
+extern float threshRestSC;
+extern float eLeakBC;
+extern float threshRestBC;
+extern float eLeakPC;
+extern float threshRestPC;
+extern float initSynWofGRtoPC;
+extern float eLeakIO;
+extern float threshRestIO;
+extern float eLeakNC;
+extern float threshRestNC;
+extern float initSynWofMFtoNC;
+
 void populate_con_params(parsed_build_file &p_file);
 void read_con_params(std::fstream &in_param_buf);
 void write_con_params(std::fstream &out_param_buf);

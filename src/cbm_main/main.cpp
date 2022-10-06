@@ -21,7 +21,7 @@
 #include "activityparams.h"
 #include "file_parse.h"
 
-int main(int argc, char **argv)
+int main2(int argc, char **argv)
 {
 	//tokenized_file t_e_file;
 	//lexed_file l_e_file;
@@ -47,7 +47,7 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-int main2(int argc, char **argv) 
+int main(int argc, char **argv) 
 {
 	parsed_commandline p_cl = {};
 	parse_commandline(&argc, &argv, p_cl);
@@ -68,67 +68,15 @@ int main2(int argc, char **argv)
 		if (p_cl.vis_mode == "TUI")
 		{
 			control->runExperiment(NULL);
-			if (!p_cl.output_sim_file.empty()) control->save_sim_to_file(p_cl.output_sim_file);
+			if (!p_cl.output_sim_file.empty())
+				control->save_sim_to_file(p_cl.output_sim_file);
 		}
 		else if (p_cl.vis_mode == "GUI")
 		{
 			exit_status = gui_init_and_run(&argc, &argv, control);
 		}
 	}
-
 	delete control;
 	return exit_status;
-
-	//enum vis_mode sim_vis_mode  = NO_VIS;
-	//enum run_mode sim_run_mode  = NO_RUN;
-	//enum user_mode sim_user_mode = NO_USER_MODE;
-	//
-	//validate_args_and_set_modes(&argc, &argv, &sim_vis_mode, &sim_run_mode, &sim_user_mode);
-	//parsed_build_file p_file;
-	//std::string out_sim_file = "";
-	//
-	//switch (sim_run_mode)
-	//{
-	//	case BUILD: /* parse build file, build sim, save to file and exit */
-	//		parse_build_args(&argv, p_file);
-	//		control = new Control(p_file);
-	//		control->build_sim();
-	//		get_out_sim_file(BUILD_OUT_SIM_FILE, &argv, out_sim_file);
-	//		control->save_sim_to_file(out_sim_file);
-	//		exit_status = 0;
-	//		break;
-	//	case RUN:
-	//		switch (sim_user_mode)
-	//		{
-	//			case FRIENDLY: /* you have to load everything in yourself in gui, but you only enter the command on cmdline */
-	//				control = new Control(GUI);
-	//				break;
-	//			case VETERAN: /* you have to know the name of every input file when invoking on cmdline */
-	//				control = new Control(&argv, sim_vis_mode); 
-	//				break;
-	//			case NO_USER_MODE:
-	//				/* unreachable */
-	//				break;
-	//		}
-	//		switch (sim_vis_mode)
-	//		{
-	//			case TUI:
-	//				control->runExperiment(NULL);
-	//				//get_out_sim_file(RUN_OUT_SIM_FILE, &argv, out_sim_file);
-	//				//control->save_sim_to_file(out_sim_file);
-	//				exit_status = 0;
-	//				break;
-	//			case GUI:
-	//				exit_status = gui_init_and_run(&argc, &argv, control);
-	//				break;
-	//			case NO_VIS:
-	//				/* unreachable */
-	//				break;
-	//		}
-	//		break;
-	//	case NO_RUN:
-	//		/* unreachable */
-	//		break;
-	//}
 }
 

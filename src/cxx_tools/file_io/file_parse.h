@@ -151,20 +151,22 @@ void lex_tokenized_file(tokenized_file &t_file, lexed_file &l_file);
 /*
  * Description:
  *     takes a lexed file reference l_file and parses it, i.e. takes each lexeme
+ *     and adds it to the correct entry in either parsed_expt_file.parsed_trial_info or
+ *     parsed_expt_file.parsed_var_sections
+ *
+ */
+void parse_lexed_expt_file(lexed_file &l_file, parsed_expt_file &e_file);
+
+/*
+ * Description:
+ *     takes a lexed file reference l_file and parses it, i.e. takes each lexeme
  *     and adds it to the correct entry in p_file.parsed_var_sections. See the above
  *     definition of parsed_build_file and parsed_section for more information.
  *
  */
 void parse_lexed_build_file(lexed_file &l_file, parsed_build_file &p_file);
 
-/*
- * Description:
- *     takes a lexed file reference l_file and parses it, i.e. takes each lexeme
- *     and adds it to the correct entry in either parsed_expt_file.parsed_trial_info or
- *     parsed_expt_file.parsed_var_sections
- *
- */
-void parse_lexed_expt_file(lexed_file &l_file, parsed_expt_file &e_file);
+void translate_parsed_expt_file(parsed_expt_file &pe_file, trials_data &td);
 
 void print_tokenized_file(tokenized_file &t_file);
 

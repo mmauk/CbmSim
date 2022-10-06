@@ -14,25 +14,19 @@ std::string getFileBasename(std::string fullFilePath)
 {
 	size_t sep = fullFilePath.find_last_of("\\/");
 	if (sep != std::string::npos)
-	    fullFilePath = fullFilePath.substr(sep + 1, fullFilePath.size() - sep - 1);
+		fullFilePath = fullFilePath.substr(sep + 1, fullFilePath.size() - sep - 1);
 	
 	size_t dot = fullFilePath.find_last_of(".");
 	if (dot != std::string::npos)
 	{
-	    std::string name = fullFilePath.substr(0, dot);
+		std::string name = fullFilePath.substr(0, dot);
 	}
 	else
 	{
-	    std::string name = fullFilePath;
+		std::string name = fullFilePath;
 	}
 	return (dot != std::string::npos) ? fullFilePath.substr(0, dot) : fullFilePath;
 }
-
-//Control::Control(parsed_build_file &p_file)
-//{
-//	if (!con_params_populated) populate_con_params(p_file);
-//	if (!act_params_populated) populate_act_params(p_file);
-//}
 
 Control::Control(parsed_commandline &p_cl)
 {
@@ -40,6 +34,10 @@ Control::Control(parsed_commandline &p_cl)
 	lexed_file l_file;
 	if (!p_cl.build_file.empty())
 	{
+		visual_mode = "TUI";
+		run_mode = "build";
+		curr_build_file_name = p_cl.build_file;
+		out_sim_file_name = p_cl.output_sim_file;
 		parsed_build_file pb_file;
 		tokenize_file(p_cl.build_file, t_file);
 		lex_tokenized_file(t_file, l_file);
@@ -48,19 +46,20 @@ Control::Control(parsed_commandline &p_cl)
 	}
 	else if (!p_cl.experiment_file.empty())
 	{
+		visual_mode = p_cl.vis_mode;
+		run_mode = "run";
+		curr_expt_file_name = p_cl.experiment_file;
+		curr_sim_file_name  = p_cl.input_sim_file;
+		out_sim_file_name   = p_cl.output_sim_file;
 		parsed_expt_file pe_file;
-		tokenize_file(p_cl.experiment_file, t_file);
+		tokenize_file(curr_expt_file_name, t_file);
 		lex_tokenized_file(t_file, l_file);
 		parse_lexed_expt_file(l_file, pe_file);
+		
 		// TODO: write translate_expt_file -> trial_info struct (more efficient)
-		init_sim(p_cl.input_sim_file);
+		init_sim(curr_sim_file_name);
 	}
 }
-
-//Control::Control(enum vis_mode sim_vis_mode)
-//{
-//	this->sim_vis_mode = sim_vis_mode;
-//}
 
 //Control::Control(char ***argv, enum vis_mode sim_vis_mode)
 //{
@@ -87,9 +86,9 @@ Control::~Control()
 	if (spike_sums_initialized) delete_spike_sums();
 }
 
-void Control::build_sim(parsed_commandline &p_cl)
+void Control::build_sim()
 {
-	if (!simState) simState = new CBMState(numMZones, p_cl);
+	if (!simState) simState = new CBMState(numMZones);
 }
 
 void Control::init_experiment(std::string in_expt_filename)
@@ -136,7 +135,6 @@ void Control::init_sim(std::string in_sim_filename)
 	initialize_spike_sums();
 	sim_file_buf.close();
 	sim_initialized = true;
-	curr_sim_file_name = in_sim_filename;
 	std::cout << "[INFO]: Simulation initialized.\n";
 }
 
@@ -172,17 +170,10 @@ void Control::save_sim_state_to_file(std::string outStateFile)
 void Control::save_sim_to_file(std::string outSimFile)
 {
 	std::fstream outSimFileBuffer(outSimFile.c_str(), std::ios::out | std::ios::binary);
-	if (!p_cl.build_file.empty())
-	{
-		write_con_params(outSimFileBuffer);
-		simState->writeState(outSimFileBuffer);
-	}
-	else if (!p_cl.experiment_file.empty())
-	{
-		write_con_params(outSimFileBuffer);
-		write_act_params(outSimFileBuffer);
-		simCore->writeState(outSimFileBuffer);
-	}
+	write_con_params(outSimFileBuffer);
+	write_act_params(outSimFileBuffer);
+	if (!simCore) simState->writeState(outSimFileBuffer);
+	else simCore->writeState(outSimFileBuffer);
 	outSimFileBuffer.close();
 }
 

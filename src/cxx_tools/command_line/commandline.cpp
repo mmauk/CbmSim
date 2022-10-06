@@ -144,6 +144,7 @@ void validate_commandline(parsed_commandline &p_cl)
 		{
 			std::cout << "[INFO]: Ignoring additional arguments in build mode.\n";
 		}
+		p_cl.build_file = INPUT_DATA_PATH + p_cl.build_file;
 	}
 	else if (!p_cl.experiment_file.empty())
 	{
@@ -162,6 +163,7 @@ void validate_commandline(parsed_commandline &p_cl)
 					  << "[INFO]: of 'TUI'.\n";
 			p_cl.vis_mode = "TUI";
 		}
+		p_cl.experiment_file = INPUT_DATA_PATH + p_cl.experiment_file;
 	}
 	else
 	{

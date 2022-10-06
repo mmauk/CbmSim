@@ -424,6 +424,10 @@ void parse_region(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, p
 	{
 		parse_var_section(ltp, l_file, b_file, region_type);
 	}
+	else if (region_type == "activity")
+	{
+		parse_var_section(ltp, l_file, b_file, region_type);
+	}
 	else
 	{
 		while (ltp->lex != END_MARKER)
@@ -502,64 +506,13 @@ void parse_lexed_build_file(lexed_file &l_file, parsed_build_file &b_file)
 		std::cerr << "[IO_ERROR]: Unidentified token after '" << ltp->raw_token << "'. Exiting...\n";
 		exit(4);
 	}
-
-	//parsed_var_section curr_section = {};
-	//variable curr_variable = {};
-	//auto line = l_file.tokens.begin();
-	//while (line != l_file.tokens.end())
-	//{
-	//	auto lexed_token = line->begin();
-	//	while (lexed_token != line->end())
-	//	{
-	//		switch (lexed_token->lex)
-	//		{
-	//			case BEGIN_MARKER:
-	//				lexed_token++;
-	//				break;
-	//			case REGION:
-	//				if (lexed_token->raw_token == "filetype")
-	//				{
-	//					lexed_token++;
-	//					p_file.file_type_label = lexed_token->raw_token;
-	//				}
-	//				else if (lexed_token->raw_token == "section")
-	//				{
-	//					lexed_token++;
-	//					curr_section.section_label = lexed_token->raw_token;
-	//				}
-	//				lexed_token++;
-	//				break;
-	//			case TYPE_NAME:
-	//				curr_variable.type_name = lexed_token->raw_token;
-	//				lexed_token++;
-	//				break;
-	//			case VAR_IDENTIFIER:
-	//				curr_variable.identifier = lexed_token->raw_token;
-	//				lexed_token++;
-	//				break;
-	//			case VAR_VALUE:
-	//				curr_variable.value = lexed_token->raw_token;
-	//				curr_section.param_map[curr_variable.identifier] = curr_variable;
-	//				curr_variable = {};
-	//				lexed_token++;
-	//				break;
-	//			case END_MARKER:
-	//				if (curr_section.section_label != "")
-	//				{
-	//					p_file.parsed_sections[curr_section.section_label] = curr_section;
-	//					curr_section.section_label = "";
-	//					curr_section.param_map.clear();
-	//				}
-	//				lexed_token++;
-	//				break;
-	//			case SINGLE_COMMENT:
-	//				lexed_token = line->end();
-	//				break;
-	//		}
-	//	}
-	//	line++;
-	//}
 }
+
+void translate_parsed_expt_file(parsed_expt_file &pe_file, trials_data &td)
+{
+	// TODO: finish writing :)
+}
+
 
 /*
  * Implementation Notes:

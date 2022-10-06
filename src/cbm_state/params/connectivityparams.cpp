@@ -120,6 +120,23 @@ float ampl_go_to_gl            = 0.0;
 float std_dev_go_to_gl_ml      = 0.0; 
 float std_dev_go_to_gl_s       = 0.0; 
 
+float eLeakGO      = 0.0;
+float threshRestGO = 0.0;
+float eLeakGR      = 0.0; 
+float threshRestGR = 0.0;
+
+float eLeakSC          = 0.0;
+float threshRestSC     = 0.0;
+float eLeakBC          = 0.0;
+float threshRestBC     = 0.0;
+float eLeakPC          = 0.0;
+float threshRestPC     = 0.0;
+float initSynWofGRtoPC = 0.0;
+float eLeakIO          = 0.0;
+float threshRestIO     = 0.0;
+float eLeakNC          = 0.0;
+float threshRestNC     = 0.0;
+float initSynWofMFtoNC = 0.0;
 
 void populate_con_params(parsed_build_file &p_file)
 {
@@ -234,6 +251,25 @@ void populate_con_params(parsed_build_file &p_file)
 	ampl_go_to_gl            = std::stof(p_file.parsed_var_sections["connectivity"].param_map["ampl_go_to_gl"].value); 
 	std_dev_go_to_gl_ml      = std::stof(p_file.parsed_var_sections["connectivity"].param_map["std_dev_go_to_gl_ml"].value); 
 	std_dev_go_to_gl_s       = std::stof(p_file.parsed_var_sections["connectivity"].param_map["std_dev_go_to_gl_s"].value); 
+
+	/* act params */
+	eLeakGO      = std::stof(p_file.parsed_var_sections["activity"].param_map["eLeakGO"].value); 
+	threshRestGO = std::stof(p_file.parsed_var_sections["activity"].param_map["threshRestGO"].value); 
+	eLeakGR      = std::stof(p_file.parsed_var_sections["activity"].param_map["eLeakGR"].value); 
+	threshRestGR = std::stof(p_file.parsed_var_sections["activity"].param_map["threshRestGR"].value); 
+	
+	eLeakSC          = std::stof(p_file.parsed_var_sections["activity"].param_map["eLeakSC"].value);
+	threshRestSC     = std::stof(p_file.parsed_var_sections["activity"].param_map["threshRestSC"].value);
+	eLeakBC          = std::stof(p_file.parsed_var_sections["activity"].param_map["eLeakBC"].value);
+	threshRestBC     = std::stof(p_file.parsed_var_sections["activity"].param_map["threshRestBC"].value);
+	eLeakPC          = std::stof(p_file.parsed_var_sections["activity"].param_map["eLeakPC"].value);
+	threshRestPC     = std::stof(p_file.parsed_var_sections["activity"].param_map["threshRestPC"].value);
+	initSynWofGRtoPC = std::stof(p_file.parsed_var_sections["activity"].param_map["initSynWofGRtoPC"].value);
+	eLeakIO          = std::stof(p_file.parsed_var_sections["activity"].param_map["eLeakIO"].value);
+	threshRestIO     = std::stof(p_file.parsed_var_sections["activity"].param_map["threshRestIO"].value);
+	eLeakNC          = std::stof(p_file.parsed_var_sections["activity"].param_map["eLeakNC"].value);
+	threshRestNC     = std::stof(p_file.parsed_var_sections["activity"].param_map["threshRestNC"].value);
+	initSynWofMFtoNC = std::stof(p_file.parsed_var_sections["activity"].param_map["initSynWofMFtoNC"].value);
 
 	con_params_populated = true;
 }
@@ -351,6 +387,25 @@ void read_con_params(std::fstream &in_param_buf)
 	in_param_buf.read((char *)&std_dev_go_to_gl_ml, sizeof(float));
 	in_param_buf.read((char *)&std_dev_go_to_gl_s, sizeof(float));
 
+	/* act params */
+	in_param_buf.read((char *)&eLeakGO, sizeof(float));
+	in_param_buf.read((char *)&threshRestGO, sizeof(float));
+	in_param_buf.read((char *)&eLeakGR, sizeof(float)); 
+	in_param_buf.read((char *)&threshRestGR, sizeof(float));
+
+	in_param_buf.read((char *)&eLeakSC, sizeof(float));
+	in_param_buf.read((char *)&threshRestSC, sizeof(float));
+	in_param_buf.read((char *)&eLeakBC, sizeof(float));
+	in_param_buf.read((char *)&threshRestBC, sizeof(float));
+	in_param_buf.read((char *)&eLeakPC, sizeof(float));
+	in_param_buf.read((char *)&threshRestPC, sizeof(float));
+	in_param_buf.read((char *)&initSynWofGRtoPC, sizeof(float));
+	in_param_buf.read((char *)&eLeakIO, sizeof(float));
+	in_param_buf.read((char *)&threshRestIO, sizeof(float));
+	in_param_buf.read((char *)&eLeakNC, sizeof(float));
+	in_param_buf.read((char *)&threshRestNC, sizeof(float));
+	in_param_buf.read((char *)&initSynWofMFtoNC, sizeof(float));
+
 	con_params_populated = true;
 }
 
@@ -466,5 +521,23 @@ void write_con_params(std::fstream &out_param_buf)
 	out_param_buf.write((char *)&ampl_go_to_gl, sizeof(float));
 	out_param_buf.write((char *)&std_dev_go_to_gl_ml, sizeof(float));
 	out_param_buf.write((char *)&std_dev_go_to_gl_s, sizeof(float));
+
+	out_param_buf.write((char *)&eLeakGO, sizeof(float));
+	out_param_buf.write((char *)&threshRestGO, sizeof(float));
+	out_param_buf.write((char *)&eLeakGR, sizeof(float)); 
+	out_param_buf.write((char *)&threshRestGR, sizeof(float));
+
+	out_param_buf.write((char *)&eLeakSC, sizeof(float));
+	out_param_buf.write((char *)&threshRestSC, sizeof(float));
+	out_param_buf.write((char *)&eLeakBC, sizeof(float));
+	out_param_buf.write((char *)&threshRestBC, sizeof(float));
+	out_param_buf.write((char *)&eLeakPC, sizeof(float));
+	out_param_buf.write((char *)&threshRestPC, sizeof(float));
+	out_param_buf.write((char *)&initSynWofGRtoPC, sizeof(float));
+	out_param_buf.write((char *)&eLeakIO, sizeof(float));
+	out_param_buf.write((char *)&threshRestIO, sizeof(float));
+	out_param_buf.write((char *)&eLeakNC, sizeof(float));
+	out_param_buf.write((char *)&threshRestNC, sizeof(float));
+	out_param_buf.write((char *)&initSynWofMFtoNC, sizeof(float));
 }
 

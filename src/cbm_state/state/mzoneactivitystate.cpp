@@ -97,19 +97,16 @@ void MZoneActivityState::allocateMemory()
 
 void MZoneActivityState::initializeVals(int randSeed)
 {
-	//uncomment for actual runs 
-	//CRandomSFMT0 randGen(randSeed);
-
 	// only actively initializing those arrays whose initial values we want
 	// differ from the default initilizer value
 
 	// sc
-	std::fill(threshSC.get(), threshSC.get() + num_sc, threshRestSC);
 	std::fill(vSC.get(), vSC.get() + num_sc, eLeakSC);
+	std::fill(threshSC.get(), threshSC.get() + num_sc, threshRestSC);
 
 	// bc
-	std::fill(threshBC.get(), threshBC.get() + num_bc, threshRestBC);
 	std::fill(vBC.get(), vBC.get() + num_bc, eLeakBC);
+	std::fill(threshBC.get(), threshBC.get() + num_bc, threshRestBC);
 
 	// pc
 	std::fill(vPC.get(), vPC.get() + num_pc, eLeakPC);
@@ -125,8 +122,8 @@ void MZoneActivityState::initializeVals(int randSeed)
 	pcPopAct            = 0;
 
 	// IO
-	std::fill(threshIO.get(), threshIO.get() + num_io, threshRestIO);
 	std::fill(vIO.get(), vIO.get() + num_io, eLeakIO);
+	std::fill(threshIO.get(), threshIO.get() + num_io, threshRestIO);
 
 	errDrive = 0;
 	
@@ -134,8 +131,8 @@ void MZoneActivityState::initializeVals(int randSeed)
 	noLTPMFNC = 0;
 	noLTDMFNC = 0;
 
-	std::fill(threshNC.get(), threshNC.get() + num_nc, threshRestNC);
 	std::fill(vNC.get(), vNC.get() + num_nc, eLeakNC);
+	std::fill(threshNC.get(), threshNC.get() + num_nc, threshRestNC);
 
 	std::fill(mfSynWeightNC.get(), mfSynWeightNC.get()
 		+ num_nc * num_p_nc_from_mf_to_nc, initSynWofMFtoNC);

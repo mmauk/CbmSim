@@ -147,11 +147,12 @@ void InNetActivityState::initializeVals()
 	// go
 	std::fill(synWscalerGOtoGO.get(), synWscalerGOtoGO.get() + num_go, 1.0);
 	std::fill(synWscalerGRtoGO.get(), synWscalerGRtoGO.get() + num_go, 1.0);
+
 	std::fill(vGO.get(), vGO.get() + num_go, eLeakGO);
 	std::fill(threshCurGO.get(), threshCurGO.get() + num_go, threshRestGO);
 
 	// gr
-	std::fill(threshGR.get(), threshGR.get() + num_gr, threshRestGR);
 	std::fill(vGR.get(), vGR.get() + num_gr, eLeakGR);
+	std::fill(threshGR.get(), threshGR.get() + num_gr, threshRestGR);
 }
 

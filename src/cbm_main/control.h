@@ -49,15 +49,14 @@ enum sim_run_state {NOT_IN_RUN, IN_RUN_NO_PAUSE, IN_RUN_PAUSE};
 class Control 
 {
 	public:
-		Control(parsed_build_file &p_file);
 		Control(parsed_commandline &p_cl);
-		Control(enum vis_mode sim_vis_mode);
 		Control(char ***argv, enum vis_mode sim_vis_mode);
 		~Control();
 
 		// Objects
 	
 		experiment expt; // TODO: find a better scheme for this
+		trials_data trial_data;
 		CBMState *simState     = NULL;
 		CBMSimCore *simCore    = NULL;
 		ECMFPopulation *mfFreq = NULL;
@@ -77,6 +76,7 @@ class Control
 		std::string curr_build_file_name = "";
 		std::string curr_expt_file_name = "";
 		std::string curr_sim_file_name  = "";
+		std::string out_sim_file_name  = "";
 
 		// params that I do not know how to categorize
 		float goMin = 0.26; 
@@ -179,7 +179,7 @@ class Control
 
 		const ct_uint8_t* goSpks; 
 
-		void build_sim(parsed_commandline &p_cl);
+		void build_sim();
 		
 		void init_experiment(std::string in_expt_filename);
 		void init_sim(std::string in_sim_filename);
