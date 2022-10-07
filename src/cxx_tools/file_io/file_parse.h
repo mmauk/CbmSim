@@ -62,7 +62,7 @@ typedef struct
 	ct_uint32_t *use_css;
 	ct_uint32_t *cs_onsets;
 	ct_uint32_t *cs_lens;
-	ct_uint32_t *cs_percents;
+	float       *cs_percents;
 	ct_uint32_t *use_uss;
 	ct_uint32_t *us_onsets;
 } trials_data;
@@ -174,7 +174,7 @@ void parse_lexed_expt_file(lexed_file &l_file, parsed_expt_file &e_file);
  */
 void parse_lexed_build_file(lexed_file &l_file, parsed_build_file &p_file);
 
-void translate_parsed_expt_file(parsed_expt_file &pe_file, trials_data &td);
+void translate_parsed_trials(parsed_expt_file &pe_file, trials_data &td);
 
 void print_tokenized_file(tokenized_file &t_file);
 

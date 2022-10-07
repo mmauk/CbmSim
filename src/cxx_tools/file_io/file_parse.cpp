@@ -508,35 +508,76 @@ void parse_lexed_build_file(lexed_file &l_file, parsed_build_file &b_file)
 	}
 }
 
-void translate_parsed_expt_file(parsed_expt_file &pe_file, trials_data &td)
+void allocate_trials_data(trials_data &td, ct_uint32_t num_trials)
 {
-//	ct_uint32_t temp_num_trials = 1;
-//	for (auto sess_pair : pe_file.expt_info.sessions)
-//	{
-//		/* check if session is actually defined */
-//		if (pe_file.session_map.find(sess_pair.first) != pe_file.session_map.end())
-//		{
-//			temp_num_trials *= std::stoi(sess_pair.second);
-//			for (auto blk_pair : pe_file.session_map[sess_pair.first].blocks)
-//			{
-//				/* check if block is actually defined */
-//				if (pe_file.block_map.find(blk_pair.first) != pe_file.block_map.end())
-//				{
-//					temp_num_trials *= std::stoi(blk_pair.second);
-//					for (auto trial_pair : pe_file.block_map[blk_pair.first].trials)
-//					{
-//						/* check if trial is actually defined */
-//						if (pe_file.trial_map.find(trial_pair.first) != pe_file.trial_map.end())
-//						{
-//							temp_num_trials *= std::stoi(trial_pair.second);
-//						}
-//						
-//					}
-//				}
-//				
-//			}
-//		}
-//	}
+	td.trial_names = (std::string *)calloc(num_trials, sizeof(std::string));
+	td.use_css = (ct_uint32_t *)calloc(num_trials, sizeof(ct_uint32_t));
+	td.cs_onsets = (ct_uint32_t *)calloc(num_trials, sizeof(ct_uint32_t));
+	td.cs_lens = (ct_uint32_t *)calloc(num_trials, sizeof(ct_uint32_t));
+	td.cs_percents = (float *)calloc(num_trials, sizeof(float));
+	td.use_uss = (ct_uint32_t *)calloc(num_trials, sizeof(ct_uint32_t));
+	td.us_onsets = (ct_uint32_t *)calloc(num_trials, sizeof(ct_uint32_t));
+}
+
+void initialize_trials_data(trials_data &td, parsed_trial_section &pt_section)
+{
+	/*
+	 * strategy for obtaining the trial names in the right order:
+	 * traverse the tree, computing the total number of blocks from num_session_a * num_block_a e.g.,
+	 * and then in block_a, looping that computed number of times, and for each iteration
+	 * setting num_trial_a and num_trial_b in that order. You then repeat the process for all blocks
+	 * and all sessions: thus the for loop is run only under the condition that you have reached the 
+	 * block definition. Also, you have to keep track of your offset inside of the trial_names array OR
+	 * you could check for the first occurence of the empty string each time you reach the block def
+	 * (possibly dangerous, and dirty to boot)
+	 *
+	 */
+}
+
+void delete_trials_data(trials_data &td)
+{
+	free(td.trial_names);
+	free(td.use_css);
+	free(td.cs_onsets);
+	free(td.cs_lens);
+	free(td.cs_percents);
+	free(td.use_uss);
+	free(td.us_onsets);
+}
+
+void calculate_num_trials_helper(parsed_trial_section &pt_section,
+		std::vector<pair> &in_vec, ct_uint32_t &temp_num_trials)
+{
+	ct_uint32_t temp_sum = 0;
+	for (auto vec_pair : in_vec)
+	{
+		ct_uint32_t temp_count = std::stoi(vec_pair.second);
+		if (pt_section.session_map.find(vec_pair.first) != pt_section.session_map.end())
+		{
+			calculate_num_trials_helper(pt_section, pt_section.session_map[vec_pair.first], temp_count);
+		}
+		else if (pt_section.block_map.find(vec_pair.first ) != pt_section.block_map.end())
+		{
+			calculate_num_trials_helper(pt_section, pt_section.block_map[vec_pair.first], temp_count);
+		}
+		temp_sum += temp_count;
+	}
+	temp_num_trials *= temp_sum;
+}
+
+ct_uint32_t calculate_num_trials(parsed_trial_section &pt_section)
+{
+	ct_uint32_t temp_num_trials = 1;
+	calculate_num_trials_helper(pt_section, pt_section.experiment, temp_num_trials);
+	return temp_num_trials;
+}
+
+void translate_parsed_trials(parsed_expt_file &pe_file, trials_data &td)
+{
+	td.num_trials = calculate_num_trials(pe_file.parsed_trial_info);
+	// no error checking on returned value, uh oh!
+	allocate_trials_data(td, td.num_trials);
+	initialize_trials_data(td, pe_file.parsed_trial_info);
 }
 
 /*
