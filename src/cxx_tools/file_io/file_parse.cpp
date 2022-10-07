@@ -519,6 +519,17 @@ void allocate_trials_data(trials_data &td, ct_uint32_t num_trials)
 	td.us_onsets = (ct_uint32_t *)calloc(num_trials, sizeof(ct_uint32_t));
 }
 
+void initialize_trial_names_helper(parsed_trial_section &pt_section, std::vector<pair> &in_vec, ct_uint32_t &temp_num_trials)
+{
+	for (auto vec_pair : in_vec)
+	{
+		if (pt_section.block_map.find(vec_pair.first) != pt_section.block_map.end())
+		{
+
+		}
+	}
+}
+
 void initialize_trials_data(trials_data &td, parsed_trial_section &pt_section)
 {
 	/*
