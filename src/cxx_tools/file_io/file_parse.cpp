@@ -519,13 +519,37 @@ void allocate_trials_data(trials_data &td, ct_uint32_t num_trials)
 	td.us_onsets = (ct_uint32_t *)calloc(num_trials, sizeof(ct_uint32_t));
 }
 
-void initialize_trial_names_helper(parsed_trial_section &pt_section, std::vector<pair> &in_vec, ct_uint32_t &temp_num_trials)
+void initialize_trial_names_helper(trials_data &td, parsed_trial_section &pt_section,
+	  std::vector<pair> &in_vec, ct_uint32_t temp_num_trials)
 {
+	std::vector<ct_uint32_t> rel_trial_nums;
 	for (auto vec_pair : in_vec)
 	{
-		if (pt_section.block_map.find(vec_pair.first) != pt_section.block_map.end())
+		if (pt_section.session_map.find(vec_pair.first) != pt_section.session_map.end())
 		{
-
+			initialize_trial_names_helper(td, pt_section, session_map[vec_pair.first], temp_num_trials * std::stoi(vec_pair.second));
+		}
+		else if (pt_section.block_map.find(vec_pair.first) != pt_section.block_map.end())
+		{
+			rel_trial_nums.push_back(std::stoi(vec_pair.second));
+		}
+	}
+	if (!rel_trial_nums.empty())
+	{
+		auto trial_names_index = std::find(std::begin(td.trial_names), std::end(td.trial_names), "");
+		if (trial_names_index != std::end(td.trial_names)) /* if havent reached end of list, we are good */
+		{
+			for (ct_uint32_t i = 0; i < std::stoi(temp_num_trials); i++)
+			{
+				for (ct_uint32_t j = 0; j < rel_trial_nums.length(); j++)
+				{
+					for (ct_uint32_t k = 0; k < rel_trial_nums[j]; k++)
+					{
+						*trial_names_index = in_vec[j].first;
+						trial_names_index++;
+					}
+				}
+			}
 		}
 	}
 }
