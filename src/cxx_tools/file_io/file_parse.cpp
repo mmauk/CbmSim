@@ -520,34 +520,36 @@ void allocate_trials_data(trials_data &td, ct_uint32_t num_trials)
 }
 
 void initialize_trial_names_helper(trials_data &td, parsed_trial_section &pt_section,
-	  std::vector<pair> &in_vec, ct_uint32_t temp_num_trials)
+	  std::vector<pair> &in_vec)
 {
-	std::vector<ct_uint32_t> rel_trial_nums;
 	for (auto vec_pair : in_vec)
 	{
-		if (pt_section.session_map.find(vec_pair.first) != pt_section.session_map.end())
+		if (pt_section.trial_map.find(vec_pair.first) != pt_section.trial_map.end())
 		{
-			initialize_trial_names_helper(td, pt_section, session_map[vec_pair.first], temp_num_trials * std::stoi(vec_pair.second));
-		}
-		else if (pt_section.block_map.find(vec_pair.first) != pt_section.block_map.end())
-		{
-			rel_trial_nums.push_back(std::stoi(vec_pair.second));
-		}
-	}
-	if (!rel_trial_nums.empty())
-	{
-		auto trial_names_index = std::find(std::begin(td.trial_names), std::end(td.trial_names), "");
-		if (trial_names_index != std::end(td.trial_names)) /* if havent reached end of list, we are good */
-		{
-			for (ct_uint32_t i = 0; i < std::stoi(temp_num_trials); i++)
+			auto first_empty = std::find(td.trial_names, td.trial_names + td.num_trials, "");
+			auto initial_empty = first_empty;
+			if (first_empty != td.trial_names + td.num_trials)
 			{
-				for (ct_uint32_t j = 0; j < rel_trial_nums.length(); j++)
+				ct_uint32_t this_num_trials = std::stoi(vec_pair.second);
+				while (first_empty != initial_empty + this_num_trials)
 				{
-					for (ct_uint32_t k = 0; k < rel_trial_nums[j]; k++)
-					{
-						*trial_names_index = in_vec[j].first;
-						trial_names_index++;
-					}
+					/* mad sus */
+					*first_empty = vec_pair.first;
+					first_empty++;
+				}
+			}
+		}
+		else
+		{
+			for (ct_uint32_t i = 0; i < std::stoi(vec_pair.second); i++)
+			{
+				if (pt_section.block_map.find(vec_pair.first) != pt_section.block_map.end())
+				{
+					initialize_trial_names_helper(td, pt_section, pt_section.block_map[vec_pair.first]);
+				}
+				else if (pt_section.session_map.find(vec_pair.first) != pt_section.session_map.end())
+				{
+					initialize_trial_names_helper(td, pt_section, pt_section.session_map[vec_pair.first]);
 				}
 			}
 		}
@@ -556,17 +558,16 @@ void initialize_trial_names_helper(trials_data &td, parsed_trial_section &pt_sec
 
 void initialize_trials_data(trials_data &td, parsed_trial_section &pt_section)
 {
-	/*
-	 * strategy for obtaining the trial names in the right order:
-	 * traverse the tree, computing the total number of blocks from num_session_a * num_block_a e.g.,
-	 * and then in block_a, looping that computed number of times, and for each iteration
-	 * setting num_trial_a and num_trial_b in that order. You then repeat the process for all blocks
-	 * and all sessions: thus the for loop is run only under the condition that you have reached the 
-	 * block definition. Also, you have to keep track of your offset inside of the trial_names array OR
-	 * you could check for the first occurence of the empty string each time you reach the block def
-	 * (possibly dangerous, and dirty to boot)
-	 *
-	 */
+	initialize_trial_names_helper(td, pt_section, pt_section.experiment);
+	for (ct_uint32_t i = 0; i < td.num_trials; i++)
+	{
+		td.use_css[i] = std::stoi(pt_section.trial_map[td.trial_names[i]]["use_cs"].value);
+		td.cs_onsets[i] = std::stoi(pt_section.trial_map[td.trial_names[i]]["cs_onset"].value);
+		td.cs_lens[i] = std::stoi(pt_section.trial_map[td.trial_names[i]]["cs_len"].value);
+		td.cs_percents[i] = std::stof(pt_section.trial_map[td.trial_names[i]]["cs_percent"].value);
+		td.use_uss[i] = std::stoi(pt_section.trial_map[td.trial_names[i]]["use_us"].value);
+		td.us_onsets[i] = std::stoi(pt_section.trial_map[td.trial_names[i]]["us_onset"].value);
+	}
 }
 
 void delete_trials_data(trials_data &td)

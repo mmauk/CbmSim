@@ -32,6 +32,11 @@ int main(int argc, char **argv)
 	parse_lexed_expt_file(l_e_file, e_file);
 	trials_data td = {};
 	translate_parsed_trials(e_file, td);
+	for (ct_uint32_t i = 0; i < td.num_trials; i++)
+	{
+		std::cout << td.trial_names[i] << "\n";
+	}
+	delete_trials_data(td);
 	//print_parsed_expt_file(e_file);
 
 	//tokenized_file t_b_file;

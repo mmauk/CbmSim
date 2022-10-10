@@ -174,7 +174,13 @@ void parse_lexed_expt_file(lexed_file &l_file, parsed_expt_file &e_file);
  */
 void parse_lexed_build_file(lexed_file &l_file, parsed_build_file &p_file);
 
+void allocate_trials_data(trials_data &td, ct_uint32_t num_trials);
+
+void initialize_trials_data(trials_data &td, parsed_trial_section &pt_section);
+
 void translate_parsed_trials(parsed_expt_file &pe_file, trials_data &td);
+
+void delete_trials_data(trials_data &td);
 
 void print_tokenized_file(tokenized_file &t_file);
 
