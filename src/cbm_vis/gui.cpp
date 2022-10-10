@@ -92,7 +92,9 @@ static void on_load_experiment_file(GtkWidget *widget, Control *control)
 
 static void on_load_sim_file(GtkWidget *widget, Control *control)
 {
-	load_file(widget, control, &Control::init_sim, "[ERROR]: Could not open simulation file.");
+	// TODO change the callback so that we are only loading in the sim file to control,
+	// not initing the whole sim (need the expt file to do so (10/10/2022))
+	//load_file(widget, control, &Control::init_sim, "[ERROR]: Could not open simulation file.");
 }
 
 static void on_save_state(GtkWidget *widget, Control *control)

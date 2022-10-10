@@ -48,7 +48,7 @@ std::map<std::string, lexeme> token_defs =
 		{ "activity", REGION_TYPE },
 		{ "trial_def", REGION_TYPE },
 		{ "mf_input", REGION_TYPE },
-		{ "act_param", REGION_TYPE },
+		{ "activity", REGION_TYPE },
 		{ "int", TYPE_NAME },
 		{ "float", TYPE_NAME },
 		{ "[a-zA-Z_]{1}[a-zA-Z0-9_]*", VAR_IDENTIFIER },
@@ -309,7 +309,7 @@ void parse_region(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, p
 		std::string region_type)
 {
 	if (region_type == "mf_input"
-		|| region_type == "act_param")
+		|| region_type == "activity")
 	{
 		parse_var_section(ltp, l_file, e_file, region_type);
 	}

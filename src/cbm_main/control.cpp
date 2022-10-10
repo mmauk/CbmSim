@@ -55,25 +55,18 @@ Control::Control(parsed_commandline &p_cl)
 		tokenize_file(curr_expt_file_name, t_file);
 		lex_tokenized_file(t_file, l_file);
 		parse_lexed_expt_file(l_file, pe_file);
-		
-		// TODO: write translate_expt_file -> trial_info struct (more efficient)
-		init_sim(curr_sim_file_name);
+		translate_parsed_trials(pe_file, td);
+		trials_data_initialized = true;
+		PSTHColSize = msPreCS + td.cs_lens[0] + msPostCS;
+		init_sim(pe_file, curr_sim_file_name);
 	}
 }
 
-//Control::Control(char ***argv, enum vis_mode sim_vis_mode)
-//{
-//	std::string in_expt_filename = "";
-//	std::string in_sim_filename = "";
-//	get_in_expt_file(argv, in_expt_filename);
-//	get_in_sim_file(argv, in_sim_filename);
-//	init_experiment(in_expt_filename);
-//	init_sim(in_sim_filename);
-//	this->sim_vis_mode = sim_vis_mode;
-//}
-
 Control::~Control()
 {
+	// delete allocated trials_data memory
+	if (trials_data_initialized) delete_trials_data(td);
+
 	// delete all dynamic objects
 	if (simState) delete simState;
 	if (simCore)  delete simCore;
@@ -102,7 +95,7 @@ void Control::init_experiment(std::string in_expt_filename)
 	std::cout << "[INFO]: Finished loading Experiment file.\n";
 }
 
-void Control::init_sim(std::string in_sim_filename)
+void Control::init_sim(parsed_expt_file &pe_file, std::string in_sim_filename)
 {
 	//if (sim_initialized) 
 	//{
@@ -121,7 +114,7 @@ void Control::init_sim(std::string in_sim_filename)
 	std::cout << "[INFO]: Initializing simulation...\n";
 	std::fstream sim_file_buf(in_sim_filename.c_str(), std::ios::in | std::ios::binary);
 	read_con_params(sim_file_buf);
-	read_act_params(sim_file_buf);
+	populate_act_params(pe_file);
 	simState = new CBMState(numMZones, sim_file_buf);
 	simCore  = new CBMSimCore(simState, gpuIndex, gpuP2);
 	mfFreq   = new ECMFPopulation(num_mf, mfRandSeed, CSTonicMFFrac, CSPhasicMFFrac,
@@ -142,7 +135,7 @@ void Control::reset_sim(std::string in_sim_filename)
 {
 	std::fstream sim_file_buf(in_sim_filename.c_str(), std::ios::in | std::ios::binary);
 	read_con_params(sim_file_buf);
-	read_act_params(sim_file_buf);
+	//read_act_params(sim_file_buf);
 	simState->readState(sim_file_buf);
 	// TODO: simCore, mfFreq, mfs
 	
@@ -171,7 +164,7 @@ void Control::save_sim_to_file(std::string outSimFile)
 {
 	std::fstream outSimFileBuffer(outSimFile.c_str(), std::ios::out | std::ios::binary);
 	write_con_params(outSimFileBuffer);
-	write_act_params(outSimFileBuffer);
+	//write_act_params(outSimFileBuffer);
 	if (!simCore) simState->writeState(outSimFileBuffer);
 	else simCore->writeState(outSimFileBuffer);
 	outSimFileBuffer.close();
@@ -371,16 +364,16 @@ void Control::runExperiment(struct gui *gui)
 
 	if (gui == NULL) run_state = IN_RUN_NO_PAUSE;
 	trial = 0;
-	while (trial < expt.num_trials && run_state != NOT_IN_RUN)
+	while (trial < td.num_trials && run_state != NOT_IN_RUN)
 	{
-		std::string trialName = expt.trials[trial].TrialName;
+		std::string trialName = td.trial_names[trial];
 
-		int useCS     = expt.trials[trial].CSuse;
-		int onsetCS   = expt.trials[trial].CSonset;
-		int offsetCS  = expt.trials[trial].CSoffset;
-		int percentCS = expt.trials[trial].CSpercent;
-		int useUS     = expt.trials[trial].USuse;
-		int onsetUS   = expt.trials[trial].USonset;
+		ct_uint32_t useCS     = td.use_css[trial];
+		ct_uint32_t onsetCS   = td.cs_onsets[trial];
+		ct_uint32_t csLength  = td.cs_lens[trial];
+		ct_uint32_t percentCS = td.cs_percents[trial];
+		ct_uint32_t useUS     = td.use_uss[trial];
+		ct_uint32_t onsetUS   = td.us_onsets[trial];
 		
 		int PSTHCounter = 0;
 		float gGRGO_sum = 0;
@@ -397,12 +390,12 @@ void Control::runExperiment(struct gui *gui)
 			{
 				simCore->updateErrDrive(0, 0.3);
 			}
-			if (ts < onsetCS || ts >= offsetCS)
+			if (ts < onsetCS || ts >= onsetCS + csLength)
 			{
 				mfAP = mfs->calcPoissActivity(mfFreq->getMFBG(),
 					  simCore->getMZoneList());
 			}
-			if (ts >= onsetCS && ts < offsetCS)
+			if (ts >= onsetCS && ts < onsetCS + csLength)
 			{
 				mfAP = (useCS == 1) ? mfs->calcPoissActivity(mfFreq->getMFInCSTonicA(), simCore->getMZoneList())
 									: mfs->calcPoissActivity(mfFreq->getMFBG(), simCore->getMZoneList());
@@ -412,9 +405,9 @@ void Control::runExperiment(struct gui *gui)
 			simCore->updateTrueMFs(isTrueMF);
 			simCore->updateMFInput(mfAP);
 			simCore->calcActivity(spillFrac); 
-			//update_spike_sums(ts, onsetCS, offsetCS);
+			//update_spike_sums(ts, onsetCS, onsetCS + csLength);
 
-			if (ts >= onsetCS && ts < offsetCS)
+			if (ts >= onsetCS && ts < onsetCS + csLength)
 			{
 				mfgoG  = simCore->getInputNet()->exportgSum_MFGO();
 				grgoG  = simCore->getInputNet()->exportgSum_GRGO();
@@ -429,16 +422,16 @@ void Control::runExperiment(struct gui *gui)
 			}
 			
 			/* upon offset of CS, report what we got*/
-			if (ts == offsetCS)
+			if (ts == onsetCS + csLength)
 			{
 				countGOSpikes(goSpkCounter, medTrials);
-				std::cout << "[INFO]: Mean gGRGO   = " << gGRGO_sum / (num_go * (offsetCS - onsetCS)) << "\n";
-				std::cout << "[INFO]: Mean gMFGO   = " << gMFGO_sum / (num_go * (offsetCS - onsetCS)) << "\n";
+				std::cout << "[INFO]: Mean gGRGO   = " << gGRGO_sum / (num_go * csLength) << "\n";
+				std::cout << "[INFO]: Mean gMFGO   = " << gMFGO_sum / (num_go * csLength) << "\n";
 				std::cout << "[INFO]: GR:MF ratio  = " << gGRGO_sum / gMFGO_sum << "\n";
 			}
 			
 			/* data collection */
-			if (ts >= onsetCS - msPreCS && ts < offsetCS + msPostCS)
+			if (ts >= onsetCS - msPreCS && ts < onsetCS + csLength + msPostCS)
 			{
 				fill_rast_internal(PSTHCounter);
 				PSTHCounter++;
@@ -458,7 +451,7 @@ void Control::runExperiment(struct gui *gui)
 			// for now, compute the mean and median firing rates for all cells if win is visible
 			// if (firing_rates_win_visible(gui))
 			// {
-			// 	calculate_firing_rates(onsetCS, offsetCS);
+			// 	calculate_firing_rates(onsetCS, onsetCS + csLength);
 			// 	gdk_threads_add_idle((GSourceFunc)update_fr_labels, gui);
 			// }
 			if (run_state == IN_RUN_PAUSE)

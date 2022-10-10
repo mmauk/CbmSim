@@ -50,19 +50,19 @@ class Control
 {
 	public:
 		Control(parsed_commandline &p_cl);
-		Control(char ***argv, enum vis_mode sim_vis_mode);
 		~Control();
 
 		// Objects
 	
 		experiment expt; // TODO: find a better scheme for this
-		trials_data trial_data;
+		trials_data td = {};
 		CBMState *simState     = NULL;
 		CBMSimCore *simCore    = NULL;
 		ECMFPopulation *mfFreq = NULL;
 		PoissonRegenCells *mfs = NULL;
 
 		enum vis_mode sim_vis_mode = NO_VIS;
+		bool trials_data_initialized = false;
 		bool experiment_initialized = false;
 		bool sim_initialized = false;
 
@@ -101,7 +101,7 @@ class Control
 
 		float nucCollFrac = 0.02;
 		float csMinRate = 100.0; // uh look at tonic lol
- 		float csMaxRate = 110.0;
+		float csMaxRate = 110.0;
 
 		float CSTonicMFFrac = 0.05;
 		float tonicFreqMin  = 100.0;
@@ -182,7 +182,7 @@ class Control
 		void build_sim();
 		
 		void init_experiment(std::string in_expt_filename);
-		void init_sim(std::string in_sim_filename);
+		void init_sim(parsed_expt_file &pe_file, std::string in_sim_filename);
 		void reset_sim(std::string in_sim_filename);
 
 		void save_sim_state_to_file(std::string outStateFile); /* TODO: deprecate, what else do we use for? */

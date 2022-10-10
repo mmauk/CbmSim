@@ -123,6 +123,7 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 				break;
 		}
 	}
+	validate_commandline(p_cl);
 }
 
 void validate_commandline(parsed_commandline &p_cl)
@@ -156,6 +157,15 @@ void validate_commandline(parsed_commandline &p_cl)
 		if (!p_cl.output_sim_file.empty())
 		{
 			p_cl.output_sim_file = INPUT_DATA_PATH + p_cl.output_sim_file;
+		}
+		if (!p_cl.input_sim_file.empty())
+		{
+			p_cl.input_sim_file = INPUT_DATA_PATH + p_cl.input_sim_file;
+		}
+		else
+		{
+			std::cerr << "[IO_ERROR]: No input simulation specified in experiment mode. Exiting...\n";
+			exit(8);
 		}
 		if (p_cl.vis_mode.empty())
 		{

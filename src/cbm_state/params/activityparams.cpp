@@ -183,7 +183,7 @@ float gLeakBC             = 0.0;
 float grgoW               = 0.0;
 float mfgoW               = 0.0;
 
-void populate_act_params(parsed_build_file &p_file)
+void populate_act_params(parsed_expt_file &p_file)
 {
 	coupleRiRjRatioGO          = std::stof(p_file.parsed_var_sections["activity"].param_map["coupleRiRjRatioGO"].value); 
 	coupleRiRjRatioIO          = std::stof(p_file.parsed_var_sections["activity"].param_map["coupleRiRjRatioIO"].value); 

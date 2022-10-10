@@ -21,7 +21,7 @@
 #include "activityparams.h"
 #include "file_parse.h"
 
-int main(int argc, char **argv)
+int main2(int argc, char **argv)
 {
 	tokenized_file t_e_file;
 	lexed_file l_e_file;
@@ -54,11 +54,10 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-int main2(int argc, char **argv) 
+int main(int argc, char **argv) 
 {
 	parsed_commandline p_cl = {};
-	parse_commandline(&argc, &argv, p_cl);
-	validate_commandline(p_cl);
+	parse_commandline(&argc, &argv, p_cl); /* includes validation step */
 
 	Control *control = new Control(p_cl);
 	int exit_status = 0;
