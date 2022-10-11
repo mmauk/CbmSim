@@ -134,6 +134,15 @@ class Control
 		int msPostCS = 400; // was 1000 (08/09/2022)
 		int PSTHColSize = 0; // derived param, from msPreCS, msPostCS and csLength 
 
+		std::string mf_raster_file = "";
+		std::string gr_raster_file = "";
+		std::string go_raster_file = "";
+		std::string bc_raster_file = "";
+		std::string sc_raster_file = "";
+		std::string pc_raster_file = "";
+		std::string io_raster_file = "";
+		std::string nc_raster_file = "";
+
 		struct cell_spike_sums spike_sums[NUM_CELL_TYPES] = {{}};
 		struct cell_firing_rates firing_rates[NUM_CELL_TYPES] = {{}};
 		const ct_uint8_t *cell_spikes[NUM_CELL_TYPES];
@@ -201,6 +210,7 @@ class Control
 		void save_sc_psth_to_file(std::string out_sc_psth_file);
 		void save_mf_psth_to_file(std::string out_mf_psth_file);
 
+		void get_raster_filenames(std::map<std::string, std::string> &raster_files);
 		void initialize_spike_sums();
 		void initialize_rast_internal();
 		void initializeOutputArrays();

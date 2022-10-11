@@ -57,7 +57,9 @@ Control::Control(parsed_commandline &p_cl)
 		parse_lexed_expt_file(l_file, pe_file);
 		translate_parsed_trials(pe_file, td);
 		trials_data_initialized = true;
+		// TODO: move this somewhere else yike
 		PSTHColSize = msPreCS + td.cs_lens[0] + msPostCS;
+		get_raster_filenames(p_cl.raster_files);
 		init_sim(pe_file, curr_sim_file_name);
 	}
 }
@@ -282,6 +284,45 @@ void Control::save_mf_psth_to_file(std::string out_mf_psth_file)
 	out_mf_psth_file_buffer.close();
 }
 
+void Control::get_raster_filenames(std::map<std::string, std::string> &raster_files)
+{
+	if (!raster_files.empty())
+	{
+		if (raster_files.find("MF") != raster_files.end())
+		{
+			mf_raster_file = raster_files["MF"];
+		}
+		if (raster_files.find("GR") != raster_files.end())
+		{
+			gr_raster_file = raster_files["GR"];
+		}
+		if (raster_files.find("GO") != raster_files.end())
+		{
+			go_raster_file = raster_files["GO"];
+		}
+		if (raster_files.find("BC") != raster_files.end())
+		{
+			bc_raster_file = raster_files["BC"];
+		}
+		if (raster_files.find("SC") != raster_files.end())
+		{
+			sc_raster_file = raster_files["SC"];
+		}
+		if (raster_files.find("PC") != raster_files.end())
+		{
+			pc_raster_file = raster_files["PC"];
+		}
+		if (raster_files.find("IO") != raster_files.end())
+		{
+			io_raster_file = raster_files["IO"];
+		}
+		if (raster_files.find("NC") != raster_files.end())
+		{
+			nc_raster_file = raster_files["NC"];
+		}
+	}
+}
+
 void Control::initialize_spike_sums()
 {
 	spike_sums[MF].num_cells  = num_mf;
@@ -307,15 +348,40 @@ void Control::initialize_spike_sums()
 
 void Control::initialize_rast_internal()
 {
-	all_mf_rast_internal    = allocate2DArray<ct_uint8_t>(num_mf, PSTHColSize);
-	all_go_rast_internal    = allocate2DArray<ct_uint8_t>(num_go, PSTHColSize);
-	sample_gr_rast_internal = allocate2DArray<ct_uint8_t>(4096, PSTHColSize);
-	all_pc_rast_internal    = allocate2DArray<ct_uint8_t>(num_pc, PSTHColSize);
-	all_nc_rast_internal    = allocate2DArray<ct_uint8_t>(num_nc, PSTHColSize);
-	all_sc_rast_internal    = allocate2DArray<ct_uint8_t>(num_sc, PSTHColSize);
-	all_bc_rast_internal    = allocate2DArray<ct_uint8_t>(num_bc, PSTHColSize);
-	all_io_rast_internal    = allocate2DArray<ct_uint8_t>(num_io, PSTHColSize);
+	if (!mf_raster_file.empty())
+	{
+		all_mf_rast_internal    = allocate2DArray<ct_uint8_t>(num_mf, PSTHColSize);
+	}
+	if (!gr_raster_file.empty())
+	{
+		sample_gr_rast_internal = allocate2DArray<ct_uint8_t>(4096, PSTHColSize);
+	}
+	if (!go_raster_file.empty())
+	{
+		all_go_rast_internal    = allocate2DArray<ct_uint8_t>(num_go, PSTHColSize);
+	}
+	if (!bc_raster_file.empty())
+	{
+		all_bc_rast_internal    = allocate2DArray<ct_uint8_t>(num_bc, PSTHColSize);
+	}
+	if (!sc_raster_file.empty())
+	{
+		all_sc_rast_internal    = allocate2DArray<ct_uint8_t>(num_sc, PSTHColSize);
+	}
+	if (!pc_raster_file.empty())
+	{
+		all_pc_rast_internal    = allocate2DArray<ct_uint8_t>(num_pc, PSTHColSize);
+	}
+	if (!io_raster_file.empty())
+	{
+		all_io_rast_internal    = allocate2DArray<ct_uint8_t>(num_io, PSTHColSize);
+	}
+	if (!nc_raster_file.empty())
+	{
+		all_nc_rast_internal    = allocate2DArray<ct_uint8_t>(num_nc, PSTHColSize);
+	}
 
+	// TODO: find a way to initialize only within gui mode
 	all_pc_vm_rast_internal = allocate2DArray<float>(num_pc, PSTHColSize);
 	all_nc_vm_rast_internal = allocate2DArray<float>(num_nc, PSTHColSize);
 	all_io_vm_rast_internal = allocate2DArray<float>(num_io, PSTHColSize);
@@ -325,24 +391,48 @@ void Control::initialize_rast_internal()
 
 void Control::initializeOutputArrays()
 {
-	all_mf_rast_size    = num_mf * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
-	all_go_rast_size    = num_go * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
-	sample_gr_rast_size = 4096 * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
-	all_pc_rast_size    = num_pc * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
-	all_nc_rast_size    = num_nc * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
-	all_sc_rast_size    = num_sc * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
-	all_bc_rast_size    = num_bc * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
-	all_io_rast_size    = num_io * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
+	if (!mf_raster_file.empty())
+	{
+		all_mf_rast_size = num_mf * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
+		allMFRaster      = (ct_uint8_t *)calloc(all_mf_rast_size, sizeof(ct_uint8_t));
+	}
+	if (!gr_raster_file.empty())
+	{
+		sample_gr_rast_size = 4096 * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
+		sampleGRRaster      = (ct_uint8_t *)calloc(sample_gr_rast_size, sizeof(ct_uint8_t));
+	}
+	if (!go_raster_file.empty())
+	{
+		all_go_rast_size = num_go * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
+		allGORaster      = (ct_uint8_t *)calloc(all_go_rast_size, sizeof(ct_uint8_t));
+	}
+	if (!bc_raster_file.empty())
+	{
+		all_bc_rast_size = num_bc * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
+		allBCRaster      = (ct_uint8_t *)calloc(all_bc_rast_size, sizeof(ct_uint8_t));
+	}
+	if (!sc_raster_file.empty())
+	{
+		all_sc_rast_size = num_sc * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
+		allSCRaster      = (ct_uint8_t *)calloc(all_sc_rast_size, sizeof(ct_uint8_t));
+	}
+	if (!pc_raster_file.empty())
+	{
+		all_pc_rast_size = num_pc * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
+		allPCRaster      = (ct_uint8_t *)calloc(all_pc_rast_size, sizeof(ct_uint8_t));
+	}
+	if (!io_raster_file.empty())
+	{
+		all_io_rast_size = num_io * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
+		allIORaster      = (ct_uint8_t *)calloc(all_io_rast_size, sizeof(ct_uint8_t));
+	}
+	if (!nc_raster_file.empty())
+	{
+		all_nc_rast_size = num_nc * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
+		allNCRaster      = (ct_uint8_t *)calloc(all_nc_rast_size, sizeof(ct_uint8_t));
+	}
 
-	allMFRaster = (ct_uint8_t *)calloc(all_mf_rast_size, sizeof(ct_uint8_t));
-	allGORaster = (ct_uint8_t *)calloc(all_go_rast_size, sizeof(ct_uint8_t));
-	sampleGRRaster = (ct_uint8_t *)calloc(sample_gr_rast_size, sizeof(ct_uint8_t));
-	allPCRaster = (ct_uint8_t *)calloc(all_pc_rast_size, sizeof(ct_uint8_t));
-	allNCRaster = (ct_uint8_t *)calloc(all_nc_rast_size, sizeof(ct_uint8_t));
-	allSCRaster = (ct_uint8_t *)calloc(all_sc_rast_size, sizeof(ct_uint8_t));
-	allBCRaster = (ct_uint8_t *)calloc(all_bc_rast_size, sizeof(ct_uint8_t));
-	allIORaster = (ct_uint8_t *)calloc(all_io_rast_size, sizeof(ct_uint8_t));
-
+	// TODO: find a way to initialize only within gui mode
 	sample_pfpc_syn_weights = new float[4096];
 	output_arrays_initialized = true;
 }
@@ -353,14 +443,6 @@ void Control::runExperiment(struct gui *gui)
 	double start;
 	double end;
 	int goSpkCounter[num_go] = {0};
-
-	//gen_gr_sample(gr_indices, 4096, num_gr);
-
-	//FILE *fp = NULL;
-	//if (sim_vis_mode == TUI)
-	//{
-	//	init_tty(&fp); 
-	//}
 
 	if (gui == NULL) run_state = IN_RUN_NO_PAUSE;
 	trial = 0;
@@ -385,8 +467,7 @@ void Control::runExperiment(struct gui *gui)
 
 		start = omp_get_wtime();
 		for (int ts = 0; ts < trialTime; ts++)
-		{
-			if (useUS && ts == onsetUS) /* deliver the US */
+		{ if (useUS && ts == onsetUS) /* deliver the US */
 			{
 				simCore->updateErrDrive(0, 0.3);
 			}
@@ -441,7 +522,6 @@ void Control::runExperiment(struct gui *gui)
 			{
 				if (gtk_events_pending()) gtk_main_iteration();
 			}
-			// else if (sim_vis_mode == TUI) process_input(&fp, ts, trial+1); /* process user input from kb */
 		}
 		end = omp_get_wtime();
 		std::cout << "[INFO]: '" << trialName << "' took " << (end - start) << "s.\n";
@@ -465,13 +545,12 @@ void Control::runExperiment(struct gui *gui)
 			}
 			//reset_spike_sums();
 		}
-		//fillOutputArrays();
+		fillOutputArrays();
 		trial++;
 	}
 	if (run_state == NOT_IN_RUN) std::cout << "[INFO]: Simulation terminated.\n";
 	else if (run_state == IN_RUN_NO_PAUSE) std::cout << "[INFO]: Simulation Completed.\n";
-	// if (sim_vis_mode == TUI) reset_tty(&fp); /* reset the tty for later use */
-	//saveOutputArraysToFile();
+	if (gui == NULL) saveOutputArraysToFile();
 	run_state = NOT_IN_RUN;
 }
 
@@ -531,42 +610,46 @@ void gen_gr_sample(int gr_indices[], int sample_size, int data_size)
 
 void Control::saveOutputArraysToFile()
 {
-	//std::cout << "Filling MF files..." << std::endl;
-	//std::string allMFRasterFileName = OUTPUT_DATA_PATH + "allMFRaster.bin";
-	//write2DCharArray(allMFRasterFileName, allMFRaster, num_mf, rasterColumnSize);
-
-	//std::cout << "[INFO]: Filling GO file..." << std::endl;
-	//std::string allGORasterFileName = OUTPUT_DATA_PATH + "allGORaster.bin";
-	//save_go_psth_to_file(allGORasterFileName);
-	//std::cout << "[INFO]: Done filling GO file." << std::endl;
-
-	//std::cout << "Filling GR files..." << std::endl;
-	//std::string sampleGRRasterFileName = OUTPUT_DATA_PATH + "sampleGRRaster.bin";
-	//write2DCharArray(sampleGRRasterFileName, sampleGRRaster, 4096, rasterColumnSize);
-
-	std::cout << "[INFO]: Filling PC file..." << std::endl;
-	std::string allPCRasterFileName = OUTPUT_DATA_PATH + "cr_prob_isi_1000_pc_raster_tune_09262022_go_fix_1_nc_fix_1_4.bin";
-	save_pc_psth_to_file(allPCRasterFileName);
-	std::cout << "[INFO]: Done filling PC file." << std::endl;
-
-	//std::cout << "[INFO]: Filling NC files..." << std::endl;
-	//std::string allNCRasterFileName = OUTPUT_DATA_PATH + "allNCRaster.bin";
-	//save_nc_psth_to_file(allNCRasterFileName);
-	//std::cout << "[INFO]: Done filling NC file." << std::endl;
-
-	//std::cout << "Filling SC files..." << std::endl;
-	//std::string allSCRasterFileName = OUTPUT_DATA_PATH + "allSCRaster.bin";
-	//save_sc_psth_to_file(allSCRasterFileName);
-	//std::cout << "[INFO]: Done filling SC file." << std::endl;
-
-	//std::cout << "Filling BC files..." << std::endl;
-	//std::string allBCRasterFileName = OUTPUT_DATA_PATH + "allBCRaster.bin";
-	//save_bc_psth_to_file(allBCRasterFileName);
-	//std::cout << "[INFO]: Done filling BC file." << std::endl;
-
-	//std::cout << "Filling IO files..." << std::endl;
-	//std::string allIORasterFileName = OUTPUT_DATA_PATH + "allIORaster.bin";
-	//write2DCharArray(allIORasterFileName, allIORaster, num_io, rasterColumnSize);
+	if (!mf_raster_file.empty())
+	{
+		std::cout << "Filling MF files...\n";
+		save_mf_psth_to_file(OUTPUT_DATA_PATH + mf_raster_file);
+	}
+	if (!gr_raster_file.empty())
+	{
+		std::cout << "[INFO]: Filling GR file...\n";
+		save_gr_psth_to_file(OUTPUT_DATA_PATH + gr_raster_file);
+	}
+	if (!go_raster_file.empty())
+	{
+		std::cout << "[INFO]: Filling GO file...\n";
+		save_go_psth_to_file(OUTPUT_DATA_PATH + go_raster_file);
+	}
+	if (!bc_raster_file.empty())
+	{
+		std::cout << "[INFO]: Filling BC file...\n";
+		save_bc_psth_to_file(OUTPUT_DATA_PATH + bc_raster_file);
+	}
+	if (!sc_raster_file.empty())
+	{
+		std::cout << "[INFO]: Filling SC file...\n";
+		save_sc_psth_to_file(OUTPUT_DATA_PATH + sc_raster_file);
+	}
+	if (!pc_raster_file.empty())
+	{
+		std::cout << "[INFO]: Filling PC file...\n";
+		save_pc_psth_to_file(OUTPUT_DATA_PATH + pc_raster_file);
+	}
+	if (!io_raster_file.empty())
+	{
+		std::cout << "[INFO]: Filling IO file...\n";
+		save_io_psth_to_file(OUTPUT_DATA_PATH + io_raster_file);
+	}
+	if (!nc_raster_file.empty())
+	{
+		std::cout << "[INFO]: Filling NC file...\n";
+		save_nc_psth_to_file(OUTPUT_DATA_PATH + nc_raster_file);
+	}
 }
 
 void Control::update_spike_sums(int tts, float onset_cs, float offset_cs)
@@ -652,73 +735,130 @@ void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
 
 void Control::fill_rast_internal(int PSTHCounter)
 {
-	//const ct_uint8_t* goSpks = simCore->getInputNet()->exportAPGO();
-	//const ct_uint8_t* grSpks = simCore->getInputNet()->exportAPGR(); /* reading from gpu mem to non-pinned host mem is slow! just calling this slows down by ~30% ! */
-	const ct_uint8_t* pcSpks = simCore->getMZoneList()[0]->exportAPPC();
-	const ct_uint8_t* ncSpks = simCore->getMZoneList()[0]->exportAPNC();
-	//const ct_uint8_t* scSpks = simCore->getMZoneList()[0]->exportAPSC();
-	//const ct_uint8_t* bcSpks = simCore->getMZoneList()[0]->exportAPBC();
-	const ct_uint8_t* ioSpks = simCore->getMZoneList()[0]->exportAPIO();
+	if (!mf_raster_file.empty())
+	{
+		for (int i = 0; i < num_mf; i++)
+		{
+			all_mf_rast_internal[i][PSTHCounter] = mfAP[i];
+		}
+	}
+	if (!go_raster_file.empty())
+	{
+		const ct_uint8_t* goSpks = simCore->getInputNet()->exportAPGO();
+		for (int i = 0; i < num_go; i++)
+		{
+			all_go_rast_internal[i][PSTHCounter] = goSpks[i];
+		}
+	}
+	if (!gr_raster_file.empty())
+	{
+		const ct_uint8_t* grSpks = simCore->getInputNet()->exportAPGR(); /* reading from gpu mem to non-pinned host mem is slow! just calling this slows down by ~30% ! */
+		for (int i = 0; i < 4096; i++)
+		{
+			sample_gr_rast_internal[i][PSTHCounter] = grSpks[i];
+		}
+	}
+	if (!pc_raster_file.empty())
+	{
+		const ct_uint8_t* pcSpks = simCore->getMZoneList()[0]->exportAPPC();
+		for (int i = 0; i < num_pc; i++)
+		{
+			all_pc_rast_internal[i][PSTHCounter] = pcSpks[i];
+		}
+	}
+	if (!nc_raster_file.empty())
+	{
+		const ct_uint8_t* ncSpks = simCore->getMZoneList()[0]->exportAPNC();
+		for (int i = 0; i < num_nc; i++)
+		{
+			all_nc_rast_internal[i][PSTHCounter] = ncSpks[i];
+		}
+	}
+	if (!sc_raster_file.empty())
+	{
+		const ct_uint8_t* scSpks = simCore->getMZoneList()[0]->exportAPSC();
+		for (int i = 0; i < num_sc; i++)
+		{
+			all_sc_rast_internal[i][PSTHCounter] = scSpks[i];
+		}
+	}
+	if (!bc_raster_file.empty())
+	{
+		const ct_uint8_t* bcSpks = simCore->getMZoneList()[0]->exportAPBC();
+		for (int i = 0; i < num_bc; i++)
+		{
+			all_bc_rast_internal[i][PSTHCounter] = bcSpks[i];
+		}
+	}
+	if (!io_raster_file.empty())
+	{
+		const ct_uint8_t* ioSpks = simCore->getMZoneList()[0]->exportAPIO();
+		for (int i = 0; i < num_io; i++)
+		{
+			all_io_rast_internal[i][PSTHCounter] = ioSpks[i];
+		}
+	}
+	if (!nc_raster_file.empty())
+	{
+		const ct_uint8_t* ncSpks = simCore->getMZoneList()[0]->exportAPNC();
+		for (int i = 0; i < num_nc; i++)
+		{
+			all_nc_rast_internal[i][PSTHCounter] = ncSpks[i];
+		}
+	}
 
 	const float* vm_pc = simCore->getMZoneList()[0]->exportVmPC();
-	const float* vm_nc = simCore->getMZoneList()[0]->exportVmNC();
-	const float* vm_io = simCore->getMZoneList()[0]->exportVmIO();
-
-	//for (int i = 0; i < num_mf; i++)
-	//{
-	//	all_mf_rast_internal[i][PSTHCounter] = mfAP[i];
-	//}
-
-	//for (int i = 0; i < num_go; i++)
-	//{
-	//	all_go_rast_internal[i][PSTHCounter] = goSpks[i];
-	//}
-
-	//for (int i = 0; i < 4096; i++)
-	//{
-	//	sample_gr_rast_internal[i][PSTHCounter] = grSpks[i];
-	//}
-
 	for (int i = 0; i < num_pc; i++)
 	{
-		all_pc_rast_internal[i][PSTHCounter] = pcSpks[i];
 		all_pc_vm_rast_internal[i][PSTHCounter] = vm_pc[i];
 	}
-
-	for (int i = 0; i < num_nc; i++)
-	{
-		all_nc_rast_internal[i][PSTHCounter] = ncSpks[i];
-		all_nc_vm_rast_internal[i][PSTHCounter] = vm_nc[i];
-	}
-
-	//for (int i = 0; i < num_sc; i++)
-	//{
-	//	all_sc_rast_internal[i][PSTHCounter] = scSpks[i];
-	//}
-
-	//for (int i = 0; i < num_bc; i++)
-	//{
-	//	all_bc_rast_internal[i][PSTHCounter] = bcSpks[i];
-	//}
-
+	const float* vm_io = simCore->getMZoneList()[0]->exportVmIO();
 	for (int i = 0; i < num_io; i++)
 	{
-		all_io_rast_internal[i][PSTHCounter] = ioSpks[i];
 		all_io_vm_rast_internal[i][PSTHCounter] = vm_io[i];
+	}
+	const float* vm_nc = simCore->getMZoneList()[0]->exportVmNC();
+	for (int i = 0; i < num_nc; i++)
+	{
+		all_nc_vm_rast_internal[i][PSTHCounter] = vm_nc[i];
 	}
 }
 
 void Control::fillOutputArrays()
 {
 	uint32_t offset_common = trial * PSTHColSize / BITS_PER_BYTE;
-	//pack_2d_byte_array(all_mf_rast_internal, num_mf, PSTHColSize, allMFRaster, offset);
-	//pack_2d_byte_array(all_go_rast_internal, num_go, PSTHColSize, allGORaster, offset_common * num_go);
-	//pack_2d_byte_array(sample_gr_rast_internal, 4096, PSTHColSize, sampleGRRaster, offset);
-	pack_2d_byte_array(all_pc_rast_internal, num_pc, PSTHColSize, allPCRaster, offset_common * num_pc);
-	//pack_2d_byte_array(all_nc_rast_internal, num_nc, PSTHColSize, allNCRaster, offset_common * num_nc);
-	//pack_2d_byte_array(all_sc_rast_internal, num_sc, PSTHColSize, allSCRaster, offset_common * num_sc);
-	//pack_2d_byte_array(all_bc_rast_internal, num_bc, PSTHColSize, allBCRaster, offset_common * num_bc);
-	//pack_2d_byte_array(all_io_rast_internal, num_io, PSTHColSize, allIORaster, offset_common * num_pc);
+	if (!mf_raster_file.empty())
+	{
+		pack_2d_byte_array(all_mf_rast_internal, num_mf, PSTHColSize, allMFRaster, offset_common * num_mf);
+	}
+	if (!gr_raster_file.empty())
+	{
+		pack_2d_byte_array(sample_gr_rast_internal, 4096, PSTHColSize, sampleGRRaster, offset_common * 4096);
+	}
+	if (!go_raster_file.empty())
+	{
+		pack_2d_byte_array(all_go_rast_internal, num_go, PSTHColSize, allGORaster, offset_common * num_go);
+	}
+	if (!bc_raster_file.empty())
+	{
+		pack_2d_byte_array(all_bc_rast_internal, num_bc, PSTHColSize, allBCRaster, offset_common * num_bc);
+	}
+	if (!sc_raster_file.empty())
+	{
+		pack_2d_byte_array(all_sc_rast_internal, num_sc, PSTHColSize, allSCRaster, offset_common * num_sc);
+	}
+	if (!pc_raster_file.empty())
+	{
+		pack_2d_byte_array(all_pc_rast_internal, num_pc, PSTHColSize, allPCRaster, offset_common * num_pc);
+	}
+	if (!io_raster_file.empty())
+	{
+		pack_2d_byte_array(all_io_rast_internal, num_io, PSTHColSize, allIORaster, offset_common * num_io);
+	}
+	if (!nc_raster_file.empty())
+	{
+		pack_2d_byte_array(all_nc_rast_internal, num_nc, PSTHColSize, allNCRaster, offset_common * num_nc);
+	}
 }
 
 // TODO: 1) find better place to put this 2) generalize
@@ -747,14 +887,14 @@ void Control::delete_spike_sums()
 
 void Control::delete_rast_internal()
 {
-	delete2DArray<ct_uint8_t>(all_mf_rast_internal);
-	delete2DArray<ct_uint8_t>(all_go_rast_internal);
-	delete2DArray<ct_uint8_t>(sample_gr_rast_internal);
-	delete2DArray<ct_uint8_t>(all_pc_rast_internal); 
-	delete2DArray<ct_uint8_t>(all_nc_rast_internal);
-	delete2DArray<ct_uint8_t>(all_sc_rast_internal);
-	delete2DArray<ct_uint8_t>(all_bc_rast_internal);
-	delete2DArray<ct_uint8_t>(all_io_rast_internal);
+	if (!mf_raster_file.empty()) delete2DArray<ct_uint8_t>(all_mf_rast_internal);
+	if (!gr_raster_file.empty()) delete2DArray<ct_uint8_t>(sample_gr_rast_internal);
+	if (!go_raster_file.empty()) delete2DArray<ct_uint8_t>(all_go_rast_internal);
+	if (!bc_raster_file.empty()) delete2DArray<ct_uint8_t>(all_bc_rast_internal);
+	if (!sc_raster_file.empty()) delete2DArray<ct_uint8_t>(all_sc_rast_internal);
+	if (!pc_raster_file.empty()) delete2DArray<ct_uint8_t>(all_pc_rast_internal);
+	if (!io_raster_file.empty()) delete2DArray<ct_uint8_t>(all_io_rast_internal);
+	if (!nc_raster_file.empty()) delete2DArray<ct_uint8_t>(all_nc_rast_internal);
 
 	delete2DArray<float>(all_pc_vm_rast_internal);
 	delete2DArray<float>(all_nc_vm_rast_internal);
@@ -763,14 +903,14 @@ void Control::delete_rast_internal()
 
 void Control::deleteOutputArrays()
 {
-	free(allMFRaster);
-	free(allGORaster);
-	free(sampleGRRaster);
-	free(allPCRaster);
-	free(allNCRaster);
-	free(allSCRaster);
-	free(allBCRaster);
-	free(allIORaster);
+	if (!mf_raster_file.empty()) free(allMFRaster);
+	if (!gr_raster_file.empty()) free(sampleGRRaster);
+	if (!go_raster_file.empty()) free(allGORaster);
+	if (!bc_raster_file.empty()) free(allBCRaster);
+	if (!sc_raster_file.empty()) free(allSCRaster);
+	if (!pc_raster_file.empty()) free(allPCRaster);
+	if (!io_raster_file.empty()) free(allIORaster);
+	if (!nc_raster_file.empty()) free(allNCRaster);
 
 	delete[] sample_pfpc_syn_weights;
 }
