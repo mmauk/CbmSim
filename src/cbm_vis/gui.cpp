@@ -87,7 +87,8 @@ static void save_file(GtkWidget *widget, Control *control, void (Control::*on_fi
 
 static void on_load_experiment_file(GtkWidget *widget, Control *control)
 {
-	load_file(widget, control, &Control::init_experiment, "[ERROR]: Could not open experiment file.");
+	// TODO: deprecate
+	//load_file(widget, control, &Control::init_experiment, "[ERROR]: Could not open experiment file.");
 }
 
 static void on_load_sim_file(GtkWidget *widget, Control *control)
@@ -660,7 +661,7 @@ static void draw_pc_plot(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 	cairo_set_source_rgb(cr, 0.075, 0.075, 0.075);
 	cairo_rectangle(cr, control->msPreCS,
 		-17,
-		control->expt.trials[0].CSoffset - control->expt.trials[0].CSonset,
+		control->td.cs_lens[0],
 		9.5 * len_scale_y);
 	cairo_fill(cr);
 

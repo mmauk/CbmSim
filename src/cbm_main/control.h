@@ -54,14 +54,12 @@ class Control
 
 		// Objects
 	
-		experiment expt; // TODO: find a better scheme for this
 		trials_data td = {};
 		CBMState *simState     = NULL;
 		CBMSimCore *simCore    = NULL;
 		ECMFPopulation *mfFreq = NULL;
 		PoissonRegenCells *mfs = NULL;
 
-		enum vis_mode sim_vis_mode = NO_VIS;
 		bool trials_data_initialized = false;
 		bool experiment_initialized = false;
 		bool sim_initialized = false;
@@ -190,7 +188,6 @@ class Control
 
 		void build_sim();
 		
-		void init_experiment(std::string in_expt_filename);
 		void init_sim(parsed_expt_file &pe_file, std::string in_sim_filename);
 		void reset_sim(std::string in_sim_filename);
 

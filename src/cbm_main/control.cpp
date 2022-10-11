@@ -86,17 +86,6 @@ void Control::build_sim()
 	if (!simState) simState = new CBMState(numMZones);
 }
 
-void Control::init_experiment(std::string in_expt_filename)
-{
-	std::cout << "[INFO]: Loading Experiment file...\n";
-	if (experiment_initialized && curr_expt_file_name != in_expt_filename) reset_experiment(expt);
-	parse_experiment_file(in_expt_filename, expt);
-	curr_expt_file_name = in_expt_filename;
-	PSTHColSize = msPreCS + (expt.trials[0].CSoffset - expt.trials[0].CSonset) + msPostCS;
-	experiment_initialized = true;
-	std::cout << "[INFO]: Finished loading Experiment file.\n";
-}
-
 void Control::init_sim(parsed_expt_file &pe_file, std::string in_sim_filename)
 {
 	//if (sim_initialized) 
@@ -393,42 +382,42 @@ void Control::initializeOutputArrays()
 {
 	if (!mf_raster_file.empty())
 	{
-		all_mf_rast_size = num_mf * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
+		all_mf_rast_size = num_mf * PSTHColSize * td.num_trials / BITS_PER_BYTE;
 		allMFRaster      = (ct_uint8_t *)calloc(all_mf_rast_size, sizeof(ct_uint8_t));
 	}
 	if (!gr_raster_file.empty())
 	{
-		sample_gr_rast_size = 4096 * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
+		sample_gr_rast_size = 4096 * PSTHColSize * td.num_trials / BITS_PER_BYTE;
 		sampleGRRaster      = (ct_uint8_t *)calloc(sample_gr_rast_size, sizeof(ct_uint8_t));
 	}
 	if (!go_raster_file.empty())
 	{
-		all_go_rast_size = num_go * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
+		all_go_rast_size = num_go * PSTHColSize * td.num_trials / BITS_PER_BYTE;
 		allGORaster      = (ct_uint8_t *)calloc(all_go_rast_size, sizeof(ct_uint8_t));
 	}
 	if (!bc_raster_file.empty())
 	{
-		all_bc_rast_size = num_bc * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
+		all_bc_rast_size = num_bc * PSTHColSize * td.num_trials / BITS_PER_BYTE;
 		allBCRaster      = (ct_uint8_t *)calloc(all_bc_rast_size, sizeof(ct_uint8_t));
 	}
 	if (!sc_raster_file.empty())
 	{
-		all_sc_rast_size = num_sc * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
+		all_sc_rast_size = num_sc * PSTHColSize * td.num_trials / BITS_PER_BYTE;
 		allSCRaster      = (ct_uint8_t *)calloc(all_sc_rast_size, sizeof(ct_uint8_t));
 	}
 	if (!pc_raster_file.empty())
 	{
-		all_pc_rast_size = num_pc * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
+		all_pc_rast_size = num_pc * PSTHColSize * td.num_trials / BITS_PER_BYTE;
 		allPCRaster      = (ct_uint8_t *)calloc(all_pc_rast_size, sizeof(ct_uint8_t));
 	}
 	if (!io_raster_file.empty())
 	{
-		all_io_rast_size = num_io * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
+		all_io_rast_size = num_io * PSTHColSize * td.num_trials / BITS_PER_BYTE;
 		allIORaster      = (ct_uint8_t *)calloc(all_io_rast_size, sizeof(ct_uint8_t));
 	}
 	if (!nc_raster_file.empty())
 	{
-		all_nc_rast_size = num_nc * PSTHColSize * expt.num_trials / BITS_PER_BYTE;
+		all_nc_rast_size = num_nc * PSTHColSize * td.num_trials / BITS_PER_BYTE;
 		allNCRaster      = (ct_uint8_t *)calloc(all_nc_rast_size, sizeof(ct_uint8_t));
 	}
 
@@ -612,43 +601,43 @@ void Control::saveOutputArraysToFile()
 {
 	if (!mf_raster_file.empty())
 	{
-		std::cout << "Filling MF files...\n";
-		save_mf_psth_to_file(OUTPUT_DATA_PATH + mf_raster_file);
+		std::cout << "[INFO]: Filling MF files...\n";
+		save_mf_psth_to_file(mf_raster_file);
 	}
 	if (!gr_raster_file.empty())
 	{
 		std::cout << "[INFO]: Filling GR file...\n";
-		save_gr_psth_to_file(OUTPUT_DATA_PATH + gr_raster_file);
+		save_gr_psth_to_file(gr_raster_file);
 	}
 	if (!go_raster_file.empty())
 	{
 		std::cout << "[INFO]: Filling GO file...\n";
-		save_go_psth_to_file(OUTPUT_DATA_PATH + go_raster_file);
+		save_go_psth_to_file(go_raster_file);
 	}
 	if (!bc_raster_file.empty())
 	{
 		std::cout << "[INFO]: Filling BC file...\n";
-		save_bc_psth_to_file(OUTPUT_DATA_PATH + bc_raster_file);
+		save_bc_psth_to_file(bc_raster_file);
 	}
 	if (!sc_raster_file.empty())
 	{
 		std::cout << "[INFO]: Filling SC file...\n";
-		save_sc_psth_to_file(OUTPUT_DATA_PATH + sc_raster_file);
+		save_sc_psth_to_file(sc_raster_file);
 	}
 	if (!pc_raster_file.empty())
 	{
 		std::cout << "[INFO]: Filling PC file...\n";
-		save_pc_psth_to_file(OUTPUT_DATA_PATH + pc_raster_file);
+		save_pc_psth_to_file(pc_raster_file);
 	}
 	if (!io_raster_file.empty())
 	{
 		std::cout << "[INFO]: Filling IO file...\n";
-		save_io_psth_to_file(OUTPUT_DATA_PATH + io_raster_file);
+		save_io_psth_to_file(io_raster_file);
 	}
 	if (!nc_raster_file.empty())
 	{
 		std::cout << "[INFO]: Filling NC file...\n";
-		save_nc_psth_to_file(OUTPUT_DATA_PATH + nc_raster_file);
+		save_nc_psth_to_file(nc_raster_file);
 	}
 }
 

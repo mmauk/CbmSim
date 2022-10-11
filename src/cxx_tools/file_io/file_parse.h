@@ -97,14 +97,6 @@ typedef struct
 	std::unordered_map<std::string, variable> param_map;
 } parsed_var_section;
 
-//typedef struct
-//{
-//	std::unordered_map<std::string, trial_2> trial_map;
-//	std::unordered_map<std::string, block> block_map;
-//	std::unordered_map<std::string, session> session_map;
-//	experiment_2 expt_info;
-//} parsed_trial_section;
-
 typedef struct
 {
 	std::unordered_map<std::string, std::unordered_map<std::string, variable>> trial_map;
@@ -182,13 +174,13 @@ void translate_parsed_trials(parsed_expt_file &pe_file, trials_data &td);
 
 void delete_trials_data(trials_data &td);
 
-void print_tokenized_file(tokenized_file &t_file);
+std::string tokenized_file_to_str(tokenized_file &t_file);
 
-void print_lexed_file(lexed_file &l_file);
+std::ostream &operator<<(std::ostream &os, tokenized_file &t_file);
 
-void print_parsed_expt_file(parsed_expt_file &e_file);
+std::string lexed_file_to_str(lexed_file &l_file);
 
-void print_parsed_build_file(parsed_build_file &b_file);
+std::ostream &operator<<(std::ostream &os, lexed_file &l_file);
 
 #endif /* FILE_PARSE_H_ */
 
