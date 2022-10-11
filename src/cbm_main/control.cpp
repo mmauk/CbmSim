@@ -9,6 +9,7 @@
 
 const std::string BIN_EXT = "bin";
 
+
 // private utility function. TODO: move to a better place
 std::string getFileBasename(std::string fullFilePath)
 {
@@ -429,8 +430,8 @@ void Control::initializeOutputArrays()
 void Control::runExperiment(struct gui *gui)
 {
 	float medTrials;
-	double start;
-	double end;
+	double trial_cpu_time, trial_gpu_time;
+	double start, end;
 	int goSpkCounter[num_go] = {0};
 
 	if (gui == NULL) run_state = IN_RUN_NO_PAUSE;
@@ -453,10 +454,12 @@ void Control::runExperiment(struct gui *gui)
 		memset(goSpkCounter, 0, num_go * sizeof(int));
 
 		std::cout << "[INFO]: Trial number: " << trial + 1 << "\n";
-
+		trial_cpu_time = 0.0;
+		trial_gpu_time = 0.0;
 		start = omp_get_wtime();
 		for (int ts = 0; ts < trialTime; ts++)
-		{ if (useUS && ts == onsetUS) /* deliver the US */
+		{
+			if (useUS && ts == onsetUS) /* deliver the US */
 			{
 				simCore->updateErrDrive(0, 0.3);
 			}
@@ -474,7 +477,7 @@ void Control::runExperiment(struct gui *gui)
 			bool *isTrueMF = mfs->calcTrueMFs(mfFreq->getMFBG()); /* only used for mfdcn plasticity */
 			simCore->updateTrueMFs(isTrueMF);
 			simCore->updateMFInput(mfAP);
-			simCore->calcActivity(spillFrac); 
+			simCore->calcActivity(spillFrac, trial_cpu_time, trial_gpu_time); 
 			//update_spike_sums(ts, onsetCS, onsetCS + csLength);
 
 			if (ts >= onsetCS && ts < onsetCS + csLength)
@@ -514,6 +517,7 @@ void Control::runExperiment(struct gui *gui)
 		}
 		end = omp_get_wtime();
 		std::cout << "[INFO]: '" << trialName << "' took " << (end - start) << "s.\n";
+		std::cout << "[INFO]: CPU / GPU time time ratio: " << trial_cpu_time / trial_gpu_time << "\n";
 		
 		if (gui != NULL)
 		{
