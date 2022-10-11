@@ -14,7 +14,6 @@
 #include <string>
 
 #include "file_parse.h"
-#include "experiment_file.h"
 
 const std::string INPUT_DATA_PATH = "../data/inputs/";
 const std::string OUTPUT_DATA_PATH = "../data/outputs/";
