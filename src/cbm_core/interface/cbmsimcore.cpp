@@ -130,14 +130,18 @@ void CBMSimCore::syncCUDA(std::string title)
 	}
 }
 
-void CBMSimCore::calcActivity(float spillFrac)
+void CBMSimCore::calcActivity(float spillFrac, double &cpu_time, double &gpu_time)
 {
+	double temp_cpu_time;
+	double temp_gpu_time;
 	cudaError_t error;
 	syncCUDA("1");
 
 	curTime++;
 
+	temp_gpu_time = omp_get_wtime();
 	inputNet->runGRActivitiesCUDA(streams, 0);
+	gpu_time += omp_get_wtime() - temp_gpu_time;
 
 #ifdef NO_ASYNC
 	syncCUDA("1a");
@@ -145,7 +149,9 @@ void CBMSimCore::calcActivity(float spillFrac)
 
 	for (int i = 0; i < numZones; i++)
 	{
+		temp_gpu_time = omp_get_wtime();
 		zones[i]->runPFPCSumCUDA(streams, i + 1);
+		gpu_time += omp_get_wtime() - temp_gpu_time;
 	}
 
 #ifdef NO_ASYNC
@@ -153,8 +159,10 @@ void CBMSimCore::calcActivity(float spillFrac)
 #endif
 	for (int i = 0; i < numZones; i++)
 	{
+		temp_gpu_time = omp_get_wtime();
 		zones[i]->runSumPFBCCUDA(streams, 2);
 		zones[i]->runSumPFSCCUDA(streams, 3);
+		gpu_time += omp_get_wtime() - temp_gpu_time;
 	}
 
 #ifdef NO_ASYNC
@@ -165,7 +173,9 @@ void CBMSimCore::calcActivity(float spillFrac)
 	syncCUDA("1d");
 #endif
 
+	temp_gpu_time = omp_get_wtime();
 	inputNet->runSumGRGOOutCUDA(streams, 4);
+	gpu_time += omp_get_wtime() - temp_gpu_time;
 #ifdef NO_ASYNC
 	syncCUDA("1e");
 #endif
@@ -177,7 +187,9 @@ void CBMSimCore::calcActivity(float spillFrac)
 	// Only allow plasticty once HomeoTuning in GCL is complete
 	for (int i = 0; i < numZones; i++)
 	{
+		temp_gpu_time = omp_get_wtime();
 		zones[i]->runPFPCPlastCUDA(streams, 1, curTime);
+		gpu_time += omp_get_wtime() - temp_gpu_time;
 	}
 #ifdef NO_ASYNC
 	syncCUDA("1f");
@@ -221,9 +233,11 @@ void CBMSimCore::calcActivity(float spillFrac)
 
 	for (int i = 0; i < numZones; i++)
 	{
+		temp_cpu_time = omp_get_wtime();
 		zones[i]->calcPCActivities();
 		zones[i]->calcSCActivities();
 		zones[i]->calcBCActivities();
+		cpu_time += omp_get_wtime() - temp_cpu_time;
 	}
 	
 	syncCUDA("2");
@@ -231,11 +245,15 @@ void CBMSimCore::calcActivity(float spillFrac)
 #ifdef NO_ASYNC
 	syncCUDA("2a");
 #endif
+	temp_gpu_time = omp_get_wtime();
 	inputNet->runUpdateMFInGRCUDA(streams, 0);
+	gpu_time += omp_get_wtime() - temp_gpu_time;
 #ifdef NO_ASYNC
 	syncCUDA("2b");
 #endif
+	temp_gpu_time = omp_get_wtime();
 	inputNet->runUpdateGOInGRCUDA(streams, 1);
+	gpu_time += omp_get_wtime() - temp_gpu_time;
 #ifdef NO_ASYNC
 	syncCUDA("2c");
 #endif
@@ -244,25 +262,35 @@ void CBMSimCore::calcActivity(float spillFrac)
 	syncCUDA("2d");
 #endif
 
+	temp_gpu_time = omp_get_wtime();
 	inputNet->runUpdateMFInGRDepressionCUDA(streams, 2);
+	gpu_time += omp_get_wtime() - temp_gpu_time;
 
 #ifdef NO_ASYNC
 	syncCUDA("2e");
 #endif
 
+	temp_gpu_time = omp_get_wtime();
 	inputNet->runUpdateGOInGRDepressionCUDA(streams, 3);
+	gpu_time += omp_get_wtime() - temp_gpu_time;
 
 #ifdef NO_ASYNC
 	syncCUDA("2f");
 #endif
 
+	temp_gpu_time = omp_get_wtime();
 	inputNet->runUpdateGOInGRDynamicSpillCUDA(streams, 4);
+	gpu_time += omp_get_wtime() - temp_gpu_time;
 
 	for (int i = 0; i < numZones; i++)
 	{
+		temp_gpu_time = omp_get_wtime();
 		zones[i]->runPFPCOutCUDA(streams, i + 2);
+		gpu_time += omp_get_wtime() - temp_gpu_time;
 		zones[i]->cpyPFPCSumCUDA(streams, i + 2);
+		temp_gpu_time = omp_get_wtime();
 		zones[i]->runUpdatePFBCSCOutCUDA(streams, i + 4); // adding i might break things in future
+		gpu_time += omp_get_wtime() - temp_gpu_time;
 	}
 #ifdef NO_ASYNC
 	syncCUDA("2g");
@@ -272,7 +300,9 @@ void CBMSimCore::calcActivity(float spillFrac)
 	syncCUDA("2h");
 #endif
 
+	temp_gpu_time = omp_get_wtime();
 	inputNet->runUpdateGROutGOCUDA(streams, 7);
+	gpu_time += omp_get_wtime() - temp_gpu_time;
 #ifdef NO_ASYNC
 	syncCUDA("2i");
 #endif
@@ -304,12 +334,16 @@ void CBMSimCore::calcActivity(float spillFrac)
 	syncCUDA("2iz");
 #endif
 
+	temp_gpu_time = omp_get_wtime();
 	inputNet->runUpdateGRHistoryCUDA(streams, 4, curTime);
+	gpu_time += omp_get_wtime() - temp_gpu_time;
 #ifdef NO_ASYNC
 	syncCUDA("2ib");
 #endif
 
+	temp_cpu_time = omp_get_wtime();
 	inputNet->calcGOActivities(); 
+	cpu_time += omp_get_wtime() - temp_cpu_time;
 #ifdef NO_ASYNC
 	syncCUDA("2ic");
 #endif
@@ -322,22 +356,30 @@ void CBMSimCore::calcActivity(float spillFrac)
 	syncCUDA("2ie");
 #endif
 	
+	temp_cpu_time = omp_get_wtime();
 	inputNet->updateMFtoGOOut();
+	cpu_time += omp_get_wtime() - temp_cpu_time;
 #ifdef NO_ASYNC
 	syncCUDA("2if");
 #endif
 	
+	temp_cpu_time = omp_get_wtime();
 	inputNet->updateGOtoGOOut();
+	cpu_time += omp_get_wtime() - temp_cpu_time;
 #ifdef NO_ASYNC
 	syncCUDA("2ig");
 #endif
 
+	temp_cpu_time = omp_get_wtime();
 	inputNet->updateMFtoGROut();
+	cpu_time += omp_get_wtime() - temp_cpu_time;
 #ifdef NO_ASYNC
 	syncCUDA("2ih");
 #endif
 
+	temp_cpu_time = omp_get_wtime();
 	inputNet->updateGOtoGROutParameters(spillFrac);
+	cpu_time += omp_get_wtime() - temp_cpu_time;
 #ifdef NO_ASYNC
 	syncCUDA("2ii");
 #endif
@@ -360,40 +402,56 @@ void CBMSimCore::calcActivity(float spillFrac)
 
 	for (int i = 0; i < numZones; i++)
 	{
+		temp_cpu_time = omp_get_wtime();
 		zones[i]->calcIOActivities();
+		cpu_time += omp_get_wtime() - temp_cpu_time;
 #ifdef NO_ASYNC
 		syncCUDA("2in");
 #endif
 
+		temp_cpu_time = omp_get_wtime();
 		zones[i]->calcNCActivities();
+		cpu_time += omp_get_wtime() - temp_cpu_time;
 #ifdef NO_ASYNC
 		syncCUDA("2io");
 #endif
 
+		temp_cpu_time = omp_get_wtime();
 		zones[i]->updateMFNCOut();
+		cpu_time += omp_get_wtime() - temp_cpu_time;
 #ifdef NO_ASYNC
 		syncCUDA("2ip");
 #endif
 
+		temp_cpu_time = omp_get_wtime();
 		zones[i]->updateBCPCOut();
+		cpu_time += omp_get_wtime() - temp_cpu_time;
 #ifdef NO_ASYNC
 		syncCUDA("2iq");
 #endif
+		temp_cpu_time = omp_get_wtime();
 		zones[i]->updateSCPCOut();
+		cpu_time += omp_get_wtime() - temp_cpu_time;
 #ifdef NO_ASYNC
 		syncCUDA("2ir");
 #endif
 
+		temp_cpu_time = omp_get_wtime();
 		zones[i]->updatePCOut();
+		cpu_time += omp_get_wtime() - temp_cpu_time;
 #ifdef NO_ASYNC
 		syncCUDA("2is");
 #endif
 
+		temp_cpu_time = omp_get_wtime();
 		zones[i]->updateIOOut();
+		cpu_time += omp_get_wtime() - temp_cpu_time;
 #ifdef NO_ASYNC
 		syncCUDA("2it");
 #endif
+		temp_cpu_time = omp_get_wtime();
 		zones[i]->updateNCOut();
+		cpu_time += omp_get_wtime() - temp_cpu_time;
 #ifdef NO_ASYNC
 		syncCUDA("2iu");
 #endif
@@ -404,7 +462,9 @@ void CBMSimCore::calcActivity(float spillFrac)
 		syncCUDA("2iw");
 #endif
 
+	temp_cpu_time = omp_get_wtime();
 	inputNet->resetMFHist(curTime);
+	cpu_time += omp_get_wtime() - temp_cpu_time;
 #ifdef NO_ASYNC
 		syncCUDA("2ix");
 #endif

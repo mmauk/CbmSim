@@ -83,7 +83,7 @@ class Control
 
 		// sim params -> TODO: place in simcore
 		int gpuIndex = 0;
-		int gpuP2    = 3;
+		int gpuP2=1;
 
 		int trial = 0;
 
