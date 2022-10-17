@@ -1,6 +1,8 @@
 .git
 scripts/analysis/.venv/**
 build/**
-data/**
+data/outputs/**
+data/inputs/*.sim
+data/inputs/*.bin
 logs/**
 

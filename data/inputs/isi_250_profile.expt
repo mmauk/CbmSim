@@ -1,0 +1,205 @@
+// this is the new format for the experiment file.
+// the aim is to make this format more general and
+// more forgiving to the end user.
+
+begin filetype run 
+
+	begin section trial_def
+
+		// trial defs 
+		def trial isi_250_paired_trial
+			int use_cs 1
+			int cs_onset 400
+			int cs_len 250 
+			float cs_percent 100.0
+			int use_us 1
+			int us_onset 650
+		end
+
+		def trial probe_trial
+			int use_cs 1
+			int cs_onset 400
+			int cs_len 250
+			float cs_percent 100.0
+			int use_us 0
+			int us_onset 650
+		end
+
+		// block defs 
+		def block isi_250_block
+			isi_250_paired_trial
+			probe_trial
+		end 
+
+		// session defs
+		def session isi_250_session
+			isi_250_block 5
+		end 
+
+		// experiment def
+		def experiment isi_250_experiment
+			isi_250_session 10
+		end
+	end
+
+	begin section mf_input
+		int mfRandSeed 3
+		float threshDecayTau 4.0
+
+		float nucCollFrac 0.02
+
+		float CSTonicMFFrac 0.05
+		float tonicFreqMin  100.0
+		float tonicFreqMax  110.0
+
+		float CSPhasicMFFrac 0.0
+		float phasicFreqMin  200.0
+		float phasicFreqMax  250.0
+	
+		// separate set of contextual MF due to position of rabbit
+		float contextMFFrac  0.0
+		float contextFreqMin 20.0 
+		float contextFreqMax 50.0
+
+		float bgFreqMin   10.0
+		float csbgFreqMin 10.0
+		float bgFreqMax   30.0
+		float csbgFreqMax 30.0
+
+		bool collaterals_off false
+		bool secondCS        true
+
+		float fracImport  0.0
+		float fracOverlap 0.2
+	end
+
+	begin section trial_spec
+		int trialTime 5000
+		int msPreCS 400
+		int msPostCS 406
+	end
+
+	begin section activity
+		float coupleRiRjRatioGO 0.0
+		float coupleRiRjRatioIO 0.05
+		float eBCtoPC -80.0
+		float eGABAGO -64.0
+		float eGOGR -75.0
+		float eMFGR 0.0
+		float eMGluRGO -96.0
+		float eNCtoIO -80.0
+		float ePCtoBC -70.0
+		float ePCtoNC -80.0
+		float eSCtoPC -80.0
+		float gDecTauBCtoPC 7.0
+		float gIncBCtoPC 0.0003
+		float gGABADecTauGOtoGO 10.0
+		float gIncDirectGOtoGR 0.01
+		float gDirectTauGOtoGR 7.0
+		float gIncFracSpilloverGOtoGR 1.0
+		float gSpilloverTauGOtoGR 150.0
+		float gGABAIncGOtoGO 0.01
+		float gDecTauGRtoGO 4.0
+		float gIncGRtoGO 0.0003
+		float gDecTauMFtoGO 3.0
+		float gIncMFtoGO 0.0009
+		float gConstGO 0.0
+		float NMDA_AMPAratioMFGO 1.3
+		float gDecTauMFtoGONMDA 30.0
+		float gIncDirectMFtoGR 0.0265 // was 0.0237 // was 0.0239
+		float gDirectTauMFtoGR 0.0 // very crucial synapse!!!
+		float gIncFracSpilloverMFtoGR 0.2
+		float gSpilloverTauMFtoGR 15.0
+		float recoveryTauMF 35.0
+		float fracDepMF 0.6
+		float recoveryTauGO 20.0
+		float fracDepGO 0.6
+		float gIncMFtoUBC 0.11
+		float gIncGOtoUBC 0.15
+		float gIncUBCtoUBC 0.15
+		float gIncUBCtoGO 0.04
+		float gIncUBCtoGR 0.12
+		float gKIncUBC 0.0135
+		float gKTauUBC 85.0
+		float gConstUBC 0.13
+		float threshTauUBC 80.0
+		float gMGluRDecGRtoGO 0.98
+		float gMGluRIncDecayGO 0.98
+		float gMGluRIncScaleGO 0.0
+		float gMGluRScaleGRtoGO 0.0
+		float gDecT0ofNCtoIO 0.56
+		float gDecTSofNCtoIO 0.5
+		float gDecTTofNCtoIO 70.0
+		float gIncNCtoIO 0.0015
+		float gIncTauNCtoIO 300.0
+		float gDecTauPCtoBC 5.0
+		float gDecTauPCtoNC 4.15
+		float gIncAvgPCtoNC 0.1
+		float gDecTauGRtoBC 2.0
+		float gDecTauGRtoPC 4.15
+		float gDecTauGRtoSC 2.0
+		float gIncGRtoPC 0.55e-05
+		float gDecTauSCtoPC 4.15
+		float gIncSCtoPC 0.0001
+		float gluDecayGO 0.98
+		float gluScaleGO 0.0
+		float goGABAGOGOSynDepF 1.0
+		float goGABAGOGOSynRecTau 100.0
+		float synLTDStepSizeGRtoPC -0.00275
+		float synLTPStepSizeGRtoPC 0.00030556
+		float mGluRDecayGO 0.98
+		float mGluRScaleGO 0.0
+		float maxExtIncVIO 30.0
+		float gmaxAMPADecTauMFtoNC 6.0
+		float synLTDStepSizeMFtoNC -6.25e-07
+		float synLTDPCPopActThreshMFtoNC 12.0
+		float synLTPStepSizeMFtoNC 5.0e-06
+		float synLTPPCPopActThreshMFtoNC 2.0
+		float gmaxNMDADecTauMFtoNC 50.0
+		float msLTDDurationIO 100.0
+		float msLTDStartAPIO -100.0
+		float msLTPEndAPIO -100.0
+		float msLTPStartAPIO 0.0
+		float msPerHistBinGR 5.0
+		float msPerHistBinMF 5.0
+		float msPerTimeStep 1.0
+		float relPDecT0ofNCtoIO 78.0
+		float relPDecTSofNCtoIO 40.0
+		float relPDecTTofNCtoIO 1.0
+		float relPIncNCtoIO 0.25
+		float relPIncTauNCtoIO 0.8
+		float gIncPCtoBC 0.15
+		float gIncGRtoBC 0.00225
+		float gIncGRtoSC 0.008
+		float rawGLeakBC 0.13
+		float rawGLeakGO 0.02
+		float rawGLeakGR 0.1
+		float rawGLeakIO 0.15
+		float rawGLeakNC 0.1
+		float rawGLeakPC 0.2
+		float rawGLeakSC 0.2
+		float rawGMFAMPAIncNC 2.35 // 3.0
+		float rawGMFNMDAIncNC 2.35 // 3.0
+		float threshDecTauBC 10.0
+		float threshDecTauGO 11.0
+		float threshDecTauUBC 20.0
+		float threshDecTauGR 3.0
+		float threshDecTauIO 200.0
+		float threshDecTauNC 5.0
+		float threshDecTauPC 6.0
+		float threshDecTauSC 18.0
+		float threshMaxBC 0.0
+		float threshMaxGO 10.0
+		float threshMaxGR -20.0
+		float threshMaxIO 10.0
+		float threshMaxNC -40.0
+		float threshMaxPC -48.0
+		float threshMaxSC 0.0
+		float weightScale 1.0
+		float rawGRGOW 0.0007
+		float rawMFGOW 0.0035
+		float gogrW 0.015
+		float gogoW 0.0125
+	end
+end
+

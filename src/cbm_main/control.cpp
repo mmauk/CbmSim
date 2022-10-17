@@ -442,11 +442,14 @@ void save_arr_as_csv(float in_arr[], ct_uint32_t arr_len, std::string file_name)
 void Control::runExperiment(struct gui *gui)
 {
 	float medTrials;
-	double trial_cpu_time, trial_gpu_time;
+	double trial_calc_act_cpu_time, trial_calc_act_gpu_time;
+	double temp_cpu_time;
 	double start, end;
 	int goSpkCounter[num_go] = {0};
 	float trial_times[td.num_trials] = {0.0};
 	float cpu_gpu_ratios[td.num_trials] = {0.0};
+	float cpu_times[td.num_trials] = {0.0};
+	float gpu_times[td.num_trials] = {0.0};
 	if (gui == NULL) run_state = IN_RUN_NO_PAUSE;
 	trial = 0;
 	while (trial < td.num_trials && run_state != NOT_IN_RUN)
@@ -467,8 +470,8 @@ void Control::runExperiment(struct gui *gui)
 		memset(goSpkCounter, 0, num_go * sizeof(int));
 
 		std::cout << "[INFO]: Trial number: " << trial + 1 << "\n";
-		trial_cpu_time = 0.0;
-		trial_gpu_time = 0.0;
+		trial_calc_act_cpu_time = 0.0;
+		trial_calc_act_gpu_time = 0.0;
 		start = omp_get_wtime();
 		for (int ts = 0; ts < trialTime; ts++)
 		{
@@ -478,19 +481,29 @@ void Control::runExperiment(struct gui *gui)
 			}
 			if (ts < onsetCS || ts >= onsetCS + csLength)
 			{
+				temp_cpu_time = omp_get_wtime();
 				mfAP = mfs->calcPoissActivity(mfFreq->getMFBG(),
 					  simCore->getMZoneList());
+				trial_calc_act_cpu_time += omp_get_wtime() - temp_cpu_time;
 			}
 			if (ts >= onsetCS && ts < onsetCS + csLength)
 			{
+				temp_cpu_time = omp_get_wtime();
 				mfAP = (useCS == 1) ? mfs->calcPoissActivity(mfFreq->getMFInCSTonicA(), simCore->getMZoneList())
 									: mfs->calcPoissActivity(mfFreq->getMFBG(), simCore->getMZoneList());
+				trial_calc_act_cpu_time += omp_get_wtime() - temp_cpu_time;
 			}
 			
+			temp_cpu_time = omp_get_wtime();
 			bool *isTrueMF = mfs->calcTrueMFs(mfFreq->getMFBG()); /* only used for mfdcn plasticity */
+			trial_calc_act_cpu_time += omp_get_wtime() - temp_cpu_time;
+			temp_cpu_time = omp_get_wtime();
 			simCore->updateTrueMFs(isTrueMF);
+			trial_calc_act_cpu_time += omp_get_wtime() - temp_cpu_time;
+			temp_cpu_time = omp_get_wtime();
 			simCore->updateMFInput(mfAP);
-			simCore->calcActivity(spillFrac, trial_cpu_time, trial_gpu_time); 
+			trial_calc_act_cpu_time += omp_get_wtime() - temp_cpu_time;
+			simCore->calcActivity(spillFrac, trial_calc_act_cpu_time, trial_calc_act_gpu_time); 
 			//update_spike_sums(ts, onsetCS, onsetCS + csLength);
 
 			if (ts >= onsetCS && ts < onsetCS + csLength)
@@ -530,10 +543,13 @@ void Control::runExperiment(struct gui *gui)
 		}
 		end = omp_get_wtime();
 		std::cout << "[INFO]: '" << trialName << "' took " << (end - start) << "s.\n";
-		std::cout << "[INFO]: CPU / GPU time time ratio: " << trial_cpu_time / trial_gpu_time << "\n";
+		std::cout << "[INFO]: CPU time: " << trial_calc_act_cpu_time << "\n";
+		std::cout << "[INFO]: GPU time: " << trial_calc_act_gpu_time << "\n";
 		
 		trial_times[trial] = end - start;
-		cpu_gpu_ratios[trial] = trial_cpu_time / trial_gpu_time;
+		cpu_gpu_ratios[trial] = trial_calc_act_cpu_time / trial_calc_act_gpu_time;
+		cpu_times[trial] = trial_calc_act_cpu_time;
+		gpu_times[trial] = trial_calc_act_gpu_time;
 		if (gui != NULL)
 		{
 			// for now, compute the mean and median firing rates for all cells if win is visible
@@ -556,7 +572,7 @@ void Control::runExperiment(struct gui *gui)
 		fillOutputArrays();
 		trial++;
 	}
-	std::string out_csv_file = OUTPUT_DATA_PATH + "basic_profile_isi_2000_100_trial_4_gpu.csv";
+	std::string out_csv_file = OUTPUT_DATA_PATH + "profile_trial_times_raw_cpu_gpu_times_isi_2000_100_trial_1_2080.csv";
 	std::fstream out_file_buf(out_csv_file.c_str(), std::ios::out);
 	for (ct_uint32_t i = 0; i < td.num_trials; i++)
 	{
@@ -569,6 +585,20 @@ void Control::runExperiment(struct gui *gui)
 	{
 		if (i == 0) out_file_buf << "cpu_gpu_ratios, ";
 		out_file_buf << cpu_gpu_ratios[i];
+		if (i == td.num_trials - 1) out_file_buf << "\n";
+		else out_file_buf << ", ";
+	}
+	for (ct_uint32_t i = 0; i < td.num_trials; i++)
+	{
+		if (i == 0) out_file_buf << "cpu_times, ";
+		out_file_buf << cpu_times[i];
+		if (i == td.num_trials - 1) out_file_buf << "\n";
+		else out_file_buf << ", ";
+	}
+	for (ct_uint32_t i = 0; i < td.num_trials; i++)
+	{
+		if (i == 0) out_file_buf << "gpu_times, ";
+		out_file_buf << gpu_times[i];
 		if (i == td.num_trials - 1) out_file_buf << "\n";
 		else out_file_buf << ", ";
 	}
