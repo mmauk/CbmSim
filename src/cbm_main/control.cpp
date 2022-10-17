@@ -9,7 +9,6 @@
 
 const std::string BIN_EXT = "bin";
 
-
 // private utility function. TODO: move to a better place
 std::string getFileBasename(std::string fullFilePath)
 {
@@ -58,8 +57,13 @@ Control::Control(parsed_commandline &p_cl)
 		parse_lexed_expt_file(l_file, pe_file);
 		translate_parsed_trials(pe_file, td);
 		trials_data_initialized = true;
+
 		// TODO: move this somewhere else yike
+		trialTime   = std::stoi(pe_file.parsed_var_sections["trial_spec"].param_map["trialTime"].value);
+		msPreCS     = std::stoi(pe_file.parsed_var_sections["trial_spec"].param_map["msPreCS"].value);
+		msPostCS    = std::stoi(pe_file.parsed_var_sections["trial_spec"].param_map["msPostCS"].value);
 		PSTHColSize = msPreCS + td.cs_lens[0] + msPostCS;
+
 		get_raster_filenames(p_cl.raster_files);
 		init_sim(pe_file, curr_sim_file_name);
 	}
