@@ -164,7 +164,7 @@ float gDecBCtoPC          = 0.0;
 float gDecSCtoPC          = 0.0; 
 float tsPopHistPC         = 0.0; 
 float tsPerPopHistBinPC   = 0.0; 
-float numPopHistBinsPC    = 0.0; 
+//float numPopHistBinsPC    = 0.0; 
 float gLeakIO             = 0.0; 
 float threshDecIO         = 0.0; 
 float tsLTDDurationIO     = 0.0; 
@@ -334,7 +334,7 @@ void populate_act_params(parsed_expt_file &p_file)
 	gDecSCtoPC          = exp(-msPerTimeStep / gDecTauSCtoPC);
 	tsPopHistPC         = 40 / msPerTimeStep;
 	tsPerPopHistBinPC   =  5 / msPerTimeStep, 
-	numPopHistBinsPC    =  tsPopHistPC / tsPerPopHistBinPC;
+	//numPopHistBinsPC    =  8.0; tsPopHistPC / tsPerPopHistBinPC
 	gLeakIO             = rawGLeakIO / (6 - msPerTimeStep);
 	threshDecIO         = 1 - exp(-msPerTimeStep / threshDecTauIO);
 	tsLTDDurationIO     = msLTDDurationIO / msPerTimeStep;
@@ -506,7 +506,7 @@ void read_act_params(std::fstream &in_param_buf)
 	in_param_buf.read((char *)&gDecSCtoPC, sizeof(float));
 	in_param_buf.read((char *)&tsPopHistPC, sizeof(float));
 	in_param_buf.read((char *)&tsPerPopHistBinPC, sizeof(float));
-	in_param_buf.read((char *)&numPopHistBinsPC, sizeof(float));
+	//in_param_buf.read((char *)&numPopHistBinsPC, sizeof(float));
 	in_param_buf.read((char *)&gLeakIO, sizeof(float));
 	in_param_buf.read((char *)&threshDecIO, sizeof(float));
 	in_param_buf.read((char *)&tsLTDDurationIO, sizeof(float));
@@ -678,7 +678,7 @@ void write_act_params(std::fstream &out_param_buf)
 	out_param_buf.write((char *)&gDecSCtoPC, sizeof(float));
 	out_param_buf.write((char *)&tsPopHistPC, sizeof(float));
 	out_param_buf.write((char *)&tsPerPopHistBinPC, sizeof(float));
-	out_param_buf.write((char *)&numPopHistBinsPC, sizeof(float));
+	//out_param_buf.write((char *)&numPopHistBinsPC, sizeof(float));
 	out_param_buf.write((char *)&gLeakIO, sizeof(float));
 	out_param_buf.write((char *)&threshDecIO, sizeof(float));
 	out_param_buf.write((char *)&tsLTDDurationIO, sizeof(float));

@@ -112,6 +112,7 @@ int num_p_io_in_io_to_io         = 0;
 int num_p_io_out_io_to_io        = 0; 
 
 float msPerTimeStep            = 0.0;
+float numPopHistBinsPC         = 0.0; 
 float ampl_go_to_go            = 0.0; 
 float std_dev_go_to_go         = 0.0; 
 float p_recip_go_go            = 0.0; 
@@ -244,6 +245,7 @@ void populate_con_params(parsed_build_file &p_file)
 
 	/* float con params */
 	msPerTimeStep            = std::stof(p_file.parsed_var_sections["connectivity"].param_map["msPerTimeStep"].value); 
+	numPopHistBinsPC         = std::stof(p_file.parsed_var_sections["connectivity"].param_map["numPopHistBinsPC"].value); 
 	ampl_go_to_go            = std::stof(p_file.parsed_var_sections["connectivity"].param_map["ampl_go_to_go"].value); 
 	std_dev_go_to_go         = std::stof(p_file.parsed_var_sections["connectivity"].param_map["std_dev_go_to_go"].value); 
 	p_recip_go_go            = std::stof(p_file.parsed_var_sections["connectivity"].param_map["p_recip_go_go"].value); 
@@ -379,6 +381,7 @@ void read_con_params(std::fstream &in_param_buf)
 	in_param_buf.read((char *)&num_p_io_out_io_to_io, sizeof(int));
 
 	in_param_buf.read((char *)&msPerTimeStep, sizeof(float));
+	in_param_buf.read((char *)&numPopHistBinsPC, sizeof(float));
 	in_param_buf.read((char *)&ampl_go_to_go, sizeof(float));
 	in_param_buf.read((char *)&std_dev_go_to_go, sizeof(float));
 	in_param_buf.read((char *)&p_recip_go_go, sizeof(float));
@@ -514,6 +517,7 @@ void write_con_params(std::fstream &out_param_buf)
 	out_param_buf.write((char *)&num_p_io_out_io_to_io, sizeof(int));
 
 	out_param_buf.write((char *)&msPerTimeStep, sizeof(float));
+	out_param_buf.write((char *)&numPopHistBinsPC, sizeof(float));
 	out_param_buf.write((char *)&ampl_go_to_go, sizeof(float));
 	out_param_buf.write((char *)&std_dev_go_to_go, sizeof(float));
 	out_param_buf.write((char *)&p_recip_go_go, sizeof(float));

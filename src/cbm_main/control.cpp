@@ -9,6 +9,7 @@
 
 const std::string BIN_EXT = "bin";
 
+
 // private utility function. TODO: move to a better place
 std::string getFileBasename(std::string fullFilePath)
 {
@@ -456,7 +457,8 @@ void Control::runExperiment(struct gui *gui)
 
 		start = omp_get_wtime();
 		for (int ts = 0; ts < trialTime; ts++)
-		{ if (useUS && ts == onsetUS) /* deliver the US */
+		{
+			if (useUS == 1 && ts == onsetUS) /* deliver the US */
 			{
 				simCore->updateErrDrive(0, 0.3);
 			}
@@ -708,18 +710,19 @@ void Control::calculate_firing_rates(float onset_cs, float offset_cs)
 
 void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
 {
-	std::sort(goSpkCounter, goSpkCounter + 4096);
+	float isi = (td.us_onsets[0] - td.cs_onsets[0]) / 1000.0;
+	std::sort(goSpkCounter, goSpkCounter + num_go);
 	
-	float m = (goSpkCounter[2047] + goSpkCounter[2048]) / 2.0;
+	float m = (goSpkCounter[num_go / 2 - 1] + goSpkCounter[num_go / 2]) / 2.0;
 	float goSpkSum = 0;
 
 	for (int i = 0; i < num_go; i++) goSpkSum += goSpkCounter[i];
 
 	// NOTE: 1.0s below should really be the isi
-	std::cout << "[INFO]: Mean GO Rate: " << goSpkSum / ((float)num_go * 1.0) << std::endl;
+	std::cout << "[INFO]: Mean GO Rate: " << goSpkSum / ((float)num_go * isi) << std::endl;
 
-	medTrials += m / 1.0;
-	std::cout << "[INFO]: Median GO Rate: " << m / 1.0 << std::endl;
+	medTrials += m / isi;
+	std::cout << "[INFO]: Median GO Rate: " << m / isi << std::endl;
 }
 
 void Control::fill_rast_internal(int PSTHCounter)

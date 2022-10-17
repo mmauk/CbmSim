@@ -169,7 +169,7 @@ extern float gDecBCtoPC;
 extern float gDecSCtoPC;
 extern float tsPopHistPC; /* used for updating MFNC syn plasticity */
 extern float tsPerPopHistBinPC; /* used for updating MFNC syn plasticity */ 
-extern float numPopHistBinsPC; /* used for updating MFNC syn plasticity */ 
+// extern float numPopHistBinsPC; /* used for updating MFNC syn plasticity */ 
 extern float gLeakIO;
 extern float threshDecIO;
 extern float tsLTDDurationIO;

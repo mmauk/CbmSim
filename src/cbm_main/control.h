@@ -82,7 +82,7 @@ class Control
 		float inputStrength = 0.0;
 
 		// sim params -> TODO: place in simcore
-		int gpuIndex = 0;
+		int gpuIndex = 2;
 		int gpuP2    = 2;
 
 		int trial = 0;
