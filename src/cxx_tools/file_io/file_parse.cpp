@@ -79,7 +79,7 @@ void tokenize_file(std::string in_file, tokenized_file &t_file)
 	std::ifstream in_file_buf(in_file.c_str());
 	if (!in_file_buf.is_open())
 	{
-		std::cerr << "[ERROR]: Could not open input file. Exiting" << std::endl;
+		std::cerr << "[IO_ERROR]: Could not open file. Exiting..." << std::endl;
 		exit(3);
 	}
 

@@ -175,8 +175,7 @@ void validate_commandline(parsed_commandline &p_cl)
 		}
 		if (p_cl.vis_mode.empty())
 		{
-			std::cout << "[INFO]: Visual mode not specified in experiment mode. Setting to default value\n"
-					  << "[INFO]: of 'TUI'.\n";
+			std::cout << "[INFO]: Visual mode not specified in experiment mode. Setting to default value of 'TUI'.\n";
 			p_cl.vis_mode = "TUI";
 		}
 		p_cl.experiment_file = INPUT_DATA_PATH + p_cl.experiment_file;
