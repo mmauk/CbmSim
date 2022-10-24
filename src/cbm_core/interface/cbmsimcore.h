@@ -38,7 +38,7 @@ public:
 	CBMSimCore(CBMState *state, int gpuIndStart = -1, int numGPUP2 = -1);
 	~CBMSimCore();
 
-	void calcActivity(float spillFrac);
+	void calcActivity(float spillFrac, ct_uint32_t usePFPCPlast);
 
 	void updateMFInput(const ct_uint8_t *mfIn);
 	void updateTrueMFs(bool *isTrueMF);

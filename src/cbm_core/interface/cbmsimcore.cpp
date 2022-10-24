@@ -130,7 +130,7 @@ void CBMSimCore::syncCUDA(std::string title)
 	}
 }
 
-void CBMSimCore::calcActivity(float spillFrac)
+void CBMSimCore::calcActivity(float spillFrac, ct_uint32_t usePFPCPlast)
 {
 	cudaError_t error;
 	syncCUDA("1");
@@ -143,9 +143,12 @@ void CBMSimCore::calcActivity(float spillFrac)
 	syncCUDA("1a");
 #endif
 
-	for (int i = 0; i < numZones; i++)
+	if (usePFPCPlast == 1)
 	{
-		zones[i]->runPFPCSumCUDA(streams, i + 1);
+		for (int i = 0; i < numZones; i++)
+		{
+			zones[i]->runPFPCSumCUDA(streams, i + 1);
+		}
 	}
 
 #ifdef NO_ASYNC
@@ -174,7 +177,6 @@ void CBMSimCore::calcActivity(float spillFrac)
 	syncCUDA("1f");
 #endif
 
-	// Only allow plasticty once HomeoTuning in GCL is complete
 	for (int i = 0; i < numZones; i++)
 	{
 		zones[i]->runPFPCPlastCUDA(streams, 1, curTime);

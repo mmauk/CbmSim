@@ -454,12 +454,13 @@ void Control::runExperiment(struct gui *gui)
 	{
 		std::string trialName = td.trial_names[trial];
 
-		ct_uint32_t useCS     = td.use_css[trial];
-		ct_uint32_t onsetCS   = td.cs_onsets[trial];
-		ct_uint32_t csLength  = td.cs_lens[trial];
-		ct_uint32_t percentCS = td.cs_percents[trial];
-		ct_uint32_t useUS     = td.use_uss[trial];
-		ct_uint32_t onsetUS   = td.us_onsets[trial];
+		ct_uint32_t useCS        = td.use_css[trial];
+		ct_uint32_t usePFPCPlast = td.use_pfpc_plasts[trial];
+		ct_uint32_t onsetCS      = td.cs_onsets[trial];
+		ct_uint32_t csLength     = td.cs_lens[trial];
+		ct_uint32_t percentCS    = td.cs_percents[trial];
+		ct_uint32_t useUS        = td.use_uss[trial];
+		ct_uint32_t onsetUS      = td.us_onsets[trial];
 		
 		int PSTHCounter = 0;
 		float gGRGO_sum = 0;
@@ -489,7 +490,7 @@ void Control::runExperiment(struct gui *gui)
 			bool *isTrueMF = mfs->calcTrueMFs(mfFreq->getMFBG()); /* only used for mfdcn plasticity */
 			simCore->updateTrueMFs(isTrueMF);
 			simCore->updateMFInput(mfAP);
-			simCore->calcActivity(spillFrac); 
+			simCore->calcActivity(spillFrac, usePFPCPlast); 
 			//update_spike_sums(ts, onsetCS, onsetCS + csLength);
 
 			if (ts >= onsetCS && ts < onsetCS + csLength)

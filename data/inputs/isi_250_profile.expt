@@ -9,6 +9,8 @@ begin filetype run
 		// trial defs 
 		def trial isi_250_paired_trial
 			int use_cs 1
+			int use_pfpc_plast 1
+			int use_mfnc_plast 1
 			int cs_onset 400
 			int cs_len 250 
 			float cs_percent 100.0
@@ -18,6 +20,8 @@ begin filetype run
 
 		def trial probe_trial
 			int use_cs 1
+			int use_pfpc_plast 0
+			int use_mfnc_plast 0
 			int cs_onset 400
 			int cs_len 250
 			float cs_percent 100.0
