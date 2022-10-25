@@ -140,6 +140,9 @@ class Control
 		std::string io_raster_file = "";
 		std::string nc_raster_file = "";
 
+		std::string pf_pc_weights_file = "";
+		std::string mf_nc_weights_file = "";
+
 		struct cell_spike_sums spike_sums[NUM_CELL_TYPES] = {{}};
 		struct cell_firing_rates firing_rates[NUM_CELL_TYPES] = {{}};
 		const ct_uint8_t *cell_spikes[NUM_CELL_TYPES];
@@ -207,6 +210,7 @@ class Control
 		void save_mf_psth_to_file(std::string out_mf_psth_file);
 
 		void get_raster_filenames(std::map<std::string, std::string> &raster_files);
+		void get_weights_filenames(std::map<std::string, std::string> &weights_files);
 		void initialize_spike_sums();
 		void initialize_rast_internal();
 		void initializeOutputArrays();

@@ -27,6 +27,7 @@ typedef struct
 	std::string input_sim_file;
 	std::string output_sim_file;
 	std::map<std::string, std::string> raster_files;
+	std::map<std::string, std::string> weights_files;
 } parsed_commandline;
 
 void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl);

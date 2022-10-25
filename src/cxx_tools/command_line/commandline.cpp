@@ -21,7 +21,8 @@ const std::vector<std::pair<std::string, std::string>> command_line_opts{
 	{ "-e", "--experiment" },
 	{ "-i", "--input" },
 	{ "-o", "--output" },
-	{ "-r", "--raster" }
+	{ "-r", "--raster" },
+	{ "-w", "--weights" }
 };
 
 bool is_cmd_opt(std::string in_str)
@@ -68,6 +69,7 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 		std::vector<std::string>::iterator curr_token_iter;
 		size_t div;
 		std::string raster_code, raster_file_name;
+		std::string weights_code, weights_file_name;
 		switch (opt_sum)
 		{
 			case 2:
@@ -112,6 +114,22 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 							raster_code = curr_token_iter->substr(0, div);
 							raster_file_name = curr_token_iter->substr(div+1);
 							p_cl.raster_files[raster_code] = raster_file_name;
+							curr_token_iter++;
+						}
+						break;
+					case 'w':
+						while (curr_token_iter != tokens.end() && !is_cmd_opt(*curr_token_iter))
+						{
+							div = curr_token_iter->find_first_of(',');
+							if (div == std::string::npos)
+							{
+								std::cerr << "[IO_ERROR]: Comma not given for weights argument '" << *curr_token_iter << "'. Exiting...\n";
+								exit(8);
+								// we have a problem, so exit
+							}
+							weights_code = curr_token_iter->substr(0, div);
+							weights_file_name = curr_token_iter->substr(div+1);
+							p_cl.weights_files[weights_code] = weights_file_name;
 							curr_token_iter++;
 						}
 						break;
@@ -173,6 +191,13 @@ void validate_commandline(parsed_commandline &p_cl)
 				iter->second = OUTPUT_DATA_PATH + iter->second;
 			}
 		}
+		if (!p_cl.weights_files.empty())
+		{
+			for (auto iter = p_cl.weights_files.begin(); iter != p_cl.weights_files.end(); iter++)
+			{
+				iter->second = OUTPUT_DATA_PATH + iter->second;
+			}
+		}
 		if (p_cl.vis_mode.empty())
 		{
 			std::cout << "[INFO]: Visual mode not specified in experiment mode. Setting to default value of 'TUI'.\n";
@@ -197,6 +222,10 @@ std::string parsed_commandline_to_str(parsed_commandline &p_cl)
 	p_cl_buf << "{ 'input_sim_file', '" << p_cl.input_sim_file << "' }\n";
 	p_cl_buf << "{ 'output_sim_file', '" << p_cl.output_sim_file << "' }\n";
 	for (auto pair : p_cl.raster_files)
+	{
+		p_cl_buf << "{ '" << pair.first << "', '" << pair.second << "' }\n";
+	}
+	for (auto pair : p_cl.weights_files)
 	{
 		p_cl_buf << "{ '" << pair.first << "', '" << pair.second << "' }\n";
 	}

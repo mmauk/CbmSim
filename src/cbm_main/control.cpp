@@ -65,6 +65,7 @@ Control::Control(parsed_commandline &p_cl)
 		PSTHColSize = msPreCS + td.cs_lens[0] + msPostCS;
 
 		get_raster_filenames(p_cl.raster_files);
+		get_weights_filenames(p_cl.weights_files);
 		init_sim(pe_file, curr_sim_file_name);
 	}
 }
@@ -317,6 +318,21 @@ void Control::get_raster_filenames(std::map<std::string, std::string> &raster_fi
 	}
 }
 
+void Control::get_weights_filenames(std::map<std::string, std::string> &weights_files)
+{
+	if (!weights_files.empty())
+	{
+		if (weights_files.find("PFPC") != weights_files.end())
+		{
+			pf_pc_weights_file = weights_files["PFPC"];
+		}
+		if (weights_files.find("MFNC") != weights_files.end())
+		{
+			mf_nc_weights_file = weights_files["MFNC"];
+		}
+	}
+}
+
 void Control::initialize_spike_sums()
 {
 	spike_sums[MF].num_cells  = num_mf;
@@ -426,8 +442,12 @@ void Control::initializeOutputArrays()
 		allNCRaster      = (ct_uint8_t *)calloc(all_nc_rast_size, sizeof(ct_uint8_t));
 	}
 
+	if (!pf_pc_weights_file.empty())
+	{
 	// TODO: find a way to initialize only within gui mode
-	sample_pfpc_syn_weights = new float[4096];
+
+		sample_pfpc_syn_weights = new float[4096];
+	}
 	output_arrays_initialized = true;
 }
 
