@@ -4,10 +4,13 @@
 # Data last modified: 09/20/2022
 ##################################
 
-ROOT      := ./
-BUILD_DIR := $(ROOT)build/
-SRC_DIR   := $(ROOT)src/
-TARGET    := $(BUILD_DIR)cbm_sim
+ROOT         := ./
+BUILD_DIR    := $(ROOT)build/
+SRC_DIR      := $(ROOT)src/
+DATA_DIR     := $(ROOT)data/
+DATA_IN_DIR  := $(DATA_DIR)inputs
+DATA_OUT_DIR := $(DATA_DIR)outputs
+TARGET       := $(BUILD_DIR)cbm_sim
 
 INC_DIRS  := $(shell find $(SRC_DIR) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
@@ -46,10 +49,11 @@ LD_FLAGS := -m64 -fopenmp -g
 CHK_DIR_EXISTS   := test -d
 MKDIR            := mkdir -p
 RMDIR            := rmdir
-
 RM               := rm -rf
 
 VPATH := $(shell echo "${INC_DIRS}" | sed -e 's/ /:/g') 
+
+first: $(DATA_IN_DIR) $(DATA_OUT_DIR) $(BUILD_DIR) $(TARGET)
 
 $(BUILD_DIR)%.o: %.cu
 	$(NVCC) $(NVCC_FLAGS) $(CUDA_INC_FLAGS) -c $< -o $@
@@ -58,7 +62,16 @@ $(BUILD_DIR)%.o: %.cpp
 	$(CPP) $(CPP_FLAGS) $(CUDA_INC_FLAGS) $(GTK_INC_FLAGS) -c $< -o $@
 
 $(TARGET): $(OBJS)
-	$(LD) $(LD_FLAGS) $^ -o $@ $(LIB_FLAGS)
+	$(LD) $(LD_FLAGS) $^ -o $@ $(LIB_FLAGS) 
+
+$(DATA_IN_DIR):
+	@$(CHK_DIR_EXISTS) $(DATA_IN_DIR) || $(MKDIR) $(DATA_IN_DIR)
+
+$(DATA_OUT_DIR):
+	@$(CHK_DIR_EXISTS) $(DATA_OUT_DIR) || $(MKDIR) $(DATA_OUT_DIR)
+
+$(BUILD_DIR):
+	@$(CHK_DIR_EXISTS) $(BUILD_DIR) || $(MKDIR) $(BUILD_DIR)
 
 .PHONY: clean
 clean:
