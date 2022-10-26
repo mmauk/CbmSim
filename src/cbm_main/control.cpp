@@ -44,29 +44,29 @@ Control::Control(parsed_commandline &p_cl)
 		parse_lexed_build_file(l_file, pb_file);
 		if (!con_params_populated) populate_con_params(pb_file);
 	}
-	else if (!p_cl.experiment_file.empty())
+	else if (!p_cl.session_file.empty())
 	{
 		visual_mode = p_cl.vis_mode;
 		run_mode = "run";
-		curr_expt_file_name = p_cl.experiment_file;
+		curr_sess_file_name = p_cl.session_file;
 		curr_sim_file_name  = p_cl.input_sim_file;
 		out_sim_file_name   = p_cl.output_sim_file;
-		parsed_expt_file pe_file;
-		tokenize_file(curr_expt_file_name, t_file);
+		parsed_sess_file s_file;
+		tokenize_file(curr_sess_file_name, t_file);
 		lex_tokenized_file(t_file, l_file);
-		parse_lexed_expt_file(l_file, pe_file);
-		translate_parsed_trials(pe_file, td);
+		parse_lexed_sess_file(l_file, s_file);
+		translate_parsed_trials(s_file, td);
 		trials_data_initialized = true;
 
 		// TODO: move this somewhere else yike
-		trialTime   = std::stoi(pe_file.parsed_var_sections["trial_spec"].param_map["trialTime"].value);
-		msPreCS     = std::stoi(pe_file.parsed_var_sections["trial_spec"].param_map["msPreCS"].value);
-		msPostCS    = std::stoi(pe_file.parsed_var_sections["trial_spec"].param_map["msPostCS"].value);
+		trialTime   = std::stoi(s_file.parsed_var_sections["trial_spec"].param_map["trialTime"].value);
+		msPreCS     = std::stoi(s_file.parsed_var_sections["trial_spec"].param_map["msPreCS"].value);
+		msPostCS    = std::stoi(s_file.parsed_var_sections["trial_spec"].param_map["msPostCS"].value);
 		PSTHColSize = msPreCS + td.cs_lens[0] + msPostCS;
 
 		get_raster_filenames(p_cl.raster_files);
 		get_weights_filenames(p_cl.weights_files);
-		init_sim(pe_file, curr_sim_file_name);
+		init_sim(s_file, curr_sim_file_name);
 	}
 }
 
@@ -92,7 +92,7 @@ void Control::build_sim()
 	if (!simState) simState = new CBMState(numMZones);
 }
 
-void Control::init_sim(parsed_expt_file &pe_file, std::string in_sim_filename)
+void Control::init_sim(parsed_sess_file &s_file, std::string in_sim_filename)
 {
 	//if (sim_initialized) 
 	//{
@@ -111,7 +111,7 @@ void Control::init_sim(parsed_expt_file &pe_file, std::string in_sim_filename)
 	std::cout << "[INFO]: Initializing simulation...\n";
 	std::fstream sim_file_buf(in_sim_filename.c_str(), std::ios::in | std::ios::binary);
 	read_con_params(sim_file_buf);
-	populate_act_params(pe_file);
+	populate_act_params(s_file);
 	simState = new CBMState(numMZones, sim_file_buf);
 	simCore  = new CBMSimCore(simState, gpuIndex, gpuP2);
 	mfFreq   = new ECMFPopulation(num_mf, mfRandSeed, CSTonicMFFrac, CSPhasicMFFrac,
@@ -463,7 +463,7 @@ void save_arr_as_csv(float in_arr[], ct_uint32_t arr_len, std::string file_name)
 	out_file_buf.close();
 }
 
-void Control::runExperiment(struct gui *gui)
+void Control::runSession(struct gui *gui)
 {
 	float medTrials;
 	double start, end;

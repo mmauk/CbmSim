@@ -188,7 +188,7 @@ extern float gLeakBC;
 extern float grgoW;
 extern float mfgoW;
 
-void populate_act_params(parsed_expt_file &p_file);
+void populate_act_params(parsed_sess_file &s_file);
 void read_act_params(std::fstream &in_param_buf);
 void write_act_params(std::fstream &out_param_buf);
 

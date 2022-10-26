@@ -18,7 +18,7 @@
 const std::vector<std::pair<std::string, std::string>> command_line_opts{
 	{ "-v", "--visual" },
 	{ "-b", "--build" },
-	{ "-e", "--experiment" },
+	{ "-s", "--session" },
 	{ "-i", "--input" },
 	{ "-o", "--output" },
 	{ "-r", "--raster" },
@@ -92,8 +92,8 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 					case 'b':
 						p_cl.build_file = this_param;
 						break;
-					case 'e':
-						p_cl.experiment_file = this_param;
+					case 's':
+						p_cl.session_file = this_param;
 						break;
 					case 'i':
 						p_cl.input_sim_file = this_param;
@@ -147,9 +147,9 @@ void validate_commandline(parsed_commandline &p_cl)
 {
 	if (!p_cl.build_file.empty())
 	{
-		if (!p_cl.experiment_file.empty())
+		if (!p_cl.session_file.empty())
 		{
-			std::cerr << "[IO_ERROR]: Cannot specify both experiment and build file. Exiting.\n";
+			std::cerr << "[IO_ERROR]: Cannot specify both session and build file. Exiting.\n";
 			exit(5);
 		}
 		if (p_cl.output_sim_file.empty())
@@ -164,11 +164,11 @@ void validate_commandline(parsed_commandline &p_cl)
 		}
 		p_cl.build_file = INPUT_DATA_PATH + p_cl.build_file;
 	}
-	else if (!p_cl.experiment_file.empty())
+	else if (!p_cl.session_file.empty())
 	{
 		if (!p_cl.build_file.empty())
 		{
-			std::cerr << "[IO_ERROR]: Cannot specify both build and experiment file. Exiting.\n";
+			std::cerr << "[IO_ERROR]: Cannot specify both build and session file. Exiting.\n";
 			exit(6);
 		}
 		if (!p_cl.output_sim_file.empty())
@@ -181,7 +181,7 @@ void validate_commandline(parsed_commandline &p_cl)
 		}
 		else
 		{
-			std::cerr << "[IO_ERROR]: No input simulation specified in experiment mode. Exiting...\n";
+			std::cerr << "[IO_ERROR]: No input simulation specified in run mode. Exiting...\n";
 			exit(8);
 		}
 		if (!p_cl.raster_files.empty())
@@ -200,14 +200,14 @@ void validate_commandline(parsed_commandline &p_cl)
 		}
 		if (p_cl.vis_mode.empty())
 		{
-			std::cout << "[INFO]: Visual mode not specified in experiment mode. Setting to default value of 'TUI'.\n";
+			std::cout << "[INFO]: Visual mode not specified in run mode. Setting to default value of 'TUI'.\n";
 			p_cl.vis_mode = "TUI";
 		}
-		p_cl.experiment_file = INPUT_DATA_PATH + p_cl.experiment_file;
+		p_cl.session_file = INPUT_DATA_PATH + p_cl.session_file;
 	}
 	else
 	{
-		std::cerr << "[IO_ERROR]: Run mode not specified. You must provide either the {-b|--build} or {-e|--experiment}\n"
+		std::cerr << "[IO_ERROR]: Run mode not specified. You must provide either the {-b|--build} or {-s|--session}\n"
 				  << "[IO_ERROR]: arguments. Exiting...\n";
 		exit(7);
 	}
@@ -218,7 +218,7 @@ std::string parsed_commandline_to_str(parsed_commandline &p_cl)
 	std::stringstream p_cl_buf;
 	p_cl_buf << "{ 'vis_mode', '" << p_cl.vis_mode << "' }\n";
 	p_cl_buf << "{ 'build_file', '" << p_cl.build_file << "' }\n";
-	p_cl_buf << "{ 'experiment_file', '" << p_cl.experiment_file << "' }\n";
+	p_cl_buf << "{ 'session_file', '" << p_cl.session_file << "' }\n";
 	p_cl_buf << "{ 'input_sim_file', '" << p_cl.input_sim_file << "' }\n";
 	p_cl_buf << "{ 'output_sim_file', '" << p_cl.output_sim_file << "' }\n";
 	for (auto pair : p_cl.raster_files)

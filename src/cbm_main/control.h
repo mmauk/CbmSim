@@ -72,7 +72,7 @@ class Control
 		std::string visual_mode = "";
 		std::string run_mode = "";
 		std::string curr_build_file_name = "";
-		std::string curr_expt_file_name = "";
+		std::string curr_sess_file_name = "";
 		std::string curr_sim_file_name  = "";
 		std::string out_sim_file_name  = "";
 
@@ -190,7 +190,7 @@ class Control
 
 		void build_sim();
 		
-		void init_sim(parsed_expt_file &pe_file, std::string in_sim_filename);
+		void init_sim(parsed_sess_file &s_file, std::string in_sim_filename);
 		void reset_sim(std::string in_sim_filename);
 
 		void save_sim_state_to_file(std::string outStateFile); /* TODO: deprecate, what else do we use for? */
@@ -214,7 +214,7 @@ class Control
 		void initialize_spike_sums();
 		void initialize_rast_internal();
 		void initializeOutputArrays();
-		void runExperiment(struct gui *gui);
+		void runSession(struct gui *gui);
 
 		void reset_spike_sums();
 		void reset_rast_internal();

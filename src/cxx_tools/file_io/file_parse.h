@@ -103,8 +103,7 @@ typedef struct
 {
 	std::unordered_map<std::string, std::unordered_map<std::string, variable>> trial_map;
 	std::unordered_map<std::string, std::vector<pair>> block_map;
-	std::unordered_map<std::string, std::vector<pair>> session_map;
-	std::vector<pair> experiment; // <-- pairs of session identifier and number of sessions
+	std::vector<pair> session;  // <-- pairs of block identifier and number of blocks 
 } parsed_trial_section;
 
 // represents the entire file contents, broken up line-by-line, token-by-token
@@ -132,7 +131,7 @@ typedef struct
 {
 	parsed_trial_section parsed_trial_info;
 	std::map<std::string, parsed_var_section> parsed_var_sections;
-} parsed_expt_file;
+} parsed_sess_file;
 
 /*
  * Description:
@@ -153,11 +152,11 @@ void lex_tokenized_file(tokenized_file &t_file, lexed_file &l_file);
 /*
  * Description:
  *     takes a lexed file reference l_file and parses it, i.e. takes each lexeme
- *     and adds it to the correct entry in either parsed_expt_file.parsed_trial_info or
- *     parsed_expt_file.parsed_var_sections
+ *     and adds it to the correct entry in either parsed_sess_file.parsed_trial_info or
+ *     parsed_sess_file.parsed_var_sections
  *
  */
-void parse_lexed_expt_file(lexed_file &l_file, parsed_expt_file &e_file);
+void parse_lexed_sess_file(lexed_file &l_file, parsed_sess_file &s_file);
 
 /*
  * Description:
@@ -172,7 +171,7 @@ void allocate_trials_data(trials_data &td, ct_uint32_t num_trials);
 
 void initialize_trials_data(trials_data &td, parsed_trial_section &pt_section);
 
-void translate_parsed_trials(parsed_expt_file &pe_file, trials_data &td);
+void translate_parsed_trials(parsed_sess_file &s_file, trials_data &td);
 
 void delete_trials_data(trials_data &td);
 

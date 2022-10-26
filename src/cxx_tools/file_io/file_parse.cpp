@@ -58,7 +58,6 @@ std::map<std::string, lexeme> token_defs =
 		{ "trial", DEF_TYPE },
 		{ "block", DEF_TYPE },
 		{ "session", DEF_TYPE },
-		{ "experiment", DEF_TYPE },
 		{ "//", SINGLE_COMMENT },
 		{ "/*", DOUBLE_COMMENT_BEGIN },
 		{ "*/", DOUBLE_COMMENT_END },
@@ -145,13 +144,12 @@ void lex_tokenized_file(tokenized_file &t_file, lexed_file &l_file)
 	}
 }
 
-void parse_def(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, parsed_expt_file &e_file,
+void parse_def(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, parsed_sess_file &s_file,
 		std::string def_type, std::string def_label)
 {
 	pair curr_pair = {};
 	std::unordered_map<std::string, variable> curr_trial = {};
 	std::vector<pair> curr_block = {};
-	std::vector<pair> curr_session = {};
 	lexeme prev_lex = NONE;
 	variable curr_var = {};
 	while (ltp->lex != END_MARKER)
@@ -214,11 +212,7 @@ void parse_def(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, pars
 						}
 						else if (def_type == "session")
 						{
-							curr_session.push_back(curr_pair);
-						}
-						else if (def_type == "experiment")
-						{
-							e_file.parsed_trial_info.experiment.push_back(curr_pair);
+						   s_file.parsed_trial_info.session.push_back(curr_pair);
 						}
 						curr_pair = {};
 					}
@@ -238,17 +232,14 @@ void parse_def(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, pars
 		{
 			curr_pair.second = "1";
 			if (def_type == "block") curr_block.push_back(curr_pair);
-			else if (def_type == "session") curr_session.push_back(curr_pair);
-			else if (def_type == "experiment") e_file.parsed_trial_info.experiment.push_back(curr_pair);
+			else if (def_type == "session") s_file.parsed_trial_info.session.push_back(curr_pair);
 		}
 	}
-	if (def_type == "trial") e_file.parsed_trial_info.trial_map[def_label] = curr_trial;
-	
-	else if (def_type == "block") e_file.parsed_trial_info.block_map[def_label] = curr_block;
-	else if (def_type == "session") e_file.parsed_trial_info.session_map[def_label] = curr_session;
+	if (def_type == "trial") s_file.parsed_trial_info.trial_map[def_label] = curr_trial;
+	else if (def_type == "block") s_file.parsed_trial_info.block_map[def_label] = curr_block;
 }
 
-void parse_var_section(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, parsed_expt_file &e_file,
+void parse_var_section(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, parsed_sess_file &s_file,
 		std::string region_type)
 {
 	parsed_var_section curr_section = {};
@@ -279,10 +270,10 @@ void parse_var_section(std::vector<lexed_token>::iterator &ltp, lexed_file &l_fi
 		}
 		ltp++;
 	}
-	e_file.parsed_var_sections[region_type] = curr_section;
+	s_file.parsed_var_sections[region_type] = curr_section;
 }
 
-void parse_trial_section(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, parsed_expt_file &e_file)
+void parse_trial_section(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, parsed_sess_file &s_file)
 {
 	while (ltp->lex != END_MARKER) // parse this section
 	{
@@ -294,7 +285,7 @@ void parse_trial_section(std::vector<lexed_token>::iterator &ltp, lexed_file &l_
 				&& second_next_lt->lex == VAR_IDENTIFIER)
 			{
 				ltp += 4;
-				parse_def(ltp, l_file, e_file, next_lt->raw_token, second_next_lt->raw_token);
+				parse_def(ltp, l_file, s_file, next_lt->raw_token, second_next_lt->raw_token);
 			}
 			else {} // TODO: report error
 		}
@@ -306,18 +297,18 @@ void parse_trial_section(std::vector<lexed_token>::iterator &ltp, lexed_file &l_
 	}
 }
 
-void parse_region(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, parsed_expt_file &e_file,
+void parse_region(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, parsed_sess_file &s_file,
 		std::string region_type)
 {
 	if (region_type == "mf_input"
 		|| region_type == "activity"
 		|| region_type == "trial_spec")
 	{
-		parse_var_section(ltp, l_file, e_file, region_type);
+		parse_var_section(ltp, l_file, s_file, region_type);
 	}
 	else if (region_type == "trial_def")
 	{
-		parse_trial_section(ltp, l_file, e_file);
+		parse_trial_section(ltp, l_file, s_file);
 	}
 	else
 	{
@@ -330,7 +321,7 @@ void parse_region(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, p
 				&& second_next_lt->lex == REGION_TYPE)
 			{
 				ltp += 4;
-				parse_region(ltp, l_file, e_file, second_next_lt->raw_token);
+				parse_region(ltp, l_file, s_file, second_next_lt->raw_token);
 			}
 			else if (ltp->lex == SINGLE_COMMENT)
 			{
@@ -341,7 +332,7 @@ void parse_region(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, p
 	}
 }
 
-void parse_lexed_expt_file(lexed_file &l_file, parsed_expt_file &e_file)
+void parse_lexed_sess_file(lexed_file &l_file, parsed_sess_file &s_file)
 {
 	// NOTE: ltp stands for [l]exed [t]oken [p]ointer, not long-term potentiation!
 	std::vector<lexed_token>::iterator ltp = l_file.tokens.begin();
@@ -376,7 +367,7 @@ void parse_lexed_expt_file(lexed_file &l_file, parsed_expt_file &e_file)
 		else
 		{
 			ltp += 4;
-			parse_region(ltp, l_file, e_file, second_next_lt->raw_token);
+			parse_region(ltp, l_file, s_file, second_next_lt->raw_token);
 		}
 	}
 	else
@@ -551,10 +542,6 @@ void initialize_trial_names_helper(trials_data &td, parsed_trial_section &pt_sec
 				{
 					initialize_trial_names_helper(td, pt_section, pt_section.block_map[vec_pair.first]);
 				}
-				else if (pt_section.session_map.find(vec_pair.first) != pt_section.session_map.end())
-				{
-					initialize_trial_names_helper(td, pt_section, pt_section.session_map[vec_pair.first]);
-				}
 			}
 		}
 	}
@@ -562,7 +549,7 @@ void initialize_trial_names_helper(trials_data &td, parsed_trial_section &pt_sec
 
 void initialize_trials_data(trials_data &td, parsed_trial_section &pt_section)
 {
-	initialize_trial_names_helper(td, pt_section, pt_section.experiment);
+	initialize_trial_names_helper(td, pt_section, pt_section.session);
 	for (ct_uint32_t i = 0; i < td.num_trials; i++)
 	{
 		td.use_css[i]         = std::stoi(pt_section.trial_map[td.trial_names[i]]["use_cs"].value);
@@ -596,11 +583,7 @@ void calculate_num_trials_helper(parsed_trial_section &pt_section,
 	for (auto vec_pair : in_vec)
 	{
 		ct_uint32_t temp_count = std::stoi(vec_pair.second);
-		if (pt_section.session_map.find(vec_pair.first) != pt_section.session_map.end())
-		{
-			calculate_num_trials_helper(pt_section, pt_section.session_map[vec_pair.first], temp_count);
-		}
-		else if (pt_section.block_map.find(vec_pair.first ) != pt_section.block_map.end())
+		if (pt_section.block_map.find(vec_pair.first ) != pt_section.block_map.end())
 		{
 			calculate_num_trials_helper(pt_section, pt_section.block_map[vec_pair.first], temp_count);
 		}
@@ -612,16 +595,16 @@ void calculate_num_trials_helper(parsed_trial_section &pt_section,
 ct_uint32_t calculate_num_trials(parsed_trial_section &pt_section)
 {
 	ct_uint32_t temp_num_trials = 1;
-	calculate_num_trials_helper(pt_section, pt_section.experiment, temp_num_trials);
+	calculate_num_trials_helper(pt_section, pt_section.session, temp_num_trials);
 	return temp_num_trials;
 }
 
-void translate_parsed_trials(parsed_expt_file &pe_file, trials_data &td)
+void translate_parsed_trials(parsed_sess_file &s_file, trials_data &td)
 {
-	td.num_trials = calculate_num_trials(pe_file.parsed_trial_info);
+	td.num_trials = calculate_num_trials(s_file.parsed_trial_info);
 	// no error checking on returned value, uh oh!
 	allocate_trials_data(td, td.num_trials);
-	initialize_trials_data(td, pe_file.parsed_trial_info);
+	initialize_trials_data(td, s_file.parsed_trial_info);
 }
 
 /*

@@ -36,13 +36,8 @@ begin filetype run
 
 		// session defs
 		def session isi_1000_session
-			isi_1000_block 10
+			isi_1000_block 1
 		end 
-
-		// experiment def
-		def experiment isi_1000_experiment
-			isi_1000_session 10
-		end
 	end
 
 	begin section mf_input

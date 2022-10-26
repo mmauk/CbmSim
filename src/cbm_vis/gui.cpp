@@ -496,7 +496,7 @@ static void on_toggle_run(GtkWidget *widget, struct gui *gui)
 				gtk_button_set_label(GTK_BUTTON(widget), "Pause");
 				gui->ctrl_ptr->run_state = IN_RUN_NO_PAUSE;
 				gtk_widget_show(gui->normal_buttons[1].widget);
-				gui->ctrl_ptr->runExperiment(gui);
+				gui->ctrl_ptr->runSession(gui);
 				gtk_button_set_label(GTK_BUTTON(widget), "Run");
 				gtk_widget_hide(gui->normal_buttons[1].widget);
 				break;

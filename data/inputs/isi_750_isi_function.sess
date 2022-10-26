@@ -31,19 +31,13 @@ begin filetype run
 
 		// block defs 
 		def block isi_750_block
-			isi_750_paired_trial
-			probe_trial
+			isi_750_paired_trial 10
 		end 
 
 		// session defs
 		def session isi_750_session
-			isi_750_block 5
+			isi_750_block 10
 		end 
-
-		// experiment def
-		def experiment isi_750_experiment
-			isi_750_session 10
-		end
 	end
 
 	begin section mf_input

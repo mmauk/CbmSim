@@ -23,7 +23,7 @@ typedef struct
 {
 	std::string vis_mode;
 	std::string build_file;
-	std::string experiment_file;
+	std::string session_file;
 	std::string input_sim_file;
 	std::string output_sim_file;
 	std::map<std::string, std::string> raster_files;

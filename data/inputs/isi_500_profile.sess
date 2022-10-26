@@ -7,15 +7,15 @@ begin filetype run
 	begin section trial_def
 
 		// trial defs 
-		def trial isi_1750_paired_trial
+		def trial isi_500_paired_trial
 			int use_cs 1
 			int use_pfpc_plast 1
 			int use_mfnc_plast 1
 			int cs_onset 400
-			int cs_len 1750
+			int cs_len 500 
 			float cs_percent 100.0
 			int use_us 1
-			int us_onset 2150
+			int us_onset 900
 		end
 
 		def trial probe_trial
@@ -23,27 +23,22 @@ begin filetype run
 			int use_pfpc_plast 0
 			int use_mfnc_plast 0
 			int cs_onset 400
-			int cs_len 1750
+			int cs_len 500
 			float cs_percent 100.0
 			int use_us 0
-			int us_onset 2150
+			int us_onset 900
 		end
 
 		// block defs 
-		def block isi_1750_block
-			isi_1750_paired_trial
+		def block isi_500_block
+			isi_500_paired_trial
 			probe_trial
 		end 
 
 		// session defs
-		def session isi_1750_session
-			isi_1750_block 5
+		def session isi_500_session
+			isi_500_block 5
 		end 
-
-		// experiment def
-		def experiment isi_1750_experiment
-			isi_1750_session 10
-		end
 	end
 
 	begin section mf_input
@@ -80,7 +75,7 @@ begin filetype run
 	begin section trial_spec
 		int trialTime 5000
 		int msPreCS 400
-		int msPostCS 402
+		int msPostCS 404
 	end
 
 	begin section activity

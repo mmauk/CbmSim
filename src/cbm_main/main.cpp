@@ -35,11 +35,11 @@ int main(int argc, char **argv)
 		control->build_sim();
 		control->save_sim_to_file(p_cl.output_sim_file);
 	}
-	else if (!p_cl.experiment_file.empty())
+	else if (!p_cl.session_file.empty())
 	{
 		if (p_cl.vis_mode == "TUI")
 		{
-			control->runExperiment(NULL);
+			control->runSession(NULL);
 			if (!p_cl.output_sim_file.empty())
 				std::cout << "[INFO]: Saving simulation to file...\n";
 				control->save_sim_to_file(p_cl.output_sim_file);

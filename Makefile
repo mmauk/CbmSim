@@ -16,8 +16,8 @@ INC_DIRS  := $(shell find $(SRC_DIR) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
 ifeq ($(shell uname -rv | awk '{print $$2}' | tr -d '#[:digit:]-'), Ubuntu)
-	CUDA_PKG_NAME   := cuda-11.7
-	CUDART_PKG_NAME := cudart-11.7
+	CUDA_PKG_NAME   := cuda-11.8
+	CUDART_PKG_NAME := cudart-11.8
 else
 	CUDA_PKG_NAME   := cuda
 	CUDART_PKG_NAME := cudart
@@ -41,10 +41,10 @@ NVCC       := nvcc
 NVCC_FLAGS := -arch=native -Xcompiler -fPIC -O3
 
 CPP       := g++-11
-CPP_FLAGS := -m64 -pipe -std=c++14 -fopenmp -g -fPIC
+CPP_FLAGS := -m64 -pipe -std=c++14 -fopenmp -O3 -fPIC
 
 LD       := g++-11
-LD_FLAGS := -m64 -fopenmp -g
+LD_FLAGS := -m64 -fopenmp -O3
 
 CHK_DIR_EXISTS   := test -d
 MKDIR            := mkdir -p
