@@ -131,6 +131,9 @@ class Control
 		int msPostCS = 0; // was 400 (10/17/2022) was 1000 (08/09/2022)
 		int PSTHColSize = 0; // derived param, from msPreCS, msPostCS and csLength 
 
+		ct_uint32_t pf_pc_plast_on;
+		ct_uint32_t mf_nc_plast_on;
+
 		std::string mf_raster_file = "";
 		std::string gr_raster_file = "";
 		std::string go_raster_file = "";

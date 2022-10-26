@@ -64,6 +64,9 @@ Control::Control(parsed_commandline &p_cl)
 		msPostCS    = std::stoi(s_file.parsed_var_sections["trial_spec"].param_map["msPostCS"].value);
 		PSTHColSize = msPreCS + td.cs_lens[0] + msPostCS;
 
+		pf_pc_plast_on = (p_cl.pfpc_plasticity == "on") ? 1 : 0;
+		mf_nc_plast_on = (p_cl.mfnc_plasticity == "on") ? 1 : 0;
+
 		get_raster_filenames(p_cl.raster_files);
 		get_weights_filenames(p_cl.weights_files);
 		init_sim(s_file, curr_sim_file_name);
@@ -475,7 +478,6 @@ void Control::runSession(struct gui *gui)
 		std::string trialName = td.trial_names[trial];
 
 		ct_uint32_t useCS        = td.use_css[trial];
-		ct_uint32_t usePFPCPlast = td.use_pfpc_plasts[trial];
 		ct_uint32_t onsetCS      = td.cs_onsets[trial];
 		ct_uint32_t csLength     = td.cs_lens[trial];
 		ct_uint32_t percentCS    = td.cs_percents[trial];
@@ -510,7 +512,7 @@ void Control::runSession(struct gui *gui)
 			bool *isTrueMF = mfs->calcTrueMFs(mfFreq->getMFBG()); /* only used for mfdcn plasticity */
 			simCore->updateTrueMFs(isTrueMF);
 			simCore->updateMFInput(mfAP);
-			simCore->calcActivity(spillFrac, usePFPCPlast); 
+			simCore->calcActivity(spillFrac, pf_pc_plast_on); 
 			//update_spike_sums(ts, onsetCS, onsetCS + csLength);
 
 			if (ts >= onsetCS && ts < onsetCS + csLength)

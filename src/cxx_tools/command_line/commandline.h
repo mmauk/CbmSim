@@ -26,6 +26,8 @@ typedef struct
 	std::string session_file;
 	std::string input_sim_file;
 	std::string output_sim_file;
+	std::string pfpc_plasticity;
+	std::string mfnc_plasticity;
 	std::map<std::string, std::string> raster_files;
 	std::map<std::string, std::string> weights_files;
 } parsed_commandline;

@@ -15,13 +15,15 @@
 #include "commandline.h"
 #include "pstdint.h"
 
-const std::vector<std::pair<std::string, std::string>> command_line_opts{
-	{ "-v", "--visual" },
-	{ "-b", "--build" },
+const std::vector<std::pair<std::string, std::string>> command_line_opts 
+{
+	{ "-v", "--visual"  },
+	{ "-b", "--build"   },
 	{ "-s", "--session" },
-	{ "-i", "--input" },
-	{ "-o", "--output" },
-	{ "-r", "--raster" },
+	{ "-i", "--input"   },
+	{ "-o", "--output"  },
+	{ "-p", "--plastic" },
+	{ "-r", "--raster"  },
 	{ "-w", "--weights" }
 };
 
@@ -68,6 +70,7 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 		char opt_char_code;
 		std::vector<std::string>::iterator curr_token_iter;
 		size_t div;
+		std::string plastic_code;
 		std::string raster_code, raster_file_name;
 		std::string weights_code, weights_file_name;
 		switch (opt_sum)
@@ -101,6 +104,22 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 					case 'o':
 						p_cl.output_sim_file = this_param;
 						break;
+					case 'p':
+						while (curr_token_iter != tokens.end() && !is_cmd_opt(*curr_token_iter))
+						{
+							div = curr_token_iter->find_first_of(',');
+							if (div == std::string::npos)
+							{
+								std::cerr << "[IO_ERROR]: Comma not given for plasticity argument '" << *curr_token_iter << "'. Exiting...\n";
+								exit(10);
+								// we have a problem, so exit
+							}
+							plastic_code = curr_token_iter->substr(0, div);
+							if (plastic_code == "PFPC") p_cl.pfpc_plasticity = curr_token_iter->substr(div+1);
+							else if (plastic_code == "MFNC") p_cl.mfnc_plasticity = curr_token_iter->substr(div+1);
+							curr_token_iter++;
+						}
+						break;
 					case 'r':
 						while (curr_token_iter != tokens.end() && !is_cmd_opt(*curr_token_iter))
 						{
@@ -124,7 +143,7 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 							if (div == std::string::npos)
 							{
 								std::cerr << "[IO_ERROR]: Comma not given for weights argument '" << *curr_token_iter << "'. Exiting...\n";
-								exit(8);
+								exit(9);
 								// we have a problem, so exit
 							}
 							weights_code = curr_token_iter->substr(0, div);
@@ -183,6 +202,22 @@ void validate_commandline(parsed_commandline &p_cl)
 		{
 			std::cerr << "[IO_ERROR]: No input simulation specified in run mode. Exiting...\n";
 			exit(8);
+		}
+		if (p_cl.pfpc_plasticity.empty() && p_cl.mfnc_plasticity.empty())
+		{
+			std::cout << "[INFO]: Plasticity argument not given. Turning all plasticity off...\n";
+			p_cl.pfpc_plasticity = "off";
+			p_cl.mfnc_plasticity = "off";
+		}
+		if (!p_cl.pfpc_plasticity.empty() && (p_cl.pfpc_plasticity != "on" && p_cl.pfpc_plasticity != "off"))
+		{
+			std::cerr << "[IO_ERROR]: Invalid argument given for PFPC plasticity. Argument must be either 'on' or 'off'. Exiting...\n";
+			exit(9);
+		}
+		if (!p_cl.mfnc_plasticity.empty() && (p_cl.mfnc_plasticity != "on" && p_cl.mfnc_plasticity != "off"))
+		{
+			std::cerr << "[IO_ERROR]: Invalid argument given for MFNC plasticity. Argument must be either 'on' or 'off'. Exiting...\n";
+			exit(9);
 		}
 		if (!p_cl.raster_files.empty())
 		{
