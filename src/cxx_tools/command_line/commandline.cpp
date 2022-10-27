@@ -16,7 +16,15 @@
 #include "commandline.h"
 #include "pstdint.h"
 
-const std::vector<std::pair<std::string, std::string>> command_line_opts 
+const std::vector<std::string> command_line_single_opts
+{
+	"-p",
+	"-m",
+	"-b",
+	"-c",
+};
+
+const std::vector<std::pair<std::string, std::string>> command_line_pair_opts 
 {
 	{ "-h", "--help"  },
 	{ "-v", "--visual"  },
@@ -24,14 +32,13 @@ const std::vector<std::pair<std::string, std::string>> command_line_opts
 	{ "-s", "--session" },
 	{ "-i", "--input"   },
 	{ "-o", "--output"  },
-	{ "-p", "--plastic" },
 	{ "-r", "--raster"  },
 	{ "-w", "--weights" }
 };
 
 bool is_cmd_opt(std::string in_str)
 {
-	for (auto opt : command_line_opts)
+	for (auto opt : command_line_pair_opts)
 	{
 		if (in_str == opt.first || in_str == opt.second) return true;
 	}
@@ -98,8 +105,33 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 	{
 		tokens.push_back(std::string(*iter));
 	}
+
+	for (auto opt : command_line_single_opts)
+	{
+		if (cmd_opt_exists(tokens, opt) == 1)
+		{
+			char opt_char_code = opt[1];
+			switch (opt_char_code)
+			{
+				/* FIXME: take care of error-case if user specifies two mutually exclusive options (e.g. -b -c) */
+				case 'p':
+					p_cl.pfpc_plasticity = "off";
+					break;
+				case 'm':
+					p_cl.mfnc_plasticity = "off";
+					break;
+				case 'b':
+					p_cl.pfpc_plasticity = "binary";
+					break;
+				case 'c':
+					p_cl.pfpc_plasticity = "cascade";
+					break;
+			}
+		}
+	}
+
 	// first pass: get options and associated opt_params.
-	for (auto opt : command_line_opts)
+	for (auto opt : command_line_pair_opts)
 	{
 		int first_opt_exist = cmd_opt_exists(tokens, opt.first); 
 		int second_opt_exist = cmd_opt_exists(tokens, opt.second);
@@ -146,22 +178,6 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 						break;
 					case 'o':
 						p_cl.output_sim_file = this_param;
-						break;
-					case 'p':
-						while (curr_token_iter != tokens.end() && !is_cmd_opt(*curr_token_iter))
-						{
-							div = curr_token_iter->find_first_of(',');
-							if (div == std::string::npos)
-							{
-								std::cerr << "[IO_ERROR]: Comma not given for plasticity argument '" << *curr_token_iter << "'. Exiting...\n";
-								exit(10);
-								// we have a problem, so exit
-							}
-							plastic_code = curr_token_iter->substr(0, div);
-							if (plastic_code == "PFPC") p_cl.pfpc_plasticity = curr_token_iter->substr(div+1);
-							else if (plastic_code == "MFNC") p_cl.mfnc_plasticity = curr_token_iter->substr(div+1);
-							curr_token_iter++;
-						}
 						break;
 					case 'r':
 						while (curr_token_iter != tokens.end() && !is_cmd_opt(*curr_token_iter))
@@ -254,21 +270,21 @@ void validate_commandline(parsed_commandline &p_cl)
 			std::cerr << "[IO_ERROR]: No input simulation specified in run mode. Exiting...\n";
 			exit(8);
 		}
-		if (p_cl.pfpc_plasticity.empty() && p_cl.mfnc_plasticity.empty())
+		if (p_cl.pfpc_plasticity.empty())
 		{
-			std::cout << "[INFO]: Plasticity argument not given. Turning all plasticity off...\n";
-			p_cl.pfpc_plasticity = "off";
-			p_cl.mfnc_plasticity = "off";
+			std::cout << "[INFO]: Turning PFPC plasticity on to default of 'graded' mode...\n";
+			p_cl.pfpc_plasticity = "graded";
 		}
-		if (!p_cl.pfpc_plasticity.empty() && (p_cl.pfpc_plasticity != "on" && p_cl.pfpc_plasticity != "off"))
+		else
 		{
-			std::cerr << "[IO_ERROR]: Invalid argument given for PFPC plasticity. Argument must be either 'on' or 'off'. Exiting...\n";
-			exit(9);
+			// just notify user what we already set above
+			if (p_cl.pfpc_plasticity == "binary") std::cout << "[INFO]: Turning PFPC plasticity on to 'binary' mode...\n";
+			if (p_cl.pfpc_plasticity == "cascade") std::cout << "[INFO]: Turning PFPC plasticity on to 'cascade' mode...\n";
 		}
-		if (!p_cl.mfnc_plasticity.empty() && (p_cl.mfnc_plasticity != "on" && p_cl.mfnc_plasticity != "off"))
+		if (p_cl.mfnc_plasticity.empty())
 		{
-			std::cerr << "[IO_ERROR]: Invalid argument given for MFNC plasticity. Argument must be either 'on' or 'off'. Exiting...\n";
-			exit(9);
+			std::cout << "[INFO]: Turning MFNC plasticity on to default of 'graded' mode...\n";
+			p_cl.mfnc_plasticity = "graded";
 		}
 		if (!p_cl.raster_files.empty())
 		{
