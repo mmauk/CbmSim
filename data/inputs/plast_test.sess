@@ -16,23 +16,14 @@ begin filetype run
 			int us_onset 650
 		end
 
-		def trial probe_trial
-			int use_cs 1
-			int cs_onset 400
-			int cs_len 250
-			float cs_percent 100.0
-			int use_us 0
-			int us_onset 650
-		end
-
 		// block defs 
 		def block isi_250_block
-			isi_250_paired_trial 10
+			isi_250_paired_trial 250 
 		end 
 
 		// session defs
 		def session isi_250_session
-			isi_250_block 10
+			isi_250_block 2
 		end 
 	end
 

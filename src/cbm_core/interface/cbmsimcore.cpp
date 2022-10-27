@@ -143,12 +143,9 @@ void CBMSimCore::calcActivity(float spillFrac, ct_uint32_t usePFPCPlast)
 	syncCUDA("1a");
 #endif
 
-	if (usePFPCPlast == 1)
+	for (int i = 0; i < numZones; i++)
 	{
-		for (int i = 0; i < numZones; i++)
-		{
-			zones[i]->runPFPCSumCUDA(streams, i + 1);
-		}
+		zones[i]->runPFPCSumCUDA(streams, i + 1);
 	}
 
 #ifdef NO_ASYNC
@@ -177,9 +174,12 @@ void CBMSimCore::calcActivity(float spillFrac, ct_uint32_t usePFPCPlast)
 	syncCUDA("1f");
 #endif
 
-	for (int i = 0; i < numZones; i++)
+	if (usePFPCPlast == 1)
 	{
-		zones[i]->runPFPCPlastCUDA(streams, 1, curTime);
+		for (int i = 0; i < numZones; i++)
+		{
+			zones[i]->runPFPCPlastCUDA(streams, 1, curTime);
+		}
 	}
 #ifdef NO_ASYNC
 	syncCUDA("1f");

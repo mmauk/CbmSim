@@ -13,6 +13,7 @@
 #include <regex>
 #include "file_parse.h"
 
+
 // regex strings for matching variable identifiers and variable values
 const std::string var_id_regex_str = "[a-zA-Z_]{1}[a-zA-Z0-9_]*";
 const std::string var_val_regex_str = "[+-]?([0-9]*[.])?[0-9]*([e][+-]?[0-9]+)?";
@@ -504,8 +505,6 @@ void parse_lexed_build_file(lexed_file &l_file, parsed_build_file &b_file)
 void allocate_trials_data(trials_data &td, ct_uint32_t num_trials)
 {
 	td.trial_names     = (std::string *)calloc(num_trials, sizeof(std::string));
-	td.use_pfpc_plasts = (ct_uint32_t *)calloc(num_trials, sizeof(ct_uint32_t));
-	td.use_mfnc_plasts = (ct_uint32_t *)calloc(num_trials, sizeof(ct_uint32_t));
 	td.use_css         = (ct_uint32_t *)calloc(num_trials, sizeof(ct_uint32_t));
 	td.cs_onsets       = (ct_uint32_t *)calloc(num_trials, sizeof(ct_uint32_t));
 	td.cs_lens         = (ct_uint32_t *)calloc(num_trials, sizeof(ct_uint32_t));
@@ -553,8 +552,6 @@ void initialize_trials_data(trials_data &td, parsed_trial_section &pt_section)
 	for (ct_uint32_t i = 0; i < td.num_trials; i++)
 	{
 		td.use_css[i]         = std::stoi(pt_section.trial_map[td.trial_names[i]]["use_cs"].value);
-		td.use_pfpc_plasts[i] = std::stoi(pt_section.trial_map[td.trial_names[i]]["use_pfpc_plast"].value);
-		td.use_mfnc_plasts[i] = std::stoi(pt_section.trial_map[td.trial_names[i]]["use_mfnc_plast"].value);
 		td.cs_onsets[i]       = std::stoi(pt_section.trial_map[td.trial_names[i]]["cs_onset"].value);
 		td.cs_lens[i]         = std::stoi(pt_section.trial_map[td.trial_names[i]]["cs_len"].value);
 		td.cs_percents[i]     = std::stof(pt_section.trial_map[td.trial_names[i]]["cs_percent"].value);
@@ -566,8 +563,6 @@ void initialize_trials_data(trials_data &td, parsed_trial_section &pt_section)
 void delete_trials_data(trials_data &td)
 {
 	free(td.trial_names);
-	free(td.use_pfpc_plasts);
-	free(td.use_mfnc_plasts);
 	free(td.use_css);
 	free(td.cs_onsets);
 	free(td.cs_lens);
