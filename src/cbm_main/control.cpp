@@ -64,9 +64,7 @@ Control::Control(parsed_commandline &p_cl)
 		msPostCS    = std::stoi(s_file.parsed_var_sections["trial_spec"].param_map["msPostCS"].value);
 		PSTHColSize = msPreCS + td.cs_lens[0] + msPostCS;
 
-		pf_pc_plast_on = (p_cl.pfpc_plasticity == "on") ? 1 : 0;
-		mf_nc_plast_on = (p_cl.mfnc_plasticity == "on") ? 1 : 0;
-
+		set_plasticity_modes(p_cl);
 		get_raster_filenames(p_cl.raster_files);
 		get_weights_filenames(p_cl.weights_files);
 		init_sim(s_file, curr_sim_file_name);
@@ -94,6 +92,21 @@ void Control::build_sim()
 {
 	if (!simState) simState = new CBMState(numMZones);
 }
+
+void Control::set_plasticity_modes(parsed_commandline &p_cl)
+{
+	if (p_cl.pfpc_plasticity == "off") pf_pc_plast = OFF;
+	else if (p_cl.pfpc_plasticity == "graded") pf_pc_plast = GRADED;
+	else if (p_cl.pfpc_plasticity == "dual") pf_pc_plast = DUAL;
+	else if (p_cl.pfpc_plasticity == "cascade") pf_pc_plast = CASCADE;
+
+	if (p_cl.mfnc_plasticity == "off") mf_nc_plast = OFF;
+	else if (p_cl.mfnc_plasticity == "graded") mf_nc_plast = GRADED;
+	/* TODO: implement cmdline functionality to enable these */
+	else if (p_cl.mfnc_plasticity == "dual") mf_nc_plast = DUAL;
+	else if (p_cl.mfnc_plasticity == "cascade") mf_nc_plast = CASCADE;
+}
+
 
 void Control::init_sim(parsed_sess_file &s_file, std::string in_sim_filename)
 {
@@ -512,7 +525,7 @@ void Control::runSession(struct gui *gui)
 			bool *isTrueMF = mfs->calcTrueMFs(mfFreq->getMFBG()); /* only used for mfdcn plasticity */
 			simCore->updateTrueMFs(isTrueMF);
 			simCore->updateMFInput(mfAP);
-			simCore->calcActivity(spillFrac, pf_pc_plast_on); 
+			simCore->calcActivity(spillFrac, pf_pc_plast, mf_nc_plast); 
 			//update_spike_sums(ts, onsetCS, onsetCS + csLength);
 
 			if (ts >= onsetCS && ts < onsetCS + csLength)

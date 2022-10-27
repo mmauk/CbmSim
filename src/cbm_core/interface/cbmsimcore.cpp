@@ -130,7 +130,7 @@ void CBMSimCore::syncCUDA(std::string title)
 	}
 }
 
-void CBMSimCore::calcActivity(float spillFrac, ct_uint32_t usePFPCPlast)
+void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum plasticity mf_nc_plast)
 {
 	cudaError_t error;
 	syncCUDA("1");
@@ -174,7 +174,7 @@ void CBMSimCore::calcActivity(float spillFrac, ct_uint32_t usePFPCPlast)
 	syncCUDA("1f");
 #endif
 
-	if (usePFPCPlast == 1)
+	if (pf_pc_plast == GRADED)
 	{
 		for (int i = 0; i < numZones; i++)
 		{

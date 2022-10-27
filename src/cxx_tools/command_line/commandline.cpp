@@ -20,7 +20,7 @@ const std::vector<std::string> command_line_single_opts
 {
 	"-p",
 	"-m",
-	"-b",
+	"-d",
 	"-c",
 };
 
@@ -64,17 +64,19 @@ void print_usage_info()
 {
 	std::cout << "Usage: ./cbm_sim [options]\n";
 	std::cout << "Options:\n";
-	std::cout << std::right << std::setw(10) << "\t-h, --help" << "\t\tprint this information and exit.\n";
+	std::cout << std::right << std::setw(10) << "\t-h, --help" << "\t\tprint this information and exit\n";
 	std::cout << std::right << std::setw(20) << "\t-v, --visual [TUI|GUI]" << "\tspecify the visual mode the simulation is run in\n";
 	std::cout << std::right << std::setw(20) << "\t-b, --build [FILE]" << "\tsets the simulation to build a bunny using FILE as the build file\n";
 	std::cout << std::right << std::setw(20) << "\t-s, --session [FILE]" << "\tsets the simulation to run a session using FILE as the session file\n";
-	std::cout << std::right << std::setw(20) << "\t-i, --input [FILE]" << "\tspecify the input simulation file.\n";
-	std::cout << std::right << std::setw(20) << "\t-o, --output [FILE]" << "\tspecify the output simulation file.\n";
-	std::cout << "\t-p, --plastic {[CODE],[on|off]} space-separated list of plasticity types and whether plasticity is on or off. Possible CODEs are:\n\n";
-	std::cout << "\t\t\t\t      \tPFPC - parallel-fiber to purkinje synapse\n";
-	std::cout << "\t\t\t\t      \tMFNC - mossy-fiber to deep nucleus synapse\n\n";
-	std::cout << "\t\t\t\t      \tif this option is not specified, the default action is to turn all plasticity on.\n\n";
-	std::cout << "\t-r, --raster {[CODE],[FILE]} space-separated list of cell types and the raster file to be saved for that cell type. Possible CODEs are:\n\n";
+	std::cout << std::right << std::setw(20) << "\t-i, --input [FILE]" << "\tspecify the input simulation file\n";
+	std::cout << std::right << std::setw(20) << "\t-o, --output [FILE]" << "\tspecify the output simulation file\n";
+	std::cout << std::right << std::setw(10) << "\t-p|-d|-c" << "\t\tturns off or sets PFPC plasticity mode; options are mutually exclusive and work as follows:\n\n";
+	std::cout << "\t\t\t\t \t-p - turns PFPC plasticity off\n";
+	std::cout << "\t\t\t\t \t-d - turns PFPC plasticity on and sets the type of plasticity to 'dual' ie 'binary'\n";
+	std::cout << "\t\t\t\t \t-c - turns PFPC plasticity on and sets the type of plasticity to 'cascade'\n\n";
+	std::cout << std::right << std::setw(10) << "\t" << "\t\tif none of these options is given, PFPC plasticity is turned on and set to 'graded' by default\n\n";
+	std::cout << std::right << std::setw(10) << "\t-m" << "\t\t\tturns off MFNC plasticity; if not included, MFNC plasticity is turned on and set to 'graded' by default\n";
+	std::cout << "\t-r, --raster {[CODE],[FILE]} space-separated list of cell types and raster file to be saved for that cell type. Possible CODEs are:\n\n";
 	std::cout << "\t\t\t\t \tMF - Mossy Fiber\n";
 	std::cout << "\t\t\t\t \tGR - Granule Cell\n";
 	std::cout << "\t\t\t\t \tGO - Golgi Cell\n";
@@ -83,17 +85,17 @@ void print_usage_info()
 	std::cout << "\t\t\t\t \tPC - Purkinje Cell\n";
 	std::cout << "\t\t\t\t \tNC - Deep Nucleus Cell\n";
 	std::cout << "\t\t\t\t \tIO - Inferior Olive Cell\n\n";
-	std::cout << "\t-w, --weights {[CODE],[FILE]} space-separated list of weights and weights file to be saved. Possible CODEs are:\n\n";
+	std::cout << "\t-w, --weights {[CODE],[FILE]} space-separated list of weights and weights files to be saved. Possible CODEs are:\n\n";
 	std::cout << "\t\t\t\t  \tPFPC - parallel-fiber to purkinje synapse\n";
 	std::cout << "\t\t\t\t  \tMFNC - mossy-fiber to deep nucleus synapse\n\n";
 	std::cout << "Example usage:\n\n";
-	std::cout << "uses file 'build_file.bld' to construct a bunny, which is placed in file 'bunny.sim':\n\n";
+	std::cout << "1) uses file 'build_file.bld' to construct a bunny, which is saved to file 'bunny.sim':\n\n";
 	std::cout << "\t./cbm_sim -b build_file.bld -o bunny.sim\n\n";
-	std::cout << "uses file 'acquisition.sess' to train the input simulation 'bunny.sim' with PFPC plasticity on, MFNC plasticity off:\n\n";
-	std::cout << "\t./cbm_sim -s acquisition.sess -i bunny.sim -p PFPC,on MFNC,off\n\n";
-	std::cout << "uses file 'acquisition.sess' to train the input simulation 'bunny.sim' with PFPC and MFNC plasticity on.\n";
-	std::cout << "PC, SC, and BC rasters are saved to files 'allPCRaster.bin' 'allSCRaster.bin' and 'allBCRaster.bin' respectively:\n\n";
-	std::cout << "\t./cbm_sim -s acquisition.sess -i bunny.sim -r PC,allPCRaster SC,allSCRaster BC,allBCRaster\n";
+	std::cout << "2) uses file 'acquisition.sess' to train the input simulation 'bunny.sim' with PFPC plasticity on and set to graded and MFNC plasticity off:\n\n";
+	std::cout << "\t./cbm_sim -s acquisition.sess -i bunny.sim -m\n\n";
+	std::cout << "3) uses file 'acquisition.sess' to train the input simulation 'bunny.sim' with PFPC and MFNC plasticity on and set to graded;\n";
+	std::cout << "   PC, SC, and BC rasters are saved to files 'allPCRaster.bin' 'allSCRaster.bin' and 'allBCRaster.bin' respectively:\n\n";
+	std::cout << "\t./cbm_sim -s acquisition.sess -i bunny.sim -r PC,allPCRaster SC,allSCRaster BC,allBCRaster\n\n";
 }
 
 
@@ -120,8 +122,8 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 				case 'm':
 					p_cl.mfnc_plasticity = "off";
 					break;
-				case 'b':
-					p_cl.pfpc_plasticity = "binary";
+				case 'd':
+					p_cl.pfpc_plasticity = "dual";
 					break;
 				case 'c':
 					p_cl.pfpc_plasticity = "cascade";
@@ -272,20 +274,22 @@ void validate_commandline(parsed_commandline &p_cl)
 		}
 		if (p_cl.pfpc_plasticity.empty())
 		{
-			std::cout << "[INFO]: Turning PFPC plasticity on to default of 'graded' mode...\n";
+			std::cout << "[INFO]: Turning PFPC plasticity on to default mode 'graded'...\n";
 			p_cl.pfpc_plasticity = "graded";
 		}
 		else
 		{
 			// just notify user what we already set above
-			if (p_cl.pfpc_plasticity == "binary") std::cout << "[INFO]: Turning PFPC plasticity on to 'binary' mode...\n";
-			if (p_cl.pfpc_plasticity == "cascade") std::cout << "[INFO]: Turning PFPC plasticity on to 'cascade' mode...\n";
+			if (p_cl.pfpc_plasticity == "dual") std::cout << "[INFO]: Turning PFPC plasticity on in 'dual' mode...\n";
+			else if (p_cl.pfpc_plasticity == "cascade") std::cout << "[INFO]: Turning PFPC plasticity on in 'cascade' mode...\n";
+			else if (p_cl.pfpc_plasticity == "off") std::cout << "[INFO]: Turning PFPC plasticity off..\n";
 		}
 		if (p_cl.mfnc_plasticity.empty())
 		{
-			std::cout << "[INFO]: Turning MFNC plasticity on to default of 'graded' mode...\n";
+			std::cout << "[INFO]: Turning MFNC plasticity on to default mode 'graded'...\n";
 			p_cl.mfnc_plasticity = "graded";
 		}
+		else if (p_cl.mfnc_plasticity == "off") std::cout << "[INFO]: Turning MFNC plasticity off...\n";
 		if (!p_cl.raster_files.empty())
 		{
 			for (auto iter = p_cl.raster_files.begin(); iter != p_cl.raster_files.end(); iter++)
@@ -302,14 +306,14 @@ void validate_commandline(parsed_commandline &p_cl)
 		}
 		if (p_cl.vis_mode.empty())
 		{
-			std::cout << "[INFO]: Visual mode not specified in run mode. Setting to default value of 'TUI'.\n";
+			std::cout << "[INFO]: Visual mode not specified in run mode. Setting to default value of 'TUI'...\n";
 			p_cl.vis_mode = "TUI";
 		}
 		p_cl.session_file = INPUT_DATA_PATH + p_cl.session_file;
 	}
 	else
 	{
-		std::cerr << "[IO_ERROR]: Run mode not specified. You must provide either the {-b|--build} or {-s|--session}\n"
+		std::cerr << "[IO_ERROR]: Run mode not specified. You must provide either {-b|--build} or {-s|--session}\n"
 				  << "[IO_ERROR]: arguments. Exiting...\n";
 		exit(7);
 	}
