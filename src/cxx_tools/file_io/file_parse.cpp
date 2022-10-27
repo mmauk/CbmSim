@@ -213,7 +213,8 @@ void parse_def(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, pars
 						}
 						else if (def_type == "session")
 						{
-						   s_file.parsed_trial_info.session.push_back(curr_pair);
+							// TODO: should check if curr_pair.first is either a block or a trial identifier (at a later stage of processing)
+							s_file.parsed_trial_info.session.push_back(curr_pair);
 						}
 						curr_pair = {};
 					}
