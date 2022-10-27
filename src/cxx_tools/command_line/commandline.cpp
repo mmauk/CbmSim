@@ -7,6 +7,7 @@
  *     This file implements the function prototypes in commandLine/commandline.h
  */
 
+#include <iomanip>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -17,6 +18,7 @@
 
 const std::vector<std::pair<std::string, std::string>> command_line_opts 
 {
+	{ "-h", "--help"  },
 	{ "-v", "--visual"  },
 	{ "-b", "--build"   },
 	{ "-s", "--session" },
@@ -50,6 +52,43 @@ std::string get_opt_param(std::vector<std::string> &token_buf, std::string opt)
 	}
 	return "";
 }
+
+void print_usage_info()
+{
+	std::cout << "Usage: ./cbm_sim [options]\n";
+	std::cout << "Options:\n";
+	std::cout << std::right << std::setw(10) << "\t-h, --help" << "\t\tprint this information and exit.\n";
+	std::cout << std::right << std::setw(20) << "\t-v, --visual [TUI|GUI]" << "\tspecify the visual mode the simulation is run in\n";
+	std::cout << std::right << std::setw(20) << "\t-b, --build [FILE]" << "\tsets the simulation to build a bunny using FILE as the build file\n";
+	std::cout << std::right << std::setw(20) << "\t-s, --session [FILE]" << "\tsets the simulation to run a session using FILE as the session file\n";
+	std::cout << std::right << std::setw(20) << "\t-i, --input [FILE]" << "\tspecify the input simulation file.\n";
+	std::cout << std::right << std::setw(20) << "\t-o, --output [FILE]" << "\tspecify the output simulation file.\n";
+	std::cout << "\t-p, --plastic {[CODE],[on|off]} space-separated list of plasticity types and whether plasticity is on or off. Possible CODEs are:\n\n";
+	std::cout << "\t\t\t\t      \tPFPC - parallel-fiber to purkinje synapse\n";
+	std::cout << "\t\t\t\t      \tMFNC - mossy-fiber to deep nucleus synapse\n\n";
+	std::cout << "\t\t\t\t      \tif this option is not specified, the default action is to turn all plasticity on.\n\n";
+	std::cout << "\t-r, --raster {[CODE],[FILE]} space-separated list of cell types and the raster file to be saved for that cell type. Possible CODEs are:\n\n";
+	std::cout << "\t\t\t\t \tMF - Mossy Fiber\n";
+	std::cout << "\t\t\t\t \tGR - Granule Cell\n";
+	std::cout << "\t\t\t\t \tGO - Golgi Cell\n";
+	std::cout << "\t\t\t\t \tSC - Stellate Cell\n";
+	std::cout << "\t\t\t\t \tBC - Basket Cell\n";
+	std::cout << "\t\t\t\t \tPC - Purkinje Cell\n";
+	std::cout << "\t\t\t\t \tNC - Deep Nucleus Cell\n";
+	std::cout << "\t\t\t\t \tIO - Inferior Olive Cell\n\n";
+	std::cout << "\t-w, --weights {[CODE],[FILE]} space-separated list of weights and weights file to be saved. Possible CODEs are:\n\n";
+	std::cout << "\t\t\t\t  \tPFPC - parallel-fiber to purkinje synapse\n";
+	std::cout << "\t\t\t\t  \tMFNC - mossy-fiber to deep nucleus synapse\n\n";
+	std::cout << "Example usage:\n\n";
+	std::cout << "uses file 'build_file.bld' to construct a bunny, which is placed in file 'bunny.sim':\n\n";
+	std::cout << "\t./cbm_sim -b build_file.bld -o bunny.sim\n\n";
+	std::cout << "uses file 'acquisition.sess' to train the input simulation 'bunny.sim' with PFPC plasticity on, MFNC plasticity off:\n\n";
+	std::cout << "\t./cbm_sim -s acquisition.sess -i bunny.sim -p PFPC,on MFNC,off\n\n";
+	std::cout << "uses file 'acquisition.sess' to train the input simulation 'bunny.sim' with PFPC and MFNC plasticity on.\n";
+	std::cout << "PC, SC, and BC rasters are saved to files 'allPCRaster.bin' 'allSCRaster.bin' and 'allBCRaster.bin' respectively:\n\n";
+	std::cout << "\t./cbm_sim -s acquisition.sess -i bunny.sim -r PC,allPCRaster SC,allSCRaster BC,allBCRaster\n";
+}
+
 
 void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 {
@@ -85,8 +124,12 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 				// both give the same thing, it is a matter of which exists, the
 				// long or the short version.
 				opt_char_code = (first_opt_exist == 1) ? this_opt[1] : this_opt[2];
-				this_param = get_opt_param(tokens, this_opt);
-				curr_token_iter = std::find(tokens.begin(), tokens.end(), this_param);
+				if (opt_char_code == 'h') p_cl.print_help = "help";
+				else 
+				{
+					this_param = get_opt_param(tokens, this_opt);
+					curr_token_iter = std::find(tokens.begin(), tokens.end(), this_param);
+				}
 				switch (opt_char_code)
 				{
 					case 'v':
@@ -164,6 +207,14 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 
 void validate_commandline(parsed_commandline &p_cl)
 {
+	/* for now, print usage info regardless of other arguments.
+	 * in future, if there is a commandline error, print usage info then exit
+	 */
+	if (!p_cl.print_help.empty())
+	{
+		print_usage_info();
+		exit(0);
+	}
 	if (!p_cl.build_file.empty())
 	{
 		if (!p_cl.session_file.empty())
