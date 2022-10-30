@@ -322,11 +322,14 @@ void validate_commandline(parsed_commandline &p_cl)
 std::string parsed_commandline_to_str(parsed_commandline &p_cl)
 {
 	std::stringstream p_cl_buf;
+	p_cl_buf << "{ 'print_help', '" << p_cl.print_help << "' }\n";
 	p_cl_buf << "{ 'vis_mode', '" << p_cl.vis_mode << "' }\n";
 	p_cl_buf << "{ 'build_file', '" << p_cl.build_file << "' }\n";
 	p_cl_buf << "{ 'session_file', '" << p_cl.session_file << "' }\n";
 	p_cl_buf << "{ 'input_sim_file', '" << p_cl.input_sim_file << "' }\n";
 	p_cl_buf << "{ 'output_sim_file', '" << p_cl.output_sim_file << "' }\n";
+	p_cl_buf << "{ 'pfpc_plasticity', '" << p_cl.pfpc_plasticity << "' }\n";
+	p_cl_buf << "{ 'mfnc_plasticity', '" << p_cl.mfnc_plasticity << "' }\n";
 	for (auto pair : p_cl.raster_files)
 	{
 		p_cl_buf << "{ '" << pair.first << "', '" << pair.second << "' }\n";

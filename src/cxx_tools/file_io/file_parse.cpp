@@ -13,7 +13,6 @@
 #include <regex>
 #include "file_parse.h"
 
-
 // regex strings for matching variable identifiers and variable values
 const std::string var_id_regex_str = "[a-zA-Z_]{1}[a-zA-Z0-9_]*";
 const std::string var_val_regex_str = "[+-]?([0-9]*[.])?[0-9]*([e][+-]?[0-9]+)?";
@@ -148,9 +147,9 @@ void lex_tokenized_file(tokenized_file &t_file, lexed_file &l_file)
 void parse_def(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, parsed_sess_file &s_file,
 		std::string def_type, std::string def_label)
 {
-	pair curr_pair = {};
-	std::unordered_map<std::string, variable> curr_trial = {};
-	std::vector<pair> curr_block = {};
+	std::pair<std::string, std::string> curr_pair = {};
+	std::map<std::string, variable> curr_trial = {};
+	std::vector<std::pair<std::string, std::string>> curr_block = {};
 	lexeme prev_lex = NONE;
 	variable curr_var = {};
 	while (ltp->lex != END_MARKER)
@@ -515,7 +514,7 @@ void allocate_trials_data(trials_data &td, ct_uint32_t num_trials)
 }
 
 void initialize_trial_names_helper(trials_data &td, parsed_trial_section &pt_section,
-	  std::vector<pair> &in_vec)
+	  std::vector<std::pair<std::string, std::string>> &in_vec)
 {
 	for (auto vec_pair : in_vec)
 	{
@@ -573,7 +572,7 @@ void delete_trials_data(trials_data &td)
 }
 
 void calculate_num_trials_helper(parsed_trial_section &pt_section,
-		std::vector<pair> &in_vec, ct_uint32_t &temp_num_trials)
+		std::vector<std::pair<std::string, std::string>> &in_vec, ct_uint32_t &temp_num_trials)
 {
 	ct_uint32_t temp_sum = 0;
 	for (auto vec_pair : in_vec)
@@ -645,5 +644,91 @@ std::string lexed_file_to_str(lexed_file &l_file)
 std::ostream &operator<<(std::ostream &os, lexed_file &l_file)
 {
 	return os << lexed_file_to_str(l_file);
+}
+
+std::string parsed_build_file_to_str(parsed_build_file &b_file)
+{
+	std::stringstream build_file_buf;
+	build_file_buf << "[\n";
+	for (auto var_sec : b_file.parsed_var_sections)
+	{
+		build_file_buf << "{\n";
+		for (auto pair : var_sec.second.param_map)
+		{
+			build_file_buf << "['" << pair.first << "': {'";
+			build_file_buf << pair.second.type_name << "', '";
+			build_file_buf << pair.second.identifier << "', '";
+			build_file_buf << pair.second.value << "'}]\n";
+		}
+		build_file_buf << "}\n";
+	}
+	return build_file_buf.str();
+}
+
+std::ostream &operator <<(std::ostream &os, parsed_build_file &b_file)
+{
+	return os << parsed_build_file_to_str(b_file);
+}
+
+std::string parsed_sess_file_to_str(parsed_sess_file &s_file)
+{
+	std::stringstream sess_file_buf;
+	sess_file_buf << "[\n";
+	for (auto var_sec : s_file.parsed_var_sections)
+	{
+		sess_file_buf << "{\n";
+		for (auto pair : var_sec.second.param_map)
+		{
+			sess_file_buf << "['" << pair.first << "': {'";
+			sess_file_buf << pair.second.type_name << "', '";
+			sess_file_buf << pair.second.identifier << "', '";
+			sess_file_buf << pair.second.value << "'}]\n";
+		}
+		sess_file_buf << "}\n";
+	}
+
+	sess_file_buf << "{\n";
+	for (auto pair : s_file.parsed_trial_info.trial_map)
+	{
+		sess_file_buf << "{'" << pair.first << "': {'";
+		for (auto vars : pair.second)
+		{
+			sess_file_buf << "{'" << vars.first << "': {'";
+			sess_file_buf << vars.second.type_name << "', '";
+			sess_file_buf << vars.second.identifier << "', '";
+			sess_file_buf << vars.second.value << "'}}\n";
+		}
+		sess_file_buf << "}\n";
+	}
+	sess_file_buf << "}\n";
+	
+	sess_file_buf << "{\n";
+	for (auto block : s_file.parsed_trial_info.block_map)
+	{
+		sess_file_buf << "['" << block.first << "' : {";
+		for (auto t_pair : block.second)
+		{
+			sess_file_buf << "{'" << t_pair.first << "', '";
+			sess_file_buf << t_pair.second << "'}\n";
+		}
+		sess_file_buf << "}]\n";
+	}
+	sess_file_buf << "}\n";
+
+	sess_file_buf << "{\n";
+	for (auto bt_pair : s_file.parsed_trial_info.session)
+	{
+		sess_file_buf << "{'" << bt_pair.first << "', '";
+		sess_file_buf << bt_pair.second << "'}\n";
+	}
+	sess_file_buf << "}\n";
+
+	return sess_file_buf.str();
+}
+
+std::ostream &operator <<(std::ostream &os, parsed_sess_file &s_file)
+{
+	return os << parsed_sess_file_to_str(s_file);
+
 }
 

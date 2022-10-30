@@ -15,12 +15,12 @@
 #define FILE_PARSE_H_
 
 #include <string>
+#include <utility> /* for std::pair */
 #include <vector>
 #include <map>
-#include <unordered_map>
 #include "pstdint.h"
 
-// lexemes of the build file ie the fundamental meanings behind each token
+// lexemes of the input files ie the fundamental meanings behind each token
 typedef enum 
 {
 	NONE,
@@ -49,12 +49,6 @@ typedef struct
 	std::string value;
 } variable;
 
-typedef struct
-{
-	std::string first;
-	std::string second;
-} pair;
-
 typedef struct 
 {
 	ct_uint32_t num_trials;
@@ -67,41 +61,21 @@ typedef struct
 	ct_uint32_t *us_onsets;
 } trials_data;
 
-typedef struct
-{
-	std::unordered_map<std::string, variable> param_map;
-} trial_2;
-
-typedef struct
-{
-	std::vector<pair> trials;
-} block;
-
-typedef struct
-{
-	std::vector<pair> blocks;
-} session;
-
-typedef struct
-{
-	std::vector<pair> sessions;
-} experiment_2;
-
 /* 
- * a section within the build file that includes the label of the section
+ * a section within an input file that includes the label of the section
  * and the dictionary of parameters in that section
  *
  */
 typedef struct
 {
-	std::unordered_map<std::string, variable> param_map;
+	std::map<std::string, variable> param_map;
 } parsed_var_section;
 
 typedef struct
 {
-	std::unordered_map<std::string, std::unordered_map<std::string, variable>> trial_map;
-	std::unordered_map<std::string, std::vector<pair>> block_map;
-	std::vector<pair> session;  // <-- pairs of block identifier and number of blocks 
+	std::map<std::string, std::map<std::string, variable>> trial_map;
+	std::map<std::string, std::vector<std::pair<std::string, std::string>>> block_map;
+	std::vector<std::pair<std::string, std::string>> session;  // <-- pairs of block identifier and number of blocks 
 } parsed_trial_section;
 
 // represents the entire file contents, broken up line-by-line, token-by-token
@@ -133,7 +107,7 @@ typedef struct
 
 /*
  * Description:
- *     takes in the string b_file representing the build file's name and constructs
+ *     takes in the string in_file representing the input file's name and constructs
  *     a tokenized file from it. See the above definition of tokenized_file.
  *
  */
@@ -165,13 +139,42 @@ void parse_lexed_sess_file(lexed_file &l_file, parsed_sess_file &s_file);
  */
 void parse_lexed_build_file(lexed_file &l_file, parsed_build_file &p_file);
 
+/*
+ * Description:
+ *     allocates memory for the arrays within reference to trials_data td.
+ *     Caller is responsible for the memory that is allocated in this function.
+ *     (blah blah blah, fancy talk for if you call this function, you will want
+ *      to call delete_trials_data at a later point to prevent memory leak)
+ *
+ */
 void allocate_trials_data(trials_data &td, ct_uint32_t num_trials);
 
+/*
+ * Description:
+ *     initializes elements of arrays in td according to parsed trial definitions
+ *     in pt_section. NOTE: "allocate_trials_data" must be run before this function
+ *     is called.
+ *
+ */
 void initialize_trials_data(trials_data &td, parsed_trial_section &pt_section);
 
+/*
+ * Description:
+ *     translates trials section information in parsed sess file into td.
+ *     td follows the structure of arrays (SoA) paradigm for efficiency in
+ *     member element access. Data in td is used later in Control::runSession
+ *
+ */
 void translate_parsed_trials(parsed_sess_file &s_file, trials_data &td);
 
+/*
+ * Description:
+ *     deallocates memory for the data members of td. NOTE: allocate_trials_data
+ *     must be called before this function is called.
+ *
+ */
 void delete_trials_data(trials_data &td);
+
 
 std::string tokenized_file_to_str(tokenized_file &t_file);
 
@@ -180,6 +183,14 @@ std::ostream &operator<<(std::ostream &os, tokenized_file &t_file);
 std::string lexed_file_to_str(lexed_file &l_file);
 
 std::ostream &operator<<(std::ostream &os, lexed_file &l_file);
+
+std::string parsed_build_file_to_str(parsed_build_file &b_file);
+
+std::ostream &operator <<(std::ostream &os, parsed_build_file &b_file);
+
+std::string parsed_sess_file_to_str(parsed_sess_file &s_file);
+
+std::ostream &operator <<(std::ostream &os, parsed_sess_file &s_file);
 
 #endif /* FILE_PARSE_H_ */
 
