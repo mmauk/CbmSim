@@ -25,6 +25,8 @@
 #include "mzone.h"
 #include "innet.h"
 
+enum plasticity {OFF, GRADED, DUAL, CASCADE};
+
 /* TODO: consider altering this code so that CBMSimCore does not keep local copies
  *       of the state classes. Consider whether transferring data between classes
  *       by using classes as arguments would be just as fast as we have things now.
@@ -38,8 +40,7 @@ public:
 	CBMSimCore(CBMState *state, int gpuIndStart = -1, int numGPUP2 = -1);
 	~CBMSimCore();
 
-	void calcActivity(float spillFrac, ct_uint32_t usePFPCPlast);
-
+	void calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum plasticity mf_nc_plast);
 	void updateMFInput(const ct_uint8_t *mfIn);
 	void updateTrueMFs(bool *isTrueMF);
 	void updateGRStim(int startGRStim, int numGRStim);

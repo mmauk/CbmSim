@@ -131,8 +131,8 @@ class Control
 		int msPostCS = 0; // was 400 (10/17/2022) was 1000 (08/09/2022)
 		int PSTHColSize = 0; // derived param, from msPreCS, msPostCS and csLength 
 
-		ct_uint32_t pf_pc_plast_on;
-		ct_uint32_t mf_nc_plast_on;
+		enum plasticity pf_pc_plast;
+		enum plasticity mf_nc_plast;
 
 		std::string mf_raster_file = "";
 		std::string gr_raster_file = "";
@@ -192,7 +192,8 @@ class Control
 		const ct_uint8_t* goSpks; 
 
 		void build_sim();
-		
+	
+		void set_plasticity_modes(parsed_commandline &p_cl);
 		void init_sim(parsed_sess_file &s_file, std::string in_sim_filename);
 		void reset_sim(std::string in_sim_filename);
 

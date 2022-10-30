@@ -15,8 +15,8 @@
 
 #include "file_parse.h"
 
-const std::string INPUT_DATA_PATH = "../data/inputs/";
-const std::string OUTPUT_DATA_PATH = "../data/outputs/";
+const std::string INPUT_DATA_PATH      = "../data/inputs/";
+const std::string OUTPUT_DATA_PATH     = "../data/outputs/";
 const std::string DEFAULT_SIM_OUT_FILE = OUTPUT_DATA_PATH + "default_out_sim_file.sim";
 
 typedef struct
