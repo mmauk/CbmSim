@@ -99,7 +99,7 @@ void tokenize_file(std::string in_file, tokenized_file &t_file)
 }
 
 /*
- * Implementation Notes;
+ * Implementation Notes:
  *     This function operates upon a tokenized file by going line-by-line, token-by-token
  *     and matching the token with its lexical-definition. The only tricky tokens are the
  *     variable identifiers and the variable values, as these are naturally variable from
@@ -144,6 +144,20 @@ void lex_tokenized_file(tokenized_file &t_file, lexed_file &l_file)
 	}
 }
 
+/*
+ * Implementation Notes:
+ *     meant to be called within parse_trial_section. Loops until the end lex is found. Is used for
+ *     each of the types of defintions which are possible: 1) trial definitions, 2) block definitions,
+ *     and 3) session definitions. To serve these 3 purposes we need to initialize a lot of temporary
+ *     data structures, which may or may not be used depending on the current definition type being
+ *     parsed. 
+ *
+ *     Collects the required information for the given definition type. In order to be compatible with
+ *     "statements" within the definition consisting of either single trial or block identifiers, we
+ *     add a "shadow token" within the l_file, which conceptually adds in the value of "1" for that trial
+ *     or block identifier.
+ *
+ */
 void parse_def(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, parsed_sess_file &s_file,
 		std::string def_type, std::string def_label)
 {
@@ -240,6 +254,13 @@ void parse_def(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, pars
 	else if (def_type == "block") s_file.parsed_trial_info.block_map[def_label] = curr_block;
 }
 
+/*
+ * Implementation Notes:
+ *     meant for parsing var sections in parsed_session files. loops until the end lex {END_MARKER, "end"} is
+ *     found. Within the loop current variable attributes are collected and added to the (temporary) current section.
+ *     Once the end marker is reached, the current section is added to the session file's parsed_var_sections map.
+ *
+ */
 void parse_var_section(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, parsed_sess_file &s_file,
 		std::string region_type)
 {
@@ -263,8 +284,7 @@ void parse_var_section(std::vector<lexed_token>::iterator &ltp, lexed_file &l_fi
 				ltp += 2;
 			}
 		}
-		// TODO: fix lexing alg so we generate new line characters and place in between
-		// tokens
+
 		else if (ltp->lex == SINGLE_COMMENT)
 		{
 			while (ltp->lex != NEW_LINE) ltp++;
@@ -274,6 +294,12 @@ void parse_var_section(std::vector<lexed_token>::iterator &ltp, lexed_file &l_fi
 	s_file.parsed_var_sections[region_type] = curr_section;
 }
 
+/*
+ * Implementation Notes:
+ *     loops over lexes until END_MARKER is found. checks whether a 3-lex sequence definition header is found,
+ *     and if so, calls parse_def. Ignores single comments by passing over the lexes until the new line lex is found.
+ *
+ */
 void parse_trial_section(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, parsed_sess_file &s_file)
 {
 	while (ltp->lex != END_MARKER) // parse this section
@@ -298,6 +324,14 @@ void parse_trial_section(std::vector<lexed_token>::iterator &ltp, lexed_file &l_
 	}
 }
 
+/*
+ * Implementation Notes:
+ *     a region is defined as a code block in a .sess file which begins with "begin" and ends with "end."
+ *     This recursive function is run on regions in a parsed sess file: it checks the region type (there
+ *     are two recognized region types) and calls parse_var_section or parse_trial_section, otherwise loops
+ *     over lexes until it encounters a valid sequence of begin marker, region, and region type.
+ *
+ */
 void parse_region(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, parsed_sess_file &s_file,
 		std::string region_type)
 {
@@ -333,6 +367,15 @@ void parse_region(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, p
 	}
 }
 
+/*
+ * Implementation Notes:
+ *     the main function for parsing lexes within l_file, assuming l_file represents a
+ *     lexed session file. First loops over lexes until it encounters the following sequence of tokens:
+ *     "begin filetype run" TODO: change filetype to session. Then loops over lexes until trial section
+ *     or variable section 3-lex sequence headers are found. If either is found, enters the appropriate
+ *     parsing subroutine.
+ *
+ */
 void parse_lexed_sess_file(lexed_file &l_file, parsed_sess_file &s_file)
 {
 	// NOTE: ltp stands for [l]exed [t]oken [p]ointer, not long-term potentiation!
@@ -378,6 +421,13 @@ void parse_lexed_sess_file(lexed_file &l_file, parsed_sess_file &s_file)
 	}
 }
 
+/*
+ * Implementation Notes:
+ *     meant for parsing var sections in parsed_build files. loops until the end lex {END_MARKER, "end"} is
+ *     found. Within the loop current variable attributes are collected and added to the (temporary) current section.
+ *     Once the end marker is reached, the current section is added to the build file's parsed_var_sections map.
+ *
+ */
 void parse_var_section(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, parsed_build_file &b_file,
 		std::string region_type)
 {
@@ -410,7 +460,14 @@ void parse_var_section(std::vector<lexed_token>::iterator &ltp, lexed_file &l_fi
 	b_file.parsed_var_sections[region_type] = curr_section;
 }
 
-
+/*
+ * Implementation Notes:
+ *     a region is defined as a code block in a .sess file which begins with "begin" and ends with "end."
+ *     This recursive function is run on regions in a parsed build file: it checks the region type (there
+ *     are two recognized region types) and calls parse_var_section, otherwise loops over lexes until it
+ *     encounters a valid sequence of begin marker, region, and region type.
+ *
+ */
 void parse_region(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, parsed_build_file &b_file,
 		std::string region_type)
 {
@@ -502,6 +559,12 @@ void parse_lexed_build_file(lexed_file &l_file, parsed_build_file &b_file)
 	}
 }
 
+/*
+ * Implementation Notes:
+ *     allocates memory for arrays in td. Note that it is expected that
+ *     num_trials would be determined from the .sess file via calculate_num_trials.
+ *
+ */
 void allocate_trials_data(trials_data &td, ct_uint32_t num_trials)
 {
 	td.trial_names     = (std::string *)calloc(num_trials, sizeof(std::string));
@@ -513,6 +576,16 @@ void allocate_trials_data(trials_data &td, ct_uint32_t num_trials)
 	td.us_onsets       = (ct_uint32_t *)calloc(num_trials, sizeof(ct_uint32_t));
 }
 
+/*
+ * Implementation Notes:
+ *     the main recursive function for determining the ordering of trial names from 
+ *     .sess file. Loops through every element of the input map and either adds
+ *     the name of the current trial at the next empty trial name in td.trial_names,
+ *     or checks whether the element is an already defined block. If the current element
+ *     is within pt_section.block_map, it recurses and checks elements within the block
+ *     for a previous trial definition.
+ *
+ */
 void initialize_trial_names_helper(trials_data &td, parsed_trial_section &pt_section,
 	  std::vector<std::pair<std::string, std::string>> &in_vec)
 {
@@ -546,6 +619,13 @@ void initialize_trial_names_helper(trials_data &td, parsed_trial_section &pt_sec
 	}
 }
 
+/*
+ * Implementation Notes:
+ *     main entry point for initializing td array elements from pt_section.
+ *     The trial names need to be initialized first, as they are used in a look-up
+ *     table to obtain the rest of the relevant data for that trial.
+ *
+ */
 void initialize_trials_data(trials_data &td, parsed_trial_section &pt_section)
 {
 	initialize_trial_names_helper(td, pt_section, pt_section.session);
@@ -571,6 +651,14 @@ void delete_trials_data(trials_data &td)
 	free(td.us_onsets);
 }
 
+/*
+ * Implementation Notes:
+ *     the main recursive algorithm for determining the number of trials specified from .sess
+ *     file and encoded withing pt_section. Computes a sum over the current iteration,
+ *     and for each level of recursion, finishes by multiplying the current sum by the previously
+ *     obtained number of trials. Of course, only recurses if vec_pair.first is a valid definition
+ *     of a block.
+ */
 void calculate_num_trials_helper(parsed_trial_section &pt_section,
 		std::vector<std::pair<std::string, std::string>> &in_vec, ct_uint32_t &temp_num_trials)
 {
@@ -587,6 +675,13 @@ void calculate_num_trials_helper(parsed_trial_section &pt_section,
 	temp_num_trials *= temp_sum;
 }
 
+/*
+ * Implementation Notes:
+ *     the entry point for recursively calculating the number of trials from pt_section.
+ *     Because sums computed at each recursive layer are multiplied by and assigned to the
+ *     previous temp_num_trials, we need to "seed" this process with 1.
+ *
+ */
 ct_uint32_t calculate_num_trials(parsed_trial_section &pt_section)
 {
 	ct_uint32_t temp_num_trials = 1;
@@ -594,6 +689,11 @@ ct_uint32_t calculate_num_trials(parsed_trial_section &pt_section)
 	return temp_num_trials;
 }
 
+/*
+ * Implementation Notes:
+ *     Computes the number of trials and allocates/initializes td given the computed number of trials.
+ *
+ */
 void translate_parsed_trials(parsed_sess_file &s_file, trials_data &td)
 {
 	td.num_trials = calculate_num_trials(s_file.parsed_trial_info);
@@ -603,8 +703,11 @@ void translate_parsed_trials(parsed_sess_file &s_file, trials_data &td)
 }
 
 /*
- * Implementation Notes:
- *     Loops go brrrrrrr
+ * Implementation Notes for to_str functions:
+ *     all *to_str functions use std::stringstreams to create a str representation of the
+ *     given data structure. For the std::ostream insertion operator overloads, the *to_str
+ *     functions are called to return the string representation which is then inserted into
+ *     the given argument std::ostream.
  *
  */
 std::string tokenized_file_to_str(tokenized_file &t_file)
@@ -622,11 +725,6 @@ std::string tokenized_file_to_str(tokenized_file &t_file)
 	return tokenized_file_buf.str();
 }
 
-std::ostream &operator<<(std::ostream &os, tokenized_file &t_file)
-{
-	return os << tokenized_file_to_str(t_file);
-}
-
 std::string lexed_file_to_str(lexed_file &l_file)
 {
 	std::stringstream lexed_file_buf;
@@ -639,11 +737,6 @@ std::string lexed_file_to_str(lexed_file &l_file)
 	}
 	lexed_file_buf << "]\n";
 	return lexed_file_buf.str();
-}
-
-std::ostream &operator<<(std::ostream &os, lexed_file &l_file)
-{
-	return os << lexed_file_to_str(l_file);
 }
 
 std::string parsed_build_file_to_str(parsed_build_file &b_file)
@@ -663,11 +756,6 @@ std::string parsed_build_file_to_str(parsed_build_file &b_file)
 		build_file_buf << "}\n";
 	}
 	return build_file_buf.str();
-}
-
-std::ostream &operator <<(std::ostream &os, parsed_build_file &b_file)
-{
-	return os << parsed_build_file_to_str(b_file);
 }
 
 std::string parsed_sess_file_to_str(parsed_sess_file &s_file)
@@ -724,6 +812,21 @@ std::string parsed_sess_file_to_str(parsed_sess_file &s_file)
 	sess_file_buf << "}\n";
 
 	return sess_file_buf.str();
+}
+
+std::ostream &operator<<(std::ostream &os, tokenized_file &t_file)
+{
+	return os << tokenized_file_to_str(t_file);
+}
+
+std::ostream &operator<<(std::ostream &os, lexed_file &l_file)
+{
+	return os << lexed_file_to_str(l_file);
+}
+
+std::ostream &operator <<(std::ostream &os, parsed_build_file &b_file)
+{
+	return os << parsed_build_file_to_str(b_file);
 }
 
 std::ostream &operator <<(std::ostream &os, parsed_sess_file &s_file)

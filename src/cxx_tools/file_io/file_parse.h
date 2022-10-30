@@ -175,20 +175,22 @@ void translate_parsed_trials(parsed_sess_file &s_file, trials_data &td);
  */
 void delete_trials_data(trials_data &td);
 
-
-std::string tokenized_file_to_str(tokenized_file &t_file);
+/*
+ * Description of following 4 functions:
+ *      following are used to print the given type to the console like
+ *      you would use the stream insertion operator for atomic types and stl
+ *      types for which an operator overload exists.
+ * 
+ * Example Usage:
+ *
+ *     std::cout << t_file << std::endl;
+ */
 
 std::ostream &operator<<(std::ostream &os, tokenized_file &t_file);
 
-std::string lexed_file_to_str(lexed_file &l_file);
-
 std::ostream &operator<<(std::ostream &os, lexed_file &l_file);
 
-std::string parsed_build_file_to_str(parsed_build_file &b_file);
-
 std::ostream &operator <<(std::ostream &os, parsed_build_file &b_file);
-
-std::string parsed_sess_file_to_str(parsed_sess_file &s_file);
 
 std::ostream &operator <<(std::ostream &os, parsed_sess_file &s_file);
 
