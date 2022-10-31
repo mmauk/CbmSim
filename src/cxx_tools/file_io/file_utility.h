@@ -22,6 +22,8 @@
 
 std::string get_file_basename(std::string full_file_path);
 
+void rawBytesRW(char *arr, unsigned long byteLen, bool read, std::fstream &file);
+
 template<typename key_t, typename val_t>
 void serialize_map_to_file(std::map<key_t, val_t> &map, std::fstream &file_buf)
 {

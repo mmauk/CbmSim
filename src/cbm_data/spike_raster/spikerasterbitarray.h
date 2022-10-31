@@ -16,7 +16,7 @@
 #include "ispikeraster.h"
 #include "pstdint.h"
 #include "dynamic2darray.h"
-#include "rawbytesrw.h"
+#include "file_utility.h"
 
 class SpikeRasterBitArray : public ISpikeRaster
 {

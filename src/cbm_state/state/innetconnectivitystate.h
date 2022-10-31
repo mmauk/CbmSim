@@ -16,7 +16,7 @@
 #include <limits.h>
 #include <algorithm>
 
-#include "rawbytesrw.h"
+#include "file_utility.h"
 #include "pstdint.h"
 #include "dynamic2darray.h"
 #include "sfmt.h"

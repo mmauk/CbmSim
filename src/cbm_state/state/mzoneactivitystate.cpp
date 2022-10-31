@@ -8,7 +8,7 @@
 #include <iostream>
 #include <algorithm> /* std::fill */
 
-#include "rawbytesrw.h"
+#include "file_utility.h"
 #include "sfmt.h"
 #include "connectivityparams.h"
 #include "activityparams.h"

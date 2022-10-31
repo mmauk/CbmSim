@@ -61,20 +61,20 @@ class Control
 		PoissonRegenCells *mfs = NULL;
 
 		bool trials_data_initialized = false;
-		bool experiment_initialized = false;
-		bool sim_initialized = false;
+		bool experiment_initialized  = false;
+		bool sim_initialized         = false;
 
 		bool internal_arrays_initialized = false; /* temporary, going to refactor soon */
-		bool output_arrays_initialized = false;
-		bool spike_sums_initialized = false;
-		enum sim_run_state run_state = NOT_IN_RUN; 
+		bool output_arrays_initialized   = false;
+		bool spike_sums_initialized      = false;
+		enum sim_run_state run_state     = NOT_IN_RUN; 
 
-		std::string visual_mode = "";
-		std::string run_mode = "";
+		std::string visual_mode          = "";
+		std::string run_mode             = "";
 		std::string curr_build_file_name = "";
-		std::string curr_sess_file_name = "";
-		std::string curr_sim_file_name  = "";
-		std::string out_sim_file_name  = "";
+		std::string curr_sess_file_name  = "";
+		std::string curr_sim_file_name   = "";
+		std::string out_sim_file_name    = "";
 
 		// params that I do not know how to categorize
 		float goMin = 0.26; 
@@ -153,7 +153,8 @@ class Control
 		int gr_indices[4096] = {0};
 
 		const float *grgoG, *mfgoG, *gogrG, *mfgrG;
-		const ct_uint8_t *mfAP;
+		float *sample_pfpc_syn_weights;
+		const ct_uint8_t *mfAP, *goSpks;
 		ct_uint8_t **all_mf_rast_internal;
 		ct_uint8_t **all_go_rast_internal;
 		ct_uint8_t **sample_gr_rast_internal;
@@ -186,10 +187,6 @@ class Control
 		ct_uint8_t *allSCRaster;
 		ct_uint8_t *allBCRaster;
 		ct_uint8_t *allIORaster;
-
-		float *sample_pfpc_syn_weights;
-
-		const ct_uint8_t* goSpks; 
 
 		void build_sim();
 	
@@ -232,9 +229,6 @@ class Control
 		void fill_rast_internal(int PSTHCounter);
 		void fillOutputArrays();
 
-		// this should be in CXX Tools or 2D array...
-		void write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
-			unsigned int numRow, unsigned int numCol);
 		void delete_rast_internal();
 		void delete_spike_sums();
 		void deleteOutputArrays();

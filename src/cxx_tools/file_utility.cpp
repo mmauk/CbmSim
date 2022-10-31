@@ -11,3 +11,9 @@ std::string get_file_basename(std::string full_file_path)
 	return (dot != std::string::npos) ? full_file_path.substr(0, dot) : full_file_path;
 }
 
+void rawBytesRW(char *arr, unsigned long byteLen, bool read, std::fstream &file)
+{
+	if (read) file.read(arr, byteLen);
+	else file.write(arr, byteLen);
+}
+

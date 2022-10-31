@@ -9,7 +9,7 @@
 #include <iostream>
 #include <limits.h>
 
-#include "rawbytesrw.h"
+#include "file_utility.h"
 #include "dynamic2darray.h"
 #include "sfmt.h"
 #include "connectivityparams.h"

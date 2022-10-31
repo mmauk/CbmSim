@@ -884,21 +884,6 @@ void Control::fillOutputArrays()
 	}
 }
 
-// TODO: 1) find better place to put this 2) generalize
-void Control::write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
-	unsigned int numRow, unsigned int numCol)
-{
-	std::fstream outStream(outFileName.c_str(), std::ios::out | std::ios::binary);
-
-	if (!outStream.is_open())
-	{
-		std::cerr << "couldn't open '" << outFileName << "' for writing." << std::endl;
-		exit(-1);
-	}
-	rawBytesRW((char *)inArr[0], numRow * numCol * sizeof(ct_uint8_t), false, outStream);
-	outStream.close();
-}
-
 void Control::delete_spike_sums()
 {
 	FOREACH(spike_sums, ssp)

@@ -11,7 +11,7 @@
 #include <memory>
 #include <fstream>
 
-#include "rawbytesrw.h"
+#include "file_utility.h"
 #include "pstdint.h"
 #include "connectivityparams.h"
 #include "activityparams.h"
