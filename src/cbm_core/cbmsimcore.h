@@ -20,8 +20,6 @@
 #include "pstdint.h"
 #include "cbmstate.h"
 #include "sfmt.h"
-#include "innetinterface.h"
-#include "mzoneinterface.h"
 #include "mzone.h"
 #include "innet.h"
 

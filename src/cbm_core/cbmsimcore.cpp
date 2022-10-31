@@ -5,7 +5,7 @@
  *      Author: consciousness
  */
 
-#include "interface/cbmsimcore.h"
+#include "cbmsimcore.h"
 
 //#define NO_ASYNC
 //#define DISP_CUDA_ERR

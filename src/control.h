@@ -19,17 +19,17 @@
 #include "ecmfpopulation.h"
 #include "poissonregencells.h"
 #include "ectrialsdata.h"
-#include "eyelidintegrator.h"
 #include "bits.h"
 
 // TODO: place in a common place, as gui uses a constant like this too
 #define NUM_CELL_TYPES 8
-#define NUM_RUN_STATES 3
+
 // convenience enum for indexing cell arrays
 enum {MF, GR, GO, BC, SC, PC, IO, DCN};
 
 struct cell_spike_sums
-{ ct_uint32_t num_cells;
+{
+	ct_uint32_t num_cells;
 	ct_uint32_t non_cs_spike_sum;
 	ct_uint32_t cs_spike_sum;
 	ct_uint32_t *non_cs_spike_counter;
@@ -53,18 +53,17 @@ class Control
 		~Control();
 
 		// Objects
-	
 		trials_data td = {};
 		CBMState *simState     = NULL;
 		CBMSimCore *simCore    = NULL;
 		ECMFPopulation *mfFreq = NULL;
 		PoissonRegenCells *mfs = NULL;
 
+		/* temporary state check vars, going to refactor soon */
 		bool trials_data_initialized = false;
-		bool experiment_initialized  = false;
 		bool sim_initialized         = false;
 
-		bool internal_arrays_initialized = false; /* temporary, going to refactor soon */
+		bool internal_arrays_initialized = false;
 		bool output_arrays_initialized   = false;
 		bool spike_sums_initialized      = false;
 		enum sim_run_state run_state     = NOT_IN_RUN; 
@@ -83,7 +82,7 @@ class Control
 
 		// sim params -> TODO: place in simcore
 		int gpuIndex = 0;
-		int gpuP2=2;
+		int gpuP2    = 2;
 
 		int trial = 0;
 
@@ -214,19 +213,19 @@ class Control
 		void initialize_spike_sums();
 		void initialize_rast_internal();
 		void initializeOutputArrays();
+
 		void runSession(struct gui *gui);
 
 		void reset_spike_sums();
 		void reset_rast_internal();
 		void resetOutputArrays();
 
-		void saveOutputArraysToFile();
-
 		void countGOSpikes(int *goSpkCounter, float &medTrials);
 		void update_spike_sums(int tts, float onset_cs, float offset_cs);
 		void calculate_firing_rates(float onset_cs, float offset_cs);
 		void fill_rast_internal(int PSTHCounter);
 		void fillOutputArrays();
+		void saveOutputArraysToFile();
 
 		void delete_rast_internal();
 		void delete_spike_sums();
