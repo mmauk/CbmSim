@@ -98,11 +98,6 @@ static void on_load_sim_file(GtkWidget *widget, Control *control)
 	//load_file(widget, control, &Control::init_sim, "[ERROR]: Could not open simulation file.");
 }
 
-static void on_save_state(GtkWidget *widget, Control *control)
-{
-	save_file(widget, control, &Control::save_sim_state_to_file, "[ERROR]: Could not save state file.", DEFAULT_STATE_FILE_NAME);
-}
-
 static void on_save_sim(GtkWidget *widget, Control *control)
 {
 	save_file(widget, control, &Control::save_sim_to_file, "[ERROR]: Could not save sim file.", DEFAULT_SIM_FILE_NAME);
@@ -1057,15 +1052,6 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 										}
 									}
 								}
-							},
-							{"Save State", gtk_menu_item_new(),
-								{
-									"activate",
-									G_CALLBACK(on_save_state),
-									control,
-									false
-								},
-								{}
 							},
 							{"Save Sim", gtk_menu_item_new(),
 								{

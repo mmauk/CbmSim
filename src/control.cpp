@@ -140,25 +140,10 @@ void Control::reset_sim(std::string in_sim_filename)
 	curr_sim_file_name = in_sim_filename;
 }
 
-void Control::save_sim_state_to_file(std::string outStateFile)
-{
-	if (!(con_params_populated && act_params_populated && simState))
-	{
-		fprintf(stderr, "[ERROR]: Trying to write an uninitialized state to file.\n");
-		fprintf(stderr, "[ERROR]: (Hint: Try loading a sim file first.)\n");
-		return;
-	}
-	std::fstream outStateFileBuffer(outStateFile.c_str(), std::ios::out | std::ios::binary);
-	if (!simCore) simState->writeState(outStateFileBuffer);
-	else simCore->writeState(outStateFileBuffer);
-	outStateFileBuffer.close();
-}
-
 void Control::save_sim_to_file(std::string outSimFile)
 {
 	std::fstream outSimFileBuffer(outSimFile.c_str(), std::ios::out | std::ios::binary);
 	write_con_params(outSimFileBuffer);
-	//write_act_params(outSimFileBuffer);
 	if (!simCore) simState->writeState(outSimFileBuffer);
 	else simCore->writeState(outSimFileBuffer);
 	outSimFileBuffer.close();

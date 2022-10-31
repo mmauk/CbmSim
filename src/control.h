@@ -194,7 +194,6 @@ class Control
 		void init_sim(parsed_sess_file &s_file, std::string in_sim_filename);
 		void reset_sim(std::string in_sim_filename);
 
-		void save_sim_state_to_file(std::string outStateFile); /* TODO: deprecate, what else do we use for? */
 		void save_sim_to_file(std::string outSimFile);
 		void save_pfpc_weights_to_file(std::string out_pfpc_file);
 		void load_pfpc_weights_from_file(std::string in_pfpc_file);
