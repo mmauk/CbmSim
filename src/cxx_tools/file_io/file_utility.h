@@ -12,13 +12,18 @@
  *     file.
  *
  */
-#include <fstream>
-#include <unordered_map>
+#ifndef FILE_UTILITY_H_
+#define FILE_UTILITY_H_
+
 #include <string>
 #include <cstring>
+#include <fstream>
+#include <map>
+
+std::string get_file_basename(std::string full_file_path);
 
 template<typename key_t, typename val_t>
-void serialize_map_to_file(std::unordered_map<key_t, val_t> &map, std::fstream &file_buf)
+void serialize_map_to_file(std::map<key_t, val_t> &map, std::fstream &file_buf)
 {
 	size_t map_size = map.size();
 	char *map_size_bytes = (char *)calloc(1, sizeof(size_t));
@@ -52,7 +57,7 @@ void serialize_map_to_file(std::unordered_map<key_t, val_t> &map, std::fstream &
 }
 
 template<typename key_t, typename val_t>
-void unserialize_map_from_file(std::unordered_map<key_t, val_t> &map, std::fstream &file_buf)
+void unserialize_map_from_file(std::map<key_t, val_t> &map, std::fstream &file_buf)
 {
 	size_t int_params_size;
 	char *int_params_size_arr = (char *)calloc(1, sizeof(size_t));
@@ -85,4 +90,6 @@ void unserialize_map_from_file(std::unordered_map<key_t, val_t> &map, std::fstre
 	}
 	free(int_params_size_arr);
 }
+
+#endif /* FILE_UTILITY_H_ */
 

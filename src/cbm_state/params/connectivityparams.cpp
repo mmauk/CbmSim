@@ -5,7 +5,6 @@
  *      Author: varicella
  */
 
-#include "serialize.h"
 #include "connectivityparams.h"
 
 bool con_params_populated = false;

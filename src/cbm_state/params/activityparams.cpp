@@ -10,7 +10,6 @@
 #include <assert.h>
 
 #include "rawbytesrw.h"
-#include "serialize.h"
 #include "connectivityparams.h"
 #include "activityparams.h"
 

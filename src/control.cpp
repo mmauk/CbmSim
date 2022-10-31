@@ -9,25 +9,6 @@
 
 const std::string BIN_EXT = "bin";
 
-// private utility function. TODO: move to a better place
-std::string getFileBasename(std::string fullFilePath)
-{
-	size_t sep = fullFilePath.find_last_of("\\/");
-	if (sep != std::string::npos)
-		fullFilePath = fullFilePath.substr(sep + 1, fullFilePath.size() - sep - 1);
-	
-	size_t dot = fullFilePath.find_last_of(".");
-	if (dot != std::string::npos)
-	{
-		std::string name = fullFilePath.substr(0, dot);
-	}
-	else
-	{
-		std::string name = fullFilePath;
-	}
-	return (dot != std::string::npos) ? fullFilePath.substr(0, dot) : fullFilePath;
-}
-
 Control::Control(parsed_commandline &p_cl)
 {
 	tokenized_file t_file;

@@ -11,10 +11,10 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstddef>
-
 #include "arrayvalidate.h"
 
-template<typename Type> Type** allocate2DArray(unsigned int numRows, unsigned int numCols)
+template<typename Type>
+Type** allocate2DArray(unsigned int numRows, unsigned int numCols)
 {
 	Type** retArr = (Type **)calloc(numRows, sizeof(Type *));
 	retArr[0] = (Type *)calloc(numRows * numCols, sizeof(Type));
@@ -27,20 +27,17 @@ template<typename Type> Type** allocate2DArray(unsigned int numRows, unsigned in
 	return retArr;
 }
 
-template<typename Type> void delete2DArray(Type** array)
+template<typename Type>
+void delete2DArray(Type** array)
 {
 	free(array[0]);
 	free(array);
 }
 
-inline bool validate2DfloatArray(float **array, unsigned int numElements)
+template <typename Type>
+inline bool validate2DArray(Type **array, unsigned int numElements)
 {
 	return validateFloatArray(array[0], numElements);
-}
-
-inline bool validate2DdoubleArray(double **array, unsigned int numElements)
-{
-	return validateDoubleArray(array[0], numElements);
 }
 
 #endif /* _DYNAMIC2DARRAY_H */
