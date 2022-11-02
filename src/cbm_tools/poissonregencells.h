@@ -15,7 +15,7 @@
 #include <math.h>
 #include <limits.h>
 
-#include "pstdint.h"
+#include <cstdint>
 #include "sfmt.h"
 #include "mzone.h"
 #include "connectivityparams.h"
@@ -28,9 +28,9 @@ public:
 	PoissonRegenCells(int randSeed, float threshDecayTau, unsigned int numZones, float sigma=0);
 	~PoissonRegenCells();
 
-	const ct_uint8_t* calcPoissActivity(const float *freqencies, MZone **mZoneList, int ispikei = 18); 
+	const uint8_t* calcPoissActivity(const float *freqencies, MZone **mZoneList, int ispikei = 18); 
 	bool* calcTrueMFs(const float *freqencies);
-	const ct_uint8_t* getAPs();
+	const uint8_t* getAPs();
 private:
 	void prepCollaterals(int rSeed);
 
@@ -45,9 +45,9 @@ private:
 	float sPerTS;
 	float sigma;
 
-	ct_uint8_t *aps;
-	ct_uint32_t *dnCellIndex;
-	ct_uint32_t *mZoneIndex;
+	uint8_t *aps;
+	uint32_t *dnCellIndex;
+	uint32_t *mZoneIndex;
 	int spikeTimer = 0;
 
 	bool *isTrueMF;

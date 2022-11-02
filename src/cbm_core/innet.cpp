@@ -34,14 +34,14 @@ InNet::InNet(InNetConnectivityState *cs,
 	gGOGRT = allocate2DArray<float>(max_num_p_gr_from_go_to_gr, num_gr);
 	gMFGRT = allocate2DArray<float>(max_num_p_gr_from_mf_to_gr, num_gr);
 
-	pGRDelayfromGRtoGOT = allocate2DArray<ct_uint32_t>(max_num_p_gr_from_gr_to_go, num_gr);
-	pGRfromMFtoGRT = allocate2DArray<ct_uint32_t>(max_num_p_gr_from_mf_to_gr, num_gr);
-	pGRfromGOtoGRT = allocate2DArray<ct_uint32_t>(max_num_p_gr_from_go_to_gr, num_gr);
-	pGRfromGRtoGOT = allocate2DArray<ct_uint32_t>(max_num_p_gr_from_gr_to_go, num_gr);
+	pGRDelayfromGRtoGOT = allocate2DArray<uint32_t>(max_num_p_gr_from_gr_to_go, num_gr);
+	pGRfromMFtoGRT = allocate2DArray<uint32_t>(max_num_p_gr_from_mf_to_gr, num_gr);
+	pGRfromGOtoGRT = allocate2DArray<uint32_t>(max_num_p_gr_from_go_to_gr, num_gr);
+	pGRfromGRtoGOT = allocate2DArray<uint32_t>(max_num_p_gr_from_gr_to_go, num_gr);
 
 	apBufGRHistMask = (1 << (int)tsPerHistBinGR) - 1;
 
-	sumGRInputGO           = new ct_uint32_t[num_go];
+	sumGRInputGO           = new uint32_t[num_go];
 	sumInputGOGABASynDepGO = new float[num_go];
 
 	initCUDA();
@@ -55,10 +55,10 @@ InNet::~InNet()
 	delete2DArray<float>(gGOGRT);
 	delete2DArray<float>(gMFGRT);
 
-	delete2DArray<ct_uint32_t>(pGRDelayfromGRtoGOT);
-	delete2DArray<ct_uint32_t>(pGRfromMFtoGRT);
-	delete2DArray<ct_uint32_t>(pGRfromGOtoGRT);
-	delete2DArray<ct_uint32_t>(pGRfromGRtoGOT);
+	delete2DArray<uint32_t>(pGRDelayfromGRtoGOT);
+	delete2DArray<uint32_t>(pGRfromMFtoGRT);
+	delete2DArray<uint32_t>(pGRfromGOtoGRT);
+	delete2DArray<uint32_t>(pGRfromGRtoGOT);
 
 	// go, external to initCUDA
 	delete[] sumGRInputGO;
@@ -213,15 +213,15 @@ void InNet::writeToState()
 	// WARNING THIS IS A HORRIBLE IDEA. IF YOU GET BUGS CONSIDER THIS!
 	// Reason: the apGR is a unique_ptr. it should only be modifed in the scope
 	// that it is defined in.
-	getGRGPUData<ct_uint8_t>(outputGRGPU, as->apGR.get());
-	getGRGPUData<ct_uint32_t>(apBufGRGPU, as->apBufGR.get());
+	getGRGPUData<uint8_t>(outputGRGPU, as->apGR.get());
+	getGRGPUData<uint32_t>(apBufGRGPU, as->apBufGR.get());
 	getGRGPUData<float>(gEGRSumGPU, as->gMFSumGR.get());
 	getGRGPUData<float>(gIGRSumGPU, as->gGOSumGR.get());
 
 	getGRGPUData<float>(threshGRGPU, as->threshGR.get());
 	getGRGPUData<float>(vGRGPU, as->vGR.get());
 	getGRGPUData<float>(gKCaGRGPU, as->gKCaGR.get());
-	getGRGPUData<ct_uint64_t>(historyGRGPU, as->historyGR.get());
+	getGRGPUData<uint64_t>(historyGRGPU, as->historyGR.get());
 	for (int i = 0; i < numGPUs; i++)
 	{
 		int cpyStartInd;
@@ -268,8 +268,8 @@ void InNet::writeToState()
 //	// might be a useless operation. would the state of these arrays
 //	// on cpu be the same as on gpu at the time we modify the segment below?
 //	// if so, no need to get gpu data. if not, need to get gpu data
-//	getGRGPUData<ct_uint8_t>(outputGRGPU, as->apGR.get());
-//	getGRGPUData<ct_uint32_t>(apBufGRGPU, as->apBufGR.get());
+//	getGRGPUData<uint8_t>(outputGRGPU, as->apGR.get());
+//	getGRGPUData<uint32_t>(apBufGRGPU, as->apBufGR.get());
 //	for (int j = startGRStim; j <= startGRStim + numGRStim; j++)
 //	{
 //		/* as-> apBufGR[j] |= 1u; // try this to see if we get the same result */
@@ -287,31 +287,31 @@ void InNet::writeToState()
 //		cudaSetDevice(i+gpuIndStart);
 //
 //		cudaMemcpy(apBufGRGPU[i], &(as->apBufGR[cpyStartInd]),
-//				cpySize*sizeof(ct_uint32_t), cudaMemcpyHostToDevice);
+//				cpySize*sizeof(uint32_t), cudaMemcpyHostToDevice);
 //		cudaMemcpy(outputGRGPU[i], &outputGRH[cpyStartInd],
-//				cpySize*sizeof(ct_uint8_t), cudaMemcpyHostToDevice);
+//				cpySize*sizeof(uint8_t), cudaMemcpyHostToDevice);
 //	}
 //}
 
-const ct_uint8_t* InNet::exportAPGO()
+const uint8_t* InNet::exportAPGO()
 {
-	return (const ct_uint8_t *)as->apGO.get();
+	return (const uint8_t *)as->apGO.get();
 }
 
-const ct_uint8_t* InNet::exportAPMF()
+const uint8_t* InNet::exportAPMF()
 {
-	return (const ct_uint8_t *)apMFOut;
+	return (const uint8_t *)apMFOut;
 }
 
-const ct_uint8_t* InNet::exportAPGR()
+const uint8_t* InNet::exportAPGR()
 {
-	cudaError_t error = getGRGPUData<ct_uint8_t>(outputGRGPU, outputGRH);
-	return (const ct_uint8_t *)outputGRH;
+	cudaError_t error = getGRGPUData<uint8_t>(outputGRGPU, outputGRH);
+	return (const uint8_t *)outputGRH;
 }
 
-const ct_uint32_t* InNet::exportSumGRInputGO()
+const uint32_t* InNet::exportSumGRInputGO()
 {
-	return (const ct_uint32_t *)sumGRInputGO;
+	return (const uint32_t *)sumGRInputGO;
 }
 
 const float* InNet::exportSumGOInputGO()
@@ -319,19 +319,19 @@ const float* InNet::exportSumGOInputGO()
 	return (const float *)sumInputGOGABASynDepGO;
 }
 
-ct_uint32_t** InNet::getApBufGRGPUPointer()
+uint32_t** InNet::getApBufGRGPUPointer()
 {
 	return apBufGRGPU;
 }
 
 // YIKES this should be deprecated: control class should not be able
 // to interact directly with the gpu pointers here!!!
-ct_uint64_t** InNet::getHistGRGPUPointer()
+uint64_t** InNet::getHistGRGPUPointer()
 {
 	return historyGRGPU;
 }
 
-ct_uint32_t** InNet::getGRInputGOSumHPointer()
+uint32_t** InNet::getGRInputGOSumHPointer()
 {
 	return grInputGOSumH;
 }
@@ -358,7 +358,7 @@ const float* InNet::exportgSum_GRGO()
 	return (const float *)as->gGRGO.get();
 }
 
-void InNet::updateMFActivties(const ct_uint8_t *actInMF)
+void InNet::updateMFActivties(const uint8_t *actInMF)
 {
 	apMFOut = actInMF;
 	for (int i = 0; i < num_mf; i++)
@@ -602,7 +602,7 @@ void InNet::cpyAPMFHosttoGPUCUDA(cudaStream_t **sts, int streamN)
 	{
 		error=cudaSetDevice(i+gpuIndStart);
 		error=cudaMemcpyAsync(apMFGPU[i], apMFH[i],
-			num_mf*sizeof(ct_uint32_t), cudaMemcpyHostToDevice, sts[i][streamN]);
+			num_mf*sizeof(uint32_t), cudaMemcpyHostToDevice, sts[i][streamN]);
 #ifdef DEBUGOUT
 		cerr<<"cpyAPMFHosttoGPUCUDA: async copy for gpu #"<<i<<
 				": "<<cudaGetErrorString(error)<<endl;
@@ -639,7 +639,7 @@ void InNet::cpyAPGOHosttoGPUCUDA(cudaStream_t **sts, int streamN)
 	{
 		error=cudaSetDevice(i+gpuIndStart);
 		error=cudaMemcpyAsync(apGOGPU[i], apGOH[i],
-			num_go*sizeof(ct_uint32_t), cudaMemcpyHostToDevice, sts[i][streamN]);
+			num_go*sizeof(uint32_t), cudaMemcpyHostToDevice, sts[i][streamN]);
 #ifdef DEBUGOUT
 		cerr<<"cpyAPGOHosttoGPUCUDA: async copy for gpu #"<<i<<
 				": "<<cudaGetErrorString(error)<<endl;
@@ -764,14 +764,14 @@ void InNet::cpyGRGOSumGPUtoHostCUDA(cudaStream_t **sts, int streamN)
 	cpyGRGOSumGPUtoHostCUDA(sts, streamN, grInputGOSumH);
 }
 
-void InNet::cpyGRGOSumGPUtoHostCUDA(cudaStream_t **sts, int streamN, ct_uint32_t **grInputGOSumHost)
+void InNet::cpyGRGOSumGPUtoHostCUDA(cudaStream_t **sts, int streamN, uint32_t **grInputGOSumHost)
 {
 	cudaError_t error;
 	for(int i=0; i<numGPUs; i++)
 	{
 		error=cudaSetDevice(i+gpuIndStart);
 
-		error=cudaMemcpyAsync(grInputGOSumHost[i], grInputGOSumGPU[i], num_go * sizeof(ct_uint32_t),
+		error=cudaMemcpyAsync(grInputGOSumHost[i], grInputGOSumGPU[i], num_go * sizeof(uint32_t),
 				cudaMemcpyDeviceToHost, sts[i][streamN]);
 	}
 }
@@ -839,17 +839,17 @@ void InNet::initCUDA()
 
 void InNet::initMFCUDA()
 {
-	apMFH		= new ct_uint32_t*[numGPUs];
+	apMFH		= new uint32_t*[numGPUs];
 	depAmpMFH	= new float*[numGPUs];
-	apMFGPU		= new ct_uint32_t*[numGPUs];
+	apMFGPU		= new uint32_t*[numGPUs];
 	depAmpMFGPU = new float*[numGPUs];
 
 	std::cout << "[INFO]: Allocating MF cuda variables..." << std::endl;
 	for(int i=0; i<numGPUs; i++)
 	{
 		cudaSetDevice(i + gpuIndStart);
-		cudaMalloc((void **)&apMFGPU[i], num_mf * sizeof(ct_uint32_t));
-		cudaMallocHost((void **)&apMFH[i], num_mf * sizeof(ct_uint32_t));
+		cudaMalloc((void **)&apMFGPU[i], num_mf * sizeof(uint32_t));
+		cudaMallocHost((void **)&apMFH[i], num_mf * sizeof(uint32_t));
 		cudaMalloc((void **)&(depAmpMFGPU[i]), num_mf * sizeof(float));
 		cudaMallocHost((void **)&depAmpMFH[i], num_mf * sizeof(float));
 		cudaDeviceSynchronize();
@@ -862,9 +862,9 @@ void InNet::initMFCUDA()
 	for(int i=0; i<numGPUs; i++)
 	{
 		cudaSetDevice(i + gpuIndStart);
-		cudaMemset(apMFH[i], 0, num_mf * sizeof(ct_uint32_t));
+		cudaMemset(apMFH[i], 0, num_mf * sizeof(uint32_t));
 		cudaMemset(depAmpMFH[i], 1, num_mf * sizeof(float));
-		cudaMemset(apMFGPU[i], 0, num_mf*sizeof(ct_uint32_t));
+		cudaMemset(apMFGPU[i], 0, num_mf*sizeof(uint32_t));
 		cudaMemset(depAmpMFGPU[i], 1, num_mf*sizeof(float));
 		cudaDeviceSynchronize();
 	}
@@ -891,9 +891,9 @@ void InNet::initGRCUDA()
 	gIDirectGPU	   = new float*[numGPUs];
 	gISpilloverGPU = new float*[numGPUs];
 
-	apBufGRGPU  = new ct_uint32_t*[numGPUs];
-	outputGRGPU = new ct_uint8_t*[numGPUs];
-	apGRGPU		= new ct_uint32_t*[numGPUs];
+	apBufGRGPU  = new uint32_t*[numGPUs];
+	outputGRGPU = new uint8_t*[numGPUs];
+	apGRGPU		= new uint32_t*[numGPUs];
 
 	threshGRGPU	  = new float*[numGPUs];
 	vGRGPU		  = new float*[numGPUs];
@@ -901,30 +901,30 @@ void InNet::initGRCUDA()
 	gLeakGRGPU	  = new float*[numGPUs];	
 	gNMDAGRGPU	  = new float*[numGPUs];
 	gNMDAIncGRGPU = new float*[numGPUs];
-	historyGRGPU  = new ct_uint64_t*[numGPUs];
+	historyGRGPU  = new uint64_t*[numGPUs];
 
-	delayGOMasksGRGPU	 = new ct_uint32_t*[numGPUs];
+	delayGOMasksGRGPU	 = new uint32_t*[numGPUs];
 	delayGOMasksGRGPUP	 = new size_t[numGPUs];
 	
-	numGOOutPerGRGPU = new ct_int32_t*[numGPUs];
-	grConGROutGOGPU  = new ct_uint32_t*[numGPUs];
+	numGOOutPerGRGPU = new int32_t*[numGPUs];
+	grConGROutGOGPU  = new uint32_t*[numGPUs];
 	grConGROutGOGPUP = new size_t[numGPUs];
 
-	numGOInPerGRGPU  = new ct_int32_t*[numGPUs];
-	grConGOOutGRGPU  = new ct_uint32_t*[numGPUs];
+	numGOInPerGRGPU  = new int32_t*[numGPUs];
+	grConGOOutGRGPU  = new uint32_t*[numGPUs];
 	grConGOOutGRGPUP = new size_t[numGPUs];
 
-	numMFInPerGRGPU  = new ct_int32_t*[numGPUs];
-	grConMFOutGRGPU  = new ct_uint32_t*[numGPUs];
+	numMFInPerGRGPU  = new int32_t*[numGPUs];
+	grConMFOutGRGPU  = new uint32_t*[numGPUs];
 	grConMFOutGRGPUP = new size_t[numGPUs];
 
 	// NOTE: debating whether to make this page-locked mem or not (06/25/2022)
-	outputGRH = new ct_uint8_t[num_gr];
+	outputGRH = new uint8_t[num_gr];
 	std::fill(outputGRH, outputGRH + num_gr, 0);
 
 	std::cout << "[INFO]: Allocating GR cuda variables..." << std::endl;
-	//cudaMallocHost((void **)&outputGRH, NUM_GR * sizeof(ct_uint8_t));
-	//cudaMemset(outputGRH, 0, NUM_GR * sizeof(ct_uint8_t));
+	//cudaMallocHost((void **)&outputGRH, NUM_GR * sizeof(uint8_t));
+	//cudaMemset(outputGRH, 0, NUM_GR * sizeof(uint8_t));
 
 	//allocate memory for GPU
 	for( int i = 0; i < numGPUs; i++)
@@ -947,9 +947,9 @@ void InNet::initGRCUDA()
 		cudaMalloc((void **)&gIDirectGPU[i], numGRPerGPU*sizeof(float));
 		cudaMalloc((void **)&gISpilloverGPU[i], numGRPerGPU*sizeof(float));
 
-		cudaMalloc((void **)&apGRGPU[i], numGRPerGPU*sizeof(ct_uint32_t));
-		cudaMalloc((void **)&apBufGRGPU[i], numGRPerGPU*sizeof(ct_uint32_t));
-		cudaMalloc((void **)&outputGRGPU[i], numGRPerGPU*sizeof(ct_uint8_t));
+		cudaMalloc((void **)&apGRGPU[i], numGRPerGPU*sizeof(uint32_t));
+		cudaMalloc((void **)&apBufGRGPU[i], numGRPerGPU*sizeof(uint32_t));
+		cudaMalloc((void **)&outputGRGPU[i], numGRPerGPU*sizeof(uint8_t));
 
 		cudaMalloc((void **)&threshGRGPU[i], numGRPerGPU*sizeof(float));
 		cudaMalloc<float>(&(vGRGPU[i]), numGRPerGPU*sizeof(float));
@@ -957,25 +957,25 @@ void InNet::initGRCUDA()
 		cudaMalloc<float>(&(gLeakGRGPU[i]), numGRPerGPU*sizeof(float));
 		cudaMalloc<float>(&(gNMDAGRGPU[i]), numGRPerGPU*sizeof(float));
 		cudaMalloc<float>(&(gNMDAIncGRGPU[i]), numGRPerGPU*sizeof(float));
-		cudaMalloc((void **)&historyGRGPU[i], numGRPerGPU*sizeof(ct_uint64_t));
+		cudaMalloc((void **)&historyGRGPU[i], numGRPerGPU*sizeof(uint64_t));
 		
 		//variables for conduction delays
 		cudaMallocPitch((void **)&delayGOMasksGRGPU[i], (size_t *)&delayGOMasksGRGPUP[i],
-			numGRPerGPU * sizeof(ct_uint32_t), max_num_p_gr_from_gr_to_go);
+			numGRPerGPU * sizeof(uint32_t), max_num_p_gr_from_gr_to_go);
 		//end conduction delay
 
 		//connectivity
-		cudaMalloc((void **)&numGOOutPerGRGPU[i], numGRPerGPU*sizeof(ct_int32_t));
+		cudaMalloc((void **)&numGOOutPerGRGPU[i], numGRPerGPU*sizeof(int32_t));
 		cudaMallocPitch((void **)&grConGROutGOGPU[i], (size_t *)&grConGROutGOGPUP[i],
-		  	numGRPerGPU*sizeof(ct_uint32_t), max_num_p_gr_from_gr_to_go);
+		  	numGRPerGPU*sizeof(uint32_t), max_num_p_gr_from_gr_to_go);
 
-		cudaMalloc((void **)&numGOInPerGRGPU[i], numGRPerGPU*sizeof(ct_int32_t));
+		cudaMalloc((void **)&numGOInPerGRGPU[i], numGRPerGPU*sizeof(int32_t));
 		cudaMallocPitch((void **)&grConGOOutGRGPU[i], (size_t *)&grConGOOutGRGPUP[i],
-		  	numGRPerGPU*sizeof(ct_uint32_t), max_num_p_gr_from_go_to_gr);
+		  	numGRPerGPU*sizeof(uint32_t), max_num_p_gr_from_go_to_gr);
 
-		cudaMalloc((void **)&numMFInPerGRGPU[i], numGRPerGPU*sizeof(ct_int32_t));
+		cudaMalloc((void **)&numMFInPerGRGPU[i], numGRPerGPU*sizeof(int32_t));
 		cudaMallocPitch((void **)&grConMFOutGRGPU[i], (size_t *)&grConMFOutGRGPUP[i],
-			numGRPerGPU*sizeof(ct_uint32_t), max_num_p_gr_from_mf_to_gr);
+			numGRPerGPU*sizeof(uint32_t), max_num_p_gr_from_mf_to_gr);
 		//end connectivity
 
 		cudaDeviceSynchronize();
@@ -1032,7 +1032,7 @@ void InNet::initGRCUDA()
 			cudaMemcpy((void *)((char *)gEGRGPU[i] + j * gEGRGPUP[i]), &gMFGRT[j][cpyStartInd],
 				cpySize * sizeof(float), cudaMemcpyHostToDevice);	
 			cudaMemcpy((void *)((char *)grConMFOutGRGPU[i]+ j * grConMFOutGRGPUP[i]),
-				&pGRfromMFtoGRT[j][cpyStartInd], cpySize * sizeof(ct_uint32_t), cudaMemcpyHostToDevice);
+				&pGRfromMFtoGRT[j][cpyStartInd], cpySize * sizeof(uint32_t), cudaMemcpyHostToDevice);
 		}
 	
 		cudaMemcpy(vGRGPU[i], &(as->vGR[cpyStartInd]), cpySize * sizeof(float), cudaMemcpyHostToDevice);	
@@ -1052,14 +1052,14 @@ void InNet::initGRCUDA()
 			cudaMemcpy((void *)((char *)gIGRGPU[i] + j * gIGRGPUP[i]), &gGOGRT[j][cpyStartInd],
 				cpySize * sizeof(float), cudaMemcpyHostToDevice);
 			cudaMemcpy((void *)((char *)grConGOOutGRGPU[i]+j*grConGOOutGRGPUP[i]),
-					&pGRfromGOtoGRT[j][cpyStartInd], cpySize * sizeof(ct_uint32_t), cudaMemcpyHostToDevice);
+					&pGRfromGOtoGRT[j][cpyStartInd], cpySize * sizeof(uint32_t), cudaMemcpyHostToDevice);
 		}
 
 		cudaMemcpy(gIGRSumGPU[i], &(as->gGOSumGR[cpyStartInd]), cpySize * sizeof(float), cudaMemcpyHostToDevice);
 		cudaMemset(gIDirectGPU[i], 0.0, cpySize * sizeof(float));	
 		cudaMemset(gISpilloverGPU[i], 0.0, cpySize * sizeof(float));
 
-		cudaMemcpy(apBufGRGPU[i], &(as->apBufGR[cpyStartInd]), cpySize * sizeof(ct_uint32_t),
+		cudaMemcpy(apBufGRGPU[i], &(as->apBufGR[cpyStartInd]), cpySize * sizeof(uint32_t),
 			cudaMemcpyHostToDevice);
 		cudaMemcpy(threshGRGPU[i], &(as->threshGR[cpyStartInd]), cpySize * sizeof(float),
 			cudaMemcpyHostToDevice);
@@ -1080,19 +1080,19 @@ void InNet::initGRCUDA()
 
 		//Basket cell stuff
 		cudaMemcpy(numGOOutPerGRGPU[i], &(cs->numpGRfromGRtoGO[cpyStartInd]),
-			cpySize * sizeof(ct_int32_t), cudaMemcpyHostToDevice);
+			cpySize * sizeof(int32_t), cudaMemcpyHostToDevice);
 
 		cudaMemcpy(numGOInPerGRGPU[i], &(cs->numpGRfromGOtoGR[cpyStartInd]),
-			cpySize * sizeof(ct_int32_t), cudaMemcpyHostToDevice);
+			cpySize * sizeof(int32_t), cudaMemcpyHostToDevice);
 		
 		cudaMemcpy(numMFInPerGRGPU[i], &(cs->numpGRfromMFtoGR[cpyStartInd]),
 			cpySize * sizeof(int), cudaMemcpyHostToDevice);
 
 		cudaMemcpy(historyGRGPU[i], &(as->historyGR[cpyStartInd]),
-			cpySize * sizeof(ct_uint64_t), cudaMemcpyHostToDevice);
+			cpySize * sizeof(uint64_t), cudaMemcpyHostToDevice);
 
-		cudaMemset(outputGRGPU[i], 0, cpySize * sizeof(ct_uint8_t));
-		cudaMemset(apGRGPU[i], 0, cpySize * sizeof(ct_uint32_t));
+		cudaMemset(outputGRGPU[i], 0, cpySize * sizeof(uint8_t));
+		cudaMemset(apGRGPU[i], 0, cpySize * sizeof(uint32_t));
 
 		cudaDeviceSynchronize();
 	}
@@ -1103,12 +1103,12 @@ void InNet::initGRCUDA()
 void InNet::initGOCUDA()
 {
 	//FIXME: change the types of some of these arrays (see joe's biasManip sim)
-	grInputGOSumH   = new ct_uint32_t*[numGPUs];
-	apGOH		    = new ct_uint32_t*[numGPUs];
-	apGOGPU		    = new ct_uint32_t*[numGPUs];
-	grInputGOGPU    = new ct_uint32_t*[numGPUs];
+	grInputGOSumH   = new uint32_t*[numGPUs];
+	apGOH		    = new uint32_t*[numGPUs];
+	apGOGPU		    = new uint32_t*[numGPUs];
+	grInputGOGPU    = new uint32_t*[numGPUs];
 	grInputGOGPUP   = new size_t[numGPUs];
-	grInputGOSumGPU = new ct_uint32_t*[numGPUs];
+	grInputGOSumGPU = new uint32_t*[numGPUs];
 	depAmpGOH		= new float*[numGPUs];
 	depAmpGOGPU		= new float*[numGPUs];	
 	dynamicAmpGOH	= new float*[numGPUs];
@@ -1122,19 +1122,19 @@ void InNet::initGOCUDA()
 	for (int i = 0; i < numGPUs; i++)
 	{
 		cudaSetDevice(i + gpuIndStart);
-		cudaMallocHost((void **)&grInputGOSumH[i], num_go*sizeof(ct_uint32_t));
-		cudaMallocHost((void **)&apGOH[i], num_go*sizeof(ct_uint32_t));
+		cudaMallocHost((void **)&grInputGOSumH[i], num_go*sizeof(uint32_t));
+		cudaMallocHost((void **)&apGOH[i], num_go*sizeof(uint32_t));
 		cudaMallocHost((void **)&depAmpGOH[i], num_go*sizeof(float));
 		cudaMallocHost((void **)&dynamicAmpGOH[i], num_go*sizeof(float));
 	
 		//allocate gpu memory
-		cudaMalloc((void **)&apGOGPU[i], num_go*sizeof(ct_uint32_t));
+		cudaMalloc((void **)&apGOGPU[i], num_go*sizeof(uint32_t));
 		cudaMalloc((void **)&depAmpGOGPU[i], num_go*sizeof(float));
 		cudaMalloc((void **)&dynamicAmpGOGPU[i], num_go*sizeof(float));
 
 		cudaMallocPitch((void **)&grInputGOGPU[i], (size_t *)&grInputGOGPUP[i],
-				num_go*sizeof(ct_uint32_t), updateGRGOOutNumGRRows);
-		cudaMalloc((void **)&grInputGOSumGPU[i], num_go * sizeof(ct_uint32_t));
+				num_go*sizeof(uint32_t), updateGRGOOutNumGRRows);
+		cudaMalloc((void **)&grInputGOSumGPU[i], num_go * sizeof(uint32_t));
 
 		cudaDeviceSynchronize();
 	}
@@ -1146,21 +1146,21 @@ void InNet::initGOCUDA()
 	for (int i = 0; i < numGPUs; i++)
 	{
 		cudaSetDevice(i + gpuIndStart);
-		cudaMemset(apGOH[i], 0, num_go * sizeof(ct_uint32_t));
+		cudaMemset(apGOH[i], 0, num_go * sizeof(uint32_t));
 		cudaMemset(depAmpGOH[i], 1, num_go * sizeof(float));
 		cudaMemset(dynamicAmpGOH[i], 1, num_go * sizeof(float));
-		cudaMemset(grInputGOSumH[i], 0, num_go * sizeof(ct_uint32_t));
+		cudaMemset(grInputGOSumH[i], 0, num_go * sizeof(uint32_t));
 
-		cudaMemset(apGOGPU[i], 0, num_go*sizeof(ct_uint32_t));
+		cudaMemset(apGOGPU[i], 0, num_go*sizeof(uint32_t));
 		cudaMemset(depAmpGOGPU[i], 1, num_go*sizeof(float));
 		cudaMemset(dynamicAmpGOGPU[i], 1, num_go*sizeof(float));
 
 		for (int j = 0; j < updateGRGOOutNumGRRows; j++)
 		{
 			cudaMemset(((char *)grInputGOGPU[i]+j * grInputGOGPUP[i]),
-					0, num_go * sizeof(ct_uint32_t));
+					0, num_go * sizeof(uint32_t));
 		}
-		cudaMemset(grInputGOSumGPU[i], 0, num_go*sizeof(ct_uint32_t));
+		cudaMemset(grInputGOSumGPU[i], 0, num_go*sizeof(uint32_t));
 
 		cudaDeviceSynchronize();
 	}

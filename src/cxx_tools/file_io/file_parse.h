@@ -18,7 +18,7 @@
 #include <utility> /* for std::pair */
 #include <vector>
 #include <map>
-#include "pstdint.h"
+#include <cstdint>
 
 // lexemes of the input files ie the fundamental meanings behind each token
 typedef enum 
@@ -51,14 +51,14 @@ typedef struct
 
 typedef struct 
 {
-	ct_uint32_t num_trials;
+	uint32_t num_trials;
 	std::string *trial_names;
-	ct_uint32_t *use_css;
-	ct_uint32_t *cs_onsets;
-	ct_uint32_t *cs_lens;
+	uint32_t *use_css;
+	uint32_t *cs_onsets;
+	uint32_t *cs_lens;
 	float       *cs_percents;
-	ct_uint32_t *use_uss;
-	ct_uint32_t *us_onsets;
+	uint32_t *use_uss;
+	uint32_t *us_onsets;
 } trials_data;
 
 /* 
@@ -147,7 +147,7 @@ void parse_lexed_build_file(lexed_file &l_file, parsed_build_file &p_file);
  *      to call delete_trials_data at a later point to prevent memory leak)
  *
  */
-void allocate_trials_data(trials_data &td, ct_uint32_t num_trials);
+void allocate_trials_data(trials_data &td, uint32_t num_trials);
 
 /*
  * Description:

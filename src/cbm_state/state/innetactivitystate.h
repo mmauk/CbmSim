@@ -12,7 +12,7 @@
 #include <fstream>
 
 #include "file_utility.h"
-#include "pstdint.h"
+#include <cstdint>
 #include "connectivityparams.h"
 #include "activityparams.h"
 
@@ -29,19 +29,19 @@ public:
 	void resetState();
 
 	//mossy fiber
-	std::unique_ptr<ct_uint8_t[]> histMF{nullptr};
-	std::unique_ptr<ct_uint32_t[]> apBufMF{nullptr};
+	std::unique_ptr<uint8_t[]> histMF{nullptr};
+	std::unique_ptr<uint32_t[]> apBufMF{nullptr};
 
 	//golgi cells
 	std::unique_ptr<float[]> synWscalerGOtoGO{nullptr};
 	std::unique_ptr<float[]> synWscalerGRtoGO{nullptr};
-	std::unique_ptr<ct_uint8_t[]> apGO{nullptr};
-	std::unique_ptr<ct_uint32_t[]> apBufGO{nullptr};
+	std::unique_ptr<uint8_t[]> apGO{nullptr};
+	std::unique_ptr<uint32_t[]> apBufGO{nullptr};
 	std::unique_ptr<float[]> vGO{nullptr};
 	std::unique_ptr<float[]> vCoupleGO{nullptr};
 	std::unique_ptr<float[]> threshCurGO{nullptr};
 
-	std::unique_ptr<ct_uint32_t[]> inputMFGO{nullptr};
+	std::unique_ptr<uint32_t[]> inputMFGO{nullptr};
 	std::unique_ptr<float[]> depAmpMFGO{nullptr};
 	std::unique_ptr<float[]> gi_MFtoGO{nullptr};
 	std::unique_ptr<float[]> gSum_MFGO{nullptr};
@@ -61,8 +61,8 @@ public:
 
 	//granule cells
 	std::unique_ptr<float[]> depAmpMFGR{nullptr};
-	std::unique_ptr<ct_uint8_t[]> apGR{nullptr}; // <- pulled via getGPUData
-	std::unique_ptr<ct_uint32_t[]> apBufGR{nullptr};
+	std::unique_ptr<uint8_t[]> apGR{nullptr}; // <- pulled via getGPUData
+	std::unique_ptr<uint32_t[]> apBufGR{nullptr};
 	// NOTE: gMFGR was 2D array, now 1D for smart ptr
 	// access using indices 0 <= i < NUM_GR, 0 <= j < MAX_NUM_P_GR_FROM_MF_TO_GR like so:
 	// i * NUM_GR + j
@@ -81,7 +81,7 @@ public:
 	std::unique_ptr<float[]> threshGR{nullptr};
 	std::unique_ptr<float[]> vGR{nullptr};
 	std::unique_ptr<float[]> gKCaGR{nullptr};
-	std::unique_ptr<ct_uint64_t[]> historyGR{nullptr};
+	std::unique_ptr<uint64_t[]> historyGR{nullptr};
 
 private:
 	void stateRW(bool read, std::fstream &file);

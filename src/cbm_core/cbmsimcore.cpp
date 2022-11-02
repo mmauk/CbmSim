@@ -413,7 +413,7 @@ void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum
 #endif
 }
 
-void CBMSimCore::updateMFInput(const ct_uint8_t *mfIn)
+void CBMSimCore::updateMFInput(const uint8_t *mfIn)
 {
 	inputNet->updateMFActivties(mfIn);
 

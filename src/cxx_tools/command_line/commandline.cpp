@@ -14,7 +14,7 @@
 #include <algorithm>
 #include <utility>
 #include "commandline.h"
-#include "pstdint.h"
+#include <cstdint>
 
 const std::vector<std::string> command_line_single_opts
 {

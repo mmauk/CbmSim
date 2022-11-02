@@ -15,7 +15,7 @@
 #include <fstream>
 #include <string>
 #include "file_parse.h"
-#include "pstdint.h"
+#include <cstdint>
 
 #define NUM_CON_PARAMS 107
 

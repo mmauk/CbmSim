@@ -7,7 +7,7 @@
 
 #include "kernels.h"
 
- extern __shared__ ct_uint32_t sharedIOBufGR[];
+ extern __shared__ uint32_t sharedIOBufGR[];
  extern __shared__ float  sharedIOBufGRfloat[];
 
 __global__ void testKernel(float *a, float *b, float *c)
@@ -20,7 +20,7 @@ __global__ void testKernel(float *a, float *b, float *c)
 //**-----------------GR Kernels------------------**
 
 __global__ void calcActivityGRGPU(float *vm, float *gKCa, float *gLeak, float *gNMDA, float *gNMDAInc,
-	float *thresh, ct_uint32_t *apBuf, ct_uint8_t *apOutGR, ct_uint32_t *apGR, int *apMFtoGR,
+	float *thresh, uint32_t *apBuf, uint8_t *apOutGR, uint32_t *apGR, int *apMFtoGR,
 	float *gESum, float *gISum, float eLeak, float eGOIn, float gAMPAInc, 
 	float threshBase, float threshMax, float threshDecay)
 {
@@ -65,11 +65,11 @@ __global__ void calcActivityGRGPU(float *vm, float *gKCa, float *gLeak, float *g
 	vm[i]      = tempV;
 }
 
-__global__ void updateGRGOOutGPU(ct_uint32_t *apBuf,
-		ct_uint32_t *goOut, size_t goOutPitch,
-		ct_uint32_t *delay, size_t delayPitch,
-		ct_uint32_t *con, size_t conPitch,
-		ct_int32_t *numSyn, int nWrites)
+__global__ void updateGRGOOutGPU(uint32_t *apBuf,
+		uint32_t *goOut, size_t goOutPitch,
+		uint32_t *delay, size_t delayPitch,
+		uint32_t *con, size_t conPitch,
+		int32_t *numSyn, int nWrites)
 {
 	int tid=threadIdx.x;
 	int index=blockIdx.x*blockDim.x+threadIdx.x;
@@ -88,8 +88,8 @@ __global__ void updateGRGOOutGPU(ct_uint32_t *apBuf,
 	__syncthreads();
 	for(int i=0; i<tempNS; i++)
 	{
-		conRow=(ct_uint32_t *)((char *)con+i*conPitch);
-		delayRow=(ct_uint32_t *)((char *)delay+i*delayPitch);
+		conRow=(uint32_t *)((char *)con+i*conPitch);
+		delayRow=(uint32_t *)((char *)delay+i*delayPitch);
 
 		tempOut=(apBuf[index]&delayRow[index])>0;
 
@@ -105,11 +105,11 @@ __global__ void updateGRGOOutGPU(ct_uint32_t *apBuf,
 	}
 }
 
-__global__ void updateGRBCOutGPU(ct_uint32_t *apBuf,
-		ct_uint32_t *bcOut, size_t bcOutPitch,
-		ct_uint32_t *delay, size_t delayPitch,
-		ct_uint32_t *con, size_t conPitch,
-		ct_int32_t *numSyn, int nWrites)
+__global__ void updateGRBCOutGPU(uint32_t *apBuf,
+		uint32_t *bcOut, size_t bcOutPitch,
+		uint32_t *delay, size_t delayPitch,
+		uint32_t *con, size_t conPitch,
+		int32_t *numSyn, int nWrites)
 {
 	int tid=threadIdx.x;
 	int index=blockIdx.x*blockDim.x+threadIdx.x;
@@ -128,8 +128,8 @@ __global__ void updateGRBCOutGPU(ct_uint32_t *apBuf,
 	__syncthreads();
 	for(int i=0; i<tempNS; i++)
 	{
-		conRow=(ct_uint32_t *)((char *)con+i*conPitch);
-		delayRow=(ct_uint32_t *)((char *)delay+i*delayPitch);
+		conRow=(uint32_t *)((char *)con+i*conPitch);
+		delayRow=(uint32_t *)((char *)delay+i*delayPitch);
 
 		tempOut=(apBuf[index]&delayRow[index])>0;
 
@@ -145,7 +145,7 @@ __global__ void updateGRBCOutGPU(ct_uint32_t *apBuf,
 	}
 }
 
-__global__ void sumGRGOOutGPU(unsigned int nRows, ct_uint32_t *goOut, size_t goOutPitch, ct_uint32_t *goOutSum)
+__global__ void sumGRGOOutGPU(unsigned int nRows, uint32_t *goOut, size_t goOutPitch, uint32_t *goOutSum)
 {
 	unsigned int *goOutRow;
 	int index=blockIdx.x*blockDim.x+threadIdx.x;
@@ -163,7 +163,7 @@ __global__ void sumGRGOOutGPU(unsigned int nRows, ct_uint32_t *goOut, size_t goO
 	//goOutSum[index]=1;
 }
 
-__global__ void sumGRBCOutGPU(unsigned int nRows, ct_uint32_t *bcOut, size_t bcOutPitch, ct_uint32_t *bcOutSum)
+__global__ void sumGRBCOutGPU(unsigned int nRows, uint32_t *bcOut, size_t bcOutPitch, uint32_t *bcOutSum)
 {
 	unsigned int *bcOutRow;
 	int index=blockIdx.x*blockDim.x+threadIdx.x;
@@ -181,8 +181,8 @@ __global__ void sumGRBCOutGPU(unsigned int nRows, ct_uint32_t *bcOut, size_t bcO
 	//bcOutSum[index]=1;
 }
 
-__global__ void updateGRInOPGPU(unsigned int inNLoads, ct_uint32_t *apIn, float *dynamicSpillAmp,
-		float *g, size_t gPitch, ct_uint32_t *conFromIn, size_t conFromInPitch, ct_int32_t *numInPerGR,
+__global__ void updateGRInOPGPU(unsigned int inNLoads, uint32_t *apIn, float *dynamicSpillAmp,
+		float *g, size_t gPitch, uint32_t *conFromIn, size_t conFromInPitch, int32_t *numInPerGR,
 		float *gSum, float *gDirect, float *gSpillover,  float gDecayD, float gIncD, float gDecayS,
 		float gIncFracS)
 {
@@ -213,8 +213,8 @@ __global__ void updateGRInOPGPU(unsigned int inNLoads, ct_uint32_t *apIn, float 
 	gSum[index] = gDirect[index] + gSpillover[index]; 
 }
 
-__global__ void updateGOGRDepressionInOPGPU(unsigned int inNLoads, float *depAmp, ct_uint32_t *conFromIn,
-	  size_t conFromInPitch, ct_int32_t *numInPerGR, float *depAmpGOGRGPU)
+__global__ void updateGOGRDepressionInOPGPU(unsigned int inNLoads, float *depAmp, uint32_t *conFromIn,
+	  size_t conFromInPitch, int32_t *numInPerGR, float *depAmpGOGRGPU)
 {
 	int tid = threadIdx.x;
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
@@ -238,8 +238,8 @@ __global__ void updateGOGRDepressionInOPGPU(unsigned int inNLoads, float *depAmp
 	depAmpGOGRGPU[index] = tempDepAmpSum / 3;
 }
 
-__global__ void updateMFGRDepressionInOPGPU(unsigned int inNLoads, float *depAmp, ct_uint32_t *conFromIn,
-	  size_t conFromInPitch, ct_int32_t *numInPerGR, int *numMFperGR, float *depAmpMFGRGPU)
+__global__ void updateMFGRDepressionInOPGPU(unsigned int inNLoads, float *depAmp, uint32_t *conFromIn,
+	  size_t conFromInPitch, int32_t *numInPerGR, int *numMFperGR, float *depAmpMFGRGPU)
 {
 	int tid = threadIdx.x;
 	int index = blockIdx.x * blockDim.x + tid;
@@ -264,8 +264,8 @@ __global__ void updateMFGRDepressionInOPGPU(unsigned int inNLoads, float *depAmp
 }
 
 __global__ void updateGOGRDynamicSpillInOPGPU(unsigned int inNLoads, float *dynamicAmp,
-		ct_uint32_t *conFromIn, size_t conFromInPitch,
-		ct_int32_t *numInPerGR, float *dynamicAmpGOGRGPU)
+		uint32_t *conFromIn, size_t conFromInPitch,
+		int32_t *numInPerGR, float *dynamicAmpGOGRGPU)
 {
 
 	int tid=threadIdx.x;
@@ -294,10 +294,10 @@ __global__ void updateGOGRDynamicSpillInOPGPU(unsigned int inNLoads, float *dyna
 
 
 
-__global__ void updateUBCGRInOPGPU(unsigned int inNLoads, ct_uint32_t *apIn, float *depAmp,
+__global__ void updateUBCGRInOPGPU(unsigned int inNLoads, uint32_t *apIn, float *depAmp,
 		float *g, size_t gPitch,
-		ct_uint32_t *conFromIn, size_t conFromInPitch,
-		ct_int32_t *numInPerGR, int *apUBCtoGRp, float *gSum, float *gDirect, float *gSpillover, 
+		uint32_t *conFromIn, size_t conFromInPitch,
+		int32_t *numInPerGR, int *apUBCtoGRp, float *gSum, float *gDirect, float *gSpillover, 
 		float gDecayD, float gIncD, float gDecayS, float gIncFracS)
 {
 	int tid=threadIdx.x;
@@ -342,9 +342,9 @@ __global__ void updateUBCGRInOPGPU(unsigned int inNLoads, ct_uint32_t *apIn, flo
 }
 
 
-__global__ void updateMFGRInOPGPU(unsigned int inNLoads, ct_uint32_t *apIn, float*depAmp,
-		float *g, size_t gPitch, ct_uint32_t *conFromIn, size_t conFromInPitch,
-		ct_int32_t *numInPerGR, int *apMFtoGR, float *gSum, float *gDirect, float *gSpillover, 
+__global__ void updateMFGRInOPGPU(unsigned int inNLoads, uint32_t *apIn, float*depAmp,
+		float *g, size_t gPitch, uint32_t *conFromIn, size_t conFromInPitch,
+		int32_t *numInPerGR, int *apMFtoGR, float *gSum, float *gDirect, float *gSpillover, 
 		float gDecayD, float gIncD, float gDecayS, float gIncFracS)
 {
 	int tid = threadIdx.x;
@@ -375,21 +375,21 @@ __global__ void updateMFGRInOPGPU(unsigned int inNLoads, ct_uint32_t *apIn, floa
 	apMFtoGR[index] = tempApInSum;
 }
 
-__global__ void updateGRHistory(ct_uint32_t *apBuf, ct_uint64_t *apHist, ct_uint32_t bufTestMask)
+__global__ void updateGRHistory(uint32_t *apBuf, uint64_t *apHist, uint32_t bufTestMask)
 {
 	int i=blockIdx.x*blockDim.x+threadIdx.x;
-	ct_uint64_t tempHist=apHist[i]<<1;
+	uint64_t tempHist=apHist[i]<<1;
 	apHist[i]=tempHist|((apBuf[i]&bufTestMask)>0)*0x00000001; 
 }
 
-__global__ void updatePFBCSCOutGPU(ct_uint32_t *apBuf, ct_uint32_t *delay,
-		ct_uint32_t *pfBC, size_t pfBCPitch, unsigned int numPFInPerBC, unsigned int numPFInPerBCP2,
-		ct_uint32_t *pfSC, size_t pfSCPitch, unsigned int numPFInPerSC, unsigned int numPFInPerSCP2)
+__global__ void updatePFBCSCOutGPU(uint32_t *apBuf, uint32_t *delay,
+		uint32_t *pfBC, size_t pfBCPitch, unsigned int numPFInPerBC, unsigned int numPFInPerBCP2,
+		uint32_t *pfSC, size_t pfSCPitch, unsigned int numPFInPerSC, unsigned int numPFInPerSCP2)
 {
 	int index=blockIdx.x*blockDim.x+threadIdx.x;
-	ct_uint32_t tempOut;
-	unsigned int *pfBCRow=(ct_uint32_t *)((char *)pfBC+(index>>numPFInPerBCP2)*pfBCPitch);
-	unsigned int *pfSCRow=(ct_uint32_t *)((char *)pfSC+(index>>numPFInPerSCP2)*pfSCPitch);
+	uint32_t tempOut;
+	unsigned int *pfBCRow=(uint32_t *)((char *)pfBC+(index>>numPFInPerBCP2)*pfBCPitch);
+	unsigned int *pfSCRow=(uint32_t *)((char *)pfSC+(index>>numPFInPerSCP2)*pfSCPitch);
 
 	tempOut=(apBuf[index]&delay[index])>0;
 
@@ -397,7 +397,7 @@ __global__ void updatePFBCSCOutGPU(ct_uint32_t *apBuf, ct_uint32_t *delay,
 	pfSCRow[index&(numPFInPerSC-1)]=tempOut;
 }
 
-__global__ void updatePFPCOutGPU(ct_uint32_t *apBuf, ct_uint32_t *delay,
+__global__ void updatePFPCOutGPU(uint32_t *apBuf, uint32_t *delay,
 		float *synWeight, float *pfPC, size_t pfPCPitch, unsigned int numPFInPerPC, unsigned int numPFInPerPCP2)
 {
 	int index=blockIdx.x*blockDim.x+threadIdx.x;
@@ -414,7 +414,7 @@ __global__ void updatePFPCOutGPU(ct_uint32_t *apBuf, ct_uint32_t *delay,
 
 //**---------------IO kernels-----------------**
 
-__global__ void updatePFPCSynIO(float *synWPFPC, ct_uint64_t *historyGR, ct_uint64_t plastCheckMask,
+__global__ void updatePFPCSynIO(float *synWPFPC, uint64_t *historyGR, uint64_t plastCheckMask,
 		unsigned int offset, float plastStep)
 {
 	int i=blockIdx.x*blockDim.x+threadIdx.x+offset;
@@ -533,7 +533,7 @@ void callTestKernel(cudaStream_t &st, float *a, float *b, float *c)
 
 void callGRActKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
 		float *vGPU, float *gKCaGPU, float *gLeakGPU, float *gNMDAGRGPU, float *gNMDAIncGRGPU,
-		float *threshGPU, ct_uint32_t *apBufGPU, ct_uint8_t *apOutGRGPU, ct_uint32_t *apGRGPU,
+		float *threshGPU, uint32_t *apBufGPU, uint8_t *apOutGRGPU, uint32_t *apGRGPU,
 		int *apMFtoGRGPU, float *gESumGPU, float *gISumGPU, float eLeak,
 		float eGOIn, float gAMPAInc, float threshBase, float threshMax, float threshDecay)
 {
@@ -586,23 +586,23 @@ void callBroadcastKernel(cudaStream_t &st, Type *broadcastVal, Type *outArray,
 }
 
 void callSumGRGOOutKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGOPerBlock,
-		unsigned int numGROutRows, ct_uint32_t *grInGOGPU,  size_t grInGOGPUPitch, ct_uint32_t *grInGOSGPU)
+		unsigned int numGROutRows, uint32_t *grInGOGPU,  size_t grInGOGPUPitch, uint32_t *grInGOSGPU)
 {
 	sumGRGOOutGPU<<<numBlocks, numGOPerBlock, 0, st>>>(numGROutRows, grInGOGPU, grInGOGPUPitch, grInGOSGPU);
 }
 void callSumGRBCOutKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numBCPerBlock,
-		unsigned int numGROutRows, ct_uint32_t *grInBCGPU,  size_t grInBCGPUPitch, ct_uint32_t *grInBCSGPU)
+		unsigned int numGROutRows, uint32_t *grInBCGPU,  size_t grInBCGPUPitch, uint32_t *grInBCSGPU)
 {
 	sumGRBCOutGPU<<<numBlocks, numBCPerBlock, 0, st>>>(numGROutRows, grInBCGPU, grInBCGPUPitch, grInBCSGPU);
 }
 
 void callUpdateInGROPKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
-		unsigned int numInCells, ct_uint32_t *apInGPU, float *dynamicAmpGPU, float *gGPU, size_t gGPUP,
-		ct_uint32_t *conInGRGPU, size_t conInGRGPUP,
-		ct_int32_t *numInPerGRGPU, float *gSumGPU, float *gDirectGPU, float *gSpilloverGPU, 
+		unsigned int numInCells, uint32_t *apInGPU, float *dynamicAmpGPU, float *gGPU, size_t gGPUP,
+		uint32_t *conInGRGPU, size_t conInGRGPUP,
+		int32_t *numInPerGRGPU, float *gSumGPU, float *gDirectGPU, float *gSpilloverGPU, 
 		float gDecayD, float gIncD, float gDecayS, float gIncFracS)
 {
-	updateGRInOPGPU<<<numBlocks, numGRPerBlock, numInCells*sizeof(ct_uint32_t), st>>>
+	updateGRInOPGPU<<<numBlocks, numGRPerBlock, numInCells*sizeof(uint32_t), st>>>
 			(numInCells/numGRPerBlock, apInGPU, dynamicAmpGPU, 
 			gGPU, gGPUP, conInGRGPU, conInGRGPUP, numInPerGRGPU,
 			gSumGPU, gDirectGPU, gSpilloverGPU, 
@@ -610,49 +610,49 @@ void callUpdateInGROPKernel(cudaStream_t &st, unsigned int numBlocks, unsigned i
 }
 
 void callUpdateMFInGRDepressionOPKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
-	 unsigned int numInCells, float *depAmpGPU, ct_uint32_t *conInGRGPU, size_t conInGRGPUP, 
-	 ct_int32_t *numInPerGRGPU, int *numMFperGR, float *depAmpMFGRGPU)
+	 unsigned int numInCells, float *depAmpGPU, uint32_t *conInGRGPU, size_t conInGRGPUP, 
+	 int32_t *numInPerGRGPU, int *numMFperGR, float *depAmpMFGRGPU)
 {
-	updateMFGRDepressionInOPGPU<<<numBlocks, numGRPerBlock, numInCells * sizeof(ct_uint32_t), st>>>
+	updateMFGRDepressionInOPGPU<<<numBlocks, numGRPerBlock, numInCells * sizeof(uint32_t), st>>>
 	   (numInCells / numGRPerBlock, depAmpGPU, conInGRGPU, conInGRGPUP, numInPerGRGPU, numMFperGR, depAmpMFGRGPU);
 }
 
 void callUpdateGOInGRDepressionOPKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
-	  unsigned int numInCells, float *depAmpGPU, ct_uint32_t *conInGRGPU, size_t conInGRGPUP, 
-	  ct_int32_t *numInPerGRGPU, float *depAmpGOGRGPU)
+	  unsigned int numInCells, float *depAmpGPU, uint32_t *conInGRGPU, size_t conInGRGPUP, 
+	  int32_t *numInPerGRGPU, float *depAmpGOGRGPU)
 {
-	updateGOGRDepressionInOPGPU<<<numBlocks, numGRPerBlock, numInCells * sizeof(ct_uint32_t), st>>>
+	updateGOGRDepressionInOPGPU<<<numBlocks, numGRPerBlock, numInCells * sizeof(uint32_t), st>>>
 	   (numInCells / numGRPerBlock, depAmpGPU, conInGRGPU, conInGRGPUP, numInPerGRGPU, depAmpGOGRGPU);
 }
 
 void callUpdateGOInGRDynamicSpillOPKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
 		unsigned int numInCells, float *dynamicAmpGPU,
-		ct_uint32_t *conInGRGPU, size_t conInGRGPUP,
-		ct_int32_t *numInPerGRGPU, float *dynamicAmpGOGRGPU)
+		uint32_t *conInGRGPU, size_t conInGRGPUP,
+		int32_t *numInPerGRGPU, float *dynamicAmpGOGRGPU)
 {
-	updateGOGRDynamicSpillInOPGPU<<<numBlocks, numGRPerBlock, numInCells*sizeof(ct_uint32_t), st>>>
+	updateGOGRDynamicSpillInOPGPU<<<numBlocks, numGRPerBlock, numInCells*sizeof(uint32_t), st>>>
 			(numInCells/numGRPerBlock, dynamicAmpGPU, conInGRGPU, conInGRGPUP, numInPerGRGPU, dynamicAmpGOGRGPU);
 }
 
 void callUpdateUBCInGROPKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
-		unsigned int numInCells, ct_uint32_t *apInGPU, float *depAmpGPU, float *gGPU, size_t gGPUP,
-		ct_uint32_t *conInGRGPU, size_t conInGRGPUP,
-		ct_int32_t *numInPerGRGPU, int *apUBCtoGRGPU, float *gSumGPU, float *gDirectGPU, float *gSpilloverGPU,  
+		unsigned int numInCells, uint32_t *apInGPU, float *depAmpGPU, float *gGPU, size_t gGPUP,
+		uint32_t *conInGRGPU, size_t conInGRGPUP,
+		int32_t *numInPerGRGPU, int *apUBCtoGRGPU, float *gSumGPU, float *gDirectGPU, float *gSpilloverGPU,  
 		float gDecayDirect, float gIncDirect, float gDecaySpill, float gIncFracSpill)
 {
-	updateUBCGRInOPGPU<<<numBlocks, numGRPerBlock, numInCells*sizeof(ct_uint32_t), st>>>
+	updateUBCGRInOPGPU<<<numBlocks, numGRPerBlock, numInCells*sizeof(uint32_t), st>>>
 			(numInCells/numGRPerBlock, apInGPU, depAmpGPU,  gGPU, gGPUP, conInGRGPU, conInGRGPUP, numInPerGRGPU,
 			apUBCtoGRGPU, gSumGPU, gDirectGPU, gSpilloverGPU, 
 			gDecayDirect, gIncDirect, gDecaySpill, gIncFracSpill);
 }
 
 void callUpdateMFInGROPKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
-		unsigned int numInCells, ct_uint32_t *apInGPU, float *depAmp, float *gGPU, size_t gGPUP,
-		ct_uint32_t *conInGRGPU, size_t conInGRGPUP,
-		ct_int32_t *numInPerGRGPU, int *apMFtoGRGPU, float *gSumGPU, float *gDirectGPU, float *gSpilloverGPU,  
+		unsigned int numInCells, uint32_t *apInGPU, float *depAmp, float *gGPU, size_t gGPUP,
+		uint32_t *conInGRGPU, size_t conInGRGPUP,
+		int32_t *numInPerGRGPU, int *apMFtoGRGPU, float *gSumGPU, float *gDirectGPU, float *gSpilloverGPU,  
 		float gDecayDirect, float gIncDirect, float gDecaySpill, float gIncFracSpill)
 {
-	updateMFGRInOPGPU<<<numBlocks, numGRPerBlock, numInCells*sizeof(ct_uint32_t), st>>>
+	updateMFGRInOPGPU<<<numBlocks, numGRPerBlock, numInCells*sizeof(uint32_t), st>>>
 			(numInCells/numGRPerBlock, apInGPU, depAmp, gGPU, gGPUP, conInGRGPU, conInGRGPUP, numInPerGRGPU,
 			apMFtoGRGPU, gSumGPU, gDirectGPU, gSpilloverGPU, 
 			gDecayDirect, gIncDirect, gDecaySpill, gIncFracSpill);
@@ -660,9 +660,9 @@ void callUpdateMFInGROPKernel(cudaStream_t &st, unsigned int numBlocks, unsigned
 
 
 void callUpdatePFBCSCOutKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
-		ct_uint32_t *apBufGPU, ct_uint32_t *delayMaskGPU,
-		ct_uint32_t *inPFBCGPU, size_t inPFBCGPUPitch, unsigned int numPFInPerBCP2,
-		ct_uint32_t *inPFSCGPU, size_t inPFSCGPUPitch, unsigned int numPFInPerSCP2)
+		uint32_t *apBufGPU, uint32_t *delayMaskGPU,
+		uint32_t *inPFBCGPU, size_t inPFBCGPUPitch, unsigned int numPFInPerBCP2,
+		uint32_t *inPFSCGPU, size_t inPFSCGPUPitch, unsigned int numPFInPerSCP2)
 {
 	updatePFBCSCOutGPU<<<numBlocks, numGRPerBlock, 0, st>>>(apBufGPU, delayMaskGPU,
 			inPFBCGPU, inPFBCGPUPitch, 1<<numPFInPerBCP2, numPFInPerBCP2,
@@ -670,7 +670,7 @@ void callUpdatePFBCSCOutKernel(cudaStream_t &st, unsigned int numBlocks, unsigne
 }
 
 void callUpdatePFPCOutKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
-		ct_uint32_t *apBufGPU, ct_uint32_t *delayMaskGPU,
+		uint32_t *apBufGPU, uint32_t *delayMaskGPU,
 		float *pfPCSynWGPU, float *inPFPCGPU, size_t inPFPCGPUPitch, unsigned int numPFInPerPCP2)
 {
 	updatePFPCOutGPU<<<numBlocks, numGRPerBlock, 0, st>>>(apBufGPU, delayMaskGPU, pfPCSynWGPU,
@@ -678,36 +678,36 @@ void callUpdatePFPCOutKernel(cudaStream_t &st, unsigned int numBlocks, unsigned 
 }
 
 void callUpdateGROutGOKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock, unsigned int numGO,
-		ct_uint32_t *apBufGPU, ct_uint32_t *grInGOGPU, ct_uint32_t grInGOGPUPitch,
-		ct_uint32_t *delayMasksGPU, ct_uint32_t delayMasksGPUPitch,
-		ct_uint32_t *conGRtoGOGPU, size_t conGRtoGOGPUPitch,
-		ct_int32_t *numGOPerGRGPU)
+		uint32_t *apBufGPU, uint32_t *grInGOGPU, uint32_t grInGOGPUPitch,
+		uint32_t *delayMasksGPU, uint32_t delayMasksGPUPitch,
+		uint32_t *conGRtoGOGPU, size_t conGRtoGOGPUPitch,
+		int32_t *numGOPerGRGPU)
 {
-	updateGRGOOutGPU<<<numBlocks, numGRPerBlock, numGO*sizeof(ct_uint32_t), st>>>(apBufGPU, grInGOGPU, grInGOGPUPitch,
+	updateGRGOOutGPU<<<numBlocks, numGRPerBlock, numGO*sizeof(uint32_t), st>>>(apBufGPU, grInGOGPU, grInGOGPUPitch,
 			delayMasksGPU, delayMasksGPUPitch, conGRtoGOGPU, conGRtoGOGPUPitch, numGOPerGRGPU, numGO/numGRPerBlock);
 }
 
 void callUpdateGROutBCKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock, unsigned int numBC,
-		ct_uint32_t *apBufGPU, ct_uint32_t *grInBCGPU, ct_uint32_t grInBCGPUPitch,
-		ct_uint32_t *delayMasksGPU, ct_uint32_t delayMasksGPUPitch,
-		ct_uint32_t *conGRtoBCGPU, size_t conGRtoBCGPUPitch,
-		ct_int32_t *numBCPerGRGPU)
+		uint32_t *apBufGPU, uint32_t *grInBCGPU, uint32_t grInBCGPUPitch,
+		uint32_t *delayMasksGPU, uint32_t delayMasksGPUPitch,
+		uint32_t *conGRtoBCGPU, size_t conGRtoBCGPUPitch,
+		int32_t *numBCPerGRGPU)
 {
-	updateGRBCOutGPU<<<numBlocks, numGRPerBlock, numBC*sizeof(ct_uint32_t), st>>>(apBufGPU, grInBCGPU, grInBCGPUPitch,
+	updateGRBCOutGPU<<<numBlocks, numGRPerBlock, numBC*sizeof(uint32_t), st>>>(apBufGPU, grInBCGPU, grInBCGPUPitch,
 			delayMasksGPU, delayMasksGPUPitch, conGRtoBCGPU, conGRtoBCGPUPitch, numBCPerGRGPU, numBC/numGRPerBlock);
 }
 
 void callUpdateGRHistKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
-		ct_uint32_t *apBufGPU, ct_uint64_t *historyGPU, ct_uint32_t apBufGRHistMask)
+		uint32_t *apBufGPU, uint64_t *historyGPU, uint32_t apBufGRHistMask)
 {
 		updateGRHistory<<<numBlocks, numGRPerBlock, 0, st>>>(apBufGPU, historyGPU, apBufGRHistMask);
 }
 
 void callUpdatePFPCPlasticityIOKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
-		float *synWeightGPU, ct_uint64_t *historyGPU, unsigned int pastBinNToCheck,
+		float *synWeightGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck,
 		int offSet, float pfPCPlastStep)
 {
-	ct_uint64_t mask = ((ct_uint64_t)1)<<(pastBinNToCheck-1);
+	uint64_t mask = ((uint64_t)1)<<(pastBinNToCheck-1);
 		updatePFPCSynIO<<<numBlocks, numGRPerBlock, 0, st>>>(synWeightGPU, historyGPU,
 				mask, offSet, pfPCPlastStep);
 }
@@ -720,14 +720,14 @@ template void callSumKernel<float, true, false>
 		(cudaStream_t &st, float *inPFGPU, size_t inPFGPUP, float *outPFSumGPU, size_t outPFSumGPUP,
 		unsigned int nOutCells, unsigned int nOutCols, unsigned int rowLength);
 
-template void callSumKernel<ct_uint32_t, true, false>
-		(cudaStream_t &st, ct_uint32_t *inPFGPU, size_t inPFGPUP, ct_uint32_t *outPFSumGPU, size_t outPFSumGPUP,
+template void callSumKernel<uint32_t, true, false>
+		(cudaStream_t &st, uint32_t *inPFGPU, size_t inPFGPUP, uint32_t *outPFSumGPU, size_t outPFSumGPUP,
 		unsigned int nOutCells, unsigned int nOutCols, unsigned int rowLength);
 
-template void callSumKernel<ct_uint32_t, false, false>
-		(cudaStream_t &st, ct_uint32_t *inPFGPU, size_t inPFGPUP, ct_uint32_t *outPFSumGPU, size_t outPFSumGPUP,
+template void callSumKernel<uint32_t, false, false>
+		(cudaStream_t &st, uint32_t *inPFGPU, size_t inPFGPUP, uint32_t *outPFSumGPU, size_t outPFSumGPUP,
 		unsigned int nOutCells, unsigned int nOutCols, unsigned int rowLength);
 
 
-template void callBroadcastKernel<ct_uint32_t>
-(cudaStream_t &st, ct_uint32_t *broadCastVal, ct_uint32_t *outArray, unsigned int nBlocks, unsigned int rowLength);
+template void callBroadcastKernel<uint32_t>
+(cudaStream_t &st, uint32_t *broadCastVal, uint32_t *outArray, unsigned int nBlocks, unsigned int rowLength);

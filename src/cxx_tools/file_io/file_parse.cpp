@@ -565,15 +565,15 @@ void parse_lexed_build_file(lexed_file &l_file, parsed_build_file &b_file)
  *     num_trials would be determined from the .sess file via calculate_num_trials.
  *
  */
-void allocate_trials_data(trials_data &td, ct_uint32_t num_trials)
+void allocate_trials_data(trials_data &td, uint32_t num_trials)
 {
 	td.trial_names     = (std::string *)calloc(num_trials, sizeof(std::string));
-	td.use_css         = (ct_uint32_t *)calloc(num_trials, sizeof(ct_uint32_t));
-	td.cs_onsets       = (ct_uint32_t *)calloc(num_trials, sizeof(ct_uint32_t));
-	td.cs_lens         = (ct_uint32_t *)calloc(num_trials, sizeof(ct_uint32_t));
+	td.use_css         = (uint32_t *)calloc(num_trials, sizeof(uint32_t));
+	td.cs_onsets       = (uint32_t *)calloc(num_trials, sizeof(uint32_t));
+	td.cs_lens         = (uint32_t *)calloc(num_trials, sizeof(uint32_t));
 	td.cs_percents     = (float *)calloc(num_trials, sizeof(float));
-	td.use_uss         = (ct_uint32_t *)calloc(num_trials, sizeof(ct_uint32_t));
-	td.us_onsets       = (ct_uint32_t *)calloc(num_trials, sizeof(ct_uint32_t));
+	td.use_uss         = (uint32_t *)calloc(num_trials, sizeof(uint32_t));
+	td.us_onsets       = (uint32_t *)calloc(num_trials, sizeof(uint32_t));
 }
 
 /*
@@ -597,7 +597,7 @@ void initialize_trial_names_helper(trials_data &td, parsed_trial_section &pt_sec
 			auto initial_empty = first_empty;
 			if (first_empty != td.trial_names + td.num_trials)
 			{
-				ct_uint32_t this_num_trials = std::stoi(vec_pair.second);
+				uint32_t this_num_trials = std::stoi(vec_pair.second);
 				while (first_empty != initial_empty + this_num_trials)
 				{
 					/* mad sus */
@@ -608,7 +608,7 @@ void initialize_trial_names_helper(trials_data &td, parsed_trial_section &pt_sec
 		}
 		else
 		{
-			for (ct_uint32_t i = 0; i < std::stoi(vec_pair.second); i++)
+			for (uint32_t i = 0; i < std::stoi(vec_pair.second); i++)
 			{
 				if (pt_section.block_map.find(vec_pair.first) != pt_section.block_map.end())
 				{
@@ -629,7 +629,7 @@ void initialize_trial_names_helper(trials_data &td, parsed_trial_section &pt_sec
 void initialize_trials_data(trials_data &td, parsed_trial_section &pt_section)
 {
 	initialize_trial_names_helper(td, pt_section, pt_section.session);
-	for (ct_uint32_t i = 0; i < td.num_trials; i++)
+	for (uint32_t i = 0; i < td.num_trials; i++)
 	{
 		td.use_css[i]         = std::stoi(pt_section.trial_map[td.trial_names[i]]["use_cs"].value);
 		td.cs_onsets[i]       = std::stoi(pt_section.trial_map[td.trial_names[i]]["cs_onset"].value);
@@ -660,12 +660,12 @@ void delete_trials_data(trials_data &td)
  *     of a block.
  */
 void calculate_num_trials_helper(parsed_trial_section &pt_section,
-		std::vector<std::pair<std::string, std::string>> &in_vec, ct_uint32_t &temp_num_trials)
+		std::vector<std::pair<std::string, std::string>> &in_vec, uint32_t &temp_num_trials)
 {
-	ct_uint32_t temp_sum = 0;
+	uint32_t temp_sum = 0;
 	for (auto vec_pair : in_vec)
 	{
-		ct_uint32_t temp_count = std::stoi(vec_pair.second);
+		uint32_t temp_count = std::stoi(vec_pair.second);
 		if (pt_section.block_map.find(vec_pair.first ) != pt_section.block_map.end())
 		{
 			calculate_num_trials_helper(pt_section, pt_section.block_map[vec_pair.first], temp_count);
@@ -682,9 +682,9 @@ void calculate_num_trials_helper(parsed_trial_section &pt_section,
  *     previous temp_num_trials, we need to "seed" this process with 1.
  *
  */
-ct_uint32_t calculate_num_trials(parsed_trial_section &pt_section)
+uint32_t calculate_num_trials(parsed_trial_section &pt_section)
 {
-	ct_uint32_t temp_num_trials = 1;
+	uint32_t temp_num_trials = 1;
 	calculate_num_trials_helper(pt_section, pt_section.session, temp_num_trials);
 	return temp_num_trials;
 }

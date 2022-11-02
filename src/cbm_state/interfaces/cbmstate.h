@@ -13,7 +13,7 @@
 #include <time.h>
 #include <limits.h>
 
-#include "pstdint.h"
+#include <cstdint>
 #include "innetconnectivitystate.h"
 #include "mzoneconnectivitystate.h"
 #include "innetactivitystate.h"
@@ -35,7 +35,7 @@ class CBMState
 		void readState(std::fstream &infile);
 		void writeState(std::fstream &outfile);
 
-		ct_uint32_t getNumZones();
+		uint32_t getNumZones();
 
 		IMZoneActState* getMZoneActState(unsigned int zoneN);
 
@@ -46,7 +46,7 @@ class CBMState
 		MZoneConnectivityState* getMZoneConStateInternal(unsigned int zoneN);
 
 	private:
-		ct_uint32_t numZones;
+		uint32_t numZones;
 
 		InNetConnectivityState *innetConState;
 		MZoneConnectivityState **mzoneConStates;

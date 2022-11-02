@@ -17,7 +17,7 @@
 #include <limits.h>
 #include <time.h>
 
-#include "pstdint.h"
+#include <cstdint>
 #include "cbmstate.h"
 #include "sfmt.h"
 #include "mzone.h"
@@ -39,7 +39,7 @@ public:
 	~CBMSimCore();
 
 	void calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum plasticity mf_nc_plast);
-	void updateMFInput(const ct_uint8_t *mfIn);
+	void updateMFInput(const uint8_t *mfIn);
 	void updateTrueMFs(bool *isTrueMF);
 	void updateGRStim(int startGRStim, int numGRStim);
 	void updateErrDrive(unsigned int zoneN, float errDriveRelative);
@@ -58,7 +58,7 @@ protected:
 
 	CBMState *simState;
 
-	ct_uint32_t numZones;
+	uint32_t numZones;
 
 	InNet *inputNet;
 	MZone **zones;

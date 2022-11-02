@@ -13,7 +13,7 @@
 #include <iostream>
 #include <string>
 
-#include "pstdint.h"
+#include <cstdint>
 #include "randomc.h"
 #include "sfmt.h"
 
@@ -46,7 +46,7 @@ private:
 	void setMFsOverlap(int numTypeMF, int numMF, CRandomSFMT0 &randGen, bool *isAny,
 			bool *isTypeA, bool *isTypeB, float fracOverlap);
 
-	ct_uint32_t numMF;
+	uint32_t numMF;
 
 	float *mfFreqBG;
 	float *mfFreqInCSTonicA;

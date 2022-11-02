@@ -8,7 +8,7 @@
 #ifndef MZONE_H_
 #define MZONE_H_
 
-#include "pstdint.h"
+#include <cstdint>
 #include "mzoneconnectivitystate.h"
 #include "mzoneactivitystate.h"
 #include "kernels.h"
@@ -17,15 +17,15 @@ class MZone
 {
 public:
 	MZone();
-	MZone(MZoneConnectivityState *cs, MZoneActivityState *as, int randSeed, ct_uint32_t **apBufGRGPU,
-			ct_uint64_t **histGRGPU, int gpuIndStart, int numGPUs);
+	MZone(MZoneConnectivityState *cs, MZoneActivityState *as, int randSeed, uint32_t **apBufGRGPU,
+			uint64_t **histGRGPU, int gpuIndStart, int numGPUs);
 	~MZone();
 
 	void writeToState();
 	void cpyPFPCSynWCUDA();
 
 	void setErrDrive(float errDriveRelative);
-	void updateMFActivities(const ct_uint8_t *actMF);
+	void updateMFActivities(const uint8_t *actMF);
 	void updateTrueMFs(bool *trueMF);
 
 	void calcPCActivities();
@@ -40,7 +40,7 @@ public:
 	void updateIOOut();
 	void updateNCOut();
 	void updateMFNCOut();
-	//void updateMFNCSyn(const std::unique_ptr<ct_uint8_t[]> histMF, unsigned long t);
+	//void updateMFNCSyn(const std::unique_ptr<uint8_t[]> histMF, unsigned long t);
 
 	void runPFPCOutCUDA(cudaStream_t **sts, int streamN);
 	void runPFPCSumCUDA(cudaStream_t **sts, int streamN);
@@ -58,11 +58,11 @@ public:
 	void setGRPCPlastSteps(float ltdStep, float ltpStep);
 	void resetGRPCPlastSteps();
 
-	const ct_uint8_t* exportAPNC();
-	const ct_uint8_t* exportAPSC();
-	const ct_uint8_t* exportAPBC();
-	const ct_uint8_t* exportAPPC();
-	const ct_uint8_t* exportAPIO();
+	const uint8_t* exportAPNC();
+	const uint8_t* exportAPSC();
+	const uint8_t* exportAPBC();
+	const uint8_t* exportAPPC();
+	const uint8_t* exportAPIO();
 
 	const float* exportVmBC();
 	const float* exportVmPC();
@@ -76,10 +76,10 @@ public:
 	void load_pfpc_weights_from_file(std::fstream &in_file_buf);
 	void load_mfdcn_weights_from_file(std::fstream &in_file_buf);
 
-	const ct_uint32_t* exportAPBufBC();
-	const ct_uint32_t* exportAPBufPC();
-	const ct_uint8_t* exportAPBufIO();
-	const ct_uint32_t* exportAPBufNC();
+	const uint32_t* exportAPBufBC();
+	const uint32_t* exportAPBufPC();
+	const uint8_t* exportAPBufIO();
+	const uint32_t* exportAPBufNC();
 
 private:
 	MZoneConnectivityState *cs;
@@ -109,30 +109,30 @@ private:
 	/* ======== not used ====== */
 
 	//mossy fiber variables
-	const ct_uint8_t *apMFInput;
-	//const ct_uint8_t *histMFInput;
+	const uint8_t *apMFInput;
+	//const uint8_t *histMFInput;
 	bool *isTrueMF;
 
 	//stellate cell variables
 	//host variables
-	ct_uint32_t *inputSumPFSCH;
+	uint32_t *inputSumPFSCH;
 	//end host variables
 
 	//gpu related variables
-	ct_uint32_t **inputPFSCGPU;
+	uint32_t **inputPFSCGPU;
 	size_t *inputPFSCGPUP;
-	ct_uint32_t **inputSumPFSCGPU;
+	uint32_t **inputSumPFSCGPU;
 	//end gpu related variables
 	//end stellate cell variables
 
 	//basket cell variables
 	//host variables
-	ct_uint32_t *inputSumPFBCH;
+	uint32_t *inputSumPFBCH;
 
 	//gpu related variables
-	ct_uint32_t **inputPFBCGPU;
+	uint32_t **inputPFBCGPU;
 	size_t *inputPFBCGPUP;
-	ct_uint32_t **inputSumPFBCGPU;
+	uint32_t **inputSumPFBCGPU;
 	//end gpu related variables
 	//end basket cell variables
 
@@ -144,9 +144,9 @@ private:
 	float **inputSumPFPCMZGPU;
 	float *inputSumPFPCMZH;
 
-	ct_uint32_t **apBufGRGPU;
-	ct_uint32_t **delayMaskGRGPU;
-	ct_uint64_t **histGRGPU;
+	uint32_t **apBufGRGPU;
+	uint32_t **delayMaskGRGPU;
+	uint64_t **histGRGPU;
 
 	//IO cell variables
 	float *pfPCPlastStepIO;

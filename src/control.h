@@ -9,7 +9,7 @@
 #include <ctime>
 
 #include "commandline.h"
-#include "pstdint.h"
+#include <cstdint>
 #include "connectivityparams.h"
 #include "activityparams.h"
 #include "cbmstate.h"
@@ -28,11 +28,11 @@ enum cell_id {MF, GR, GO, BC, SC, PC, IO, NC};
 
 struct cell_spike_sums
 {
-	ct_uint32_t num_cells;
-	ct_uint32_t non_cs_spike_sum;
-	ct_uint32_t cs_spike_sum;
-	ct_uint32_t *non_cs_spike_counter;
-	ct_uint32_t *cs_spike_counter;
+	uint32_t num_cells;
+	uint32_t non_cs_spike_sum;
+	uint32_t cs_spike_sum;
+	uint32_t *non_cs_spike_counter;
+	uint32_t *cs_spike_counter;
 };
 
 struct cell_firing_rates
@@ -139,18 +139,18 @@ class Control
 
 		struct cell_spike_sums spike_sums[NUM_CELL_TYPES];
 		struct cell_firing_rates firing_rates[NUM_CELL_TYPES];
-		const ct_uint8_t *cell_spikes[NUM_CELL_TYPES];
+		const uint8_t *cell_spikes[NUM_CELL_TYPES];
 
 		const float *grgoG, *mfgoG, *gogrG, *mfgrG;
 		float *sample_pfpc_syn_weights;
-		const ct_uint8_t *mfAP, *goSpks;
+		const uint8_t *mfAP, *goSpks;
 		
-		const ct_uint8_t *cell_spks[NUM_CELL_TYPES];
+		const uint8_t *cell_spks[NUM_CELL_TYPES];
 		int rast_cell_nums[NUM_CELL_TYPES];
-		ct_uint8_t **rast_internal[NUM_CELL_TYPES];
+		uint8_t **rast_internal[NUM_CELL_TYPES];
 
-		ct_uint32_t rast_sizes[NUM_CELL_TYPES]; // initialized in initializeOutputArrays
-		ct_uint8_t *rast_output[NUM_CELL_TYPES];
+		uint32_t rast_sizes[NUM_CELL_TYPES]; // initialized in initializeOutputArrays
+		uint8_t *rast_output[NUM_CELL_TYPES];
 
 		float **all_pc_vm_rast_internal;
 		float **all_nc_vm_rast_internal;

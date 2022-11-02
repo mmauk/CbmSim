@@ -102,7 +102,7 @@ void CBMState::writeState(std::fstream &outfile)
 	}
 }
 
-ct_uint32_t CBMState::getNumZones()
+uint32_t CBMState::getNumZones()
 {
 	return numZones;
 }

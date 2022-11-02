@@ -28,10 +28,10 @@ PoissonRegenCells::PoissonRegenCells(int randSeed, float threshDecayTau, unsigne
 
 	normDist = new std::normal_distribution<float>(0, this->sigma);
 
-	aps         = (ct_uint8_t *)calloc(num_mf, sizeof(ct_uint8_t));
+	aps         = (uint8_t *)calloc(num_mf, sizeof(uint8_t));
 	isTrueMF    = (bool *)calloc(num_mf, sizeof(bool));
-	dnCellIndex = (ct_uint32_t *)calloc(num_mf, sizeof(ct_uint32_t));
-	mZoneIndex  = (ct_uint32_t *)calloc(num_mf, sizeof(ct_uint32_t));
+	dnCellIndex = (uint32_t *)calloc(num_mf, sizeof(uint32_t));
+	mZoneIndex  = (uint32_t *)calloc(num_mf, sizeof(uint32_t));
 
 	prepCollaterals(randSeedGen->IRandom(0, INT_MAX));
 }
@@ -40,7 +40,7 @@ PoissonRegenCells::~PoissonRegenCells()
 {
 	delete randSeedGen;
 	delete noiseRandGen;
-	for(ct_uint32_t i=0; i<nThreads; i++)
+	for(uint32_t i=0; i<nThreads; i++)
 	{
 		delete randGens[i];
 	}
@@ -55,15 +55,15 @@ PoissonRegenCells::~PoissonRegenCells()
 
 void PoissonRegenCells::prepCollaterals(int rSeed)
 {
-	ct_uint32_t repeats = num_mf / (numZones * num_nc) + 1;
-	ct_uint32_t *tempNCs = new ct_uint32_t[repeats * numZones * num_nc];
-	ct_uint32_t *tempMZs = new ct_uint32_t[repeats * numZones * num_nc];
+	uint32_t repeats = num_mf / (numZones * num_nc) + 1;
+	uint32_t *tempNCs = new uint32_t[repeats * numZones * num_nc];
+	uint32_t *tempMZs = new uint32_t[repeats * numZones * num_nc];
 
-	for(ct_uint32_t i = 0; i < repeats; i++)
+	for(uint32_t i = 0; i < repeats; i++)
 	{
-		for(ct_uint32_t j = 0; j < numZones; j++)
+		for(uint32_t j = 0; j < numZones; j++)
 		{
-			for(ct_uint32_t k = 0; k < num_nc; k++)
+			for(uint32_t k = 0; k < num_nc; k++)
 			{
 				tempNCs[k + num_nc * j + num_nc * numZones * i] = k;
 				tempMZs[k + num_nc * j + num_nc * numZones * i] = j;
@@ -81,13 +81,13 @@ void PoissonRegenCells::prepCollaterals(int rSeed)
 	delete[] tempMZs;
 }
 
-const ct_uint8_t* PoissonRegenCells::calcPoissActivity(const float *frequencies, MZone **mZoneList, int ispikei)
+const uint8_t* PoissonRegenCells::calcPoissActivity(const float *frequencies, MZone **mZoneList, int ispikei)
 {
 	int countColls = 0;
-	const ct_uint8_t *holdNCs;
+	const uint8_t *holdNCs;
 	float noise;
 	spikeTimer++;
-	for (ct_uint32_t i = 0; i < num_mf; i++)
+	for (uint32_t i = 0; i < num_mf; i++)
 	{
 		if (frequencies[i] == -1) /* dcn mfs (or collaterals this makes no sense) */
 		{
@@ -107,7 +107,7 @@ const ct_uint8_t* PoissonRegenCells::calcPoissActivity(const float *frequencies,
 		}
 	}
 	if (spikeTimer == ispikei) spikeTimer = 0;
-	return (const ct_uint8_t *)aps;
+	return (const uint8_t *)aps;
 }
 
 /*
@@ -116,7 +116,7 @@ const ct_uint8_t* PoissonRegenCells::calcPoissActivity(const float *frequencies,
  */
 bool* PoissonRegenCells::calcTrueMFs(const float *frequencies)
 {
-	for (ct_uint32_t i = 0; i < num_mf; i++)
+	for (uint32_t i = 0; i < num_mf; i++)
 	{
 		if (frequencies[i] == -1)
 		{
@@ -126,9 +126,9 @@ bool* PoissonRegenCells::calcTrueMFs(const float *frequencies)
 	return isTrueMF;
 }
 
-const ct_uint8_t* PoissonRegenCells::getAPs()
+const uint8_t* PoissonRegenCells::getAPs()
 {
-	return (const ct_uint8_t *)aps;
+	return (const uint8_t *)aps;
 }
 
 

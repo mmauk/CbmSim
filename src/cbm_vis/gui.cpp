@@ -519,8 +519,8 @@ static void on_exit_sim(GtkWidget *widget, struct gui *gui)
 	gtk_widget_hide(widget);
 }
 
-static void draw_raster(GtkWidget *drawing_area, cairo_t *cr, ct_uint32_t trial, ct_uint32_t num_cells,
-	  ct_uint32_t num_col, ct_uint8_t **raster_data)
+static void draw_raster(GtkWidget *drawing_area, cairo_t *cr, uint32_t trial, uint32_t num_cells,
+	  uint32_t num_col, uint8_t **raster_data)
 {
 	// background color setup
 	cairo_set_source_rgb(cr, 0, 0, 0);

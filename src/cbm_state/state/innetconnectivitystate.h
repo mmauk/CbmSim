@@ -17,7 +17,7 @@
 #include <algorithm>
 
 #include "file_utility.h"
-#include "pstdint.h"
+#include <cstdint>
 #include "dynamic2darray.h"
 #include "sfmt.h"
 

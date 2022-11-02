@@ -8,7 +8,7 @@
 #ifndef IMZONEACTSTATE_H_
 #define IMZONEACTSTATE_H_
 
-#include "pstdint.h"
+#include <cstdint>
 
 class IMZoneActState
 {

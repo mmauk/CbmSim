@@ -18,8 +18,8 @@
 
 MZone::MZone() {}
 
-MZone::MZone(MZoneConnectivityState *cs, MZoneActivityState *as, int randSeed, ct_uint32_t **apBufGRGPU,
-			 ct_uint64_t **histGRGPU, int gpuIndStart, int numGPUs)
+MZone::MZone(MZoneConnectivityState *cs, MZoneActivityState *as, int randSeed, uint32_t **apBufGRGPU,
+			 uint64_t **histGRGPU, int gpuIndStart, int numGPUs)
 {
 	randGen = new CRandomSFMT0(randSeed);
 
@@ -35,7 +35,7 @@ MZone::MZone(MZoneConnectivityState *cs, MZoneActivityState *as, int randSeed, c
 	this->apBufGRGPU     = apBufGRGPU;
 	this->histGRGPU      = histGRGPU;
 
-	delayMaskGRGPU = new ct_uint32_t*[numGPUs];
+	delayMaskGRGPU = new uint32_t*[numGPUs];
 
 	pfSynWeightPCLinear = new float[num_gr];
 	pfPCPlastStepIO     = new float[num_io];
@@ -182,10 +182,10 @@ void MZone::initCUDA()
 		cudaSetDevice(i + gpuIndStart);
 
 		// conduction delay variables
-		cudaMalloc((void **)&delayMaskGRGPU[i], numGRPerGPU * sizeof(ct_uint32_t));
+		cudaMalloc((void **)&delayMaskGRGPU[i], numGRPerGPU * sizeof(uint32_t));
 		// TODO: put the delay mask info into mzoneconnectivitystate
 		cudaMemcpy(delayMaskGRGPU[i], &(cs->pGRDelayMaskfromGRtoBSP[cpyStartInd]),
-			cpySize * sizeof(ct_uint32_t), cudaMemcpyHostToDevice);
+			cpySize * sizeof(uint32_t), cudaMemcpyHostToDevice);
 
 		//allocate device cuda memory
 		cudaMalloc((void **)&pfSynWeightPCGPU[i], numGRPerGPU * sizeof(float));
@@ -221,15 +221,15 @@ void MZone::initCUDA()
 void MZone::initBCCUDA()
 {
 	
-	inputPFBCGPU    = new ct_uint32_t*[numGPUs];
+	inputPFBCGPU    = new uint32_t*[numGPUs];
 	inputPFBCGPUP   = new size_t[numGPUs];
-	inputSumPFBCGPU = new ct_uint32_t*[numGPUs];
+	inputSumPFBCGPU = new uint32_t*[numGPUs];
 
 	//allocate host memory
 	std::cout << "[INFO]: Allocating BC cuda variables..." << std::endl;
 	cudaSetDevice(gpuIndStart);
-	cudaHostAlloc((void **)&inputSumPFBCH, num_bc*sizeof(ct_uint32_t), cudaHostAllocPortable);
-	cudaMemset(inputSumPFBCH, 0, num_bc * sizeof(ct_uint32_t));
+	cudaHostAlloc((void **)&inputSumPFBCH, num_bc*sizeof(uint32_t), cudaHostAllocPortable);
+	cudaMemset(inputSumPFBCH, 0, num_bc * sizeof(uint32_t));
 
 	cudaDeviceSynchronize();
 
@@ -238,8 +238,8 @@ void MZone::initBCCUDA()
 		cudaSetDevice(i + gpuIndStart);
 
 		cudaMallocPitch((void **)&inputPFBCGPU[i], (size_t *)&inputPFBCGPUP[i],
-			num_p_bc_from_gr_to_bc * sizeof(ct_uint32_t), num_bc / numGPUs);
-		cudaMalloc((void **)&inputSumPFBCGPU[i], num_bc / numGPUs * sizeof(ct_uint32_t));
+			num_p_bc_from_gr_to_bc * sizeof(uint32_t), num_bc / numGPUs);
+		cudaMalloc((void **)&inputSumPFBCGPU[i], num_bc / numGPUs * sizeof(uint32_t));
 		cudaDeviceSynchronize();
 	}		
 	std::cerr << "[INFO]: Finished BC variable cuda allocation - Last Error: "
@@ -254,9 +254,9 @@ void MZone::initBCCUDA()
 		for (int j = 0; j < num_bc / numGPUs; j++)
 		{
 			cudaMemset(((char *)inputPFBCGPU[i] + j * inputPFBCGPUP[i]), 0,
-				num_p_bc_from_gr_to_bc * sizeof(ct_uint32_t));
+				num_p_bc_from_gr_to_bc * sizeof(uint32_t));
 		}
-		cudaMemset(inputSumPFBCGPU[i], 0, num_bc / numGPUs*sizeof(ct_uint32_t));
+		cudaMemset(inputSumPFBCGPU[i], 0, num_bc / numGPUs*sizeof(uint32_t));
 		cudaDeviceSynchronize();
 	}
 	std::cout << "[INFO]: Finished initializing BC cuda variables..." << std::endl;
@@ -264,15 +264,15 @@ void MZone::initBCCUDA()
 
 void MZone::initSCCUDA()
 {
-	inputPFSCGPU    = new ct_uint32_t*[numGPUs];
+	inputPFSCGPU    = new uint32_t*[numGPUs];
 	inputPFSCGPUP   = new size_t[numGPUs];
-	inputSumPFSCGPU = new ct_uint32_t*[numGPUs];
+	inputSumPFSCGPU = new uint32_t*[numGPUs];
 
 	//allocate host memory
 	std::cout << "[INFO]: Allocating SC cuda variables..." << std::endl;
 	cudaSetDevice(gpuIndStart);
-	cudaHostAlloc((void **)&inputSumPFSCH, num_sc * sizeof(ct_uint32_t), cudaHostAllocPortable);
-	cudaMemset(inputSumPFSCH, 0, num_sc * sizeof(ct_uint32_t));
+	cudaHostAlloc((void **)&inputSumPFSCH, num_sc * sizeof(uint32_t), cudaHostAllocPortable);
+	cudaMemset(inputSumPFSCH, 0, num_sc * sizeof(uint32_t));
 
 	cudaDeviceSynchronize();
 
@@ -280,8 +280,8 @@ void MZone::initSCCUDA()
 	{
 		cudaSetDevice(i + gpuIndStart);
 		cudaMallocPitch((void **)&inputPFSCGPU[i], (size_t *)&inputPFSCGPUP[i],
-				num_p_sc_from_gr_to_sc * sizeof(ct_uint32_t), num_sc / numGPUs);
-		cudaMalloc((void **)&inputSumPFSCGPU[i], num_sc / numGPUs * sizeof(ct_uint32_t));
+				num_p_sc_from_gr_to_sc * sizeof(uint32_t), num_sc / numGPUs);
+		cudaMalloc((void **)&inputSumPFSCGPU[i], num_sc / numGPUs * sizeof(uint32_t));
 
 		cudaDeviceSynchronize();
 	}
@@ -296,9 +296,9 @@ void MZone::initSCCUDA()
 		for(int j =0; j < num_sc / numGPUs; j++)
 		{
 			cudaMemset(((char *)inputPFSCGPU[i] + j * inputPFSCGPUP[i]), 0,
-					num_p_sc_from_gr_to_sc * sizeof(ct_uint32_t));
+					num_p_sc_from_gr_to_sc * sizeof(uint32_t));
 		}
-		cudaMemset(inputSumPFSCGPU[i], 0, num_sc / numGPUs * sizeof(ct_uint32_t));
+		cudaMemset(inputSumPFSCGPU[i], 0, num_sc / numGPUs * sizeof(uint32_t));
 
 		cudaDeviceSynchronize();
 	}
@@ -339,7 +339,7 @@ void MZone::setErrDrive(float errDriveRelative)
 	as->errDrive = errDriveRelative * maxExtIncVIO;
 }
 
-void MZone::updateMFActivities(const ct_uint8_t *actMF)
+void MZone::updateMFActivities(const uint8_t *actMF)
 {
 	apMFInput = actMF;
 }
@@ -639,7 +639,7 @@ void MZone::updateMFNCOut()
 /*
  * NOTE: it is okay that we are passing the unique ptr by value, since we only read from it, not write
  */
-//void MZone::updateMFNCSyn(const std::unique_ptr<ct_uint8_t[]> histMF, unsigned long t)
+//void MZone::updateMFNCSyn(const std::unique_ptr<uint8_t[]> histMF, unsigned long t)
 //{
 //	
 //	bool reset;
@@ -813,7 +813,7 @@ void MZone::runSumPFSCCUDA(cudaStream_t **sts, int streamN)
 	for(int i=0; i<numGPUs; i++)
 	{
 		error=cudaSetDevice(i+gpuIndStart);
-		callSumKernel<ct_uint32_t, true, false>
+		callSumKernel<uint32_t, true, false>
 		(sts[i][streamN], inputPFSCGPU[i], inputPFSCGPUP[i],
 				inputSumPFSCGPU[i], 1, num_sc/numGPUs, 1, num_p_sc_from_gr_to_sc);
 #ifdef DEBUGOUT
@@ -831,7 +831,7 @@ void MZone::cpyPFSCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN)
 	{
 		error=cudaSetDevice(i+gpuIndStart);
 		error=cudaMemcpyAsync(&inputSumPFSCH[num_sc * i / numGPUs], inputSumPFSCGPU[i],
-				num_sc / numGPUs * sizeof(ct_uint32_t),
+				num_sc / numGPUs * sizeof(uint32_t),
 				cudaMemcpyDeviceToHost, sts[i][streamN]);
 #ifdef DEBUGOUT
 		cerr<<"cpyPFSCSumGPUtoHostCUDA: async copy for gpu #"<<i<<
@@ -864,7 +864,7 @@ void MZone::runSumPFBCCUDA(cudaStream_t **sts, int streamN)
 	for(int i=0; i<numGPUs; i++)
 	{
 		error=cudaSetDevice(i+gpuIndStart);
-		callSumKernel<ct_uint32_t, true, false>
+		callSumKernel<uint32_t, true, false>
 		(sts[i][streamN], inputPFBCGPU[i], inputPFBCGPUP[i],
 				inputSumPFBCGPU[i], 1, num_bc/numGPUs, 1, num_p_bc_from_gr_to_bc);
 #ifdef DEBUGOUT
@@ -882,7 +882,7 @@ void MZone::cpyPFBCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN)
 	{
 		error=cudaSetDevice(i+gpuIndStart);
 		error=cudaMemcpyAsync(&inputSumPFBCH[num_bc * i / numGPUs], inputSumPFBCGPU[i],
-				num_bc / numGPUs * sizeof(ct_uint32_t),
+				num_bc / numGPUs * sizeof(uint32_t),
 				cudaMemcpyDeviceToHost, sts[i][streamN]);
 #ifdef DEBUGOUT
 		cerr<<"cpyPFBCSumGPUtoHostCUDA: async copy for gpu #"<<i<<
@@ -931,29 +931,29 @@ void MZone::load_mfdcn_weights_from_file(std::fstream &in_file_buf)
 }
 
 // Why not write one export function which takes in the thing you want to export?
-const ct_uint8_t* MZone::exportAPNC()
+const uint8_t* MZone::exportAPNC()
 {
-	return (const ct_uint8_t *)as->apNC.get();
+	return (const uint8_t *)as->apNC.get();
 }
 
-const ct_uint8_t* MZone::exportAPSC()
+const uint8_t* MZone::exportAPSC()
 {
-	return (const ct_uint8_t *)as->apSC.get();
+	return (const uint8_t *)as->apSC.get();
 }
 
-const ct_uint8_t* MZone::exportAPBC()
+const uint8_t* MZone::exportAPBC()
 {
-	return (const ct_uint8_t *)as->apBC.get();
+	return (const uint8_t *)as->apBC.get();
 }
 
-const ct_uint8_t* MZone::exportAPPC()
+const uint8_t* MZone::exportAPPC()
 {
-	return (const ct_uint8_t *)as->apPC.get();
+	return (const uint8_t *)as->apPC.get();
 }
 
-const ct_uint8_t* MZone::exportAPIO()
+const uint8_t* MZone::exportAPIO()
 {
-	return (const ct_uint8_t *)as->apIO.get();
+	return (const uint8_t *)as->apIO.get();
 }
 
 const float* MZone::exportgBCPC()
@@ -991,19 +991,19 @@ const unsigned int* MZone::exportAPBufBC()
 	return (const unsigned int *)as->apBufBC.get();
 }
 
-const ct_uint32_t* MZone::exportAPBufPC()
+const uint32_t* MZone::exportAPBufPC()
 {
-	return (const ct_uint32_t *)as->apBufPC.get();
+	return (const uint32_t *)as->apBufPC.get();
 }
 
-const ct_uint8_t* MZone::exportAPBufIO()
+const uint8_t* MZone::exportAPBufIO()
 {
-	return (const ct_uint8_t *)as->apBufIO.get();
+	return (const uint8_t *)as->apBufIO.get();
 }
 
-const ct_uint32_t* MZone::exportAPBufNC()
+const uint32_t* MZone::exportAPBufNC()
 {
-	return (const ct_uint32_t *)as->apBufNC.get();
+	return (const uint32_t *)as->apBufNC.get();
 }
 
 void MZone::testReduction()

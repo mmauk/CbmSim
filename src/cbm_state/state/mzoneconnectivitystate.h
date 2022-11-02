@@ -9,7 +9,7 @@
 #define MZONECONNECTIVITYSTATE_H_
 
 #include <fstream>
-#include "pstdint.h"
+#include <cstdint>
 
 class MZoneConnectivityState
 {
@@ -23,32 +23,32 @@ public:
 	void writeState(std::fstream &outfile);
 
 	//granule cells
-	ct_uint32_t *pGRDelayMaskfromGRtoBSP;
+	uint32_t *pGRDelayMaskfromGRtoBSP;
 
 	//basket cells
-	ct_uint32_t **pBCfromBCtoPC;
-	ct_uint32_t **pBCfromPCtoBC;
+	uint32_t **pBCfromBCtoPC;
+	uint32_t **pBCfromPCtoBC;
 
 	//stellate cells
-	ct_uint32_t **pSCfromSCtoPC;
+	uint32_t **pSCfromSCtoPC;
 
 	//purkinje cells
-	ct_uint32_t **pPCfromBCtoPC;
-	ct_uint32_t **pPCfromPCtoBC;
-	ct_uint32_t **pPCfromSCtoPC;
-	ct_uint32_t **pPCfromPCtoNC;
-	ct_uint32_t *pPCfromIOtoPC;
+	uint32_t **pPCfromBCtoPC;
+	uint32_t **pPCfromPCtoBC;
+	uint32_t **pPCfromSCtoPC;
+	uint32_t **pPCfromPCtoNC;
+	uint32_t *pPCfromIOtoPC;
 
 	//nucleus cells
-	ct_uint32_t **pNCfromPCtoNC;
-	ct_uint32_t **pNCfromNCtoIO;
-	ct_uint32_t **pNCfromMFtoNC;
+	uint32_t **pNCfromPCtoNC;
+	uint32_t **pNCfromNCtoIO;
+	uint32_t **pNCfromMFtoNC;
 
 	//inferior olivary cells
-	ct_uint32_t **pIOfromIOtoPC;
-	ct_uint32_t **pIOfromNCtoIO;
-	ct_uint32_t **pIOInIOIO;
-	ct_uint32_t **pIOOutIOIO;
+	uint32_t **pIOfromIOtoPC;
+	uint32_t **pIOfromNCtoIO;
+	uint32_t **pIOInIOIO;
+	uint32_t **pIOOutIOIO;
 
 private:
 	void allocateMemory();

@@ -219,7 +219,7 @@ void Control::get_raster_filenames(std::map<std::string, std::string> &raster_fi
 {
 	if (!raster_files.empty())
 	{
-		for (ct_uint32_t i = 0; i < NUM_CELL_TYPES; i++)
+		for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 		{
 			if (raster_files.find(CELL_IDS[i]) != raster_files.end())
 			{
@@ -284,20 +284,20 @@ void Control::initialize_spike_sums()
 	{
 		ssp->non_cs_spike_sum = 0;
 		ssp->cs_spike_sum     = 0;
-		ssp->non_cs_spike_counter = new ct_uint32_t[ssp->num_cells];
-		ssp->cs_spike_counter = new ct_uint32_t[ssp->num_cells];
-		memset((void *)ssp->non_cs_spike_counter, 0, ssp->num_cells * sizeof(ct_uint32_t));
-		memset((void *)ssp->cs_spike_counter, 0, ssp->num_cells * sizeof(ct_uint32_t));
+		ssp->non_cs_spike_counter = new uint32_t[ssp->num_cells];
+		ssp->cs_spike_counter = new uint32_t[ssp->num_cells];
+		memset((void *)ssp->non_cs_spike_counter, 0, ssp->num_cells * sizeof(uint32_t));
+		memset((void *)ssp->cs_spike_counter, 0, ssp->num_cells * sizeof(uint32_t));
 	}
 	spike_sums_initialized = true;
 }
 
 void Control::initialize_rast_internal()
 {
-	for (ct_uint32_t i = 0; i < NUM_CELL_TYPES; i++)
+	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
 		if (!rf_names[i].empty())
-			rast_internal[i] = allocate2DArray<ct_uint8_t>(rast_cell_nums[i], PSTHColSize);
+			rast_internal[i] = allocate2DArray<uint8_t>(rast_cell_nums[i], PSTHColSize);
 	}
 
 	// TODO: find a way to initialize only within gui mode
@@ -310,12 +310,12 @@ void Control::initialize_rast_internal()
 
 void Control::initializeOutputArrays()
 {
-	for (ct_uint32_t i = 0; i < NUM_CELL_TYPES; i++)
+	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
 		if (!rf_names[i].empty())
 		{
 			rast_sizes[i] = rast_cell_nums[i] * PSTHColSize * td.num_trials / BITS_PER_BYTE;
-			rast_output[i] = (ct_uint8_t *)calloc(rast_sizes[i], sizeof(ct_uint8_t));
+			rast_output[i] = (uint8_t *)calloc(rast_sizes[i], sizeof(uint8_t));
 		}
 	}
 
@@ -328,10 +328,10 @@ void Control::initializeOutputArrays()
 	output_arrays_initialized = true;
 }
 
-void save_arr_as_csv(float in_arr[], ct_uint32_t arr_len, std::string file_name)
+void save_arr_as_csv(float in_arr[], uint32_t arr_len, std::string file_name)
 {
 	std::fstream out_file_buf(file_name.c_str(), std::ios::out);
-	for (ct_uint32_t i = 0; i < arr_len; i++)
+	for (uint32_t i = 0; i < arr_len; i++)
 	{
 		out_file_buf << in_arr[i];
 		if (i == arr_len - 1) out_file_buf << "\n";
@@ -351,12 +351,12 @@ void Control::runSession(struct gui *gui)
 	{
 		std::string trialName = td.trial_names[trial];
 
-		ct_uint32_t useCS        = td.use_css[trial];
-		ct_uint32_t onsetCS      = td.cs_onsets[trial];
-		ct_uint32_t csLength     = td.cs_lens[trial];
-		ct_uint32_t percentCS    = td.cs_percents[trial];
-		ct_uint32_t useUS        = td.use_uss[trial];
-		ct_uint32_t onsetUS      = td.us_onsets[trial];
+		uint32_t useCS        = td.use_css[trial];
+		uint32_t onsetCS      = td.cs_onsets[trial];
+		uint32_t csLength     = td.cs_lens[trial];
+		uint32_t percentCS    = td.cs_percents[trial];
+		uint32_t useUS        = td.use_uss[trial];
+		uint32_t onsetUS      = td.us_onsets[trial];
 		
 		int PSTHCounter = 0;
 		float gGRGO_sum = 0;
@@ -462,26 +462,26 @@ void Control::reset_spike_sums()
 		{
 			spike_sums[i].cs_spike_sum = 0;
 			spike_sums[i].non_cs_spike_sum = 0;
-			memset((void *)(spike_sums[i].non_cs_spike_counter), 0, spike_sums[i].num_cells * sizeof(ct_uint32_t));
-			memset((void *)(spike_sums[i].cs_spike_counter), 0, spike_sums[i].num_cells * sizeof(ct_uint32_t));
+			memset((void *)(spike_sums[i].non_cs_spike_counter), 0, spike_sums[i].num_cells * sizeof(uint32_t));
+			memset((void *)(spike_sums[i].cs_spike_counter), 0, spike_sums[i].num_cells * sizeof(uint32_t));
 		}
 }
 
 void Control::reset_rast_internal()
 {
-	for (ct_uint32_t i = 0; i < NUM_CELL_TYPES; i++)
+	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
 		if (!rf_names[i].empty()) 
-			memset(rast_internal[i][0], '\000', rast_cell_nums[i] * PSTHColSize * sizeof(ct_uint8_t));
+			memset(rast_internal[i][0], '\000', rast_cell_nums[i] * PSTHColSize * sizeof(uint8_t));
 	}
 }
 
 void Control::resetOutputArrays()
 {
-	for (ct_uint32_t i = 0; i < NUM_CELL_TYPES; i++)
+	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
 		if (!rf_names[i].empty()) 
-			memset(rast_output[i], '\000', rast_sizes[i] * sizeof(ct_uint8_t));
+			memset(rast_output[i], '\000', rast_sizes[i] * sizeof(uint8_t));
 	}
 	memset(sample_pfpc_syn_weights, 0.0, 4096 * sizeof(float));
 }
@@ -505,7 +505,7 @@ void gen_gr_sample(int gr_indices[], int sample_size, int data_size)
 
 void Control::saveOutputArraysToFile()
 {
-	for (ct_uint32_t i = 0; i < NUM_CELL_TYPES; i++)
+	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
 		if (!rf_names[i].empty())
 		{
@@ -599,14 +599,14 @@ void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
 
 void Control::fill_rast_internal(int PSTHCounter)
 {
-	for (ct_uint32_t i = 0; i < NUM_CELL_TYPES; i++)
+	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
 		if (!rf_names[i].empty())
 		{
 			/* GR spikes are only spikes not saved on host every time step:
 			 * InNet::exportAPGR makes cudaMemcpy call before returning pointer to mem address */
 			if (CELL_IDS[i] == "GR") cell_spks[i] = simCore->getInputNet()->exportAPGR();
-			for (ct_uint32_t j = 0; j < rast_cell_nums[i]; j++)
+			for (uint32_t j = 0; j < rast_cell_nums[i]; j++)
 			{
 				rast_internal[i][j][PSTHCounter] = cell_spks[i][j];
 			}
@@ -634,7 +634,7 @@ void Control::fill_rast_internal(int PSTHCounter)
 void Control::fillOutputArrays()
 {
 	uint32_t offset_common = trial * PSTHColSize / BITS_PER_BYTE;
-	for (ct_uint32_t i = 0; i < NUM_CELL_TYPES; i++)
+	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
 		if (!rf_names[i].empty())
 			pack_2d_byte_array(rast_internal[i], rast_cell_nums[i], PSTHColSize, rast_output[i], offset_common * rast_cell_nums[i]);
@@ -652,9 +652,9 @@ void Control::delete_spike_sums()
 
 void Control::delete_rast_internal()
 {
-	for (ct_uint32_t i = 0; i < NUM_CELL_TYPES; i++)
+	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
-		if (!rf_names[i].empty()) delete2DArray<ct_uint8_t>(rast_internal[i]);
+		if (!rf_names[i].empty()) delete2DArray<uint8_t>(rast_internal[i]);
 	}
 	delete2DArray<float>(all_pc_vm_rast_internal);
 	delete2DArray<float>(all_nc_vm_rast_internal);
@@ -663,7 +663,7 @@ void Control::delete_rast_internal()
 
 void Control::deleteOutputArrays()
 {
-	for (ct_uint32_t i = 0; i < NUM_CELL_TYPES; i++)
+	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
 		if (!rf_names[i].empty()) free(rast_output[i]);
 	}

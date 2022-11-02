@@ -11,7 +11,7 @@
 #include <omp.h>
 #include <cuda.h>
 
-#include "pstdint.h"
+#include <cstdint>
 #include "innetconnectivitystate.h"
 #include "innetactivitystate.h"
 #include "kernels.h"
@@ -25,25 +25,25 @@ public:
 
 	void writeToState();
 
-	const ct_uint8_t* exportAPGO();
-	const ct_uint8_t* exportAPMF();
-	const ct_uint8_t* exportAPGR();
+	const uint8_t* exportAPGO();
+	const uint8_t* exportAPMF();
+	const uint8_t* exportAPGR();
 
-	const ct_uint32_t* exportSumGRInputGO();
+	const uint32_t* exportSumGRInputGO();
 	const float* exportSumGOInputGO();
 
 	// used when initializing mzone
-	ct_uint32_t** getApBufGRGPUPointer();
-	ct_uint64_t** getHistGRGPUPointer();
+	uint32_t** getApBufGRGPUPointer();
+	uint64_t** getHistGRGPUPointer();
 
-	ct_uint32_t** getGRInputGOSumHPointer();
+	uint32_t** getGRInputGOSumHPointer();
 
 	const float* exportGESumGR();
 	const float* exportGISumGR();
 	const float* exportgSum_MFGO();
 	const float* exportgSum_GRGO();
 
-	void updateMFActivties(const ct_uint8_t *actInMF);
+	void updateMFActivties(const uint8_t *actInMF);
 	void calcGOActivities();
 
 	void updateMFtoGROut();
@@ -77,7 +77,7 @@ public:
 	
 	void cpyGRGOSumGPUtoHostCUDA(cudaStream_t **sts, int streamN);
 	void cpyGRGOSumGPUtoHostCUDA(cudaStream_t **sts, int streamN,
-		ct_uint32_t **grInputGOSumHost);
+		uint32_t **grInputGOSumHost);
 	void runUpdateGRHistoryCUDA(cudaStream_t **sts, int streamN, unsigned long t);
 
 protected:
@@ -111,19 +111,19 @@ protected:
 	unsigned int updateGRHistNumBlocks;
 
 	//UBC
-	ct_uint32_t **apUBCH;
-	ct_uint32_t **apUBCGPU;
+	uint32_t **apUBCH;
+	uint32_t **apUBCGPU;
 
 	float **depAmpUBCH;
 	float **depAmpUBCGPU;
 	float **depAmpUBCGRGPU;
 
 	//mossy fibers
-	const ct_uint8_t *apMFOut;
+	const uint8_t *apMFOut;
 
 	//gpu related variables
-	ct_uint32_t **apMFH;
-	ct_uint32_t **apMFGPU;
+	uint32_t **apMFH;
+	uint32_t **apMFGPU;
 
 	float **depAmpMFH;
 	float **depAmpMFGPU;
@@ -136,17 +136,17 @@ protected:
 	//golgi cell variables
 	//gpu related variables
 
-	ct_uint32_t **apGOH;
-	ct_uint32_t **grInputGOSumH;
+	uint32_t **apGOH;
+	uint32_t **grInputGOSumH;
 
 	float **depAmpGOH;
 	float **dynamicAmpGOH;
 
 	int *counter;
 
-	ct_uint32_t **apGOGPU;
-	ct_uint32_t **grInputGOGPU;
-	ct_uint32_t **grInputGOSumGPU;
+	uint32_t **apGOGPU;
+	uint32_t **grInputGOGPU;
+	uint32_t **grInputGOSumGPU;
 
 	size_t *grInputGOGPUP;
 
@@ -156,7 +156,7 @@ protected:
 	float **dynamicAmpGOGRGPU;
 	//end gpu variables
 
-	ct_uint32_t *sumGRInputGO;
+	uint32_t *sumGRInputGO;
 
 	float *sumInputGOGABASynDepGO;
 	float tempGIncGRtoGO;
@@ -167,16 +167,16 @@ protected:
 	float **gUBCGRT;
 	float **gGOGRT;
 
-	ct_uint32_t **pGRDelayfromGRtoGOT;
-	ct_uint32_t **pGRfromMFtoGRT;
-	ct_uint32_t **pGRfromUBCtoGRT;
-	ct_uint32_t **pGRfromGOtoGRT;
-	ct_uint32_t **pGRfromGRtoGOT;
+	uint32_t **pGRDelayfromGRtoGOT;
+	uint32_t **pGRfromMFtoGRT;
+	uint32_t **pGRfromUBCtoGRT;
+	uint32_t **pGRfromGOtoGRT;
+	uint32_t **pGRfromGRtoGOT;
 
-	ct_uint32_t apBufGRHistMask;
+	uint32_t apBufGRHistMask;
 	//gpu related variables
 	//host variables
-	ct_uint8_t *outputGRH;
+	uint8_t *outputGRH;
 	//end host variables
 
 	float **gEGRGPU;
@@ -198,9 +198,9 @@ protected:
 	size_t *gIGRGPUP;
 	float **gIGRSumGPU;
 
-	ct_uint32_t **apBufGRGPU;
-	ct_uint8_t  **outputGRGPU;
-	ct_uint32_t **apGRGPU;
+	uint32_t **apBufGRGPU;
+	uint8_t  **outputGRGPU;
+	uint32_t **apGRGPU;
 
 	float **threshGRGPU;
 	float **vGRGPU;
@@ -208,10 +208,10 @@ protected:
 	float **gNMDAGRGPU;
 	float **gNMDAIncGRGPU;
 	float **gKCaGRGPU;
-	ct_uint64_t **historyGRGPU;
+	uint64_t **historyGRGPU;
 
 	//conduction delays
-	ct_uint32_t **delayGOMasksGRGPU;
+	uint32_t **delayGOMasksGRGPU;
 	size_t *delayGOMasksGRGPUP;
 
 	//connectivity
@@ -223,21 +223,21 @@ protected:
 	int timeStepPOne;
 	int thingCounter  = 0;
 
-	ct_int32_t  **numGOOutPerGRGPU;
-	ct_uint32_t **grConGROutGOGPU;
+	int32_t  **numGOOutPerGRGPU;
+	uint32_t **grConGROutGOGPU;
 	size_t *grConGROutGOGPUP;
 	
-	ct_int32_t  **numGOInPerGRGPU;
-	ct_uint32_t **grConGOOutGRGPU;
+	int32_t  **numGOInPerGRGPU;
+	uint32_t **grConGOOutGRGPU;
 	size_t *grConGOOutGRGPUP;
 
-	ct_int32_t  **numMFInPerGRGPU;
-	ct_uint32_t **grConMFOutGRGPU;
+	int32_t  **numMFInPerGRGPU;
+	uint32_t **grConMFOutGRGPU;
 	size_t *grConMFOutGRGPUP;
 	
 	
-	ct_int32_t **numUBCInPerGRGPU;
-	ct_uint32_t **grConUBCOutGRGPU;
+	int32_t **numUBCInPerGRGPU;
+	uint32_t **grConUBCOutGRGPU;
 	size_t *grConUBCOutGRGPUP;
 	
 	//end gpu variables
