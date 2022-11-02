@@ -372,15 +372,15 @@ void Control::runSession(struct gui *gui)
 			{
 				simCore->updateErrDrive(0, 0.3);
 			}
-			if (ts < onsetCS || ts >= onsetCS + csLength)
-			{
-				mfAP = mfs->calcPoissActivity(mfFreq->getMFBG(),
-					  simCore->getMZoneList());
-			}
 			if (ts >= onsetCS && ts < onsetCS + csLength)
 			{
 				mfAP = (useCS == 1) ? mfs->calcPoissActivity(mfFreq->getMFInCSTonicA(), simCore->getMZoneList())
 									: mfs->calcPoissActivity(mfFreq->getMFBG(), simCore->getMZoneList());
+			}
+			else
+			{
+				mfAP = mfs->calcPoissActivity(mfFreq->getMFBG(),
+					  simCore->getMZoneList());
 			}
 			
 			bool *isTrueMF = mfs->calcTrueMFs(mfFreq->getMFBG()); /* only used for mfdcn plasticity */
@@ -517,15 +517,6 @@ void Control::saveOutputArraysToFile()
 
 void Control::update_spike_sums(int tts, float onset_cs, float offset_cs)
 {
-	cell_spikes[MF]  = mfAP;
-	cell_spikes[GR]  = simCore->getInputNet()->exportAPGR();
-	cell_spikes[GO]  = simCore->getInputNet()->exportAPGO();
-	cell_spikes[BC]  = simCore->getMZoneList()[0]->exportAPBC();
-	cell_spikes[SC]  = simCore->getMZoneList()[0]->exportAPSC();
-	cell_spikes[PC]  = simCore->getMZoneList()[0]->exportAPPC();
-	cell_spikes[IO]  = simCore->getMZoneList()[0]->exportAPIO();
-	cell_spikes[NC] = simCore->getMZoneList()[0]->exportAPNC();
-
 	// update cs spikes
 	if (tts >= onset_cs && tts < offset_cs)
 	{
@@ -533,8 +524,8 @@ void Control::update_spike_sums(int tts, float onset_cs, float offset_cs)
 		{
 			for (int j = 0; j < spike_sums[i].num_cells; j++)
 			{
-				spike_sums[i].cs_spike_sum += cell_spikes[i][j];
-				spike_sums[i].cs_spike_counter[j] += cell_spikes[i][j];
+				spike_sums[i].cs_spike_sum += cell_spks[i][j];
+				spike_sums[i].cs_spike_counter[j] += cell_spks[i][j];
 			}
 		}
 	}
@@ -545,8 +536,8 @@ void Control::update_spike_sums(int tts, float onset_cs, float offset_cs)
 		{
 			for (int j = 0; j < spike_sums[i].num_cells; j++)
 			{
-				spike_sums[i].non_cs_spike_sum += cell_spikes[i][j];
-				spike_sums[i].non_cs_spike_counter[j] += cell_spikes[i][j];
+				spike_sums[i].non_cs_spike_sum += cell_spks[i][j];
+				spike_sums[i].non_cs_spike_counter[j] += cell_spks[i][j];
 			}
 		}
 	}

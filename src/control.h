@@ -95,8 +95,8 @@ class Control
 		float threshDecayTau = 4.0;
 
 		float nucCollFrac = 0.02;
-		float csMinRate = 100.0; // uh look at tonic lol
-		float csMaxRate = 110.0;
+		//float csMinRate = 100.0; // uh look at tonic lol
+		//float csMaxRate = 110.0;
 
 		float CSTonicMFFrac = 0.05;
 		float tonicFreqMin  = 100.0;
