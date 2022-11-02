@@ -5,7 +5,7 @@
  *      Author: consciousness
  */
 
-#include "interfaces/cbmstate.h"
+#include "cbmstate.h"
 
 CBMState::CBMState() {}
 
@@ -105,11 +105,6 @@ void CBMState::writeState(std::fstream &outfile)
 uint32_t CBMState::getNumZones()
 {
 	return numZones;
-}
-
-IMZoneActState* CBMState::getMZoneActState(unsigned int zoneN)
-{
-	return (IMZoneActState *)mzoneActStates[zoneN];
 }
 
 InNetActivityState* CBMState::getInnetActStateInternal()

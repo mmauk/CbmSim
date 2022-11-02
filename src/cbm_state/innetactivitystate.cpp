@@ -4,10 +4,10 @@
  *  Created on: Nov 16, 2012
  *      Author: consciousness
  *  Updated on: March, 2022
- * 		Author: the gallogly
+ *      Author: the gallogly
  */ 
 
-#include "state/innetactivitystate.h"
+#include "innetactivitystate.h"
 
 InNetActivityState::InNetActivityState()
 {

@@ -10,9 +10,8 @@
 
 #include <memory>
 #include <fstream>
-
-#include "file_utility.h"
 #include <cstdint>
+#include "file_utility.h"
 #include "connectivityparams.h"
 #include "activityparams.h"
 

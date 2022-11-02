@@ -1,5 +1,5 @@
 #include "array_util.h"
-#include "params/connectivityparams.h"
+#include "connectivityparams.h"
 #include "gui.h"
 
 // temp function so gtk doesn't whine abt NULL callbacks

@@ -20,7 +20,6 @@
 #include "mzoneactivitystate.h"
 #include "connectivityparams.h" // <-- added in 06/01/2022
 #include "activityparams.h"
-#include "imzoneactstate.h"
 
 class CBMState
 {
@@ -36,8 +35,6 @@ class CBMState
 		void writeState(std::fstream &outfile);
 
 		uint32_t getNumZones();
-
-		IMZoneActState* getMZoneActState(unsigned int zoneN);
 
 		InNetActivityState* getInnetActStateInternal();
 		MZoneActivityState* getMZoneActStateInternal(unsigned int zoneN);
