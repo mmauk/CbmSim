@@ -30,6 +30,7 @@ public:
 
 	const ct_uint8_t* calcPoissActivity(const float *freqencies, MZone **mZoneList, int ispikei = 18); 
 	bool* calcTrueMFs(const float *freqencies);
+	const ct_uint8_t* getAPs();
 private:
 	void prepCollaterals(int rSeed);
 

@@ -108,7 +108,6 @@ struct tuning_button
 	int digits_to_display;
 	struct tuning_button_label label;
 	struct signal signal;
-
 };
 
 struct tuning_window
@@ -146,7 +145,6 @@ struct gui
 	struct menu menu_bar;
 	struct firing_rate_window frw;
 	Control *ctrl_ptr;
-	
 };
 
 gboolean firing_rates_win_visible(struct gui *gui);

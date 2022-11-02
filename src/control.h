@@ -18,14 +18,13 @@
 #include "cbmsimcore.h"
 #include "ecmfpopulation.h"
 #include "poissonregencells.h"
-#include "ectrialsdata.h"
 #include "bits.h"
 
 // TODO: place in a common place, as gui uses a constant like this too
 #define NUM_CELL_TYPES 8
 
 // convenience enum for indexing cell arrays
-enum {MF, GR, GO, BC, SC, PC, IO, DCN};
+enum cell_id {MF, GR, GO, BC, SC, PC, IO, NC};
 
 struct cell_spike_sums
 {
@@ -53,7 +52,7 @@ class Control
 		~Control();
 
 		// Objects
-		trials_data td = {};
+		trials_data td;
 		CBMState *simState     = NULL;
 		CBMSimCore *simCore    = NULL;
 		ECMFPopulation *mfFreq = NULL;
@@ -133,62 +132,32 @@ class Control
 		enum plasticity pf_pc_plast;
 		enum plasticity mf_nc_plast;
 
-		std::string mf_raster_file = "";
-		std::string gr_raster_file = "";
-		std::string go_raster_file = "";
-		std::string bc_raster_file = "";
-		std::string sc_raster_file = "";
-		std::string pc_raster_file = "";
-		std::string io_raster_file = "";
-		std::string nc_raster_file = "";
+		std::string rf_names[NUM_CELL_TYPES];
 
 		std::string pf_pc_weights_file = "";
 		std::string mf_nc_weights_file = "";
 
-		struct cell_spike_sums spike_sums[NUM_CELL_TYPES] = {{}};
-		struct cell_firing_rates firing_rates[NUM_CELL_TYPES] = {{}};
+		struct cell_spike_sums spike_sums[NUM_CELL_TYPES];
+		struct cell_firing_rates firing_rates[NUM_CELL_TYPES];
 		const ct_uint8_t *cell_spikes[NUM_CELL_TYPES];
-
-		int gr_indices[4096] = {0};
 
 		const float *grgoG, *mfgoG, *gogrG, *mfgrG;
 		float *sample_pfpc_syn_weights;
 		const ct_uint8_t *mfAP, *goSpks;
-		ct_uint8_t **all_mf_rast_internal;
-		ct_uint8_t **all_go_rast_internal;
-		ct_uint8_t **sample_gr_rast_internal;
-		ct_uint8_t **all_pc_rast_internal;
-		ct_uint8_t **all_nc_rast_internal;
-		ct_uint8_t **all_sc_rast_internal;
-		ct_uint8_t **all_bc_rast_internal;
-		ct_uint8_t **all_io_rast_internal;
+		
+		const ct_uint8_t *cell_spks[NUM_CELL_TYPES];
+		int rast_cell_nums[NUM_CELL_TYPES];
+		ct_uint8_t **rast_internal[NUM_CELL_TYPES];
+
+		ct_uint32_t rast_sizes[NUM_CELL_TYPES]; // initialized in initializeOutputArrays
+		ct_uint8_t *rast_output[NUM_CELL_TYPES];
 
 		float **all_pc_vm_rast_internal;
 		float **all_nc_vm_rast_internal;
 		float **all_io_vm_rast_internal;
 
-		/* initialized within initializeOutputArrays */
-		ct_uint32_t all_mf_rast_size;   
-		ct_uint32_t all_go_rast_size;
-		ct_uint32_t sample_gr_rast_size;
-		ct_uint32_t all_pc_rast_size;  
-		ct_uint32_t all_nc_rast_size;  
-		ct_uint32_t all_sc_rast_size;  
-		ct_uint32_t all_bc_rast_size;  
-		ct_uint32_t all_io_rast_size; 
-
-		/* output raster arrays */
-		ct_uint8_t *allMFRaster;
-		ct_uint8_t *allGORaster;
-		ct_uint8_t *sampleGRRaster;
-		ct_uint8_t *allPCRaster;
-		ct_uint8_t *allNCRaster;
-		ct_uint8_t *allSCRaster;
-		ct_uint8_t *allBCRaster;
-		ct_uint8_t *allIORaster;
-
 		void build_sim();
-	
+
 		void set_plasticity_modes(parsed_commandline &p_cl);
 		void init_sim(parsed_sess_file &s_file, std::string in_sim_filename);
 		void reset_sim(std::string in_sim_filename);
@@ -199,17 +168,12 @@ class Control
 		void save_mfdcn_weights_to_file(std::string out_mfdcn_file);
 		void load_mfdcn_weights_from_file(std::string in_mfdcn_file);
 
-		void save_gr_psth_to_file(std::string out_gr_psth_file);
-		void save_go_psth_to_file(std::string out_go_psth_file);
-		void save_pc_psth_to_file(std::string out_pc_psth_file);
-		void save_nc_psth_to_file(std::string out_nc_psth_file);
-		void save_io_psth_to_file(std::string out_io_psth_file);
-		void save_bc_psth_to_file(std::string out_bc_psth_file);
-		void save_sc_psth_to_file(std::string out_sc_psth_file);
-		void save_mf_psth_to_file(std::string out_mf_psth_file);
+		void save_raster_to_file(std::string raster_file_name, enum cell_id);
 
 		void get_raster_filenames(std::map<std::string, std::string> &raster_files);
 		void get_weights_filenames(std::map<std::string, std::string> &weights_files);
+		void initialize_rast_cell_nums();
+		void initialize_cell_spikes();
 		void initialize_spike_sums();
 		void initialize_rast_internal();
 		void initializeOutputArrays();

@@ -107,7 +107,6 @@ const ct_uint8_t* PoissonRegenCells::calcPoissActivity(const float *frequencies,
 		}
 	}
 	if (spikeTimer == ispikei) spikeTimer = 0;
-
 	return (const ct_uint8_t *)aps;
 }
 
@@ -126,4 +125,10 @@ bool* PoissonRegenCells::calcTrueMFs(const float *frequencies)
 	}
 	return isTrueMF;
 }
+
+const ct_uint8_t* PoissonRegenCells::getAPs()
+{
+	return (const ct_uint8_t *)aps;
+}
+
 

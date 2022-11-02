@@ -229,7 +229,7 @@ void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum
 	}
 
 	// TODO: put in macro def for num_gpus so we don't run this line if running on one GPU
-	syncCUDA("2");
+	//syncCUDA("2");
 
 #ifdef NO_ASYNC
 	syncCUDA("2a");

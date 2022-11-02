@@ -8,7 +8,8 @@
 #include "gui.h" /* tenuous inclide at best :pogO: */
 
 const std::string BIN_EXT = "bin";
-
+const std::string CELL_IDS[NUM_CELL_TYPES] = {"MF", "GR", "GO", "BC", "SC", "PC", "IO", "NC"}; 
+ 
 Control::Control(parsed_commandline &p_cl)
 {
 	tokenized_file t_file;
@@ -117,6 +118,8 @@ void Control::init_sim(parsed_sess_file &s_file, std::string in_sim_filename)
 								  csbgFreqMax, contextFreqMax, tonicFreqMax, phasicFreqMax,
 								  collaterals_off, fracImport, secondCS, fracOverlap);
 	mfs = new PoissonRegenCells(mfRandSeed, threshDecayTau, numMZones);
+	initialize_rast_cell_nums();
+	initialize_cell_spikes();
 	initialize_rast_internal();
 	initializeOutputArrays();
 	initialize_spike_sums();
@@ -205,97 +208,23 @@ void Control::load_mfdcn_weights_from_file(std::string in_mfdcn_file)
 	inMFDCNFileBuffer.close();
 }
 
-void Control::save_gr_psth_to_file(std::string out_gr_psth_file)
+void Control::save_raster_to_file(std::string raster_file_name, enum cell_id id)
 {
-	std::fstream out_gr_psth_file_buffer(out_gr_psth_file.c_str(), std::ios::out | std::ios::binary);
-	rawBytesRW((char *)sampleGRRaster, sample_gr_rast_size, false, out_gr_psth_file_buffer);
-	out_gr_psth_file_buffer.close();
-}
-
-void Control::save_go_psth_to_file(std::string out_go_psth_file)
-{
-	std::fstream out_go_psth_file_buffer(out_go_psth_file.c_str(), std::ios::out | std::ios::binary);
-	rawBytesRW((char *)allGORaster, all_go_rast_size, false, out_go_psth_file_buffer);
-	out_go_psth_file_buffer.close();
-}
-
-void Control::save_pc_psth_to_file(std::string out_pc_psth_file)
-{
-	std::fstream out_pc_psth_file_buffer(out_pc_psth_file.c_str(), std::ios::out | std::ios::binary);
-	rawBytesRW((char *)allPCRaster, all_pc_rast_size, false, out_pc_psth_file_buffer);
-	out_pc_psth_file_buffer.close();
-}
-
-void Control::save_nc_psth_to_file(std::string out_nc_psth_file)
-{
-	std::fstream out_nc_psth_file_buffer(out_nc_psth_file.c_str(), std::ios::out | std::ios::binary);
-	rawBytesRW((char *)allNCRaster, all_nc_rast_size, false, out_nc_psth_file_buffer);
-	out_nc_psth_file_buffer.close();
-}
-
-void Control::save_io_psth_to_file(std::string out_io_psth_file)
-{
-	std::fstream out_io_psth_file_buffer(out_io_psth_file.c_str(), std::ios::out | std::ios::binary);
-	rawBytesRW((char *)allIORaster, all_io_rast_size, false, out_io_psth_file_buffer);
-	out_io_psth_file_buffer.close();
-}
-
-void Control::save_bc_psth_to_file(std::string out_bc_psth_file)
-{
-	std::fstream out_bc_psth_file_buffer(out_bc_psth_file.c_str(), std::ios::out | std::ios::binary);
-	rawBytesRW((char *)allBCRaster, all_bc_rast_size, false, out_bc_psth_file_buffer);
-	out_bc_psth_file_buffer.close();
-}
-
-void Control::save_sc_psth_to_file(std::string out_sc_psth_file)
-{
-	std::fstream out_sc_psth_file_buffer(out_sc_psth_file.c_str(), std::ios::out | std::ios::binary);
-	rawBytesRW((char *)allSCRaster, all_sc_rast_size, false, out_sc_psth_file_buffer);
-	out_sc_psth_file_buffer.close();
-}
-
-void Control::save_mf_psth_to_file(std::string out_mf_psth_file)
-{
-	std::fstream out_mf_psth_file_buffer(out_mf_psth_file.c_str(), std::ios::out | std::ios::binary);
-	rawBytesRW((char *)allMFRaster, all_mf_rast_size, false, out_mf_psth_file_buffer);
-	out_mf_psth_file_buffer.close();
+	std::fstream out_rast_file_buf(raster_file_name.c_str(), std::ios::out | std::ios::binary);
+	rawBytesRW((char *)rast_output[id], rast_sizes[id], false, out_rast_file_buf);
+	out_rast_file_buf.close();
 }
 
 void Control::get_raster_filenames(std::map<std::string, std::string> &raster_files)
 {
 	if (!raster_files.empty())
 	{
-		if (raster_files.find("MF") != raster_files.end())
+		for (ct_uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 		{
-			mf_raster_file = raster_files["MF"];
-		}
-		if (raster_files.find("GR") != raster_files.end())
-		{
-			gr_raster_file = raster_files["GR"];
-		}
-		if (raster_files.find("GO") != raster_files.end())
-		{
-			go_raster_file = raster_files["GO"];
-		}
-		if (raster_files.find("BC") != raster_files.end())
-		{
-			bc_raster_file = raster_files["BC"];
-		}
-		if (raster_files.find("SC") != raster_files.end())
-		{
-			sc_raster_file = raster_files["SC"];
-		}
-		if (raster_files.find("PC") != raster_files.end())
-		{
-			pc_raster_file = raster_files["PC"];
-		}
-		if (raster_files.find("IO") != raster_files.end())
-		{
-			io_raster_file = raster_files["IO"];
-		}
-		if (raster_files.find("NC") != raster_files.end())
-		{
-			nc_raster_file = raster_files["NC"];
+			if (raster_files.find(CELL_IDS[i]) != raster_files.end())
+			{
+				rf_names[i] = raster_files[CELL_IDS[i]];
+			}
 		}
 	}
 }
@@ -315,6 +244,31 @@ void Control::get_weights_filenames(std::map<std::string, std::string> &weights_
 	}
 }
 
+void Control::initialize_rast_cell_nums()
+{
+	rast_cell_nums[MF] = num_mf;
+	rast_cell_nums[GR] = 4096;
+	rast_cell_nums[GO] = num_go;
+	rast_cell_nums[BC] = num_bc;
+	rast_cell_nums[SC] = num_sc;
+	rast_cell_nums[PC] = num_pc;
+	rast_cell_nums[IO] = num_io;
+	rast_cell_nums[NC] = num_nc;
+}
+
+void Control::initialize_cell_spikes()
+{
+	cell_spks[MF] = mfs->getAPs();
+	/* NOTE: incurs a call to cudaMemcpy from device to host, but initializing so is not repeatedly called */
+	cell_spks[GR] = simCore->getInputNet()->exportAPGR(); 
+	cell_spks[GO] = simCore->getInputNet()->exportAPGO(); 
+	cell_spks[BC] = simCore->getMZoneList()[0]->exportAPBC(); 
+	cell_spks[SC] = simCore->getMZoneList()[0]->exportAPSC();
+	cell_spks[PC] = simCore->getMZoneList()[0]->exportAPPC();
+	cell_spks[IO] = simCore->getMZoneList()[0]->exportAPIO();
+	cell_spks[NC] = simCore->getMZoneList()[0]->exportAPNC();
+}
+
 void Control::initialize_spike_sums()
 {
 	spike_sums[MF].num_cells  = num_mf;
@@ -324,7 +278,7 @@ void Control::initialize_spike_sums()
 	spike_sums[SC].num_cells  = num_sc;
 	spike_sums[PC].num_cells  = num_pc;
 	spike_sums[IO].num_cells  = num_io;
-	spike_sums[DCN].num_cells = num_nc;
+	spike_sums[NC].num_cells = num_nc;
 
 	FOREACH(spike_sums, ssp)
 	{
@@ -340,37 +294,10 @@ void Control::initialize_spike_sums()
 
 void Control::initialize_rast_internal()
 {
-	if (!mf_raster_file.empty())
+	for (ct_uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
-		all_mf_rast_internal    = allocate2DArray<ct_uint8_t>(num_mf, PSTHColSize);
-	}
-	if (!gr_raster_file.empty())
-	{
-		sample_gr_rast_internal = allocate2DArray<ct_uint8_t>(4096, PSTHColSize);
-	}
-	if (!go_raster_file.empty())
-	{
-		all_go_rast_internal    = allocate2DArray<ct_uint8_t>(num_go, PSTHColSize);
-	}
-	if (!bc_raster_file.empty())
-	{
-		all_bc_rast_internal    = allocate2DArray<ct_uint8_t>(num_bc, PSTHColSize);
-	}
-	if (!sc_raster_file.empty())
-	{
-		all_sc_rast_internal    = allocate2DArray<ct_uint8_t>(num_sc, PSTHColSize);
-	}
-	if (!pc_raster_file.empty())
-	{
-		all_pc_rast_internal    = allocate2DArray<ct_uint8_t>(num_pc, PSTHColSize);
-	}
-	if (!io_raster_file.empty())
-	{
-		all_io_rast_internal    = allocate2DArray<ct_uint8_t>(num_io, PSTHColSize);
-	}
-	if (!nc_raster_file.empty())
-	{
-		all_nc_rast_internal    = allocate2DArray<ct_uint8_t>(num_nc, PSTHColSize);
+		if (!rf_names[i].empty())
+			rast_internal[i] = allocate2DArray<ct_uint8_t>(rast_cell_nums[i], PSTHColSize);
 	}
 
 	// TODO: find a way to initialize only within gui mode
@@ -383,45 +310,13 @@ void Control::initialize_rast_internal()
 
 void Control::initializeOutputArrays()
 {
-	if (!mf_raster_file.empty())
+	for (ct_uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
-		all_mf_rast_size = num_mf * PSTHColSize * td.num_trials / BITS_PER_BYTE;
-		allMFRaster      = (ct_uint8_t *)calloc(all_mf_rast_size, sizeof(ct_uint8_t));
-	}
-	if (!gr_raster_file.empty())
-	{
-		sample_gr_rast_size = 4096 * PSTHColSize * td.num_trials / BITS_PER_BYTE;
-		sampleGRRaster      = (ct_uint8_t *)calloc(sample_gr_rast_size, sizeof(ct_uint8_t));
-	}
-	if (!go_raster_file.empty())
-	{
-		all_go_rast_size = num_go * PSTHColSize * td.num_trials / BITS_PER_BYTE;
-		allGORaster      = (ct_uint8_t *)calloc(all_go_rast_size, sizeof(ct_uint8_t));
-	}
-	if (!bc_raster_file.empty())
-	{
-		all_bc_rast_size = num_bc * PSTHColSize * td.num_trials / BITS_PER_BYTE;
-		allBCRaster      = (ct_uint8_t *)calloc(all_bc_rast_size, sizeof(ct_uint8_t));
-	}
-	if (!sc_raster_file.empty())
-	{
-		all_sc_rast_size = num_sc * PSTHColSize * td.num_trials / BITS_PER_BYTE;
-		allSCRaster      = (ct_uint8_t *)calloc(all_sc_rast_size, sizeof(ct_uint8_t));
-	}
-	if (!pc_raster_file.empty())
-	{
-		all_pc_rast_size = num_pc * PSTHColSize * td.num_trials / BITS_PER_BYTE;
-		allPCRaster      = (ct_uint8_t *)calloc(all_pc_rast_size, sizeof(ct_uint8_t));
-	}
-	if (!io_raster_file.empty())
-	{
-		all_io_rast_size = num_io * PSTHColSize * td.num_trials / BITS_PER_BYTE;
-		allIORaster      = (ct_uint8_t *)calloc(all_io_rast_size, sizeof(ct_uint8_t));
-	}
-	if (!nc_raster_file.empty())
-	{
-		all_nc_rast_size = num_nc * PSTHColSize * td.num_trials / BITS_PER_BYTE;
-		allNCRaster      = (ct_uint8_t *)calloc(all_nc_rast_size, sizeof(ct_uint8_t));
+		if (!rf_names[i].empty())
+		{
+			rast_sizes[i] = rast_cell_nums[i] * PSTHColSize * td.num_trials / BITS_PER_BYTE;
+			rast_output[i] = (ct_uint8_t *)calloc(rast_sizes[i], sizeof(ct_uint8_t));
+		}
 	}
 
 	if (!pf_pc_weights_file.empty())
@@ -574,27 +469,20 @@ void Control::reset_spike_sums()
 
 void Control::reset_rast_internal()
 {
-	memset(all_mf_rast_internal[0], '\000', num_mf * PSTHColSize * sizeof(ct_uint8_t));
-	memset(all_go_rast_internal[0], '\000', num_go * PSTHColSize * sizeof(ct_uint8_t));
-	memset(sample_gr_rast_internal[0], '\000', 4096 * PSTHColSize * sizeof(ct_uint8_t));
-	memset(all_pc_rast_internal[0], '\000', num_mf * PSTHColSize * sizeof(ct_uint8_t));
-	memset(all_nc_rast_internal[0], '\000', num_mf * PSTHColSize * sizeof(ct_uint8_t));
-	memset(all_sc_rast_internal[0], '\000', num_mf * PSTHColSize * sizeof(ct_uint8_t));
-	memset(all_bc_rast_internal[0], '\000', num_mf * PSTHColSize * sizeof(ct_uint8_t));
-	memset(all_io_rast_internal[0], '\000', num_mf * PSTHColSize * sizeof(ct_uint8_t));
+	for (ct_uint32_t i = 0; i < NUM_CELL_TYPES; i++)
+	{
+		if (!rf_names[i].empty()) 
+			memset(rast_internal[i][0], '\000', rast_cell_nums[i] * PSTHColSize * sizeof(ct_uint8_t));
+	}
 }
 
 void Control::resetOutputArrays()
 {
-	memset(allMFRaster, '\000', all_mf_rast_size * sizeof(ct_uint8_t));
-	memset(allGORaster, '\000', all_go_rast_size * sizeof(ct_uint8_t));
-	memset(sampleGRRaster, '\000', sample_gr_rast_size * sizeof(ct_uint8_t));
-	memset(allPCRaster, '\000', all_pc_rast_size * sizeof(ct_uint8_t));
-	memset(allNCRaster, '\000', all_nc_rast_size * sizeof(ct_uint8_t));
-	memset(allSCRaster, '\000', all_sc_rast_size * sizeof(ct_uint8_t));
-	memset(allBCRaster, '\000', all_bc_rast_size * sizeof(ct_uint8_t));
-	memset(allIORaster, '\000', all_io_rast_size * sizeof(ct_uint8_t));
-
+	for (ct_uint32_t i = 0; i < NUM_CELL_TYPES; i++)
+	{
+		if (!rf_names[i].empty()) 
+			memset(rast_output[i], '\000', rast_sizes[i] * sizeof(ct_uint8_t));
+	}
 	memset(sample_pfpc_syn_weights, 0.0, 4096 * sizeof(float));
 }
 
@@ -617,45 +505,13 @@ void gen_gr_sample(int gr_indices[], int sample_size, int data_size)
 
 void Control::saveOutputArraysToFile()
 {
-	if (!mf_raster_file.empty())
+	for (ct_uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
-		std::cout << "[INFO]: Filling MF files...\n";
-		save_mf_psth_to_file(mf_raster_file);
-	}
-	if (!gr_raster_file.empty())
-	{
-		std::cout << "[INFO]: Filling GR file...\n";
-		save_gr_psth_to_file(gr_raster_file);
-	}
-	if (!go_raster_file.empty())
-	{
-		std::cout << "[INFO]: Filling GO file...\n";
-		save_go_psth_to_file(go_raster_file);
-	}
-	if (!bc_raster_file.empty())
-	{
-		std::cout << "[INFO]: Filling BC file...\n";
-		save_bc_psth_to_file(bc_raster_file);
-	}
-	if (!sc_raster_file.empty())
-	{
-		std::cout << "[INFO]: Filling SC file...\n";
-		save_sc_psth_to_file(sc_raster_file);
-	}
-	if (!pc_raster_file.empty())
-	{
-		std::cout << "[INFO]: Filling PC file...\n";
-		save_pc_psth_to_file(pc_raster_file);
-	}
-	if (!io_raster_file.empty())
-	{
-		std::cout << "[INFO]: Filling IO file...\n";
-		save_io_psth_to_file(io_raster_file);
-	}
-	if (!nc_raster_file.empty())
-	{
-		std::cout << "[INFO]: Filling NC file...\n";
-		save_nc_psth_to_file(nc_raster_file);
+		if (!rf_names[i].empty())
+		{
+			std::cout << "[INFO]: Filling " << CELL_IDS[i] << " raster file...\n";
+			save_raster_to_file(rf_names[i], (enum cell_id)i);
+		}
 	}
 }
 
@@ -668,7 +524,7 @@ void Control::update_spike_sums(int tts, float onset_cs, float offset_cs)
 	cell_spikes[SC]  = simCore->getMZoneList()[0]->exportAPSC();
 	cell_spikes[PC]  = simCore->getMZoneList()[0]->exportAPPC();
 	cell_spikes[IO]  = simCore->getMZoneList()[0]->exportAPIO();
-	cell_spikes[DCN] = simCore->getMZoneList()[0]->exportAPNC();
+	cell_spikes[NC] = simCore->getMZoneList()[0]->exportAPNC();
 
 	// update cs spikes
 	if (tts >= onset_cs && tts < offset_cs)
@@ -743,78 +599,21 @@ void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
 
 void Control::fill_rast_internal(int PSTHCounter)
 {
-	if (!mf_raster_file.empty())
+	for (ct_uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
-		for (int i = 0; i < num_mf; i++)
+		if (!rf_names[i].empty())
 		{
-			all_mf_rast_internal[i][PSTHCounter] = mfAP[i];
-		}
-	}
-	if (!go_raster_file.empty())
-	{
-		const ct_uint8_t* goSpks = simCore->getInputNet()->exportAPGO();
-		for (int i = 0; i < num_go; i++)
-		{
-			all_go_rast_internal[i][PSTHCounter] = goSpks[i];
-		}
-	}
-	if (!gr_raster_file.empty())
-	{
-		const ct_uint8_t* grSpks = simCore->getInputNet()->exportAPGR(); /* reading from gpu mem to non-pinned host mem is slow! just calling this slows down by ~30% ! */
-		for (int i = 0; i < 4096; i++)
-		{
-			sample_gr_rast_internal[i][PSTHCounter] = grSpks[i];
-		}
-	}
-	if (!pc_raster_file.empty())
-	{
-		const ct_uint8_t* pcSpks = simCore->getMZoneList()[0]->exportAPPC();
-		for (int i = 0; i < num_pc; i++)
-		{
-			all_pc_rast_internal[i][PSTHCounter] = pcSpks[i];
-		}
-	}
-	if (!nc_raster_file.empty())
-	{
-		const ct_uint8_t* ncSpks = simCore->getMZoneList()[0]->exportAPNC();
-		for (int i = 0; i < num_nc; i++)
-		{
-			all_nc_rast_internal[i][PSTHCounter] = ncSpks[i];
-		}
-	}
-	if (!sc_raster_file.empty())
-	{
-		const ct_uint8_t* scSpks = simCore->getMZoneList()[0]->exportAPSC();
-		for (int i = 0; i < num_sc; i++)
-		{
-			all_sc_rast_internal[i][PSTHCounter] = scSpks[i];
-		}
-	}
-	if (!bc_raster_file.empty())
-	{
-		const ct_uint8_t* bcSpks = simCore->getMZoneList()[0]->exportAPBC();
-		for (int i = 0; i < num_bc; i++)
-		{
-			all_bc_rast_internal[i][PSTHCounter] = bcSpks[i];
-		}
-	}
-	if (!io_raster_file.empty())
-	{
-		const ct_uint8_t* ioSpks = simCore->getMZoneList()[0]->exportAPIO();
-		for (int i = 0; i < num_io; i++)
-		{
-			all_io_rast_internal[i][PSTHCounter] = ioSpks[i];
-		}
-	}
-	if (!nc_raster_file.empty())
-	{
-		const ct_uint8_t* ncSpks = simCore->getMZoneList()[0]->exportAPNC();
-		for (int i = 0; i < num_nc; i++)
-		{
-			all_nc_rast_internal[i][PSTHCounter] = ncSpks[i];
+			/* GR spikes are only spikes not saved on host every time step:
+			 * InNet::exportAPGR makes cudaMemcpy call before returning pointer to mem address */
+			if (CELL_IDS[i] == "GR") cell_spks[i] = simCore->getInputNet()->exportAPGR();
+			for (ct_uint32_t j = 0; j < rast_cell_nums[i]; j++)
+			{
+				rast_internal[i][j][PSTHCounter] = cell_spks[i][j];
+			}
 		}
 	}
 
+	// TODO: might want to make this an array
 	const float* vm_pc = simCore->getMZoneList()[0]->exportVmPC();
 	for (int i = 0; i < num_pc; i++)
 	{
@@ -835,37 +634,10 @@ void Control::fill_rast_internal(int PSTHCounter)
 void Control::fillOutputArrays()
 {
 	uint32_t offset_common = trial * PSTHColSize / BITS_PER_BYTE;
-	if (!mf_raster_file.empty())
+	for (ct_uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
-		pack_2d_byte_array(all_mf_rast_internal, num_mf, PSTHColSize, allMFRaster, offset_common * num_mf);
-	}
-	if (!gr_raster_file.empty())
-	{
-		pack_2d_byte_array(sample_gr_rast_internal, 4096, PSTHColSize, sampleGRRaster, offset_common * 4096);
-	}
-	if (!go_raster_file.empty())
-	{
-		pack_2d_byte_array(all_go_rast_internal, num_go, PSTHColSize, allGORaster, offset_common * num_go);
-	}
-	if (!bc_raster_file.empty())
-	{
-		pack_2d_byte_array(all_bc_rast_internal, num_bc, PSTHColSize, allBCRaster, offset_common * num_bc);
-	}
-	if (!sc_raster_file.empty())
-	{
-		pack_2d_byte_array(all_sc_rast_internal, num_sc, PSTHColSize, allSCRaster, offset_common * num_sc);
-	}
-	if (!pc_raster_file.empty())
-	{
-		pack_2d_byte_array(all_pc_rast_internal, num_pc, PSTHColSize, allPCRaster, offset_common * num_pc);
-	}
-	if (!io_raster_file.empty())
-	{
-		pack_2d_byte_array(all_io_rast_internal, num_io, PSTHColSize, allIORaster, offset_common * num_io);
-	}
-	if (!nc_raster_file.empty())
-	{
-		pack_2d_byte_array(all_nc_rast_internal, num_nc, PSTHColSize, allNCRaster, offset_common * num_nc);
+		if (!rf_names[i].empty())
+			pack_2d_byte_array(rast_internal[i], rast_cell_nums[i], PSTHColSize, rast_output[i], offset_common * rast_cell_nums[i]);
 	}
 }
 
@@ -880,15 +652,10 @@ void Control::delete_spike_sums()
 
 void Control::delete_rast_internal()
 {
-	if (!mf_raster_file.empty()) delete2DArray<ct_uint8_t>(all_mf_rast_internal);
-	if (!gr_raster_file.empty()) delete2DArray<ct_uint8_t>(sample_gr_rast_internal);
-	if (!go_raster_file.empty()) delete2DArray<ct_uint8_t>(all_go_rast_internal);
-	if (!bc_raster_file.empty()) delete2DArray<ct_uint8_t>(all_bc_rast_internal);
-	if (!sc_raster_file.empty()) delete2DArray<ct_uint8_t>(all_sc_rast_internal);
-	if (!pc_raster_file.empty()) delete2DArray<ct_uint8_t>(all_pc_rast_internal);
-	if (!io_raster_file.empty()) delete2DArray<ct_uint8_t>(all_io_rast_internal);
-	if (!nc_raster_file.empty()) delete2DArray<ct_uint8_t>(all_nc_rast_internal);
-
+	for (ct_uint32_t i = 0; i < NUM_CELL_TYPES; i++)
+	{
+		if (!rf_names[i].empty()) delete2DArray<ct_uint8_t>(rast_internal[i]);
+	}
 	delete2DArray<float>(all_pc_vm_rast_internal);
 	delete2DArray<float>(all_nc_vm_rast_internal);
 	delete2DArray<float>(all_io_vm_rast_internal);
@@ -896,15 +663,10 @@ void Control::delete_rast_internal()
 
 void Control::deleteOutputArrays()
 {
-	if (!mf_raster_file.empty()) free(allMFRaster);
-	if (!gr_raster_file.empty()) free(sampleGRRaster);
-	if (!go_raster_file.empty()) free(allGORaster);
-	if (!bc_raster_file.empty()) free(allBCRaster);
-	if (!sc_raster_file.empty()) free(allSCRaster);
-	if (!pc_raster_file.empty()) free(allPCRaster);
-	if (!io_raster_file.empty()) free(allIORaster);
-	if (!nc_raster_file.empty()) free(allNCRaster);
-
+	for (ct_uint32_t i = 0; i < NUM_CELL_TYPES; i++)
+	{
+		if (!rf_names[i].empty()) free(rast_output[i]);
+	}
 	delete[] sample_pfpc_syn_weights;
 }
 
