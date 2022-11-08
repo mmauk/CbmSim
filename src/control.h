@@ -9,7 +9,7 @@
 #include <ctime>
 
 #include "commandline.h"
-#include "pstdint.h"
+#include <cstdint>
 #include "connectivityparams.h"
 #include "activityparams.h"
 #include "cbmstate.h"
@@ -18,22 +18,21 @@
 #include "cbmsimcore.h"
 #include "ecmfpopulation.h"
 #include "poissonregencells.h"
-#include "ectrialsdata.h"
-#include "eyelidintegrator.h"
 #include "bits.h"
 
 // TODO: place in a common place, as gui uses a constant like this too
 #define NUM_CELL_TYPES 8
-#define NUM_RUN_STATES 3
+
 // convenience enum for indexing cell arrays
-enum {MF, GR, GO, BC, SC, PC, IO, DCN};
+enum cell_id {MF, GR, GO, BC, SC, PC, IO, NC};
 
 struct cell_spike_sums
-{ ct_uint32_t num_cells;
-	ct_uint32_t non_cs_spike_sum;
-	ct_uint32_t cs_spike_sum;
-	ct_uint32_t *non_cs_spike_counter;
-	ct_uint32_t *cs_spike_counter;
+{
+	uint32_t num_cells;
+	uint32_t non_cs_spike_sum;
+	uint32_t cs_spike_sum;
+	uint32_t *non_cs_spike_counter;
+	uint32_t *cs_spike_counter;
 };
 
 struct cell_firing_rates
@@ -53,28 +52,27 @@ class Control
 		~Control();
 
 		// Objects
-	
-		trials_data td = {};
+		trials_data td;
 		CBMState *simState     = NULL;
 		CBMSimCore *simCore    = NULL;
 		ECMFPopulation *mfFreq = NULL;
 		PoissonRegenCells *mfs = NULL;
 
+		/* temporary state check vars, going to refactor soon */
 		bool trials_data_initialized = false;
-		bool experiment_initialized = false;
-		bool sim_initialized = false;
+		bool sim_initialized         = false;
 
-		bool internal_arrays_initialized = false; /* temporary, going to refactor soon */
-		bool output_arrays_initialized = false;
-		bool spike_sums_initialized = false;
-		enum sim_run_state run_state = NOT_IN_RUN; 
+		bool internal_arrays_initialized = false;
+		bool output_arrays_initialized   = false;
+		bool spike_sums_initialized      = false;
+		enum sim_run_state run_state     = NOT_IN_RUN; 
 
-		std::string visual_mode = "";
-		std::string run_mode = "";
+		std::string visual_mode          = "";
+		std::string run_mode             = "";
 		std::string curr_build_file_name = "";
-		std::string curr_sess_file_name = "";
-		std::string curr_sim_file_name  = "";
-		std::string out_sim_file_name  = "";
+		std::string curr_sess_file_name  = "";
+		std::string curr_sim_file_name   = "";
+		std::string out_sim_file_name    = "";
 
 		// params that I do not know how to categorize
 		float goMin = 0.26; 
@@ -83,7 +81,7 @@ class Control
 
 		// sim params -> TODO: place in simcore
 		int gpuIndex = 0;
-		int gpuP2=2;
+		int gpuP2    = 2;
 
 		int trial = 0;
 
@@ -97,8 +95,8 @@ class Control
 		float threshDecayTau = 4.0;
 
 		float nucCollFrac = 0.02;
-		float csMinRate = 100.0; // uh look at tonic lol
-		float csMaxRate = 110.0;
+		//float csMinRate = 100.0; // uh look at tonic lol
+		//float csMaxRate = 110.0;
 
 		float CSTonicMFFrac = 0.05;
 		float tonicFreqMin  = 100.0;
@@ -134,107 +132,65 @@ class Control
 		enum plasticity pf_pc_plast;
 		enum plasticity mf_nc_plast;
 
-		std::string mf_raster_file = "";
-		std::string gr_raster_file = "";
-		std::string go_raster_file = "";
-		std::string bc_raster_file = "";
-		std::string sc_raster_file = "";
-		std::string pc_raster_file = "";
-		std::string io_raster_file = "";
-		std::string nc_raster_file = "";
+		std::string rf_names[NUM_CELL_TYPES];
 
 		std::string pf_pc_weights_file = "";
 		std::string mf_nc_weights_file = "";
 
-		struct cell_spike_sums spike_sums[NUM_CELL_TYPES] = {{}};
-		struct cell_firing_rates firing_rates[NUM_CELL_TYPES] = {{}};
-		const ct_uint8_t *cell_spikes[NUM_CELL_TYPES];
-
-		int gr_indices[4096] = {0};
+		struct cell_spike_sums spike_sums[NUM_CELL_TYPES];
+		struct cell_firing_rates firing_rates[NUM_CELL_TYPES];
+		const uint8_t *cell_spikes[NUM_CELL_TYPES];
 
 		const float *grgoG, *mfgoG, *gogrG, *mfgrG;
-		const ct_uint8_t *mfAP;
-		ct_uint8_t **all_mf_rast_internal;
-		ct_uint8_t **all_go_rast_internal;
-		ct_uint8_t **sample_gr_rast_internal;
-		ct_uint8_t **all_pc_rast_internal;
-		ct_uint8_t **all_nc_rast_internal;
-		ct_uint8_t **all_sc_rast_internal;
-		ct_uint8_t **all_bc_rast_internal;
-		ct_uint8_t **all_io_rast_internal;
+		float *sample_pfpc_syn_weights;
+		const uint8_t *mfAP, *goSpks;
+		
+		const uint8_t *cell_spks[NUM_CELL_TYPES];
+		int rast_cell_nums[NUM_CELL_TYPES];
+		uint8_t **rast_internal[NUM_CELL_TYPES];
+
+		uint32_t rast_sizes[NUM_CELL_TYPES]; // initialized in initializeOutputArrays
+		uint8_t *rast_output[NUM_CELL_TYPES];
 
 		float **all_pc_vm_rast_internal;
 		float **all_nc_vm_rast_internal;
 		float **all_io_vm_rast_internal;
 
-		/* initialized within initializeOutputArrays */
-		ct_uint32_t all_mf_rast_size;   
-		ct_uint32_t all_go_rast_size;
-		ct_uint32_t sample_gr_rast_size;
-		ct_uint32_t all_pc_rast_size;  
-		ct_uint32_t all_nc_rast_size;  
-		ct_uint32_t all_sc_rast_size;  
-		ct_uint32_t all_bc_rast_size;  
-		ct_uint32_t all_io_rast_size; 
-
-		/* output raster arrays */
-		ct_uint8_t *allMFRaster;
-		ct_uint8_t *allGORaster;
-		ct_uint8_t *sampleGRRaster;
-		ct_uint8_t *allPCRaster;
-		ct_uint8_t *allNCRaster;
-		ct_uint8_t *allSCRaster;
-		ct_uint8_t *allBCRaster;
-		ct_uint8_t *allIORaster;
-
-		float *sample_pfpc_syn_weights;
-
-		const ct_uint8_t* goSpks; 
-
 		void build_sim();
-	
+
 		void set_plasticity_modes(parsed_commandline &p_cl);
 		void init_sim(parsed_sess_file &s_file, std::string in_sim_filename);
 		void reset_sim(std::string in_sim_filename);
 
-		void save_sim_state_to_file(std::string outStateFile); /* TODO: deprecate, what else do we use for? */
 		void save_sim_to_file(std::string outSimFile);
 		void save_pfpc_weights_to_file(std::string out_pfpc_file);
 		void load_pfpc_weights_from_file(std::string in_pfpc_file);
 		void save_mfdcn_weights_to_file(std::string out_mfdcn_file);
 		void load_mfdcn_weights_from_file(std::string in_mfdcn_file);
 
-		void save_gr_psth_to_file(std::string out_gr_psth_file);
-		void save_go_psth_to_file(std::string out_go_psth_file);
-		void save_pc_psth_to_file(std::string out_pc_psth_file);
-		void save_nc_psth_to_file(std::string out_nc_psth_file);
-		void save_io_psth_to_file(std::string out_io_psth_file);
-		void save_bc_psth_to_file(std::string out_bc_psth_file);
-		void save_sc_psth_to_file(std::string out_sc_psth_file);
-		void save_mf_psth_to_file(std::string out_mf_psth_file);
+		void save_raster_to_file(std::string raster_file_name, enum cell_id);
 
 		void get_raster_filenames(std::map<std::string, std::string> &raster_files);
 		void get_weights_filenames(std::map<std::string, std::string> &weights_files);
+		void initialize_rast_cell_nums();
+		void initialize_cell_spikes();
 		void initialize_spike_sums();
 		void initialize_rast_internal();
 		void initializeOutputArrays();
+
 		void runSession(struct gui *gui);
 
 		void reset_spike_sums();
 		void reset_rast_internal();
 		void resetOutputArrays();
 
-		void saveOutputArraysToFile();
-
 		void countGOSpikes(int *goSpkCounter, float &medTrials);
 		void update_spike_sums(int tts, float onset_cs, float offset_cs);
 		void calculate_firing_rates(float onset_cs, float offset_cs);
 		void fill_rast_internal(int PSTHCounter);
 		void fillOutputArrays();
+		void saveOutputArraysToFile();
 
-		// this should be in CXX Tools or 2D array...
-		void write2DCharArray(std::string outFileName, ct_uint8_t **inArr,
-			unsigned int numRow, unsigned int numCol);
 		void delete_rast_internal();
 		void delete_spike_sums();
 		void deleteOutputArrays();
