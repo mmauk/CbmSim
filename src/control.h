@@ -141,18 +141,18 @@ class Control
 		const uint8_t *cell_spikes[NUM_CELL_TYPES];
 
 		const float *grgoG, *mfgoG, *gogrG, *mfgrG;
-		//float *sample_pfpc_syn_weights;
+		float *sample_pfpc_syn_weights; //TODO: remove, write function to save at end of session
 		const uint8_t *mfAP, *goSpks;
 		
 		const uint8_t *cell_spks[NUM_CELL_TYPES];
 		int rast_cell_nums[NUM_CELL_TYPES];
-		uint8_t **rast_internal[NUM_CELL_TYPES];
+		uint8_t **rasters[NUM_CELL_TYPES];
 
 		uint32_t rast_sizes[NUM_CELL_TYPES]; // initialized in initializeOutputArrays
 
-		float **all_pc_vm_rast_internal;
-		float **all_nc_vm_rast_internal;
-		float **all_io_vm_rast_internal;
+		float **pc_vm_raster;
+		float **nc_vm_raster;
+		float **io_vm_raster;
 
 		void build_sim();
 
@@ -179,13 +179,12 @@ class Control
 
 		void reset_spike_sums();
 		void reset_rasters();
-		void resetOutputArrays();
 
 		void countGOSpikes(int *goSpkCounter, float &medTrials);
 		void update_spike_sums(int tts, float onset_cs, float offset_cs);
 		void calculate_firing_rates(float onset_cs, float offset_cs);
 		void fill_rasters(int PSTHCounter);
-		void saveOutputArraysToFile();
+		void save_rasters();
 
 		void delete_rasters();
 		void delete_spike_sums();

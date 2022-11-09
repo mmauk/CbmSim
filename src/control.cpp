@@ -208,7 +208,7 @@ void Control::load_mfdcn_weights_from_file(std::string in_mfdcn_file)
 void Control::save_raster_to_file(std::string raster_file_name, enum cell_id id)
 {
 	std::fstream out_rast_file_buf(raster_file_name.c_str(), std::ios::out | std::ios::binary);
-	//TODO: put in rast_internal
+	//TODO: put in rasters 
 	//rawBytesRW((char *)rast_output[id], rast_sizes[id], false, out_rast_file_buf);
 	out_rast_file_buf.close();
 }
@@ -295,27 +295,15 @@ void Control::initialize_rasters()
 	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
 		if (!rf_names[i].empty())
-			rast_internal[i] = allocate2DArray<uint8_t>(rast_cell_nums[i], PSTHColSize);
+			rasters[i] = allocate2DArray<uint8_t>(rast_cell_nums[i], PSTHColSize);
 	}
 
 	// TODO: find a way to initialize only within gui mode
-	all_pc_vm_rast_internal = allocate2DArray<float>(num_pc, PSTHColSize);
-	all_nc_vm_rast_internal = allocate2DArray<float>(num_nc, PSTHColSize);
-	all_io_vm_rast_internal = allocate2DArray<float>(num_io, PSTHColSize);
+	pc_vm_raster = allocate2DArray<float>(num_pc, PSTHColSize);
+	nc_vm_raster = allocate2DArray<float>(num_nc, PSTHColSize);
+	io_vm_raster = allocate2DArray<float>(num_io, PSTHColSize);
 
 	raster_arrays_initialized = true;
-}
-
-void save_arr_as_csv(float in_arr[], uint32_t arr_len, std::string file_name)
-{
-	std::fstream out_file_buf(file_name.c_str(), std::ios::out);
-	for (uint32_t i = 0; i < arr_len; i++)
-	{
-		out_file_buf << in_arr[i];
-		if (i == arr_len - 1) out_file_buf << "\n";
-		else out_file_buf << ", ";
-	}
-	out_file_buf.close();
 }
 
 void Control::runSession(struct gui *gui)
@@ -429,7 +417,7 @@ void Control::runSession(struct gui *gui)
 	if (run_state == NOT_IN_RUN) std::cout << "[INFO]: Simulation terminated.\n";
 	else if (run_state == IN_RUN_NO_PAUSE) std::cout << "[INFO]: Simulation Completed.\n";
 	
-	if (gui == NULL) saveOutputArraysToFile();
+	if (gui == NULL) save_rasters();
 	run_state = NOT_IN_RUN;
 }
 
@@ -449,7 +437,7 @@ void Control::reset_rasters()
 	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
 		if (!rf_names[i].empty()) 
-			memset(rast_internal[i][0], '\000', rast_cell_nums[i] * PSTHColSize * sizeof(uint8_t));
+			memset(rasters[i][0], '\000', rast_cell_nums[i] * PSTHColSize * sizeof(uint8_t));
 	}
 }
 
@@ -470,7 +458,7 @@ void gen_gr_sample(int gr_indices[], int sample_size, int data_size)
 	}
 }
 
-void Control::saveOutputArraysToFile()
+void Control::save_rasters()
 {
 	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
@@ -566,7 +554,7 @@ void Control::fill_rasters(int PSTHCounter)
 			if (CELL_IDS[i] == "GR") cell_spks[i] = simCore->getInputNet()->exportAPGR();
 			for (uint32_t j = 0; j < rast_cell_nums[i]; j++)
 			{
-				rast_internal[i][j][PSTHCounter] = cell_spks[i][j];
+				rasters[i][j][PSTHCounter] = cell_spks[i][j];
 			}
 		}
 	}
@@ -575,17 +563,17 @@ void Control::fill_rasters(int PSTHCounter)
 	const float* vm_pc = simCore->getMZoneList()[0]->exportVmPC();
 	for (int i = 0; i < num_pc; i++)
 	{
-		all_pc_vm_rast_internal[i][PSTHCounter] = vm_pc[i];
+		pc_vm_raster[i][PSTHCounter] = vm_pc[i];
 	}
 	const float* vm_io = simCore->getMZoneList()[0]->exportVmIO();
 	for (int i = 0; i < num_io; i++)
 	{
-		all_io_vm_rast_internal[i][PSTHCounter] = vm_io[i];
+		io_vm_raster[i][PSTHCounter] = vm_io[i];
 	}
 	const float* vm_nc = simCore->getMZoneList()[0]->exportVmNC();
 	for (int i = 0; i < num_nc; i++)
 	{
-		all_nc_vm_rast_internal[i][PSTHCounter] = vm_nc[i];
+		nc_vm_raster[i][PSTHCounter] = vm_nc[i];
 	}
 }
 
@@ -602,10 +590,10 @@ void Control::delete_rasters()
 {
 	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
-		if (!rf_names[i].empty()) delete2DArray<uint8_t>(rast_internal[i]);
+		if (!rf_names[i].empty()) delete2DArray<uint8_t>(rasters[i]);
 	}
-	delete2DArray<float>(all_pc_vm_rast_internal);
-	delete2DArray<float>(all_nc_vm_rast_internal);
-	delete2DArray<float>(all_io_vm_rast_internal);
+	delete2DArray<float>(pc_vm_raster);
+	delete2DArray<float>(nc_vm_raster);
+	delete2DArray<float>(io_vm_raster);
 }
 
