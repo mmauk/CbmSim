@@ -65,8 +65,7 @@ Control::~Control()
 	if (mfs)      delete mfs;
 
 	// deallocate output arrays
-	if (internal_arrays_initialized) delete_rast_internal();
-	if (output_arrays_initialized) deleteOutputArrays();
+	if (raster_arrays_initialized) delete_rasters();
 	if (spike_sums_initialized) delete_spike_sums();
 }
 
@@ -120,8 +119,7 @@ void Control::init_sim(parsed_sess_file &s_file, std::string in_sim_filename)
 	mfs = new PoissonRegenCells(mfRandSeed, threshDecayTau, numMZones);
 	initialize_rast_cell_nums();
 	initialize_cell_spikes();
-	initialize_rast_internal();
-	initializeOutputArrays();
+	initialize_rasters();
 	initialize_spike_sums();
 	sim_file_buf.close();
 	sim_initialized = true;
@@ -136,8 +134,7 @@ void Control::reset_sim(std::string in_sim_filename)
 	simState->readState(sim_file_buf);
 	// TODO: simCore, mfFreq, mfs
 	
-	reset_rast_internal();
-	resetOutputArrays();
+	reset_rasters();
 	reset_spike_sums();
 	sim_file_buf.close();
 	curr_sim_file_name = in_sim_filename;
@@ -211,7 +208,8 @@ void Control::load_mfdcn_weights_from_file(std::string in_mfdcn_file)
 void Control::save_raster_to_file(std::string raster_file_name, enum cell_id id)
 {
 	std::fstream out_rast_file_buf(raster_file_name.c_str(), std::ios::out | std::ios::binary);
-	rawBytesRW((char *)rast_output[id], rast_sizes[id], false, out_rast_file_buf);
+	//TODO: put in rast_internal
+	//rawBytesRW((char *)rast_output[id], rast_sizes[id], false, out_rast_file_buf);
 	out_rast_file_buf.close();
 }
 
@@ -292,7 +290,7 @@ void Control::initialize_spike_sums()
 	spike_sums_initialized = true;
 }
 
-void Control::initialize_rast_internal()
+void Control::initialize_rasters()
 {
 	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
@@ -305,27 +303,7 @@ void Control::initialize_rast_internal()
 	all_nc_vm_rast_internal = allocate2DArray<float>(num_nc, PSTHColSize);
 	all_io_vm_rast_internal = allocate2DArray<float>(num_io, PSTHColSize);
 
-	internal_arrays_initialized = true;
-}
-
-void Control::initializeOutputArrays()
-{
-	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
-	{
-		if (!rf_names[i].empty())
-		{
-			rast_sizes[i] = rast_cell_nums[i] * PSTHColSize * td.num_trials / BITS_PER_BYTE;
-			rast_output[i] = (uint8_t *)calloc(rast_sizes[i], sizeof(uint8_t));
-		}
-	}
-
-	if (!pf_pc_weights_file.empty())
-	{
-	// TODO: find a way to initialize only within gui mode
-
-		sample_pfpc_syn_weights = new float[4096];
-	}
-	output_arrays_initialized = true;
+	raster_arrays_initialized = true;
 }
 
 void save_arr_as_csv(float in_arr[], uint32_t arr_len, std::string file_name)
@@ -415,7 +393,7 @@ void Control::runSession(struct gui *gui)
 			/* data collection */
 			if (ts >= onsetCS - msPreCS && ts < onsetCS + csLength + msPostCS)
 			{
-				fill_rast_internal(PSTHCounter);
+				fill_rasters(PSTHCounter);
 				PSTHCounter++;
 			}
 
@@ -446,7 +424,6 @@ void Control::runSession(struct gui *gui)
 			}
 			//reset_spike_sums();
 		}
-		fillOutputArrays();
 		trial++;
 	}
 	if (run_state == NOT_IN_RUN) std::cout << "[INFO]: Simulation terminated.\n";
@@ -467,23 +444,13 @@ void Control::reset_spike_sums()
 		}
 }
 
-void Control::reset_rast_internal()
+void Control::reset_rasters()
 {
 	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
 		if (!rf_names[i].empty()) 
 			memset(rast_internal[i][0], '\000', rast_cell_nums[i] * PSTHColSize * sizeof(uint8_t));
 	}
-}
-
-void Control::resetOutputArrays()
-{
-	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
-	{
-		if (!rf_names[i].empty()) 
-			memset(rast_output[i], '\000', rast_sizes[i] * sizeof(uint8_t));
-	}
-	memset(sample_pfpc_syn_weights, 0.0, 4096 * sizeof(float));
 }
 
 void gen_gr_sample(int gr_indices[], int sample_size, int data_size)
@@ -588,7 +555,7 @@ void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
 	std::cout << "[INFO]: Median GO Rate: " << m / isi << std::endl;
 }
 
-void Control::fill_rast_internal(int PSTHCounter)
+void Control::fill_rasters(int PSTHCounter)
 {
 	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
@@ -622,16 +589,6 @@ void Control::fill_rast_internal(int PSTHCounter)
 	}
 }
 
-void Control::fillOutputArrays()
-{
-	uint32_t offset_common = trial * PSTHColSize / BITS_PER_BYTE;
-	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
-	{
-		if (!rf_names[i].empty())
-			pack_2d_byte_array(rast_internal[i], rast_cell_nums[i], PSTHColSize, rast_output[i], offset_common * rast_cell_nums[i]);
-	}
-}
-
 void Control::delete_spike_sums()
 {
 	FOREACH(spike_sums, ssp)
@@ -641,7 +598,7 @@ void Control::delete_spike_sums()
 	}
 }
 
-void Control::delete_rast_internal()
+void Control::delete_rasters()
 {
 	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
@@ -650,14 +607,5 @@ void Control::delete_rast_internal()
 	delete2DArray<float>(all_pc_vm_rast_internal);
 	delete2DArray<float>(all_nc_vm_rast_internal);
 	delete2DArray<float>(all_io_vm_rast_internal);
-}
-
-void Control::deleteOutputArrays()
-{
-	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
-	{
-		if (!rf_names[i].empty()) free(rast_output[i]);
-	}
-	delete[] sample_pfpc_syn_weights;
 }
 

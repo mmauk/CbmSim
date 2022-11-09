@@ -29,9 +29,10 @@ Type** allocate2DArray(unsigned int numRows, unsigned int numCols)
 
 template <typename Type>
 void write2DArray(std::string out_file_name, Type **inArr,
-	unsigned int num_row, unsigned int num_col)
+	unsigned int num_row, unsigned int num_col, bool append = false)
 {
-	std::fstream out_file_buf(out_file_name.c_str(), std::ios::out | std::ios::binary);
+	std::ios_base::openmode app_opt = (append) ? std::ios::app : 0;
+	std::fstream out_file_buf(out_file_name.c_str(), std::ios::out | std::ios::binary | app_opt);
 
 	if (!out_file_buf.is_open())
 	{

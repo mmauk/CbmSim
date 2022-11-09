@@ -62,8 +62,7 @@ class Control
 		bool trials_data_initialized = false;
 		bool sim_initialized         = false;
 
-		bool internal_arrays_initialized = false;
-		bool output_arrays_initialized   = false;
+		bool raster_arrays_initialized = false;
 		bool spike_sums_initialized      = false;
 		enum sim_run_state run_state     = NOT_IN_RUN; 
 
@@ -142,7 +141,7 @@ class Control
 		const uint8_t *cell_spikes[NUM_CELL_TYPES];
 
 		const float *grgoG, *mfgoG, *gogrG, *mfgrG;
-		float *sample_pfpc_syn_weights;
+		//float *sample_pfpc_syn_weights;
 		const uint8_t *mfAP, *goSpks;
 		
 		const uint8_t *cell_spks[NUM_CELL_TYPES];
@@ -150,7 +149,6 @@ class Control
 		uint8_t **rast_internal[NUM_CELL_TYPES];
 
 		uint32_t rast_sizes[NUM_CELL_TYPES]; // initialized in initializeOutputArrays
-		uint8_t *rast_output[NUM_CELL_TYPES];
 
 		float **all_pc_vm_rast_internal;
 		float **all_nc_vm_rast_internal;
@@ -175,25 +173,22 @@ class Control
 		void initialize_rast_cell_nums();
 		void initialize_cell_spikes();
 		void initialize_spike_sums();
-		void initialize_rast_internal();
-		void initializeOutputArrays();
+		void initialize_rasters();
 
 		void runSession(struct gui *gui);
 
 		void reset_spike_sums();
-		void reset_rast_internal();
+		void reset_rasters();
 		void resetOutputArrays();
 
 		void countGOSpikes(int *goSpkCounter, float &medTrials);
 		void update_spike_sums(int tts, float onset_cs, float offset_cs);
 		void calculate_firing_rates(float onset_cs, float offset_cs);
-		void fill_rast_internal(int PSTHCounter);
-		void fillOutputArrays();
+		void fill_rasters(int PSTHCounter);
 		void saveOutputArraysToFile();
 
-		void delete_rast_internal();
+		void delete_rasters();
 		void delete_spike_sums();
-		void deleteOutputArrays();
 };
 
 #endif /*_CONTROL_H*/
