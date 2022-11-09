@@ -35,7 +35,7 @@ class CBMSimCore
 {
 public:
 	CBMSimCore();
-	CBMSimCore(CBMState *state, int gpuIndStart = -1, int numGPUP2 = -1);
+	CBMSimCore(CBMState *state, int gpuIndStart = -1, int numGPU = -1);
 	~CBMSimCore();
 
 	void calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum plasticity mf_nc_plast);
@@ -75,7 +75,7 @@ private:
 	unsigned long curTime;
 
 	void construct(CBMState *state, int *mzoneRSeed,
-		int gpuIndStart, int numGPUP2);
+		int gpuIndStart, int numGPU);
 };
 
 #endif /* CBMSIMCORE_H_ */

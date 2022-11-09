@@ -9,7 +9,7 @@
 
 #include "poissonregencells.h"
 
-PoissonRegenCells::PoissonRegenCells(int randSeed, float threshDecayTau, unsigned int numZones, float sigma)
+PoissonRegenCells::PoissonRegenCells(int randSeed, unsigned int numZones, float sigma)
 {
 	randSeedGen = new CRandomSFMT0(randSeed);
 	noiseRandGen = new std::mt19937(randSeed);

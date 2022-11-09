@@ -13,7 +13,7 @@
 CBMSimCore::CBMSimCore() {}
 
 CBMSimCore::CBMSimCore(CBMState *state,
-	int gpuIndStart, int numGPUP2)
+	int gpuIndStart, int numGPU)
 {
 	CRandomSFMT0 randGen(time(0));
 	int *mzoneRSeed = new int[state->getNumZones()];
@@ -23,7 +23,7 @@ CBMSimCore::CBMSimCore(CBMState *state,
 		mzoneRSeed[i] = randGen.IRandom(0, INT_MAX);
 	}
 
-	construct(state, mzoneRSeed, gpuIndStart, numGPUP2);
+	construct(state, mzoneRSeed, gpuIndStart, numGPU);
 
 	delete[] mzoneRSeed;
 }
@@ -455,7 +455,7 @@ MZone** CBMSimCore::getMZoneList()
 }
 
 void CBMSimCore::construct(CBMState *state,
-	int *mzoneRSeed, int gpuIndStart, int numGPUP2)
+	int *mzoneRSeed, int gpuIndStart, int numGPU)
 {
 	int maxNumGPUs;
 
@@ -476,13 +476,13 @@ void CBMSimCore::construct(CBMState *state,
 		this->gpuIndStart = gpuIndStart;
 	}
 
-	if (numGPUP2 < 0)
+	if (numGPU < 0)
 	{
 		numGPUs = maxNumGPUs;
 	}
 	else
 	{
-		numGPUs = (unsigned int)numGPUP2;
+		numGPUs = (unsigned int)numGPU;
 	}
 
 	if (this->gpuIndStart + numGPUs > maxNumGPUs)

@@ -111,13 +111,13 @@ void Control::init_sim(parsed_sess_file &s_file, std::string in_sim_filename)
 	read_con_params(sim_file_buf);
 	populate_act_params(s_file);
 	simState = new CBMState(numMZones, sim_file_buf);
-	simCore  = new CBMSimCore(simState, gpuIndex, gpuP2);
+	simCore  = new CBMSimCore(simState, gpuIndex, num_gpu);
 	mfFreq   = new ECMFPopulation(num_mf, mfRandSeed, CSTonicMFFrac, CSPhasicMFFrac,
 								  contextMFFrac, nucCollFrac, bgFreqMin, csbgFreqMin,
 								  contextFreqMin, tonicFreqMin, phasicFreqMin, bgFreqMax,
 								  csbgFreqMax, contextFreqMax, tonicFreqMax, phasicFreqMax,
 								  collaterals_off, fracImport, secondCS, fracOverlap);
-	mfs = new PoissonRegenCells(mfRandSeed, threshDecayTau, numMZones);
+	mfs = new PoissonRegenCells(mfRandSeed, numMZones);
 	initialize_rast_cell_nums();
 	initialize_cell_spikes();
 	initialize_rast_internal();

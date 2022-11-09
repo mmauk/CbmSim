@@ -25,7 +25,7 @@ class PoissonRegenCells
 {
 public:
 	PoissonRegenCells();
-	PoissonRegenCells(int randSeed, float threshDecayTau, unsigned int numZones, float sigma=0);
+	PoissonRegenCells(int randSeed, unsigned int numZones, float sigma=0);
 	~PoissonRegenCells();
 
 	const uint8_t* calcPoissActivity(const float *freqencies, MZone **mZoneList, int ispikei = 18); 

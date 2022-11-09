@@ -23,9 +23,20 @@
 // TODO: place in a common place, as gui uses a constant like this too
 #define NUM_CELL_TYPES 8
 
-// convenience enum for indexing cell arrays
+/** convenience indexing cell arrays
+ * used for indexing raster arrays cell num arrays, and name arrays
+ */
 enum cell_id {MF, GR, GO, BC, SC, PC, IO, NC};
 
+/** used for the gui in Control::runSession
+ * an identifier to hold the state of the current run of the session
+ */
+enum sim_run_state {NOT_IN_RUN, IN_RUN_NO_PAUSE, IN_RUN_PAUSE};
+
+/** used to collect and sum all cell spikes
+ * non_cs_spike_counter is used for the period before the cs period.
+ * arrays run in the order of cell_id enum.
+ */
 struct cell_spike_sums
 {
 	uint32_t num_cells;
@@ -35,6 +46,10 @@ struct cell_spike_sums
 	uint32_t *cs_spike_counter;
 };
 
+/** used to compute mean and median firing rates
+ * is currently used in the Array of Structures (AoS)
+ * design. 
+ */
 struct cell_firing_rates
 {
 	float non_cs_mean_fr;
@@ -43,58 +58,54 @@ struct cell_firing_rates
 	float cs_median_fr;
 };
 
-enum sim_run_state {NOT_IN_RUN, IN_RUN_NO_PAUSE, IN_RUN_PAUSE};
-
+/** The class that controls the simulation
+ *
+ * All of the behaviour of the simulation, from the number of trials
+ * to the types of mossy fiber input, is specified here. Output arrays are
+ * also included in this class, in addition instances of all the classes
+ * that afford the simulation its functionality, including the state and the
+ * core of the simulation.
+ *
+ */
 class Control 
 {
 	public:
 		Control(parsed_commandline &p_cl);
 		~Control();
 
-		// Objects
-		trials_data td;
-		CBMState *simState     = NULL;
-		CBMSimCore *simCore    = NULL;
-		ECMFPopulation *mfFreq = NULL;
-		PoissonRegenCells *mfs = NULL;
+		trials_data td; /* used for ordering and type of trials */
+		CBMState *simState     = NULL; /* contains the connectivity and activity states. Is copied over to the gpus */
+		CBMSimCore *simCore    = NULL; /* contains interface code to the gpus in order to copy arrays and run the sim */
+		ECMFPopulation *mfFreq = NULL; /* separate state class containing the frequencies of all mossy fibers */
+		PoissonRegenCells *mfs = NULL; /* separate state class containing the spikes of all mossy fibers */
 
-		/* temporary state check vars, going to refactor soon */
-		bool trials_data_initialized = false;
-		bool sim_initialized         = false;
+		bool trials_data_initialized = false; /* used in the destructor */ 
+		bool sim_initialized         = false; /* used in the constructor and gui-related functions */
 
-		bool internal_arrays_initialized = false;
-		bool output_arrays_initialized   = false;
-		bool spike_sums_initialized      = false;
-		enum sim_run_state run_state     = NOT_IN_RUN; 
+		bool internal_arrays_initialized = false; /* used in the destructor */ 
+		bool output_arrays_initialized   = false; /* used in the destructor */
+		bool spike_sums_initialized      = false; /* used to check whether spike sums should be calculated */
+		enum sim_run_state run_state     = NOT_IN_RUN; /* used in the gui to hide or make visible buttons in gui */
 
-		std::string visual_mode          = "";
-		std::string run_mode             = "";
-		std::string curr_build_file_name = "";
-		std::string curr_sess_file_name  = "";
-		std::string curr_sim_file_name   = "";
-		std::string out_sim_file_name    = "";
+		std::string visual_mode          = ""; /* raw string from parsed_commandline */
+		std::string run_mode             = ""; /* raw string from parsed commandline. either 'build' or 'run' */
+		std::string curr_build_file_name = ""; /* build file used to create current sim. is empty in run mode */ 
+		std::string curr_sess_file_name  = ""; /* session file used to dictate trial type and order. is empty in build mode */
+		std::string curr_sim_file_name   = ""; /* current input simulation file. is empty in build mode */
+		std::string out_sim_file_name    = ""; /* output of the requested session run. */
 
-		// params that I do not know how to categorize
-		float goMin = 0.26; 
-		float spillFrac = 0.15; // go->gr synapse, part of build
-		float inputStrength = 0.0;
+		// TODO: place in .sess file
+		float spillFrac = 0.15; /* the fraction of go->gr synapses that is spillover from the main post-synaptic target */ 
 
-		// sim params -> TODO: place in simcore
-		int gpuIndex = 0;
-		int gpuP2    = 2;
+		int gpuIndex = 0; /* the starting index for counting which gpus will be used */
+		int num_gpu  = 2; /* the number of gpus to be used */
 
-		int trial = 0;
+		int trial = 0; /* trial number tracker. used as a class attrib for dedicated functions in gui */
 
-		int csPhasicSize = 50;
-
-		// mzone stuff -> TODO: place in build file down the road
-		int numMZones = 1; 
-
-		// MFFreq params (formally in Simulation::getMFs, Simulation::getMFFreq)
-		int mfRandSeed = 3;
-		float threshDecayTau = 4.0;
-
-		float nucCollFrac = 0.02;
+		int csPhasicSize     = 50; /* transient cs time period, measured in ms */
+		int numMZones        = 1; /* number of microzones within the simulation */
+		int mfRandSeed       = 3; /* random seed used in generating mf frequencies and dcn collateral connectivities */
+		float nucCollFrac    = 0.02;
 		//float csMinRate = 100.0; // uh look at tonic lol
 		//float csMaxRate = 110.0;
 
