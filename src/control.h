@@ -82,7 +82,8 @@ class Control
 		int gpuIndex = 0;
 		int gpuP2    = 2;
 
-		int trial = 0;
+		int trial;
+		uint32_t raster_counter;
 
 		int csPhasicSize = 50;
 
@@ -124,8 +125,8 @@ class Control
 		int trialTime = 0; /* was 5000 (10/17/2022) */
 	
 		// raster measurement params. 
-		int msPreCS = 0; // was 400 (10/17/2022) was 1500 (08/09/2022)
-		int msPostCS = 0; // was 400 (10/17/2022) was 1000 (08/09/2022)
+		int msPreCS = 0;
+		int msPostCS = 0;
 		int PSTHColSize = 0; // derived param, from msPreCS, msPostCS and csLength 
 
 		enum plasticity pf_pc_plast;
@@ -166,8 +167,6 @@ class Control
 		void save_mfdcn_weights_to_file(std::string out_mfdcn_file);
 		void load_mfdcn_weights_from_file(std::string in_mfdcn_file);
 
-		void save_raster_to_file(std::string raster_file_name, enum cell_id);
-
 		void get_raster_filenames(std::map<std::string, std::string> &raster_files);
 		void get_weights_filenames(std::map<std::string, std::string> &weights_files);
 		void initialize_rast_cell_nums();
@@ -178,12 +177,12 @@ class Control
 		void runSession(struct gui *gui);
 
 		void reset_spike_sums();
-		void reset_rasters();
+		void reset_rasters(); // TODO: seems like should be deprecated
 
 		void countGOSpikes(int *goSpkCounter, float &medTrials);
 		void update_spike_sums(int tts, float onset_cs, float offset_cs);
 		void calculate_firing_rates(float onset_cs, float offset_cs);
-		void fill_rasters(int PSTHCounter);
+		void fill_rasters(uint32_t raster_counter, struct gui *gui);
 		void save_rasters();
 
 		void delete_rasters();

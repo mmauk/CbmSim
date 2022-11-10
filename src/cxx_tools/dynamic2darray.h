@@ -31,12 +31,14 @@ template <typename Type>
 void write2DArray(std::string out_file_name, Type **inArr,
 	unsigned int num_row, unsigned int num_col, bool append = false)
 {
-	std::ios_base::openmode app_opt = (append) ? std::ios::app : 0;
+	std::ios_base::openmode app_opt = (append) ? std::ios_base::app : (std::ios_base::openmode)0;
 	std::fstream out_file_buf(out_file_name.c_str(), std::ios::out | std::ios::binary | app_opt);
+	// FIXME: figure out how to open in append mode only if append is true
+	//if (append) out_file_buf.setf(std::ios_base::app);
 
 	if (!out_file_buf.is_open())
 	{
-		fprintf(stderr, "[INFO]: Couldn't open '%s' for writing. Exiting...\n", out_file_name);
+		fprintf(stderr, "[INFO]: Couldn't open '%s' for writing. Exiting...\n", out_file_name.c_str());
 		exit(-1);
 	}
 	rawBytesRW((char *)inArr[0], num_row * num_col * sizeof(Type), false, out_file_buf);

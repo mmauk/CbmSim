@@ -580,12 +580,12 @@ static void draw_spatial_activity(GtkWidget *drawing_area, cairo_t *cr, Control 
 static void draw_gr_raster(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 {
 	/* 4096 gr raster sample size */
-	draw_raster(drawing_area, cr, control->trial, 4096, control->PSTHColSize, control->rast_internal[GR]);
+	draw_raster(drawing_area, cr, control->trial, 4096, control->PSTHColSize, control->rasters[GR]);
 }
 
 static void draw_go_raster(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 {
-	draw_raster(drawing_area, cr, control->trial, num_go, control->PSTHColSize, control->rast_internal[GO]);
+	draw_raster(drawing_area, cr, control->trial, num_go, control->PSTHColSize, control->rasters[GO]);
 }
 
 /* weights plot */
@@ -668,9 +668,9 @@ static void draw_pc_plot(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 		int alternator = 1;
 		for (int j = 0; j < num_pc; j++)
 		{
-			float vm_ij = control->all_pc_vm_rast_internal[j][i] + alternator * 0.2 * ceil(j/2.0) * len_scale_y; 
+			float vm_ij = control->pc_vm_raster[j][i] + alternator * 0.2 * ceil(j/2.0) * len_scale_y; 
 			cairo_rectangle(cr, i, vm_ij, 1.0, 0.05);
-			if (control->rast_internal[PC][j][i])
+			if (control->rasters[PC][j][i])
 			{
 				cairo_rectangle(cr, i, vm_ij, 1.0, 1.0);
 			}
@@ -690,9 +690,9 @@ static void draw_pc_plot(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 		int alternator = 1;
 		for (int j = 0; j < num_nc; j++)
 		{
-			float vm_ij = nc_scale * control->all_nc_vm_rast_internal[j][i] + nc_offset + alternator * 0.2 * ceil(j/2.0) * len_scale_y; 
+			float vm_ij = nc_scale * control->nc_vm_raster[j][i] + nc_offset + alternator * 0.2 * ceil(j/2.0) * len_scale_y; 
 			cairo_rectangle(cr, i, vm_ij, 1.0, 0.05);
-			if (control->rast_internal[NC][j][i])
+			if (control->rasters[NC][j][i])
 			{
 				cairo_rectangle(cr, i, vm_ij, 1.0, 1.0);
 			}
@@ -712,9 +712,9 @@ static void draw_pc_plot(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 		int alternator = 1;
 		for (int j = 0; j < num_io; j++)
 		{
-			float vm_ij = io_scale * control->all_io_vm_rast_internal[j][i] + io_offset + alternator * 0.2 * ceil(j/2.0) * len_scale_y; 
+			float vm_ij = io_scale * control->io_vm_raster[j][i] + io_offset + alternator * 0.2 * ceil(j/2.0) * len_scale_y; 
 			cairo_rectangle(cr, i, vm_ij, 1.0, 0.05);
-			if (control->rast_internal[IO][j][i])
+			if (control->rasters[IO][j][i])
 			{
 				cairo_rectangle(cr, i, vm_ij, 1.0, 1.0);
 			}

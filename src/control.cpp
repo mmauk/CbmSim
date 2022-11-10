@@ -205,13 +205,6 @@ void Control::load_mfdcn_weights_from_file(std::string in_mfdcn_file)
 	inMFDCNFileBuffer.close();
 }
 
-void Control::save_raster_to_file(std::string raster_file_name, enum cell_id id)
-{
-	std::fstream out_rast_file_buf(raster_file_name.c_str(), std::ios::out | std::ios::binary);
-	//TODO: put in rasters 
-	//rawBytesRW((char *)rast_output[id], rast_sizes[id], false, out_rast_file_buf);
-	out_rast_file_buf.close();
-}
 
 void Control::get_raster_filenames(std::map<std::string, std::string> &raster_files)
 {
@@ -295,7 +288,7 @@ void Control::initialize_rasters()
 	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
 		if (!rf_names[i].empty())
-			rasters[i] = allocate2DArray<uint8_t>(rast_cell_nums[i], PSTHColSize);
+			rasters[i] = allocate2DArray<uint8_t>(rast_cell_nums[i], PSTHColSize * td.num_trials);
 	}
 
 	// TODO: find a way to initialize only within gui mode
@@ -313,6 +306,7 @@ void Control::runSession(struct gui *gui)
 	int goSpkCounter[num_go] = {0};
 	if (gui == NULL) run_state = IN_RUN_NO_PAUSE;
 	trial = 0;
+	raster_counter = 0;
 	while (trial < td.num_trials && run_state != NOT_IN_RUN)
 	{
 		std::string trialName = td.trial_names[trial];
@@ -381,8 +375,9 @@ void Control::runSession(struct gui *gui)
 			/* data collection */
 			if (ts >= onsetCS - msPreCS && ts < onsetCS + csLength + msPostCS)
 			{
-				fill_rasters(PSTHCounter);
+				fill_rasters(raster_counter, gui);
 				PSTHCounter++;
+				raster_counter++;
 			}
 
 			if (gui != NULL)
@@ -437,7 +432,7 @@ void Control::reset_rasters()
 	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
 		if (!rf_names[i].empty()) 
-			memset(rasters[i][0], '\000', rast_cell_nums[i] * PSTHColSize * sizeof(uint8_t));
+			memset(rasters[i][0], '\000', rast_cell_nums[i] * PSTHColSize * td.num_trials * sizeof(uint8_t));
 	}
 }
 
@@ -465,7 +460,7 @@ void Control::save_rasters()
 		if (!rf_names[i].empty())
 		{
 			std::cout << "[INFO]: Filling " << CELL_IDS[i] << " raster file...\n";
-			save_raster_to_file(rf_names[i], (enum cell_id)i);
+			write2DArray<uint8_t>(rf_names[i], rasters[i], rast_cell_nums[i], PSTHColSize * td.num_trials);
 		}
 	}
 }
@@ -543,7 +538,7 @@ void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
 	std::cout << "[INFO]: Median GO Rate: " << m / isi << std::endl;
 }
 
-void Control::fill_rasters(int PSTHCounter)
+void Control::fill_rasters(uint32_t raster_counter, struct gui *gui)
 {
 	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
@@ -552,28 +547,32 @@ void Control::fill_rasters(int PSTHCounter)
 			/* GR spikes are only spikes not saved on host every time step:
 			 * InNet::exportAPGR makes cudaMemcpy call before returning pointer to mem address */
 			if (CELL_IDS[i] == "GR") cell_spks[i] = simCore->getInputNet()->exportAPGR();
+
 			for (uint32_t j = 0; j < rast_cell_nums[i]; j++)
 			{
-				rasters[i][j][PSTHCounter] = cell_spks[i][j];
+				rasters[i][j][raster_counter] = cell_spks[i][j];
 			}
 		}
 	}
 
-	// TODO: might want to make this an array
-	const float* vm_pc = simCore->getMZoneList()[0]->exportVmPC();
-	for (int i = 0; i < num_pc; i++)
+	// Note: backwards compatability, for now. might place in separate function later
+	if (gui != NULL)
 	{
-		pc_vm_raster[i][PSTHCounter] = vm_pc[i];
-	}
-	const float* vm_io = simCore->getMZoneList()[0]->exportVmIO();
-	for (int i = 0; i < num_io; i++)
-	{
-		io_vm_raster[i][PSTHCounter] = vm_io[i];
-	}
-	const float* vm_nc = simCore->getMZoneList()[0]->exportVmNC();
-	for (int i = 0; i < num_nc; i++)
-	{
-		nc_vm_raster[i][PSTHCounter] = vm_nc[i];
+		const float* vm_pc = simCore->getMZoneList()[0]->exportVmPC();
+		for (int i = 0; i < num_pc; i++)
+		{
+			pc_vm_raster[i][raster_counter % PSTHColSize] = vm_pc[i];
+		}
+		const float* vm_io = simCore->getMZoneList()[0]->exportVmIO();
+		for (int i = 0; i < num_io; i++)
+		{
+			io_vm_raster[i][raster_counter % PSTHColSize] = vm_io[i];
+		}
+		const float* vm_nc = simCore->getMZoneList()[0]->exportVmNC();
+		for (int i = 0; i < num_nc; i++)
+		{
+			nc_vm_raster[i][raster_counter % PSTHColSize] = vm_nc[i];
+		}
 	}
 }
 
