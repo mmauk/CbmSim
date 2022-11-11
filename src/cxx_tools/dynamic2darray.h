@@ -33,8 +33,6 @@ void write2DArray(std::string out_file_name, Type **inArr,
 {
 	std::ios_base::openmode app_opt = (append) ? std::ios_base::app : (std::ios_base::openmode)0;
 	std::fstream out_file_buf(out_file_name.c_str(), std::ios::out | std::ios::binary | app_opt);
-	// FIXME: figure out how to open in append mode only if append is true
-	//if (append) out_file_buf.setf(std::ios_base::app);
 
 	if (!out_file_buf.is_open())
 	{

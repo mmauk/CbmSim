@@ -10,6 +10,7 @@
 const std::string BIN_EXT = "bin";
 const std::string CELL_IDS[NUM_CELL_TYPES] = {"MF", "GR", "GO", "BC", "SC", "PC", "IO", "NC"}; 
  
+
 Control::Control(parsed_commandline &p_cl)
 {
 	tokenized_file t_file;
@@ -91,20 +92,6 @@ void Control::set_plasticity_modes(parsed_commandline &p_cl)
 
 void Control::init_sim(parsed_sess_file &s_file, std::string in_sim_filename)
 {
-	//if (sim_initialized) 
-	//{
-	//	if (curr_sim_file_name != in_sim_filename)
-	//	{
-	//		std::cout << "[INFO]: Deallocating previous simulation...\n";
-	//		this->~Control();
-	//		std::cout << "[INFO]: Finished deallocating previous simulation.\n";
-	//	}
-	//	else
-	//	{
-	//		std::cout << "[ERROR]: Trying to load in an already initialized file.\n";
-	//		return;
-	//	}
-	//}
 	std::cout << "[INFO]: Initializing simulation...\n";
 	std::fstream sim_file_buf(in_sim_filename.c_str(), std::ios::in | std::ios::binary);
 	read_con_params(sim_file_buf);
@@ -238,7 +225,7 @@ void Control::get_weights_filenames(std::map<std::string, std::string> &weights_
 void Control::initialize_rast_cell_nums()
 {
 	rast_cell_nums[MF] = num_mf;
-	rast_cell_nums[GR] = 4096;
+	rast_cell_nums[GR] = num_gr; /* may need to change this to lower value for gui */
 	rast_cell_nums[GO] = num_go;
 	rast_cell_nums[BC] = num_bc;
 	rast_cell_nums[SC] = num_sc;
@@ -262,6 +249,7 @@ void Control::initialize_cell_spikes()
 
 void Control::initialize_spike_sums()
 {
+	/* TODO: remove */
 	spike_sums[MF].num_cells  = num_mf;
 	spike_sums[GR].num_cells  = num_gr;
 	spike_sums[GO].num_cells  = num_go;
@@ -288,7 +276,11 @@ void Control::initialize_rasters()
 	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
 		if (!rf_names[i].empty())
-			rasters[i] = allocate2DArray<uint8_t>(rast_cell_nums[i], PSTHColSize * td.num_trials);
+		{
+			/* granules are saved every trial, so their raster size is num_gr x PSTHColSize */
+			uint32_t column_size = (CELL_IDS[i] == "GR") ? PSTHColSize : PSTHColSize * td.num_trials;
+			rasters[i] = allocate2DArray<uint8_t>(rast_cell_nums[i], column_size);
+		}
 	}
 
 	// TODO: find a way to initialize only within gui mode
@@ -375,7 +367,7 @@ void Control::runSession(struct gui *gui)
 			/* data collection */
 			if (ts >= onsetCS - msPreCS && ts < onsetCS + csLength + msPostCS)
 			{
-				fill_rasters(raster_counter, gui);
+				fill_rasters(raster_counter, PSTHCounter, gui);
 				PSTHCounter++;
 				raster_counter++;
 			}
@@ -407,6 +399,8 @@ void Control::runSession(struct gui *gui)
 			}
 			//reset_spike_sums();
 		}
+		// save gr rasters every trial, appending to same file
+		save_gr_raster();
 		trial++;
 	}
 	if (run_state == NOT_IN_RUN) std::cout << "[INFO]: Simulation terminated.\n";
@@ -431,8 +425,11 @@ void Control::reset_rasters()
 {
 	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
-		if (!rf_names[i].empty()) 
-			memset(rasters[i][0], '\000', rast_cell_nums[i] * PSTHColSize * td.num_trials * sizeof(uint8_t));
+		if (!rf_names[i].empty())
+		{
+			uint32_t column_size = (CELL_IDS[i] == "GR") ? PSTHColSize : (PSTHColSize * td.num_trials);
+			memset(rasters[i][0], '\000', rast_cell_nums[i] * column_size * sizeof(uint8_t));
+		}
 	}
 }
 
@@ -453,11 +450,19 @@ void gen_gr_sample(int gr_indices[], int sample_size, int data_size)
 	}
 }
 
+void Control::save_gr_raster()
+{
+	std::string trial_raster_name = OUTPUT_DATA_PATH + get_file_basename(rf_names[GR])
+								  + "_trial_" + std::to_string(trial) + "." + BIN_EXT;
+	std::cout << "[INFO]: GR Raster file name: " << trial_raster_name << "\n";
+	write2DArray<uint8_t>(trial_raster_name, rasters[GR], num_gr, PSTHColSize);
+}
+
 void Control::save_rasters()
 {
 	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
-		if (!rf_names[i].empty())
+		if (!rf_names[i].empty() && CELL_IDS[i] != "GR")
 		{
 			std::cout << "[INFO]: Filling " << CELL_IDS[i] << " raster file...\n";
 			write2DArray<uint8_t>(rf_names[i], rasters[i], rast_cell_nums[i], PSTHColSize * td.num_trials);
@@ -538,19 +543,23 @@ void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
 	std::cout << "[INFO]: Median GO Rate: " << m / isi << std::endl;
 }
 
-void Control::fill_rasters(uint32_t raster_counter, struct gui *gui)
+void Control::fill_rasters(uint32_t raster_counter, uint32_t psth_counter, struct gui *gui)
 {
 	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
+		uint32_t temp_counter = raster_counter;
 		if (!rf_names[i].empty())
 		{
 			/* GR spikes are only spikes not saved on host every time step:
 			 * InNet::exportAPGR makes cudaMemcpy call before returning pointer to mem address */
-			if (CELL_IDS[i] == "GR") cell_spks[i] = simCore->getInputNet()->exportAPGR();
-
+			if (CELL_IDS[i] == "GR")
+			{
+				cell_spks[i] = simCore->getInputNet()->exportAPGR();
+				temp_counter = psth_counter;
+			}
 			for (uint32_t j = 0; j < rast_cell_nums[i]; j++)
 			{
-				rasters[i][j][raster_counter] = cell_spks[i][j];
+				rasters[i][j][temp_counter] = cell_spks[i][j];
 			}
 		}
 	}
@@ -561,17 +570,17 @@ void Control::fill_rasters(uint32_t raster_counter, struct gui *gui)
 		const float* vm_pc = simCore->getMZoneList()[0]->exportVmPC();
 		for (int i = 0; i < num_pc; i++)
 		{
-			pc_vm_raster[i][raster_counter % PSTHColSize] = vm_pc[i];
+			pc_vm_raster[i][psth_counter] = vm_pc[i];
 		}
 		const float* vm_io = simCore->getMZoneList()[0]->exportVmIO();
 		for (int i = 0; i < num_io; i++)
 		{
-			io_vm_raster[i][raster_counter % PSTHColSize] = vm_io[i];
+			io_vm_raster[i][psth_counter] = vm_io[i];
 		}
 		const float* vm_nc = simCore->getMZoneList()[0]->exportVmNC();
 		for (int i = 0; i < num_nc; i++)
 		{
-			nc_vm_raster[i][raster_counter % PSTHColSize] = vm_nc[i];
+			nc_vm_raster[i][psth_counter] = vm_nc[i];
 		}
 	}
 }

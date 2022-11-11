@@ -79,7 +79,7 @@ class Control
 		float inputStrength = 0.0;
 
 		// sim params -> TODO: place in simcore
-		int gpuIndex = 0;
+		int gpuIndex = 2;
 		int gpuP2    = 2;
 
 		int trial;
@@ -182,7 +182,8 @@ class Control
 		void countGOSpikes(int *goSpkCounter, float &medTrials);
 		void update_spike_sums(int tts, float onset_cs, float offset_cs);
 		void calculate_firing_rates(float onset_cs, float offset_cs);
-		void fill_rasters(uint32_t raster_counter, struct gui *gui);
+		void fill_rasters(uint32_t raster_counter, uint32_t psth_counter, struct gui *gui);
+		void save_gr_raster();
 		void save_rasters();
 
 		void delete_rasters();
