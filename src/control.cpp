@@ -49,6 +49,7 @@ Control::Control(parsed_commandline &p_cl)
 
 		set_plasticity_modes(p_cl);
 		get_raster_filenames(p_cl.raster_files);
+		get_psth_filenames(p_cl.psth_files);
 		get_weights_filenames(p_cl.weights_files);
 		init_sim(s_file, curr_sim_file_name);
 	}
@@ -67,7 +68,8 @@ Control::~Control()
 
 	// deallocate output arrays
 	if (raster_arrays_initialized) delete_rasters();
-	if (spike_sums_initialized) delete_spike_sums();
+	if (psth_arrays_initialized)   delete_psths();
+	if (spike_sums_initialized)    delete_spike_sums();
 }
 
 void Control::build_sim()
@@ -107,6 +109,7 @@ void Control::init_sim(parsed_sess_file &s_file, std::string in_sim_filename)
 	initialize_rast_cell_nums();
 	initialize_cell_spikes();
 	initialize_rasters();
+	initialize_psths();
 	initialize_spike_sums();
 	sim_file_buf.close();
 	sim_initialized = true;
@@ -207,6 +210,20 @@ void Control::get_raster_filenames(std::map<std::string, std::string> &raster_fi
 	}
 }
 
+void Control::get_psth_filenames(std::map<std::string, std::string> &psth_files)
+{
+	if (!psth_files.empty())
+	{
+		for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
+		{
+			if (psth_files.find(CELL_IDS[i]) != psth_files.end())
+			{
+				pf_names[i] = psth_files[CELL_IDS[i]];
+			}
+		}
+	}
+}
+
 void Control::get_weights_filenames(std::map<std::string, std::string> &weights_files)
 {
 	if (!weights_files.empty())
@@ -291,6 +308,16 @@ void Control::initialize_rasters()
 	raster_arrays_initialized = true;
 }
 
+void Control::initialize_psths()
+{
+	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
+	{
+		if (!pf_names[i].empty())
+			psths[i] = allocate2DArray<uint8_t>(rast_cell_nums[i], PSTHColSize);
+	}
+	psth_arrays_initialized = true;
+}
+
 void Control::runSession(struct gui *gui)
 {
 	float medTrials;
@@ -368,6 +395,7 @@ void Control::runSession(struct gui *gui)
 			if (ts >= onsetCS - msPreCS && ts < onsetCS + csLength + msPostCS)
 			{
 				fill_rasters(raster_counter, PSTHCounter, gui);
+				fill_psths(PSTHCounter);
 				PSTHCounter++;
 				raster_counter++;
 			}
@@ -383,11 +411,11 @@ void Control::runSession(struct gui *gui)
 		if (gui != NULL)
 		{
 			// for now, compute the mean and median firing rates for all cells if win is visible
-			// if (firing_rates_win_visible(gui))
-			// {
-			// 	calculate_firing_rates(onsetCS, onsetCS + csLength);
-			// 	gdk_threads_add_idle((GSourceFunc)update_fr_labels, gui);
-			// }
+			if (firing_rates_win_visible(gui))
+			{
+				calculate_firing_rates(onsetCS, onsetCS + csLength);
+				gdk_threads_add_idle((GSourceFunc)update_fr_labels, gui);
+			}
 			if (run_state == IN_RUN_PAUSE)
 			{
 				std::cout << "[INFO]: Simulation is paused at end of trial " << trial+1 << ".\n";
@@ -399,14 +427,18 @@ void Control::runSession(struct gui *gui)
 			}
 			//reset_spike_sums();
 		}
-		// save gr rasters every trial, appending to same file
+		// save gr rasters into new file every trial 
 		save_gr_raster();
 		trial++;
 	}
 	if (run_state == NOT_IN_RUN) std::cout << "[INFO]: Simulation terminated.\n";
 	else if (run_state == IN_RUN_NO_PAUSE) std::cout << "[INFO]: Simulation Completed.\n";
 	
-	if (gui == NULL) save_rasters();
+	if (gui == NULL)
+	{
+		save_rasters();
+		save_psths();
+	}
 	run_state = NOT_IN_RUN;
 }
 
@@ -433,6 +465,17 @@ void Control::reset_rasters()
 	}
 }
 
+void Control::reset_psths()
+{
+	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
+	{
+		if (!pf_names[i].empty())
+		{
+			memset(psths[i][0], '\000', rast_cell_nums[i] * PSTHColSize * sizeof(uint8_t));
+		}
+	}
+}
+
 void gen_gr_sample(int gr_indices[], int sample_size, int data_size)
 {
 	CRandomSFMT0 randGen(0); // replace seed later
@@ -452,10 +495,13 @@ void gen_gr_sample(int gr_indices[], int sample_size, int data_size)
 
 void Control::save_gr_raster()
 {
-	std::string trial_raster_name = OUTPUT_DATA_PATH + get_file_basename(rf_names[GR])
-								  + "_trial_" + std::to_string(trial) + "." + BIN_EXT;
-	std::cout << "[INFO]: GR Raster file name: " << trial_raster_name << "\n";
-	write2DArray<uint8_t>(trial_raster_name, rasters[GR], num_gr, PSTHColSize);
+	if (!rf_names[GR].empty())
+	{
+		std::string trial_raster_name = OUTPUT_DATA_PATH + get_file_basename(rf_names[GR])
+									  + "_trial_" + std::to_string(trial) + "." + BIN_EXT;
+		std::cout << "[INFO]: GR Raster file name: " << trial_raster_name << "\n";
+		write2DArray<uint8_t>(trial_raster_name, rasters[GR], num_gr, PSTHColSize);
+	}
 }
 
 void Control::save_rasters()
@@ -466,6 +512,18 @@ void Control::save_rasters()
 		{
 			std::cout << "[INFO]: Filling " << CELL_IDS[i] << " raster file...\n";
 			write2DArray<uint8_t>(rf_names[i], rasters[i], rast_cell_nums[i], PSTHColSize * td.num_trials);
+		}
+	}
+}
+
+void Control::save_psths()
+{
+	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
+	{
+		if (!pf_names[i].empty())
+		{
+			std::cout << "[INFO]: Filling " << CELL_IDS[i] << " psth file...\n";
+			write2DArray<uint8_t>(pf_names[i], psths[i], rast_cell_nums[i], PSTHColSize);
 		}
 	}
 }
@@ -585,6 +643,20 @@ void Control::fill_rasters(uint32_t raster_counter, uint32_t psth_counter, struc
 	}
 }
 
+void Control::fill_psths(uint32_t psth_counter)
+{
+	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
+	{
+		if (!pf_names[i].empty())
+		{
+			for (uint32_t j = 0; j < rast_cell_nums[i]; j++)
+			{
+				psths[i][j][psth_counter] += cell_spks[i][j];
+			}
+		}
+	}
+}
+
 void Control::delete_spike_sums()
 {
 	FOREACH(spike_sums, ssp)
@@ -604,4 +676,13 @@ void Control::delete_rasters()
 	delete2DArray<float>(nc_vm_raster);
 	delete2DArray<float>(io_vm_raster);
 }
+
+void Control::delete_psths()
+{
+	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
+	{
+		if (!pf_names[i].empty()) delete2DArray<uint8_t>(psths[i]);
+	}
+}
+
 

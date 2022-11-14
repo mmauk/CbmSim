@@ -63,8 +63,9 @@ class Control
 		bool sim_initialized         = false;
 
 		bool raster_arrays_initialized = false;
-		bool spike_sums_initialized      = false;
-		enum sim_run_state run_state     = NOT_IN_RUN; 
+		bool psth_arrays_initialized   = false;
+		bool spike_sums_initialized    = false;
+		enum sim_run_state run_state   = NOT_IN_RUN; 
 
 		std::string visual_mode          = "";
 		std::string run_mode             = "";
@@ -133,6 +134,7 @@ class Control
 		enum plasticity mf_nc_plast;
 
 		std::string rf_names[NUM_CELL_TYPES];
+		std::string pf_names[NUM_CELL_TYPES]; // TODO: write in commandline feature and initliaze from that
 
 		std::string pf_pc_weights_file = "";
 		std::string mf_nc_weights_file = "";
@@ -148,6 +150,7 @@ class Control
 		const uint8_t *cell_spks[NUM_CELL_TYPES];
 		int rast_cell_nums[NUM_CELL_TYPES];
 		uint8_t **rasters[NUM_CELL_TYPES];
+		uint8_t **psths[NUM_CELL_TYPES];
 
 		uint32_t rast_sizes[NUM_CELL_TYPES]; // initialized in initializeOutputArrays
 
@@ -168,25 +171,31 @@ class Control
 		void load_mfdcn_weights_from_file(std::string in_mfdcn_file);
 
 		void get_raster_filenames(std::map<std::string, std::string> &raster_files);
+		void get_psth_filenames(std::map<std::string, std::string> &psth_files);
 		void get_weights_filenames(std::map<std::string, std::string> &weights_files);
 		void initialize_rast_cell_nums();
 		void initialize_cell_spikes();
 		void initialize_spike_sums();
 		void initialize_rasters();
+		void initialize_psths();
 
 		void runSession(struct gui *gui);
 
 		void reset_spike_sums();
 		void reset_rasters(); // TODO: seems like should be deprecated
+		void reset_psths(); 
 
 		void countGOSpikes(int *goSpkCounter, float &medTrials);
 		void update_spike_sums(int tts, float onset_cs, float offset_cs);
 		void calculate_firing_rates(float onset_cs, float offset_cs);
 		void fill_rasters(uint32_t raster_counter, uint32_t psth_counter, struct gui *gui);
+		void fill_psths(uint32_t psth_counter);
 		void save_gr_raster();
 		void save_rasters();
+		void save_psths();
 
 		void delete_rasters();
+		void delete_psths(); // new function
 		void delete_spike_sums();
 };
 

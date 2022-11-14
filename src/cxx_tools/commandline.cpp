@@ -18,21 +18,22 @@
 
 const std::vector<std::string> command_line_single_opts
 {
-	"-p",
-	"-m",
-	"-d",
-	"-c",
+	"--pfpc-off",
+	"--mfnc-off",
+	"--binary",
+	"--cascade",
 };
 
 const std::vector<std::pair<std::string, std::string>> command_line_pair_opts 
 {
-	{ "-h", "--help"  },
+	{ "-h", "--help"    },
 	{ "-v", "--visual"  },
 	{ "-b", "--build"   },
 	{ "-s", "--session" },
 	{ "-i", "--input"   },
 	{ "-o", "--output"  },
 	{ "-r", "--raster"  },
+	{ "-p", "--psth"    },
 	{ "-w", "--weights" }
 };
 
@@ -70,13 +71,13 @@ void print_usage_info()
 	std::cout << std::right << std::setw(20) << "\t-s, --session [FILE]" << "\tsets the simulation to run a session using FILE as the session file\n";
 	std::cout << std::right << std::setw(20) << "\t-i, --input [FILE]" << "\tspecify the input simulation file\n";
 	std::cout << std::right << std::setw(20) << "\t-o, --output [FILE]" << "\tspecify the output simulation file\n";
-	std::cout << std::right << std::setw(10) << "\t-p|-d|-c" << "\t\tturns off or sets PFPC plasticity mode; options are mutually exclusive and work as follows:\n\n";
-	std::cout << "\t\t\t\t \t-p - turns PFPC plasticity off\n";
-	std::cout << "\t\t\t\t \t-d - turns PFPC plasticity on and sets the type of plasticity to 'dual' ie 'binary'\n";
-	std::cout << "\t\t\t\t \t-c - turns PFPC plasticity on and sets the type of plasticity to 'cascade'\n\n";
-	std::cout << std::right << std::setw(10) << "\t" << "\t\tif none of these options is given, PFPC plasticity is turned on and set to 'graded' by default\n\n";
-	std::cout << std::right << std::setw(10) << "\t-m" << "\t\t\tturns off MFNC plasticity; if not included, MFNC plasticity is turned on and set to 'graded' by default\n";
-	std::cout << "\t-r, --raster {[CODE],[FILE]} space-separated list of cell types and raster file to be saved for that cell type. Possible CODEs are:\n\n";
+	std::cout << std::right << std::setw(10) << "\t--pfpc-off|--binary|--cascade" << "\tturns off or sets PFPC plasticity mode; options are mutually exclusive and work as follows:\n\n";
+	std::cout << "\t\t\t\t \t--pfpc-off - turns PFPC plasticity off\n";
+	std::cout << "\t\t\t\t \t--binary - turns PFPC plasticity on and sets the type of plasticity to 'dual' ie 'binary'\n";
+	std::cout << "\t\t\t\t \t--cascade - turns PFPC plasticity on and sets the type of plasticity to 'cascade'\n\n";
+	std::cout << std::right << std::setw(10) << "\t" << "\t\t\tif none of these options is given, PFPC plasticity is turned on and set to 'graded' by default\n\n";
+	std::cout << std::right << std::setw(10) << "\t--mfnc-off" << "\t\tturns off MFNC plasticity; if not included, MFNC plasticity is turned on and set to 'graded' by default\n";
+	std::cout << "\t-r, --raster {[CODE],[FILE]} space-separated list of cell types and raster files to be saved for that cell type. Possible CODEs are:\n\n";
 	std::cout << "\t\t\t\t \tMF - Mossy Fiber\n";
 	std::cout << "\t\t\t\t \tGR - Granule Cell\n";
 	std::cout << "\t\t\t\t \tGO - Golgi Cell\n";
@@ -85,6 +86,7 @@ void print_usage_info()
 	std::cout << "\t\t\t\t \tPC - Purkinje Cell\n";
 	std::cout << "\t\t\t\t \tNC - Deep Nucleus Cell\n";
 	std::cout << "\t\t\t\t \tIO - Inferior Olive Cell\n\n";
+	std::cout << "\t-p, --psth {[CODE],[FILE]} space-separated list of cell types and psth files to be saved for that cell type. Possible CODEs are identical with those for rasters.\n\n";
 	std::cout << "\t-w, --weights {[CODE],[FILE]} space-separated list of weights and weights files to be saved. Possible CODEs are:\n\n";
 	std::cout << "\t\t\t\t  \tPFPC - parallel-fiber to purkinje synapse\n";
 	std::cout << "\t\t\t\t  \tMFNC - mossy-fiber to deep nucleus synapse\n\n";
@@ -92,7 +94,7 @@ void print_usage_info()
 	std::cout << "1) uses file 'build_file.bld' to construct a bunny, which is saved to file 'bunny.sim':\n\n";
 	std::cout << "\t./cbm_sim -b build_file.bld -o bunny.sim\n\n";
 	std::cout << "2) uses file 'acquisition.sess' to train the input simulation 'bunny.sim' with PFPC plasticity on and set to graded and MFNC plasticity off:\n\n";
-	std::cout << "\t./cbm_sim -s acquisition.sess -i bunny.sim -m\n\n";
+	std::cout << "\t./cbm_sim -s acquisition.sess -i bunny.sim --mfnc-off\n\n";
 	std::cout << "3) uses file 'acquisition.sess' to train the input simulation 'bunny.sim' with PFPC and MFNC plasticity on and set to graded;\n";
 	std::cout << "   PC, SC, and BC rasters are saved to files 'allPCRaster.bin' 'allSCRaster.bin' and 'allBCRaster.bin' respectively:\n\n";
 	std::cout << "\t./cbm_sim -s acquisition.sess -i bunny.sim -r PC,allPCRaster SC,allSCRaster BC,allBCRaster\n\n";
@@ -112,7 +114,7 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 	{
 		if (cmd_opt_exists(tokens, opt) == 1)
 		{
-			char opt_char_code = opt[1];
+			char opt_char_code = opt[2];
 			switch (opt_char_code)
 			{
 				/* FIXME: take care of error-case if user specifies two mutually exclusive options (e.g. -b -c) */
@@ -122,7 +124,7 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 				case 'm':
 					p_cl.mfnc_plasticity = "off";
 					break;
-				case 'd':
+				case 'b':
 					p_cl.pfpc_plasticity = "dual";
 					break;
 				case 'c':
@@ -145,6 +147,7 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 		size_t div;
 		std::string plastic_code;
 		std::string raster_code, raster_file_name;
+		std::string psth_code, psth_file_name;
 		std::string weights_code, weights_file_name;
 		switch (opt_sum)
 		{
@@ -194,6 +197,22 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 							raster_code = curr_token_iter->substr(0, div);
 							raster_file_name = curr_token_iter->substr(div+1);
 							p_cl.raster_files[raster_code] = raster_file_name;
+							curr_token_iter++;
+						}
+						break;
+					case 'p':
+						while (curr_token_iter != tokens.end() && !is_cmd_opt(*curr_token_iter))
+						{
+							div = curr_token_iter->find_first_of(',');
+							if (div == std::string::npos)
+							{
+								std::cerr << "[IO_ERROR]: Comma not given for raster argument '" << *curr_token_iter << "'. Exiting...\n";
+								exit(8);
+								// we have a problem, so exit
+							}
+							psth_code = curr_token_iter->substr(0, div);
+							psth_file_name = curr_token_iter->substr(div+1);
+							p_cl.psth_files[psth_code] = psth_file_name;
 							curr_token_iter++;
 						}
 						break;
@@ -293,6 +312,13 @@ void validate_commandline(parsed_commandline &p_cl)
 		if (!p_cl.raster_files.empty())
 		{
 			for (auto iter = p_cl.raster_files.begin(); iter != p_cl.raster_files.end(); iter++)
+			{
+				iter->second = OUTPUT_DATA_PATH + iter->second;
+			}
+		}
+		if (!p_cl.psth_files.empty())
+		{
+			for (auto iter = p_cl.psth_files.begin(); iter != p_cl.psth_files.end(); iter++)
 			{
 				iter->second = OUTPUT_DATA_PATH + iter->second;
 			}

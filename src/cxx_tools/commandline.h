@@ -30,6 +30,7 @@ typedef struct
 	std::string pfpc_plasticity;
 	std::string mfnc_plasticity;
 	std::map<std::string, std::string> raster_files;
+	std::map<std::string, std::string> psth_files;
 	std::map<std::string, std::string> weights_files;
 } parsed_commandline;
 
