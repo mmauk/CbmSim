@@ -7,32 +7,23 @@ begin filetype run
 	begin section trial_def
 
 		// trial defs 
-		def trial isi_1250_paired_trial
-			int use_cs 1
-			int cs_onset 400
-			int cs_len 1250
-			float cs_percent 100.0
-			int use_us 1
-			int us_onset 1650
-		end
-
 		def trial probe_trial
 			int use_cs 1
-			int cs_onset 400
-			int cs_len 1250
+			int cs_onset 550
+			int cs_len 500 
 			float cs_percent 100.0
 			int use_us 0
-			int us_onset 1650
+			int us_onset 1050
 		end
 
 		// block defs 
-		def block isi_1250_block
-			isi_1250_paired_trial 10
-		end 
+		//def block isi_250_block
+		//	isi_250_paired_trial 250 
+		//end 
 
 		// session defs
-		def session isi_1250_session
-			isi_1250_block 10
+		def session probe_session
+			probe_trial 50
 		end 
 	end
 
@@ -69,8 +60,8 @@ begin filetype run
 
 	begin section trial_spec
 		int trialTime 5000
-		int msPreCS 400
-		int msPostCS 406
+		int msPreCS 550
+		int msPostCS 550
 	end
 
 	begin section activity
