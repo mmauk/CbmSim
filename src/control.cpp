@@ -7,9 +7,9 @@
 #include "array_util.h"
 #include "gui.h" /* tenuous inclide at best :pogO: */
 
+
 const std::string BIN_EXT = "bin";
 const std::string CELL_IDS[NUM_CELL_TYPES] = {"MF", "GR", "GO", "BC", "SC", "PC", "IO", "NC"}; 
- 
 
 Control::Control(parsed_commandline &p_cl)
 {
@@ -74,6 +74,8 @@ Control::~Control()
 
 void Control::build_sim()
 {
+	// TODO: create a separate function to create the state,
+	// have the constructor allocate memory and initialize values
 	if (!simState) simState = new CBMState(numMZones);
 }
 
@@ -90,7 +92,6 @@ void Control::set_plasticity_modes(parsed_commandline &p_cl)
 	else if (p_cl.mfnc_plasticity == "dual") mf_nc_plast = DUAL;
 	else if (p_cl.mfnc_plasticity == "cascade") mf_nc_plast = CASCADE;
 }
-
 
 void Control::init_sim(parsed_sess_file &s_file, std::string in_sim_filename)
 {
@@ -125,9 +126,11 @@ void Control::reset_sim(std::string in_sim_filename)
 	// TODO: simCore, mfFreq, mfs
 	
 	reset_rasters();
+	reset_psths();
 	reset_spike_sums();
 	sim_file_buf.close();
 	curr_sim_file_name = in_sim_filename;
+	// TODO: more things to reset?
 }
 
 void Control::save_sim_to_file(std::string outSimFile)
@@ -195,7 +198,7 @@ void Control::load_mfdcn_weights_from_file(std::string in_mfdcn_file)
 	inMFDCNFileBuffer.close();
 }
 
-
+// TODO: combine two below funcs into one for generality
 void Control::get_raster_filenames(std::map<std::string, std::string> &raster_files)
 {
 	if (!raster_files.empty())
@@ -322,7 +325,7 @@ void Control::runSession(struct gui *gui)
 {
 	float medTrials;
 	double start, end;
-	int goSpkCounter[num_go] = {0};
+	int goSpkCounter[num_go];
 	if (gui == NULL) run_state = IN_RUN_NO_PAUSE;
 	trial = 0;
 	raster_counter = 0;
@@ -684,5 +687,4 @@ void Control::delete_psths()
 		if (!pf_names[i].empty()) delete2DArray<uint8_t>(psths[i]);
 	}
 }
-
 

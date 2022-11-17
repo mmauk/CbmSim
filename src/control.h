@@ -123,7 +123,7 @@ class Control
 		float fracImport  = 0.0;
 		float fracOverlap = 0.2;
 
-		int trialTime = 0; /* was 5000 (10/17/2022) */
+		int trialTime = 0; 
 	
 		// raster measurement params. 
 		int msPreCS = 0;
@@ -134,7 +134,7 @@ class Control
 		enum plasticity mf_nc_plast;
 
 		std::string rf_names[NUM_CELL_TYPES];
-		std::string pf_names[NUM_CELL_TYPES]; // TODO: write in commandline feature and initliaze from that
+		std::string pf_names[NUM_CELL_TYPES]; 
 
 		std::string pf_pc_weights_file = "";
 		std::string mf_nc_weights_file = "";
@@ -152,7 +152,7 @@ class Control
 		uint8_t **rasters[NUM_CELL_TYPES];
 		uint8_t **psths[NUM_CELL_TYPES];
 
-		uint32_t rast_sizes[NUM_CELL_TYPES]; // initialized in initializeOutputArrays
+		uint32_t rast_sizes[NUM_CELL_TYPES]; 
 
 		float **pc_vm_raster;
 		float **nc_vm_raster;
@@ -195,7 +195,7 @@ class Control
 		void save_psths();
 
 		void delete_rasters();
-		void delete_psths(); // new function
+		void delete_psths(); 
 		void delete_spike_sums();
 };
 
