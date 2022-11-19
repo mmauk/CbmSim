@@ -117,7 +117,6 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 			char opt_char_code = opt[2];
 			switch (opt_char_code)
 			{
-				/* FIXME: take care of error-case if user specifies two mutually exclusive options (e.g. -b -c) */
 				case 'p':
 					p_cl.pfpc_plasticity = "off";
 					break;
@@ -239,110 +238,135 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 				break;
 		}
 	}
-	validate_commandline(p_cl);
+}
+
+// I am sorry in advance for this implementation. C++ doesn't have reflection. A shame.
+bool p_cmdline_is_empty(parsed_commandline &p_cl)
+{
+	return p_cl.print_help.empty() && p_cl.vis_mode.empty() &&
+	   p_cl.build_file.empty() && p_cl.session_file.empty() &&
+	   p_cl.input_sim_file.empty() && p_cl.output_sim_file.empty() &&
+	   p_cl.pfpc_plasticity.empty() && p_cl.mfnc_plasticity.empty() &&
+	   p_cl.raster_files.empty() && p_cl.psth_files.empty() && p_cl.weights_files.empty();
 }
 
 void validate_commandline(parsed_commandline &p_cl)
 {
-	/* for now, print usage info regardless of other arguments.
-	 * in future, if there is a commandline error, print usage info then exit
-	 */
-	if (!p_cl.print_help.empty())
+	if (p_cmdline_is_empty(p_cl))
 	{
-		print_usage_info();
-		exit(0);
-	}
-	if (!p_cl.build_file.empty())
-	{
-		if (!p_cl.session_file.empty())
-		{
-			std::cerr << "[IO_ERROR]: Cannot specify both session and build file. Exiting.\n";
-			exit(5);
-		}
-		if (p_cl.output_sim_file.empty())
-		{
-			std::cout << "[INFO]: Output simulation file not specified. Using default value...\n";
-			p_cl.output_sim_file = DEFAULT_SIM_OUT_FILE; 
-		}
-		else p_cl.output_sim_file = INPUT_DATA_PATH + p_cl.output_sim_file;
-		if (!p_cl.vis_mode.empty() || !p_cl.input_sim_file.empty() || !p_cl.raster_files.empty())
-		{
-			std::cout << "[INFO]: Ignoring additional arguments in build mode.\n";
-		}
-		p_cl.build_file = INPUT_DATA_PATH + p_cl.build_file;
-	}
-	else if (!p_cl.session_file.empty())
-	{
-		if (!p_cl.build_file.empty())
-		{
-			std::cerr << "[IO_ERROR]: Cannot specify both build and session file. Exiting.\n";
-			exit(6);
-		}
-		if (!p_cl.output_sim_file.empty())
-		{
-			p_cl.output_sim_file = INPUT_DATA_PATH + p_cl.output_sim_file;
-		}
-		if (!p_cl.input_sim_file.empty())
-		{
-			p_cl.input_sim_file = INPUT_DATA_PATH + p_cl.input_sim_file;
-		}
-		else
-		{
-			std::cerr << "[IO_ERROR]: No input simulation specified in run mode. Exiting...\n";
-			exit(8);
-		}
-		if (p_cl.pfpc_plasticity.empty())
-		{
-			std::cout << "[INFO]: Turning PFPC plasticity on to default mode 'graded'...\n";
-			p_cl.pfpc_plasticity = "graded";
-		}
-		else
-		{
-			// just notify user what we already set above
-			if (p_cl.pfpc_plasticity == "dual") std::cout << "[INFO]: Turning PFPC plasticity on in 'dual' mode...\n";
-			else if (p_cl.pfpc_plasticity == "cascade") std::cout << "[INFO]: Turning PFPC plasticity on in 'cascade' mode...\n";
-			else if (p_cl.pfpc_plasticity == "off") std::cout << "[INFO]: Turning PFPC plasticity off..\n";
-		}
-		if (p_cl.mfnc_plasticity.empty())
-		{
-			std::cout << "[INFO]: Turning MFNC plasticity on to default mode 'graded'...\n";
-			p_cl.mfnc_plasticity = "graded";
-		}
-		else if (p_cl.mfnc_plasticity == "off") std::cout << "[INFO]: Turning MFNC plasticity off...\n";
-		if (!p_cl.raster_files.empty())
-		{
-			for (auto iter = p_cl.raster_files.begin(); iter != p_cl.raster_files.end(); iter++)
-			{
-				iter->second = OUTPUT_DATA_PATH + iter->second;
-			}
-		}
-		if (!p_cl.psth_files.empty())
-		{
-			for (auto iter = p_cl.psth_files.begin(); iter != p_cl.psth_files.end(); iter++)
-			{
-				iter->second = OUTPUT_DATA_PATH + iter->second;
-			}
-		}
-		if (!p_cl.weights_files.empty())
-		{
-			for (auto iter = p_cl.weights_files.begin(); iter != p_cl.weights_files.end(); iter++)
-			{
-				iter->second = OUTPUT_DATA_PATH + iter->second;
-			}
-		}
-		if (p_cl.vis_mode.empty())
-		{
-			std::cout << "[INFO]: Visual mode not specified in run mode. Setting to default value of 'TUI'...\n";
-			p_cl.vis_mode = "TUI";
-		}
-		p_cl.session_file = INPUT_DATA_PATH + p_cl.session_file;
+		p_cl.vis_mode = "GUI";
+		p_cl.output_sim_file = DEFAULT_SIM_OUT_FILE; 
+		p_cl.mfnc_plasticity = "graded"; 
+		p_cl.mfnc_plasticity = "graded";
 	}
 	else
 	{
-		std::cerr << "[IO_ERROR]: Run mode not specified. You must provide either {-b|--build} or {-s|--session}\n"
-				  << "[IO_ERROR]: arguments. Exiting...\n";
-		exit(7);
+		/* for now, print usage info regardless of other arguments.
+		 * in future, if there is a commandline error, print usage info then exit
+		 */
+		if (!p_cl.print_help.empty())
+		{
+			print_usage_info();
+			exit(0);
+		}
+		if (!p_cl.build_file.empty())
+		{
+			if (!p_cl.session_file.empty())
+			{
+				std::cerr << "[IO_ERROR]: Cannot specify both session and build file. Exiting.\n";
+				exit(5);
+			}
+			if (p_cl.output_sim_file.empty())
+			{
+				std::cout << "[INFO]: Output simulation file not specified. Using default value...\n";
+				p_cl.output_sim_file = DEFAULT_SIM_OUT_FILE; 
+			}
+			else p_cl.output_sim_file = INPUT_DATA_PATH + p_cl.output_sim_file;
+			if (!p_cl.vis_mode.empty() || !p_cl.input_sim_file.empty() || !p_cl.raster_files.empty())
+			{
+				std::cout << "[INFO]: Ignoring additional arguments in build mode.\n";
+			}
+			p_cl.build_file = INPUT_DATA_PATH + p_cl.build_file;
+		}
+		else if (!p_cl.session_file.empty())
+		{
+			if (!p_cl.build_file.empty())
+			{
+				std::cerr << "[IO_ERROR]: Cannot specify both build and session file. Exiting.\n";
+				exit(6);
+			}
+			if (!p_cl.output_sim_file.empty())
+			{
+				p_cl.output_sim_file = INPUT_DATA_PATH + p_cl.output_sim_file;
+			}
+			if (!p_cl.input_sim_file.empty())
+			{
+				p_cl.input_sim_file = INPUT_DATA_PATH + p_cl.input_sim_file;
+			}
+			else
+			{
+				std::cerr << "[IO_ERROR]: No input simulation specified in run mode. Exiting...\n";
+				exit(8);
+			}
+			if (p_cl.pfpc_plasticity.empty())
+			{
+				std::cout << "[INFO]: Turning PFPC plasticity on to default mode 'graded'...\n";
+				p_cl.pfpc_plasticity = "graded";
+			}
+			else
+			{
+				// just notify user what we already set above
+				if (p_cl.pfpc_plasticity == "dual") std::cout << "[INFO]: Turning PFPC plasticity on in 'dual' mode...\n";
+				else if (p_cl.pfpc_plasticity == "cascade") std::cout << "[INFO]: Turning PFPC plasticity on in 'cascade' mode...\n";
+				else if (p_cl.pfpc_plasticity == "off") std::cout << "[INFO]: Turning PFPC plasticity off..\n";
+			}
+			if (p_cl.mfnc_plasticity.empty())
+			{
+				std::cout << "[INFO]: Turning MFNC plasticity on to default mode 'graded'...\n";
+				p_cl.mfnc_plasticity = "graded";
+			}
+			else if (p_cl.mfnc_plasticity == "off") std::cout << "[INFO]: Turning MFNC plasticity off...\n";
+			if (!p_cl.raster_files.empty())
+			{
+				for (auto iter = p_cl.raster_files.begin(); iter != p_cl.raster_files.end(); iter++)
+				{
+					iter->second = OUTPUT_DATA_PATH + iter->second;
+				}
+			}
+			if (!p_cl.psth_files.empty())
+			{
+				for (auto iter = p_cl.psth_files.begin(); iter != p_cl.psth_files.end(); iter++)
+				{
+					iter->second = OUTPUT_DATA_PATH + iter->second;
+				}
+			}
+			if (!p_cl.weights_files.empty())
+			{
+				for (auto iter = p_cl.weights_files.begin(); iter != p_cl.weights_files.end(); iter++)
+				{
+					iter->second = OUTPUT_DATA_PATH + iter->second;
+				}
+			}
+			if (p_cl.vis_mode.empty())
+			{
+				std::cout << "[INFO]: Visual mode not specified in run mode. Setting to default value of 'TUI'...\n";
+				p_cl.vis_mode = "TUI";
+			}
+			p_cl.session_file = INPUT_DATA_PATH + p_cl.session_file;
+		}
+		else
+		{
+			std::cerr << "[IO_ERROR]: Run mode not specified. You must provide either {-b|--build} or {-s|--session}\n"
+					  << "[IO_ERROR]: arguments. Exiting...\n";
+			exit(7);
+		}
 	}
+}
+
+void parse_and_validate_parsed_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
+{
+	parse_commandline(argc, argv, p_cl);
+	validate_commandline(p_cl);
 }
 
 std::string parsed_commandline_to_str(parsed_commandline &p_cl)
@@ -356,14 +380,24 @@ std::string parsed_commandline_to_str(parsed_commandline &p_cl)
 	p_cl_buf << "{ 'output_sim_file', '" << p_cl.output_sim_file << "' }\n";
 	p_cl_buf << "{ 'pfpc_plasticity', '" << p_cl.pfpc_plasticity << "' }\n";
 	p_cl_buf << "{ 'mfnc_plasticity', '" << p_cl.mfnc_plasticity << "' }\n";
+	p_cl_buf << "{ 'raster_files' :\n";
 	for (auto pair : p_cl.raster_files)
 	{
 		p_cl_buf << "{ '" << pair.first << "', '" << pair.second << "' }\n";
 	}
+	p_cl_buf << "}\n";
+	p_cl_buf << "{ 'psth_files' :\n";
+	for (auto pair : p_cl.psth_files)
+	{
+		p_cl_buf << "{ '" << pair.first << "', '" << pair.second << "' }\n";
+	}
+	p_cl_buf << "}\n";
+	p_cl_buf << "{ 'weights_files' :\n";
 	for (auto pair : p_cl.weights_files)
 	{
 		p_cl_buf << "{ '" << pair.first << "', '" << pair.second << "' }\n";
 	}
+	p_cl_buf << "}\n";
 	return p_cl_buf.str();
 }
 

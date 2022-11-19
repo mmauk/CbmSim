@@ -13,14 +13,14 @@ const std::string CELL_IDS[NUM_CELL_TYPES] = {"MF", "GR", "GO", "BC", "SC", "PC"
 
 Control::Control(parsed_commandline &p_cl)
 {
-	tokenized_file t_file;
-	lexed_file l_file;
+	use_gui = (p_cl.vis_mode == "GUI") ? true : false;
 	if (!p_cl.build_file.empty())
 	{
-		visual_mode = "TUI";
-		run_mode = "build";
 		curr_build_file_name = p_cl.build_file;
 		out_sim_file_name = p_cl.output_sim_file;
+
+		tokenized_file t_file;
+		lexed_file l_file;
 		parsed_build_file pb_file;
 		tokenize_file(p_cl.build_file, t_file);
 		lex_tokenized_file(t_file, l_file);
@@ -29,29 +29,15 @@ Control::Control(parsed_commandline &p_cl)
 	}
 	else if (!p_cl.session_file.empty())
 	{
-		visual_mode = p_cl.vis_mode;
-		run_mode = "run";
-		curr_sess_file_name = p_cl.session_file;
 		curr_sim_file_name  = p_cl.input_sim_file;
 		out_sim_file_name   = p_cl.output_sim_file;
-		parsed_sess_file s_file;
-		tokenize_file(curr_sess_file_name, t_file);
-		lex_tokenized_file(t_file, l_file);
-		parse_lexed_sess_file(l_file, s_file);
-		translate_parsed_trials(s_file, td);
-		trials_data_initialized = true;
 
-		// TODO: move this somewhere else yike
-		trialTime   = std::stoi(s_file.parsed_var_sections["trial_spec"].param_map["trialTime"].value);
-		msPreCS     = std::stoi(s_file.parsed_var_sections["trial_spec"].param_map["msPreCS"].value);
-		msPostCS    = std::stoi(s_file.parsed_var_sections["trial_spec"].param_map["msPostCS"].value);
-		PSTHColSize = msPreCS + td.cs_lens[0] + msPostCS;
-
+		initialize_session(p_cl.session_file);
 		set_plasticity_modes(p_cl);
 		get_raster_filenames(p_cl.raster_files);
 		get_psth_filenames(p_cl.psth_files);
 		get_weights_filenames(p_cl.weights_files);
-		init_sim(s_file, curr_sim_file_name);
+		init_sim(curr_sim_file_name);
 	}
 }
 
@@ -93,12 +79,29 @@ void Control::set_plasticity_modes(parsed_commandline &p_cl)
 	else if (p_cl.mfnc_plasticity == "cascade") mf_nc_plast = CASCADE;
 }
 
-void Control::init_sim(parsed_sess_file &s_file, std::string in_sim_filename)
+void Control::initialize_session(std::string sess_file)
+{
+	tokenized_file t_file;
+	lexed_file l_file;
+	tokenize_file(sess_file, t_file);
+	lex_tokenized_file(t_file, l_file);
+	parse_lexed_sess_file(l_file, s_file);
+	translate_parsed_trials(s_file, td);
+
+	trialTime   = std::stoi(s_file.parsed_var_sections["trial_spec"].param_map["trialTime"].value);
+	msPreCS     = std::stoi(s_file.parsed_var_sections["trial_spec"].param_map["msPreCS"].value);
+	msPostCS    = std::stoi(s_file.parsed_var_sections["trial_spec"].param_map["msPostCS"].value);
+	PSTHColSize = msPreCS + td.cs_lens[0] + msPostCS;
+
+	trials_data_initialized = true;
+}
+
+void Control::init_sim(std::string in_sim_filename)
 {
 	std::cout << "[INFO]: Initializing simulation...\n";
 	std::fstream sim_file_buf(in_sim_filename.c_str(), std::ios::in | std::ios::binary);
 	read_con_params(sim_file_buf);
-	populate_act_params(s_file);
+	populate_act_params(s_file); // FIXME: place act params in separate file so we don't have to make s_file class attrib
 	simState = new CBMState(numMZones, sim_file_buf);
 	simCore  = new CBMSimCore(simState, gpuIndex, gpuP2);
 	mfFreq   = new ECMFPopulation(num_mf, mfRandSeed, CSTonicMFFrac, CSPhasicMFFrac,
@@ -295,7 +298,7 @@ void Control::initialize_rasters()
 {
 	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
-		if (!rf_names[i].empty())
+		if (!rf_names[i].empty() || use_gui)
 		{
 			/* granules are saved every trial, so their raster size is num_gr x PSTHColSize */
 			uint32_t column_size = (CELL_IDS[i] == "GR") ? PSTHColSize : PSTHColSize * td.num_trials;
@@ -303,10 +306,13 @@ void Control::initialize_rasters()
 		}
 	}
 
-	// TODO: find a way to initialize only within gui mode
-	pc_vm_raster = allocate2DArray<float>(num_pc, PSTHColSize);
-	nc_vm_raster = allocate2DArray<float>(num_nc, PSTHColSize);
-	io_vm_raster = allocate2DArray<float>(num_io, PSTHColSize);
+	if (use_gui)
+	{
+		// TODO: find a way to initialize only within gui mode
+		pc_vm_raster = allocate2DArray<float>(num_pc, PSTHColSize);
+		nc_vm_raster = allocate2DArray<float>(num_nc, PSTHColSize);
+		io_vm_raster = allocate2DArray<float>(num_io, PSTHColSize);
+	}
 
 	raster_arrays_initialized = true;
 }
@@ -316,6 +322,7 @@ void Control::initialize_psths()
 	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
 		if (!pf_names[i].empty())
+			// TODO: make data type bigger for psth
 			psths[i] = allocate2DArray<uint8_t>(rast_cell_nums[i], PSTHColSize);
 	}
 	psth_arrays_initialized = true;
@@ -326,7 +333,7 @@ void Control::runSession(struct gui *gui)
 	float medTrials;
 	double start, end;
 	int goSpkCounter[num_go];
-	if (gui == NULL) run_state = IN_RUN_NO_PAUSE;
+	if (!use_gui) run_state = IN_RUN_NO_PAUSE;
 	trial = 0;
 	raster_counter = 0;
 	while (trial < td.num_trials && run_state != NOT_IN_RUN)
@@ -392,18 +399,20 @@ void Control::runSession(struct gui *gui)
 				std::cout << "[INFO]: Mean gGRGO   = " << gGRGO_sum / (num_go * csLength) << "\n";
 				std::cout << "[INFO]: Mean gMFGO   = " << gMFGO_sum / (num_go * csLength) << "\n";
 				std::cout << "[INFO]: GR:MF ratio  = " << gGRGO_sum / gMFGO_sum << "\n";
+				std::cout << "[DEBUG]: raster counter: " << raster_counter << "\n";
+				std::cout << "[DEBUG]: psth counter: " << PSTHCounter << "\n";
 			}
 			
 			/* data collection */
 			if (ts >= onsetCS - msPreCS && ts < onsetCS + csLength + msPostCS)
 			{
-				fill_rasters(raster_counter, PSTHCounter, gui);
+				fill_rasters(raster_counter, PSTHCounter);
 				fill_psths(PSTHCounter);
 				PSTHCounter++;
 				raster_counter++;
 			}
 
-			if (gui != NULL)
+			if (use_gui)
 			{
 				if (gtk_events_pending()) gtk_main_iteration();
 			}
@@ -411,7 +420,7 @@ void Control::runSession(struct gui *gui)
 		end = omp_get_wtime();
 		std::cout << "[INFO]: '" << trialName << "' took " << (end - start) << "s.\n";
 		
-		if (gui != NULL)
+		if (use_gui)
 		{
 			// for now, compute the mean and median firing rates for all cells if win is visible
 			if (firing_rates_win_visible(gui))
@@ -437,7 +446,7 @@ void Control::runSession(struct gui *gui)
 	if (run_state == NOT_IN_RUN) std::cout << "[INFO]: Simulation terminated.\n";
 	else if (run_state == IN_RUN_NO_PAUSE) std::cout << "[INFO]: Simulation Completed.\n";
 	
-	if (gui == NULL)
+	if (!use_gui)
 	{
 		save_rasters();
 		save_psths();
@@ -460,7 +469,7 @@ void Control::reset_rasters()
 {
 	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
-		if (!rf_names[i].empty())
+		if (!rf_names[i].empty() || use_gui)
 		{
 			uint32_t column_size = (CELL_IDS[i] == "GR") ? PSTHColSize : (PSTHColSize * td.num_trials);
 			memset(rasters[i][0], '\000', rast_cell_nums[i] * column_size * sizeof(uint8_t));
@@ -604,12 +613,12 @@ void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
 	std::cout << "[INFO]: Median GO Rate: " << m / isi << std::endl;
 }
 
-void Control::fill_rasters(uint32_t raster_counter, uint32_t psth_counter, struct gui *gui)
+void Control::fill_rasters(uint32_t raster_counter, uint32_t psth_counter)
 {
 	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
 		uint32_t temp_counter = raster_counter;
-		if (!rf_names[i].empty())
+		if (!rf_names[i].empty() || use_gui)
 		{
 			/* GR spikes are only spikes not saved on host every time step:
 			 * InNet::exportAPGR makes cudaMemcpy call before returning pointer to mem address */
@@ -625,8 +634,7 @@ void Control::fill_rasters(uint32_t raster_counter, uint32_t psth_counter, struc
 		}
 	}
 
-	// Note: backwards compatability, for now. might place in separate function later
-	if (gui != NULL)
+	if (use_gui)
 	{
 		const float* vm_pc = simCore->getMZoneList()[0]->exportVmPC();
 		for (int i = 0; i < num_pc; i++)
@@ -673,11 +681,14 @@ void Control::delete_rasters()
 {
 	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
-		if (!rf_names[i].empty()) delete2DArray<uint8_t>(rasters[i]);
+		if (!rf_names[i].empty() || use_gui) delete2DArray<uint8_t>(rasters[i]);
 	}
-	delete2DArray<float>(pc_vm_raster);
-	delete2DArray<float>(nc_vm_raster);
-	delete2DArray<float>(io_vm_raster);
+	if (use_gui)
+	{
+		delete2DArray<float>(pc_vm_raster);
+		delete2DArray<float>(nc_vm_raster);
+		delete2DArray<float>(io_vm_raster);
+	}
 }
 
 void Control::delete_psths()

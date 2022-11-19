@@ -27,7 +27,7 @@ begin filetype run
 
 		// block defs 
 		def block isi_250_block
-			isi_250_paired_trial 10
+			isi_250_paired_trial 20
 		end 
 
 		// session defs
@@ -70,7 +70,7 @@ begin filetype run
 	begin section trial_spec
 		int trialTime 5000
 		int msPreCS 400
-		int msPostCS 406
+		int msPostCS 400
 	end
 
 	begin section activity

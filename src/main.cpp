@@ -15,6 +15,8 @@
 #include <fstream>
 #include <omp.h>
 
+#include <iomanip>
+
 #include "control.h"
 #include "gui.h"
 #include "commandline.h"
@@ -23,21 +25,21 @@
 int main(int argc, char **argv) 
 {
 	parsed_commandline p_cl = {};
-	parse_commandline(&argc, &argv, p_cl); /* includes validation step */
+	parse_and_validate_parsed_commandline(&argc, &argv, p_cl);
 
 	Control *control = new Control(p_cl);
 	int exit_status = 0;
 
 	omp_set_num_threads(1); /* for 4 gpus, 8 is the sweet spot. Unsure for 2. */
 
-	if (!p_cl.build_file.empty())
+	if (p_cl.vis_mode == "TUI")
 	{
-		control->build_sim();
-		control->save_sim_to_file(p_cl.output_sim_file);
-	}
-	else if (!p_cl.session_file.empty())
-	{
-		if (p_cl.vis_mode == "TUI")
+		if (!p_cl.build_file.empty())
+		{
+			control->build_sim();
+			control->save_sim_to_file(p_cl.output_sim_file);
+		}
+		else if (!p_cl.session_file.empty())
 		{
 			control->runSession(NULL);
 			if (!p_cl.output_sim_file.empty())
@@ -50,10 +52,10 @@ int main(int argc, char **argv)
 				std::cout << "[INFO]: Saving mossy fiber to deep nucleus weigths to file...\n";
 				control->save_mfdcn_weights_to_file(p_cl.weights_files["MFNC"]);
 		}
-		else if (p_cl.vis_mode == "GUI")
-		{
-			exit_status = gui_init_and_run(&argc, &argv, control);
-		}
+	}
+	else if (p_cl.vis_mode == "GUI")
+	{
+		exit_status = gui_init_and_run(&argc, &argv, control);
 	}
 	delete control;
 	return exit_status;

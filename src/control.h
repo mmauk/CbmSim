@@ -52,6 +52,7 @@ class Control
 		~Control();
 
 		// Objects
+		parsed_sess_file s_file;
 		trials_data td;
 		CBMState *simState     = NULL;
 		CBMSimCore *simCore    = NULL;
@@ -59,6 +60,7 @@ class Control
 		PoissonRegenCells *mfs = NULL;
 
 		/* temporary state check vars, going to refactor soon */
+		bool use_gui                 = false;
 		bool trials_data_initialized = false;
 		bool sim_initialized         = false;
 
@@ -67,10 +69,7 @@ class Control
 		bool spike_sums_initialized    = false;
 		enum sim_run_state run_state   = NOT_IN_RUN; 
 
-		std::string visual_mode          = "";
-		std::string run_mode             = "";
 		std::string curr_build_file_name = "";
-		std::string curr_sess_file_name  = "";
 		std::string curr_sim_file_name   = "";
 		std::string out_sim_file_name    = "";
 
@@ -80,7 +79,7 @@ class Control
 		float inputStrength = 0.0;
 
 		// sim params -> TODO: place in simcore
-		int gpuIndex = 2;
+		int gpuIndex = 0;
 		int gpuP2    = 2;
 
 		int trial;
@@ -161,7 +160,8 @@ class Control
 		void build_sim();
 
 		void set_plasticity_modes(parsed_commandline &p_cl);
-		void init_sim(parsed_sess_file &s_file, std::string in_sim_filename);
+		void initialize_session(std::string sess_file);
+		void init_sim(std::string in_sim_filename);
 		void reset_sim(std::string in_sim_filename);
 
 		void save_sim_to_file(std::string outSimFile);
@@ -188,7 +188,7 @@ class Control
 		void countGOSpikes(int *goSpkCounter, float &medTrials);
 		void update_spike_sums(int tts, float onset_cs, float offset_cs);
 		void calculate_firing_rates(float onset_cs, float offset_cs);
-		void fill_rasters(uint32_t raster_counter, uint32_t psth_counter, struct gui *gui);
+		void fill_rasters(uint32_t raster_counter, uint32_t psth_counter);
 		void fill_psths(uint32_t psth_counter);
 		void save_gr_raster();
 		void save_rasters();

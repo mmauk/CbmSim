@@ -85,17 +85,21 @@ static void save_file(GtkWidget *widget, Control *control, void (Control::*on_fi
 	(control->*on_file_save_func)(out_file_std_str);
 }
 
-static void on_load_experiment_file(GtkWidget *widget, Control *control)
+static void on_load_session_file(GtkWidget *widget, Control *control)
 {
-	// TODO: deprecate
-	//load_file(widget, control, &Control::init_experiment, "[ERROR]: Could not open experiment file.");
+	load_file(widget, control, &Control::initialize_session, "[ERROR]: Could not open experiment file.");
 }
 
 static void on_load_sim_file(GtkWidget *widget, Control *control)
 {
-	// TODO change the callback so that we are only loading in the sim file to control,
-	// not initing the whole sim (need the expt file to do so (10/10/2022))
-	//load_file(widget, control, &Control::init_sim, "[ERROR]: Could not open simulation file.");
+	// terribly stupid design atm. act params initialized when session is initialized,
+	// so user needs to load session file before initializing simulation. FIX IT
+	if (!control->trials_data_initialized)
+	{
+		std::cout << "[ERROR]: Due to shitty design, you need to load a session file before loading in a simulation file...\n";
+		return;
+	}
+	load_file(widget, control, &Control::init_sim, "[ERROR]: Could not open simulation file.");
 }
 
 static void on_save_sim(GtkWidget *widget, Control *control)
@@ -548,9 +552,12 @@ static void draw_raster(GtkWidget *drawing_area, cairo_t *cr, uint32_t trial, ui
 	// point color
 	cairo_set_source_rgb(cr, 0.0, 1.0, 0.0);
 
-	for (int i = 0; i < num_cells; i++)
+	uint32_t trial_start = trial * num_col;
+	uint32_t trial_end = trial_start + num_col;
+
+	for (uint32_t i = 0; i < num_cells; i++)
 	{
-		for (int j = 0; j < num_col; j++)
+		for (uint32_t j = trial_start; j < trial_end; j++)
 		{
 			if (raster_data[i][j])
 			{
@@ -580,7 +587,7 @@ static void draw_spatial_activity(GtkWidget *drawing_area, cairo_t *cr, Control 
 static void draw_gr_raster(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 {
 	/* 4096 gr raster sample size */
-	draw_raster(drawing_area, cr, control->trial, 4096, control->PSTHColSize, control->rasters[GR]);
+	draw_raster(drawing_area, cr, 0, 4096, control->PSTHColSize, control->rasters[GR]);
 }
 
 static void draw_go_raster(GtkWidget *drawing_area, cairo_t *cr, Control *control)
@@ -662,21 +669,25 @@ static void draw_pc_plot(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 
 	// pc point color
 	cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
-
-	for (int i = 0; i < control->PSTHColSize; i++)
+	unsigned int trial_start = control->trial * control->PSTHColSize;
+	printf("%u\n", trial_start);
+	uint32_t k = trial_start;
+	// FIXME: not drawing on second trial
+	for (uint32_t i = 0; i < control->PSTHColSize; i++)
 	{
 		int alternator = 1;
 		for (int j = 0; j < num_pc; j++)
 		{
 			float vm_ij = control->pc_vm_raster[j][i] + alternator * 0.2 * ceil(j/2.0) * len_scale_y; 
 			cairo_rectangle(cr, i, vm_ij, 1.0, 0.05);
-			if (control->rasters[PC][j][i])
+			if (control->rasters[PC][j][k])
 			{
 				cairo_rectangle(cr, i, vm_ij, 1.0, 1.0);
 			}
 			alternator *= -1;
 		}
 		cairo_fill(cr);
+		k++;
 	}
 
 	// nc point color
@@ -685,6 +696,7 @@ static void draw_pc_plot(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 	float nc_offset = -72.0;
 	float nc_scale  = 0.55;
 
+	k = trial_start;
 	for (int i = 0; i < control->PSTHColSize; i++)
 	{
 		int alternator = 1;
@@ -692,13 +704,14 @@ static void draw_pc_plot(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 		{
 			float vm_ij = nc_scale * control->nc_vm_raster[j][i] + nc_offset + alternator * 0.2 * ceil(j/2.0) * len_scale_y; 
 			cairo_rectangle(cr, i, vm_ij, 1.0, 0.05);
-			if (control->rasters[NC][j][i])
+			if (control->rasters[NC][j][k])
 			{
 				cairo_rectangle(cr, i, vm_ij, 1.0, 1.0);
 			}
 			alternator *= -1;
 		}
 		cairo_fill(cr);
+		k++;
 	}
 
 	// io point color
@@ -707,6 +720,7 @@ static void draw_pc_plot(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 	float io_offset = -124.0;
 	float io_scale  = 0.1;
 
+	k = trial_start;
 	for (int i = 0; i < control->PSTHColSize; i++)
 	{
 		int alternator = 1;
@@ -714,13 +728,14 @@ static void draw_pc_plot(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 		{
 			float vm_ij = io_scale * control->io_vm_raster[j][i] + io_offset + alternator * 0.2 * ceil(j/2.0) * len_scale_y; 
 			cairo_rectangle(cr, i, vm_ij, 1.0, 0.05);
-			if (control->rasters[IO][j][i])
+			if (control->rasters[IO][j][k])
 			{
 				cairo_rectangle(cr, i, vm_ij, 1.0, 1.0);
 			}
 			alternator *= -1;
 		}
 		cairo_fill(cr);
+		k++;
 	}
 } 
 
@@ -1032,10 +1047,10 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 							{"Load...", gtk_menu_item_new(), {},
 								{gtk_menu_new(), NUM_FILE_SUB_MENU_ITEMS, new menu_item[NUM_FILE_SUB_MENU_ITEMS]
 									{
-										{"Experiment File", gtk_menu_item_new(),
+										{"Session File", gtk_menu_item_new(),
 											{
 												"activate",
-												G_CALLBACK(on_load_experiment_file),
+												G_CALLBACK(on_load_session_file),
 												control,
 												false
 											},
