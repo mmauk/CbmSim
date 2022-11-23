@@ -85,6 +85,44 @@ static void save_file(GtkWidget *widget, Control *control, void (Control::*on_fi
 	(control->*on_file_save_func)(out_file_std_str);
 }
 
+// redundant overload..eck
+static void save_file(GtkWidget *widget, Control *control, std::function<void(std::string)> *save_func,
+	std::string err_msg, const char *default_out_file)
+{
+	std::string out_file_std_str = "";
+	GtkWidget *dialog = gtk_file_chooser_dialog_new
+		(
+		  "Save File",
+		  NULL, /* no parent window is fine for now */
+		  GTK_FILE_CHOOSER_ACTION_SAVE,
+		  "Cancel",
+		  GTK_RESPONSE_CANCEL,
+		  "Save",
+		  GTK_RESPONSE_ACCEPT,
+		  NULL
+		);
+
+	GtkFileChooser *chooser = GTK_FILE_CHOOSER(dialog);
+	gtk_file_chooser_set_do_overwrite_confirmation(chooser, TRUE); /* huh? */
+	gtk_file_chooser_set_current_name(chooser, default_out_file);
+	gint response = gtk_dialog_run(GTK_DIALOG(dialog));
+
+	if (response == GTK_RESPONSE_ACCEPT)
+	{
+		char *out_file_c_str = gtk_file_chooser_get_filename(chooser);
+		out_file_std_str = std::string(out_file_c_str);
+		g_free(out_file_c_str);
+	}
+	else
+	{
+		fprintf(stderr, "%s\n", err_msg.c_str());
+		gtk_widget_destroy(dialog);
+		return;
+	}
+	gtk_widget_destroy(dialog);
+	(*save_func)(out_file_std_str);
+}
+
 static void on_load_session_file(GtkWidget *widget, Control *control)
 {
 	load_file(widget, control, &Control::initialize_session, "[ERROR]: Could not open experiment file.");
@@ -127,44 +165,44 @@ static void on_load_mfdcn_weights(GtkWidget *widget, Control *control)
 	load_file(widget, control, &Control::load_mfdcn_weights_from_file, "[ERROR]: Could not open mf-dcn weights file.");
 }
 
-static void on_save_gr_psth(GtkWidget *widget, Control *control)
+static void on_save_gr_raster(GtkWidget *widget, Control *control)
 {
-	//save_file(widget, control, &Control::save_raster_to_file, "[ERROR]: Could not save gr psth to file.", DEFAULT_GR_RASTER_FILE_NAME);
+	save_file(widget, control, &control->rast_save_funcs[GR], "[ERROR]: Could not save gr raster to file.", DEFAULT_GR_RASTER_FILE_NAME);
 } 
 
-static void on_save_go_psth(GtkWidget *widget, Control *control)
+static void on_save_go_raster(GtkWidget *widget, Control *control)
 {
-	//save_file(widget, control, &Control::save_raster_to_file, "[ERROR]: Could not save go psth to file.", DEFAULT_GO_RASTER_FILE_NAME);
+	save_file(widget, control, &control->rast_save_funcs[GO], "[ERROR]: Could not save go raster to file.", DEFAULT_GO_RASTER_FILE_NAME);
 } 
 
-static void on_save_pc_psth(GtkWidget *widget, Control *control)
+static void on_save_pc_raster(GtkWidget *widget, Control *control)
 {
-	//save_file(widget, control, &Control::save_raster_to_file, "[ERROR]: Could not save pc psth to file.", DEFAULT_PC_RASTER_FILE_NAME);
+	save_file(widget, control, &control->rast_save_funcs[PC], "[ERROR]: Could not save pc raster to file.", DEFAULT_PC_RASTER_FILE_NAME);
 } 
 
-static void on_save_nc_psth(GtkWidget *widget, Control *control)
+static void on_save_nc_raster(GtkWidget *widget, Control *control)
 {
-	//save_file(widget, control, &Control::save_raster_to_file, "[ERROR]: Could not save nc psth to file.", DEFAULT_NC_RASTER_FILE_NAME);
+	save_file(widget, control, &control->rast_save_funcs[NC], "[ERROR]: Could not save nc raster to file.", DEFAULT_NC_RASTER_FILE_NAME);
 } 
 
-static void on_save_io_psth(GtkWidget *widget, Control *control)
+static void on_save_io_raster(GtkWidget *widget, Control *control)
 {
-	//save_file(widget, control, &Control::save_raster_to_file, "[ERROR]: Could not save io psth to file.", DEFAULT_IO_RASTER_FILE_NAME);
+	save_file(widget, control, &control->rast_save_funcs[IO], "[ERROR]: Could not save io raster to file.", DEFAULT_IO_RASTER_FILE_NAME);
 } 
 
-static void on_save_bc_psth(GtkWidget *widget, Control *control)
+static void on_save_bc_raster(GtkWidget *widget, Control *control)
 {
-	//save_file(widget, control, &Control::save_raster_to_file, "[ERROR]: Could not save bc psth to file.", DEFAULT_BC_RASTER_FILE_NAME);
+	save_file(widget, control, &control->rast_save_funcs[BC], "[ERROR]: Could not save bc raster to file.", DEFAULT_BC_RASTER_FILE_NAME);
 } 
 
-static void on_save_sc_psth(GtkWidget *widget, Control *control)
+static void on_save_sc_raster(GtkWidget *widget, Control *control)
 {
-	//save_file(widget, control, &Control::save_raster_to_file, "[ERROR]: Could not save sc psth to file.", DEFAULT_SC_RASTER_FILE_NAME);
+	save_file(widget, control, &control->rast_save_funcs[SC], "[ERROR]: Could not save sc raster to file.", DEFAULT_SC_RASTER_FILE_NAME);
 }
 
-static void on_save_mf_psth(GtkWidget *widget, Control *control)
+static void on_save_mf_raster(GtkWidget *widget, Control *control)
 {
-	//save_file(widget, control, &Control::save_raster_to_file, "[ERROR]: Could not save mf psth to file.", DEFAULT_MF_RASTER_FILE_NAME);
+	save_file(widget, control, &control->rast_save_funcs[MF], "[ERROR]: Could not save mf raster to file.", DEFAULT_MF_RASTER_FILE_NAME);
 }
 
 //FIXME: below is a stop-gap solution. should be more careful with destroy callback
@@ -825,14 +863,35 @@ static bool on_parameters(GtkWidget *widget, gpointer data)
 	return assert(false, "Not implemented", __func__);
 }
 
-static bool on_dcn_plast(GtkWidget *widget, gpointer data)
+static void on_dcn_plast(GtkWidget *widget, Control *control)
 {
-	return assert(false, "Not implemented", __func__);
+	if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget)))
+	{
+		printf("[INFO]: mf-nc plasticity set to mode: Graded\n");
+		control->mf_nc_plast = GRADED; 
+	}
+	else
+	{
+		printf("[INFO]: mf-nc plasticity set to mode: Off\n");
+		control->mf_nc_plast = OFF; 
+	}
 }
 
-static bool on_radio(GtkWidget *widget, gpointer data)
+static void on_radio(GtkWidget *widget, Control *control)
 {
-	return assert(false, "Not implemented", __func__);
+	if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget)))
+	{
+		const gchar *this_rad_label = gtk_button_get_label(GTK_BUTTON(widget));
+		printf("[INFO]: pf-pc plasticity set to mode: %s\n", this_rad_label);
+		if (this_rad_label == "Graded")
+			control->pf_pc_plast = GRADED;
+		else if (this_rad_label == "Binary")
+			control->pf_pc_plast = DUAL;
+		else if (this_rad_label == "Cascade")
+			control->pf_pc_plast = CASCADE;
+		else if (this_rad_label == "Off")
+			control->pf_pc_plast = OFF; 
+	}
 }
 
 // TODO: make width and height params to this functn
@@ -893,7 +952,7 @@ static void set_gui_radio_button_attribs(struct gui *gui)
 		gtk_radio_button_join_group(GTK_RADIO_BUTTON(r->widget), GTK_RADIO_BUTTON(group));
 		if (r->label == "Graded") group = r->widget; /* hack to ensure first radio group NULL, rest are first radio */
 		gtk_grid_attach(GTK_GRID(gui->grid), r->widget, r->col, r->row, 1, 1);
-		//g_signal_connect(r->widget, "toggled", r->handler, (gpointer) &radio_mask); // IFFY!
+		g_signal_connect(r->widget, r->signal.signal, r->signal.handler, r->signal.data);
 		radio_mask++;
 	}
 }
@@ -1025,16 +1084,28 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 			{
 				"clicked",
 				G_CALLBACK(on_dcn_plast),
-				NULL,
+				control,
 				false
 			}
 		},
 		.plast_radio_label = gtk_label_new("Plasticity"),
 		.plasticity_radios = {
-			{"Graded" , gtk_radio_button_new(NULL), 0, 3, {}},
-			{"Binary" , gtk_radio_button_new(NULL), 0, 4, {}}, 
-			{"Cascade", gtk_radio_button_new(NULL), 0, 5, {}},
-			{"Off"    , gtk_radio_button_new(NULL), 0, 6, {}}
+			{
+				"Graded", gtk_radio_button_new(NULL), 0, 3,
+				{"toggled", G_CALLBACK(on_radio), control, false}
+			},
+			{
+				"Binary", gtk_radio_button_new(NULL), 0, 4,
+				{"toggled", G_CALLBACK(on_radio), control, false}
+			}, 
+			{
+				"Cascade", gtk_radio_button_new(NULL), 0, 5,
+				{"toggled", G_CALLBACK(on_radio), control, false}
+			},
+			{
+				"Off", gtk_radio_button_new(NULL), 0, 6,
+				{"toggled", G_CALLBACK(on_radio), control, false}
+			}
 		},
 		.menu_bar = {
 			.menu = gtk_menu_bar_new(),
@@ -1138,7 +1209,7 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 							{"Save GR", gtk_menu_item_new(),
 								{
 									"activate",
-									G_CALLBACK(on_save_gr_psth),
+									G_CALLBACK(on_save_gr_raster),
 									control,
 									false
 								},
@@ -1147,7 +1218,7 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 							{"Save GO", gtk_menu_item_new(),
 								{
 									"activate",
-									G_CALLBACK(on_save_go_psth),
+									G_CALLBACK(on_save_go_raster),
 									control,
 									false
 								},
@@ -1156,7 +1227,7 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 							{"Save PC", gtk_menu_item_new(),
 								{
 									"activate",
-									G_CALLBACK(on_save_pc_psth),
+									G_CALLBACK(on_save_pc_raster),
 									control,
 									false
 								},
@@ -1165,7 +1236,7 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 							{"Save DCN", gtk_menu_item_new(),
 								{
 									"activate",
-									G_CALLBACK(on_save_nc_psth),
+									G_CALLBACK(on_save_nc_raster),
 									control,
 									false
 								},
@@ -1174,7 +1245,7 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 							{"Save CF", gtk_menu_item_new(),
 								{
 									"activate",
-									G_CALLBACK(on_save_io_psth),
+									G_CALLBACK(on_save_io_raster),
 									control,
 									false
 								},
@@ -1183,7 +1254,7 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 							{"Save BC", gtk_menu_item_new(),
 								{
 									"activate",
-									G_CALLBACK(on_save_bc_psth),
+									G_CALLBACK(on_save_bc_raster),
 									control,
 									false
 								},
@@ -1192,7 +1263,7 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 							{"Save SC", gtk_menu_item_new(),
 								{
 									"activate",
-									G_CALLBACK(on_save_sc_psth),
+									G_CALLBACK(on_save_sc_raster),
 									control,
 									false
 								},
@@ -1201,7 +1272,7 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 							{"Save MF", gtk_menu_item_new(),
 								{
 									"activate",
-									G_CALLBACK(on_save_mf_psth),
+									G_CALLBACK(on_save_mf_raster),
 									control,
 									false
 								},

@@ -16,8 +16,8 @@
 #include <string>
 #include <limits.h>
 #include <time.h>
-
 #include <cstdint>
+
 #include "cbmstate.h"
 #include "sfmt.h"
 #include "mzone.h"

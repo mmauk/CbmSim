@@ -5,11 +5,12 @@
 #include <fstream>
 #include <string>
 #include <algorithm>
+#include <functional>
 #include <iterator>
 #include <ctime>
+#include <cstdint>
 
 #include "commandline.h"
-#include <cstdint>
 #include "connectivityparams.h"
 #include "activityparams.h"
 #include "cbmstate.h"
@@ -69,29 +70,25 @@ class Control
 		bool spike_sums_initialized    = false;
 		enum sim_run_state run_state   = NOT_IN_RUN; 
 
-		std::string curr_build_file_name = "";
-		std::string curr_sim_file_name   = "";
-		std::string out_sim_file_name    = "";
-
 		// params that I do not know how to categorize
 		float goMin = 0.26; 
 		float spillFrac = 0.15; // go->gr synapse, part of build
 		float inputStrength = 0.0;
 
 		// sim params -> TODO: place in simcore
-		int gpuIndex = 0;
-		int gpuP2    = 2;
+		uint32_t gpuIndex = 0;
+		uint32_t gpuP2    = 2;
 
-		int trial;
+		uint32_t trial;
 		uint32_t raster_counter;
 
-		int csPhasicSize = 50;
+		uint32_t csPhasicSize = 50;
 
 		// mzone stuff -> TODO: place in build file down the road
-		int numMZones = 1; 
+		uint32_t numMZones = 1; 
 
 		// MFFreq params (formally in Simulation::getMFs, Simulation::getMFFreq)
-		int mfRandSeed = 3;
+		uint32_t mfRandSeed = 3;
 		float threshDecayTau = 4.0;
 
 		float nucCollFrac = 0.02;
@@ -122,15 +119,15 @@ class Control
 		float fracImport  = 0.0;
 		float fracOverlap = 0.2;
 
-		int trialTime = 0; 
+		uint32_t trialTime = 0; 
 	
 		// raster measurement params. 
-		int msPreCS = 0;
-		int msPostCS = 0;
-		int PSTHColSize = 0; // derived param, from msPreCS, msPostCS and csLength 
+		uint32_t msPreCS = 0;
+		uint32_t msPostCS = 0;
+		uint32_t PSTHColSize = 0; // derived param, from msPreCS, msPostCS and csLength 
 
-		enum plasticity pf_pc_plast;
-		enum plasticity mf_nc_plast;
+		enum plasticity pf_pc_plast = GRADED;
+		enum plasticity mf_nc_plast = GRADED;
 
 		std::string rf_names[NUM_CELL_TYPES];
 		std::string pf_names[NUM_CELL_TYPES]; 
@@ -147,11 +144,12 @@ class Control
 		const uint8_t *mfAP, *goSpks;
 		
 		const uint8_t *cell_spks[NUM_CELL_TYPES];
-		int rast_cell_nums[NUM_CELL_TYPES];
+		uint32_t rast_cell_nums[NUM_CELL_TYPES];
 		uint8_t **rasters[NUM_CELL_TYPES];
 		uint8_t **psths[NUM_CELL_TYPES];
 
 		uint32_t rast_sizes[NUM_CELL_TYPES]; 
+		std::function<void(std::string)> rast_save_funcs[NUM_CELL_TYPES];
 
 		float **pc_vm_raster;
 		float **nc_vm_raster;
@@ -159,7 +157,7 @@ class Control
 
 		void build_sim();
 
-		void set_plasticity_modes(parsed_commandline &p_cl);
+		void set_plasticity_modes(std::string pfpc_plasticity, std::string mfnc_plasticity);
 		void initialize_session(std::string sess_file);
 		void init_sim(std::string in_sim_filename);
 		void reset_sim(std::string in_sim_filename);
@@ -176,7 +174,9 @@ class Control
 		void initialize_rast_cell_nums();
 		void initialize_cell_spikes();
 		void initialize_spike_sums();
-		void initialize_rasters();
+		void initialize_rasters(); 
+		void initialize_raster_save_funcs();
+
 		void initialize_psths();
 
 		void runSession(struct gui *gui);
@@ -190,8 +190,7 @@ class Control
 		void calculate_firing_rates(float onset_cs, float offset_cs);
 		void fill_rasters(uint32_t raster_counter, uint32_t psth_counter);
 		void fill_psths(uint32_t psth_counter);
-		void save_raster(std::string filename, uint32_t id);
-		void save_rasters();
+		//void save_rasters();
 		void save_psths();
 
 		void delete_rasters();

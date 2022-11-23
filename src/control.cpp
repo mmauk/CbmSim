@@ -16,9 +16,6 @@ Control::Control(parsed_commandline &p_cl)
 	use_gui = (p_cl.vis_mode == "GUI") ? true : false;
 	if (!p_cl.build_file.empty())
 	{
-		curr_build_file_name = p_cl.build_file;
-		out_sim_file_name = p_cl.output_sim_file;
-
 		tokenized_file t_file;
 		lexed_file l_file;
 		parsed_build_file pb_file;
@@ -29,15 +26,12 @@ Control::Control(parsed_commandline &p_cl)
 	}
 	else if (!p_cl.session_file.empty())
 	{
-		curr_sim_file_name  = p_cl.input_sim_file;
-		out_sim_file_name   = p_cl.output_sim_file;
-
 		initialize_session(p_cl.session_file);
-		set_plasticity_modes(p_cl);
+		set_plasticity_modes(p_cl.pfpc_plasticity, p_cl.mfnc_plasticity);
 		get_raster_filenames(p_cl.raster_files);
 		get_psth_filenames(p_cl.psth_files);
 		get_weights_filenames(p_cl.weights_files);
-		init_sim(curr_sim_file_name);
+		init_sim(p_cl.input_sim_file);
 	}
 }
 
@@ -65,18 +59,18 @@ void Control::build_sim()
 	if (!simState) simState = new CBMState(numMZones);
 }
 
-void Control::set_plasticity_modes(parsed_commandline &p_cl)
+void Control::set_plasticity_modes(std::string pfpc_plasticity, std::string mfnc_plasticity)
 {
-	if (p_cl.pfpc_plasticity == "off") pf_pc_plast = OFF;
-	else if (p_cl.pfpc_plasticity == "graded") pf_pc_plast = GRADED;
-	else if (p_cl.pfpc_plasticity == "dual") pf_pc_plast = DUAL;
-	else if (p_cl.pfpc_plasticity == "cascade") pf_pc_plast = CASCADE;
+	if (pfpc_plasticity == "off") pf_pc_plast = OFF;
+	else if (pfpc_plasticity == "graded") pf_pc_plast = GRADED;
+	else if (pfpc_plasticity == "dual") pf_pc_plast = DUAL;
+	else if (pfpc_plasticity == "cascade") pf_pc_plast = CASCADE;
 
-	if (p_cl.mfnc_plasticity == "off") mf_nc_plast = OFF;
-	else if (p_cl.mfnc_plasticity == "graded") mf_nc_plast = GRADED;
+	if (mfnc_plasticity == "off") mf_nc_plast = OFF;
+	else if (mfnc_plasticity == "graded") mf_nc_plast = GRADED;
 	/* TODO: implement cmdline functionality to enable these */
-	else if (p_cl.mfnc_plasticity == "dual") mf_nc_plast = DUAL;
-	else if (p_cl.mfnc_plasticity == "cascade") mf_nc_plast = CASCADE;
+	else if (mfnc_plasticity == "dual") mf_nc_plast = DUAL;
+	else if (mfnc_plasticity == "cascade") mf_nc_plast = CASCADE;
 }
 
 void Control::initialize_session(std::string sess_file)
@@ -113,6 +107,7 @@ void Control::init_sim(std::string in_sim_filename)
 	initialize_rast_cell_nums();
 	initialize_cell_spikes();
 	initialize_rasters();
+	initialize_raster_save_funcs();
 	initialize_psths();
 	initialize_spike_sums();
 	sim_file_buf.close();
@@ -132,7 +127,6 @@ void Control::reset_sim(std::string in_sim_filename)
 	reset_psths();
 	reset_spike_sums();
 	sim_file_buf.close();
-	curr_sim_file_name = in_sim_filename;
 	// TODO: more things to reset?
 }
 
@@ -317,6 +311,22 @@ void Control::initialize_rasters()
 	raster_arrays_initialized = true;
 }
 
+void Control::initialize_raster_save_funcs()
+{
+	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
+	{
+		rast_save_funcs[i] = [this, i](std::string filename)
+		{
+			if (!filename.empty() && CELL_IDS[i] != "GR")
+			{
+				uint32_t row_size = (CELL_IDS[i] == "GR") ? this->PSTHColSize : this->PSTHColSize * this->td.num_trials;
+				std::cout << "[INFO]: Saving " << CELL_IDS[i] << " raster to '" <<  filename << "'\n";
+				write2DArray<uint8_t>(filename, this->rasters[i], row_size, this->rast_cell_nums[i]);
+			}
+		};
+	}
+}
+
 void Control::initialize_psths()
 {
 	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
@@ -343,7 +353,7 @@ void Control::runSession(struct gui *gui)
 		uint32_t useCS        = td.use_css[trial];
 		uint32_t onsetCS      = td.cs_onsets[trial];
 		uint32_t csLength     = td.cs_lens[trial];
-		uint32_t percentCS    = td.cs_percents[trial];
+		//uint32_t percentCS    = td.cs_percents[trial]; // unused for now
 		uint32_t useUS        = td.use_uss[trial];
 		uint32_t onsetUS      = td.us_onsets[trial];
 		
@@ -355,7 +365,7 @@ void Control::runSession(struct gui *gui)
 
 		std::cout << "[INFO]: Trial number: " << trial + 1 << "\n";
 		start = omp_get_wtime();
-		for (int ts = 0; ts < trialTime; ts++)
+		for (uint32_t ts = 0; ts < trialTime; ts++)
 		{
 			if (useUS == 1 && ts == onsetUS) /* deliver the US */
 			{
@@ -440,9 +450,9 @@ void Control::runSession(struct gui *gui)
 			//reset_spike_sums();
 		}
 		// save gr rasters into new file every trial 
-		std::string trial_gr_raster_name = OUTPUT_DATA_PATH + get_file_basename(rf_names[GR])
-									  + "_trial_" + std::to_string(trial) + "." + BIN_EXT;
-		save_raster(trial_gr_raster_name, GR);
+		//std::string trial_gr_raster_name = OUTPUT_DATA_PATH + get_file_basename(rf_names[GR])
+		//							  + "_trial_" + std::to_string(trial) + "." + BIN_EXT;
+		//save_raster(trial_gr_raster_name, GR);
 		trial++;
 	}
 	if (run_state == NOT_IN_RUN) std::cout << "[INFO]: Simulation terminated.\n";
@@ -450,7 +460,7 @@ void Control::runSession(struct gui *gui)
 	
 	if (!use_gui)
 	{
-		save_rasters();
+		//save_rasters();
 		save_psths();
 	}
 	run_state = NOT_IN_RUN;
@@ -507,23 +517,13 @@ void gen_gr_sample(int gr_indices[], int sample_size, int data_size)
 	}
 }
 
-void Control::save_raster(std::string filename, uint32_t id)
-{
-	if (!filename.empty() && CELL_IDS[id] != "GR")
-	{
-		uint32_t row_size = (CELL_IDS[id] == "GR") ? PSTHColSize : PSTHColSize * td.num_trials;
-		std::cout << "[INFO]: Saving " << CELL_IDS[id] << " raster to'" <<  filename << "'\n";
-		write2DArray<uint8_t>(rf_names[id], rasters[id], row_size, rast_cell_nums[id]);
-	}
-}
-
-void Control::save_rasters()
-{
-	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
-	{
-		save_raster(rf_names[i], i);
-	}
-}
+//void Control::save_rasters()
+//{
+//	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
+//	{
+//		save_raster(rf_names[i], i);
+//	}
+//}
 
 void Control::save_psths()
 {
@@ -542,9 +542,9 @@ void Control::update_spike_sums(int tts, float onset_cs, float offset_cs)
 	// update cs spikes
 	if (tts >= onset_cs && tts < offset_cs)
 	{
-		for (int i = 0; i < NUM_CELL_TYPES; i++)
+		for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 		{
-			for (int j = 0; j < spike_sums[i].num_cells; j++)
+			for (uint32_t j = 0; j < spike_sums[i].num_cells; j++)
 			{
 				spike_sums[i].cs_spike_sum += cell_spks[i][j];
 				spike_sums[i].cs_spike_counter[j] += cell_spks[i][j];
@@ -554,9 +554,9 @@ void Control::update_spike_sums(int tts, float onset_cs, float offset_cs)
 	// update non-cs spikes
 	else if (tts < onset_cs)
 	{
-		for (int i = 0; i < NUM_CELL_TYPES; i++)
+		for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 		{
-			for (int j = 0; j < spike_sums[i].num_cells; j++)
+			for (uint32_t j = 0; j < spike_sums[i].num_cells; j++)
 			{
 				spike_sums[i].non_cs_spike_sum += cell_spks[i][j];
 				spike_sums[i].non_cs_spike_counter[j] += cell_spks[i][j];
