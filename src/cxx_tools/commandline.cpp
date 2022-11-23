@@ -282,7 +282,17 @@ void validate_commandline(parsed_commandline &p_cl)
 				p_cl.output_sim_file = DEFAULT_SIM_OUT_FILE; 
 			}
 			else p_cl.output_sim_file = INPUT_DATA_PATH + p_cl.output_sim_file;
-			if (!p_cl.vis_mode.empty() || !p_cl.input_sim_file.empty() || !p_cl.raster_files.empty())
+			if (p_cl.vis_mode.empty())
+			{
+				std::cout << "[INFO]: Visual mode not specified. Setting to default of 'TUI'...\n";
+				p_cl.vis_mode = "TUI";
+			}
+			else if (p_cl.vis_mode == "GUI")
+			{
+				std::cout << "[IO_ERROR]: Cannot specify visual mode 'GUI' in build mode. Exiting...\n";
+				exit(7);
+			}
+			if (!p_cl.input_sim_file.empty() || !p_cl.raster_files.empty())
 			{
 				std::cout << "[INFO]: Ignoring additional arguments in build mode.\n";
 			}

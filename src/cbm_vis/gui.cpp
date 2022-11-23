@@ -524,7 +524,7 @@ static void on_exit_sim(GtkWidget *widget, struct gui *gui)
 }
 
 static void draw_raster(GtkWidget *drawing_area, cairo_t *cr, uint32_t trial, uint32_t num_cells,
-	  uint32_t num_col, uint8_t **raster_data)
+	  uint32_t num_row, uint8_t **raster_data)
 {
 	// background color setup
 	cairo_set_source_rgb(cr, 0, 0, 0);
@@ -544,7 +544,7 @@ static void draw_raster(GtkWidget *drawing_area, cairo_t *cr, uint32_t trial, ui
 	// raster sample size == 4096
 	// TODO: add pixel_height_per_cell var
 	float raster_to_pixel_scale_y = da.height / (float)num_cells;
-	float raster_to_pixel_scale_x = da.width / (float)num_col;
+	float raster_to_pixel_scale_x = da.width / (float)num_row;
 
 	cairo_translate(cr, 0, da.height);
 	cairo_scale(cr, raster_to_pixel_scale_x, -raster_to_pixel_scale_y);
@@ -552,14 +552,14 @@ static void draw_raster(GtkWidget *drawing_area, cairo_t *cr, uint32_t trial, ui
 	// point color
 	cairo_set_source_rgb(cr, 0.0, 1.0, 0.0);
 
-	uint32_t trial_start = trial * num_col;
-	uint32_t trial_end = trial_start + num_col;
+	uint32_t trial_start = trial * num_row;
+	uint32_t trial_end = trial_start + num_row;
 
 	for (uint32_t i = 0; i < num_cells; i++)
 	{
 		for (uint32_t j = trial_start; j < trial_end; j++)
 		{
-			if (raster_data[i][j])
+			if (raster_data[j][i])
 			{
 				cairo_rectangle(cr, j, i, 2, 2);
 				cairo_fill(cr);
@@ -670,17 +670,17 @@ static void draw_pc_plot(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 	// pc point color
 	cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
 	unsigned int trial_start = control->trial * control->PSTHColSize;
-	printf("%u\n", trial_start);
 	uint32_t k = trial_start;
+
 	// FIXME: not drawing on second trial
 	for (uint32_t i = 0; i < control->PSTHColSize; i++)
 	{
 		int alternator = 1;
 		for (int j = 0; j < num_pc; j++)
 		{
-			float vm_ij = control->pc_vm_raster[j][i] + alternator * 0.2 * ceil(j/2.0) * len_scale_y; 
+			float vm_ij = control->pc_vm_raster[i][j] + alternator * 0.2 * ceil(j/2.0) * len_scale_y; 
 			cairo_rectangle(cr, i, vm_ij, 1.0, 0.05);
-			if (control->rasters[PC][j][k])
+			if (control->rasters[PC][k][j])
 			{
 				cairo_rectangle(cr, i, vm_ij, 1.0, 1.0);
 			}
@@ -702,9 +702,9 @@ static void draw_pc_plot(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 		int alternator = 1;
 		for (int j = 0; j < num_nc; j++)
 		{
-			float vm_ij = nc_scale * control->nc_vm_raster[j][i] + nc_offset + alternator * 0.2 * ceil(j/2.0) * len_scale_y; 
+			float vm_ij = nc_scale * control->nc_vm_raster[i][j] + nc_offset + alternator * 0.2 * ceil(j/2.0) * len_scale_y; 
 			cairo_rectangle(cr, i, vm_ij, 1.0, 0.05);
-			if (control->rasters[NC][j][k])
+			if (control->rasters[NC][k][j])
 			{
 				cairo_rectangle(cr, i, vm_ij, 1.0, 1.0);
 			}
@@ -726,9 +726,9 @@ static void draw_pc_plot(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 		int alternator = 1;
 		for (int j = 0; j < num_io; j++)
 		{
-			float vm_ij = io_scale * control->io_vm_raster[j][i] + io_offset + alternator * 0.2 * ceil(j/2.0) * len_scale_y; 
+			float vm_ij = io_scale * control->io_vm_raster[i][j] + io_offset + alternator * 0.2 * ceil(j/2.0) * len_scale_y; 
 			cairo_rectangle(cr, i, vm_ij, 1.0, 0.05);
-			if (control->rasters[IO][j][k])
+			if (control->rasters[IO][k][j])
 			{
 				cairo_rectangle(cr, i, vm_ij, 1.0, 1.0);
 			}

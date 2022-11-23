@@ -43,14 +43,20 @@ int main(int argc, char **argv)
 		{
 			control->runSession(NULL);
 			if (!p_cl.output_sim_file.empty())
+			{
 				std::cout << "[INFO]: Saving simulation to file...\n";
 				control->save_sim_to_file(p_cl.output_sim_file);
+			}
 			if (!control->pf_pc_weights_file.empty())
+			{
 				std::cout << "[INFO]: Saving granule to purkinje weigths to file...\n";
 				control->save_pfpc_weights_to_file(p_cl.weights_files["PFPC"]);
+			}
 			if (!control->mf_nc_weights_file.empty())
+			{
 				std::cout << "[INFO]: Saving mossy fiber to deep nucleus weigths to file...\n";
 				control->save_mfdcn_weights_to_file(p_cl.weights_files["MFNC"]);
+			}
 		}
 	}
 	else if (p_cl.vis_mode == "GUI")

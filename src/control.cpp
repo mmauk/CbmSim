@@ -300,18 +300,18 @@ void Control::initialize_rasters()
 	{
 		if (!rf_names[i].empty() || use_gui)
 		{
-			/* granules are saved every trial, so their raster size is num_gr x PSTHColSize */
-			uint32_t column_size = (CELL_IDS[i] == "GR") ? PSTHColSize : PSTHColSize * td.num_trials;
-			rasters[i] = allocate2DArray<uint8_t>(rast_cell_nums[i], column_size);
+			/* granules are saved every trial, so their raster size is PSTHColSize  x num_gr */
+			uint32_t row_size = (CELL_IDS[i] == "GR") ? PSTHColSize : PSTHColSize * td.num_trials;
+			rasters[i] = allocate2DArray<uint8_t>(row_size, rast_cell_nums[i]);
 		}
 	}
 
 	if (use_gui)
 	{
 		// TODO: find a way to initialize only within gui mode
-		pc_vm_raster = allocate2DArray<float>(num_pc, PSTHColSize);
-		nc_vm_raster = allocate2DArray<float>(num_nc, PSTHColSize);
-		io_vm_raster = allocate2DArray<float>(num_io, PSTHColSize);
+		pc_vm_raster = allocate2DArray<float>(PSTHColSize, num_pc);
+		nc_vm_raster = allocate2DArray<float>(PSTHColSize, num_nc);
+		io_vm_raster = allocate2DArray<float>(PSTHColSize, num_io);
 	}
 
 	raster_arrays_initialized = true;
@@ -440,7 +440,9 @@ void Control::runSession(struct gui *gui)
 			//reset_spike_sums();
 		}
 		// save gr rasters into new file every trial 
-		save_gr_raster();
+		std::string trial_gr_raster_name = OUTPUT_DATA_PATH + get_file_basename(rf_names[GR])
+									  + "_trial_" + std::to_string(trial) + "." + BIN_EXT;
+		save_raster(trial_gr_raster_name, GR);
 		trial++;
 	}
 	if (run_state == NOT_IN_RUN) std::cout << "[INFO]: Simulation terminated.\n";
@@ -471,8 +473,8 @@ void Control::reset_rasters()
 	{
 		if (!rf_names[i].empty() || use_gui)
 		{
-			uint32_t column_size = (CELL_IDS[i] == "GR") ? PSTHColSize : (PSTHColSize * td.num_trials);
-			memset(rasters[i][0], '\000', rast_cell_nums[i] * column_size * sizeof(uint8_t));
+			uint32_t row_size = (CELL_IDS[i] == "GR") ? PSTHColSize : PSTHColSize * td.num_trials;
+			memset(rasters[i][0], '\000', row_size * rast_cell_nums[i] * sizeof(uint8_t));
 		}
 	}
 }
@@ -505,14 +507,13 @@ void gen_gr_sample(int gr_indices[], int sample_size, int data_size)
 	}
 }
 
-void Control::save_gr_raster()
+void Control::save_raster(std::string filename, uint32_t id)
 {
-	if (!rf_names[GR].empty())
+	if (!filename.empty() && CELL_IDS[id] != "GR")
 	{
-		std::string trial_raster_name = OUTPUT_DATA_PATH + get_file_basename(rf_names[GR])
-									  + "_trial_" + std::to_string(trial) + "." + BIN_EXT;
-		std::cout << "[INFO]: GR Raster file name: " << trial_raster_name << "\n";
-		write2DArray<uint8_t>(trial_raster_name, rasters[GR], num_gr, PSTHColSize);
+		uint32_t row_size = (CELL_IDS[id] == "GR") ? PSTHColSize : PSTHColSize * td.num_trials;
+		std::cout << "[INFO]: Saving " << CELL_IDS[id] << " raster to'" <<  filename << "'\n";
+		write2DArray<uint8_t>(rf_names[id], rasters[id], row_size, rast_cell_nums[id]);
 	}
 }
 
@@ -520,11 +521,7 @@ void Control::save_rasters()
 {
 	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
-		if (!rf_names[i].empty() && CELL_IDS[i] != "GR")
-		{
-			std::cout << "[INFO]: Filling " << CELL_IDS[i] << " raster file...\n";
-			write2DArray<uint8_t>(rf_names[i], rasters[i], rast_cell_nums[i], PSTHColSize * td.num_trials);
-		}
+		save_raster(rf_names[i], i);
 	}
 }
 
@@ -629,7 +626,7 @@ void Control::fill_rasters(uint32_t raster_counter, uint32_t psth_counter)
 			}
 			for (uint32_t j = 0; j < rast_cell_nums[i]; j++)
 			{
-				rasters[i][j][temp_counter] = cell_spks[i][j];
+				rasters[i][temp_counter][j] = cell_spks[i][j];
 			}
 		}
 	}
@@ -639,17 +636,17 @@ void Control::fill_rasters(uint32_t raster_counter, uint32_t psth_counter)
 		const float* vm_pc = simCore->getMZoneList()[0]->exportVmPC();
 		for (int i = 0; i < num_pc; i++)
 		{
-			pc_vm_raster[i][psth_counter] = vm_pc[i];
+			pc_vm_raster[psth_counter][i] = vm_pc[i];
 		}
 		const float* vm_io = simCore->getMZoneList()[0]->exportVmIO();
 		for (int i = 0; i < num_io; i++)
 		{
-			io_vm_raster[i][psth_counter] = vm_io[i];
+			io_vm_raster[psth_counter][i] = vm_io[i];
 		}
 		const float* vm_nc = simCore->getMZoneList()[0]->exportVmNC();
 		for (int i = 0; i < num_nc; i++)
 		{
-			nc_vm_raster[i][psth_counter] = vm_nc[i];
+			nc_vm_raster[psth_counter][i] = vm_nc[i];
 		}
 	}
 }
