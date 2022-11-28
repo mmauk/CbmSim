@@ -114,22 +114,14 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 	{
 		if (cmd_opt_exists(tokens, opt) == 1)
 		{
-			char opt_char_code = opt[2];
-			switch (opt_char_code)
-			{
-				case 'p':
-					p_cl.pfpc_plasticity = "off";
-					break;
-				case 'm':
-					p_cl.mfnc_plasticity = "off";
-					break;
-				case 'b':
-					p_cl.pfpc_plasticity = "dual";
-					break;
-				case 'c':
-					p_cl.pfpc_plasticity = "cascade";
-					break;
-			}
+			if (opt == "--pfpc-off")
+				p_cl.pfpc_plasticity = "off";
+			else if (opt == "--mfnc-off")
+				p_cl.mfnc_plasticity = "off";
+			else if (opt == "--binary")
+				p_cl.pfpc_plasticity = "binary";
+			else if (opt == "--cascade")
+				p_cl.pfpc_plasticity = "cascade";
 		}
 	}
 

@@ -125,7 +125,7 @@ static void save_file(GtkWidget *widget, Control *control, std::function<void(st
 
 static void on_load_session_file(GtkWidget *widget, Control *control)
 {
-	load_file(widget, control, &Control::initialize_session, "[ERROR]: Could not open experiment file.");
+	load_file(widget, control, &Control::initialize_session, "[ERROR]: Could not open session file.");
 }
 
 static void on_load_sim_file(GtkWidget *widget, Control *control)
@@ -533,6 +533,8 @@ static void on_toggle_run(GtkWidget *widget, struct gui *gui)
 				gtk_button_set_label(GTK_BUTTON(widget), "Pause");
 				gui->ctrl_ptr->run_state = IN_RUN_NO_PAUSE;
 				gtk_widget_show(gui->normal_buttons[1].widget);
+				// FIXME: thats a segfault: where is the object this guy is called upon???
+				//g_thread_new("sim_thread", (GThreadFunc)&Control::runSession, gui);
 				gui->ctrl_ptr->runSession(gui);
 				gtk_button_set_label(GTK_BUTTON(widget), "Run");
 				gtk_widget_hide(gui->normal_buttons[1].widget);
@@ -777,61 +779,22 @@ static void draw_pc_plot(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 	}
 } 
 
-static void generate_raster_plot(GtkWidget *widget,
-	  void (* draw_func)(GtkWidget *, cairo_t *, Control *), Control *control)
+static void generate_plot(GtkWidget *widget, void (* draw_func)(GtkWidget *, cairo_t *, Control *),
+	Control *control, const gchar *title, gint width, gint height)
 {
+	if (!control->sim_initialized)
+	{
+		std::cout << "[ERROR]: Simulation not initialized. Nothing to show...\n";
+		return;
+	}
 	GtkWidget *child_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	
-	gtk_window_set_title(GTK_WINDOW(child_window), "Raster Plot");
-	gtk_window_set_default_size(GTK_WINDOW(child_window),
-								DEFAULT_RASTER_WINDOW_WIDTH,
-								DEFAULT_RASTER_WINDOW_HEIGHT);
+	gtk_window_set_title(GTK_WINDOW(child_window), title);
+	gtk_window_set_default_size(GTK_WINDOW(child_window), width, height);
 	gtk_window_set_resizable(GTK_WINDOW(child_window), FALSE);
 
 	GtkWidget *drawing_area = gtk_drawing_area_new();
-	gtk_widget_set_size_request(drawing_area,
-								DEFAULT_RASTER_WINDOW_WIDTH,
-								DEFAULT_RASTER_WINDOW_HEIGHT);
-	gtk_container_add(GTK_CONTAINER(child_window), drawing_area);
-	g_signal_connect(G_OBJECT(drawing_area), "draw", G_CALLBACK(draw_func), control);
-	gtk_widget_show_all(child_window);
-}
-
-static void generate_pfpc_plot(GtkWidget *widget,
-	  void (* draw_func)(GtkWidget *, cairo_t *, Control *), Control *control)
-{
-	GtkWidget *child_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	
-	gtk_window_set_title(GTK_WINDOW(child_window), "PFPC Weights");
-	gtk_window_set_default_size(GTK_WINDOW(child_window),
-								DEFAULT_PFPC_WINDOW_WIDTH,
-								DEFAULT_PFPC_WINDOW_HEIGHT);
-	gtk_window_set_resizable(GTK_WINDOW(child_window), FALSE);
-
-	GtkWidget *drawing_area = gtk_drawing_area_new();
-	gtk_widget_set_size_request(drawing_area,
-								DEFAULT_PFPC_WINDOW_WIDTH,
-								DEFAULT_PFPC_WINDOW_HEIGHT);
-	gtk_container_add(GTK_CONTAINER(child_window), drawing_area);
-	g_signal_connect(G_OBJECT(drawing_area), "draw", G_CALLBACK(draw_func), control);
-	gtk_widget_show_all(child_window);
-}
-
-static void generate_pc_plot(GtkWidget *widget,
-	  void (* draw_func)(GtkWidget *, cairo_t *, Control *), Control *control)
-{
-	GtkWidget *child_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	
-	gtk_window_set_title(GTK_WINDOW(child_window), "PC Window");
-	gtk_window_set_default_size(GTK_WINDOW(child_window),
-								DEFAULT_PC_WINDOW_WIDTH,
-								DEFAULT_PC_WINDOW_HEIGHT);
-	gtk_window_set_resizable(GTK_WINDOW(child_window), FALSE);
-
-	GtkWidget *drawing_area = gtk_drawing_area_new();
-	gtk_widget_set_size_request(drawing_area,
-								DEFAULT_PC_WINDOW_WIDTH,
-								DEFAULT_PC_WINDOW_HEIGHT);
+	gtk_widget_set_size_request(drawing_area, width, height);
 	gtk_container_add(GTK_CONTAINER(child_window), drawing_area);
 	g_signal_connect(G_OBJECT(drawing_area), "draw", G_CALLBACK(draw_func), control);
 	gtk_widget_show_all(child_window);
@@ -845,22 +808,31 @@ static void on_quit(GtkWidget *widget, Control *control)
 
 static void on_gr_raster(GtkWidget *widget, Control *control)
 {
-	generate_raster_plot(widget, draw_gr_raster, control);
+	generate_plot(widget, draw_gr_raster, control, "GR Rasters",
+		DEFAULT_RASTER_WINDOW_WIDTH, DEFAULT_RASTER_WINDOW_HEIGHT);
 }
 
 static void on_go_raster(GtkWidget *widget, Control *control)
 {
-	generate_raster_plot(widget, draw_go_raster, control);
+	generate_plot(widget, draw_go_raster, control, "GO Rasters",
+		DEFAULT_RASTER_WINDOW_WIDTH, DEFAULT_RASTER_WINDOW_HEIGHT);
+}
+
+static void on_pfpc_window(GtkWidget *widget, Control *control)
+{
+	generate_plot(widget, draw_pf_pc_plot, control, "PF-PC Weights",
+		DEFAULT_PFPC_WINDOW_WIDTH, DEFAULT_PFPC_WINDOW_HEIGHT);
 }
 
 static void on_pc_window(GtkWidget *widget, Control *control)
 {
-	generate_pc_plot(widget, draw_pc_plot, control);
+	generate_plot(widget, draw_pc_plot, control, "PC Window",
+		DEFAULT_PC_WINDOW_WIDTH, DEFAULT_PC_WINDOW_HEIGHT);
 }
 
 static bool on_parameters(GtkWidget *widget, gpointer data)
 {
-	return assert(false, "Not implemented", __func__);
+	return assert(false, "[DEBUG]: Not implemented", __func__);
 }
 
 static void on_dcn_plast(GtkWidget *widget, Control *control)
@@ -886,7 +858,7 @@ static void on_radio(GtkWidget *widget, Control *control)
 		if (this_rad_label == "Graded")
 			control->pf_pc_plast = GRADED;
 		else if (this_rad_label == "Binary")
-			control->pf_pc_plast = DUAL;
+			control->pf_pc_plast = BINARY;
 		else if (this_rad_label == "Cascade")
 			control->pf_pc_plast = CASCADE;
 		else if (this_rad_label == "Off")
@@ -894,7 +866,6 @@ static void on_radio(GtkWidget *widget, Control *control)
 	}
 }
 
-// TODO: make width and height params to this functn
 static void set_gui_window_attribs(struct gui *gui)
 {
 	gtk_window_set_title(GTK_WINDOW(gui->window), "Main Window");
@@ -902,7 +873,7 @@ static void set_gui_window_attribs(struct gui *gui)
 	gtk_window_set_position(GTK_WINDOW(gui->window), GTK_WIN_POS_CENTER);
 
 	gtk_widget_add_events(gui->window, GDK_DELETE);
-	g_signal_connect(gui->window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
+	g_signal_connect(gui->window, "destroy", G_CALLBACK(on_quit), gui->ctrl_ptr);
 }
 
 static void set_gui_grid_attribs(struct gui *gui)
@@ -925,6 +896,7 @@ static void set_gui_normal_button_attribs(struct gui *gui)
 static void set_gui_dcn_plast_button_attribs(struct gui *gui)
 {
 	gtk_button_set_label(GTK_BUTTON(gui->dcn_plast_button.widget), gui->dcn_plast_button.label);
+	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(gui->dcn_plast_button.widget), true);
 	gtk_widget_set_hexpand(gui->dcn_plast_button.widget, true);
 	gtk_widget_set_vexpand(gui->dcn_plast_button.widget, true);
 	gtk_grid_attach(GTK_GRID(gui->grid),
@@ -1028,83 +1000,45 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 		.grid = gtk_grid_new(),
 		.normal_buttons = {
 			{"Run", gtk_button_new(), 0, 0,
-				{
-					"clicked",
-					G_CALLBACK(on_toggle_run),
-					&gui,
-					false
-				}
+				{ "clicked", G_CALLBACK(on_toggle_run), &gui, false }
 			},
 			{"Exit Sim", gtk_button_new(), 0, 1,
-				{
-					"clicked",
-					G_CALLBACK(on_exit_sim),
-					&gui,
-					false
-				}
+				{ "clicked", G_CALLBACK(on_exit_sim), &gui, false }
 			},
 			{"GR Raster", gtk_button_new(), 1, 0,
-				{
-				   "clicked",
-				   G_CALLBACK(on_gr_raster),
-				   control,
-				   false
-				}
+				{ "clicked", G_CALLBACK(on_gr_raster), control, false }
 			},
 			{"GO Raster", gtk_button_new(), 1, 1,
-				{
-				   "clicked",
-				   G_CALLBACK(on_go_raster),
-				   control,
-				   false
-				}
+				{ "clicked", G_CALLBACK(on_go_raster), control, false }
 			},
 			{"PC Window", gtk_button_new(), 1, 2,
-				{
-				   "clicked",
-				   G_CALLBACK(on_pc_window),
-				   control,
-				   false
-				}
+				{ "clicked", G_CALLBACK(on_pc_window), control, false }
 			},
 			{"Parameters", gtk_button_new(), 1, 3,
-				{
-				   "clicked",
-				   G_CALLBACK(on_parameters),
-				   NULL,
-				   false
-				}
+				{ "clicked", G_CALLBACK(on_parameters), NULL, false }
 			},
 		},
 		.dcn_plast_button = {
-			"DCN Plasticity",
-			gtk_check_button_new(),
-			1,
-			4,
-			{
-				"clicked",
-				G_CALLBACK(on_dcn_plast),
-				control,
-				false
-			}
+			"DCN Plasticity", gtk_check_button_new(), 1, 4,
+			{ "clicked", G_CALLBACK(on_dcn_plast), control, false }
 		},
 		.plast_radio_label = gtk_label_new("Plasticity"),
 		.plasticity_radios = {
 			{
 				"Graded", gtk_radio_button_new(NULL), 0, 3,
-				{"toggled", G_CALLBACK(on_radio), control, false}
+				{ "toggled", G_CALLBACK(on_radio), control, false }
 			},
 			{
 				"Binary", gtk_radio_button_new(NULL), 0, 4,
-				{"toggled", G_CALLBACK(on_radio), control, false}
+				{ "toggled", G_CALLBACK(on_radio), control, false }
 			}, 
 			{
 				"Cascade", gtk_radio_button_new(NULL), 0, 5,
-				{"toggled", G_CALLBACK(on_radio), control, false}
+				{ "toggled", G_CALLBACK(on_radio), control, false }
 			},
 			{
 				"Off", gtk_radio_button_new(NULL), 0, 6,
-				{"toggled", G_CALLBACK(on_radio), control, false}
+				{ "toggled", G_CALLBACK(on_radio), control, false }
 			}
 		},
 		.menu_bar = {
@@ -1119,43 +1053,23 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 								{gtk_menu_new(), NUM_FILE_SUB_MENU_ITEMS, new menu_item[NUM_FILE_SUB_MENU_ITEMS]
 									{
 										{"Session File", gtk_menu_item_new(),
-											{
-												"activate",
-												G_CALLBACK(on_load_session_file),
-												control,
-												false
-											},
+											{ "activate", G_CALLBACK(on_load_session_file), control, false },
 											{}
 										},
 										{"Simulation File", gtk_menu_item_new(),
-											{
-												"activate",
-												G_CALLBACK(on_load_sim_file),
-												control,
-												false
-											},
+											{ "activate", G_CALLBACK(on_load_sim_file), control, false },
 											{}
 										}
 									}
 								}
 							},
 							{"Save Sim", gtk_menu_item_new(),
-								{
-									"activate",
-									G_CALLBACK(on_save_sim),
-									control,
-									false
-								},
+								{ "activate", G_CALLBACK(on_save_sim), control, false },
 								{}
 							},
 							{"", gtk_separator_menu_item_new(), {}, {}},
 							{"Quit", gtk_menu_item_new(),
-								{
-									"activate",
-									G_CALLBACK(on_quit),
-									control,
-									false
-								},  
+								{ "activate", G_CALLBACK(on_quit), control, false },
 								{}
 							},
 						}
@@ -1165,39 +1079,19 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 					{gtk_menu_new(), NUM_WEIGHTS_MENU_ITEMS, new menu_item[NUM_WEIGHTS_MENU_ITEMS]
 						{
 							{"Save PF-PC", gtk_menu_item_new(),
-								{
-									"activate",
-									G_CALLBACK(on_save_pfpc_weights),
-									control,
-									false
-								},
+								{ "activate", G_CALLBACK(on_save_pfpc_weights), control, false },
 								{}
 							},
 							{"Load PF-PC", gtk_menu_item_new(),
-								{
-									"activate",
-									G_CALLBACK(on_load_pfpc_weights),
-									control,
-									false
-								},
+								{ "activate", G_CALLBACK(on_load_pfpc_weights), control, false },
 								{}
 							},
 							{"Save MF-DN", gtk_menu_item_new(),
-								{
-									"activate",
-									G_CALLBACK(on_save_mfdcn_weights),
-									control,
-									false
-								},
+								{ "activate", G_CALLBACK(on_save_mfdcn_weights), control, false },
 								{}
 							},
 							{"Load MF-DN", gtk_menu_item_new(),
-								{
-									"activate",
-									G_CALLBACK(on_load_mfdcn_weights),
-									control,
-									false
-								},
+								{ "activate", G_CALLBACK(on_load_mfdcn_weights), control, false },
 								{}
 							}
 						}
@@ -1207,75 +1101,35 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 					{gtk_menu_new(), NUM_RASTER_MENU_ITEMS, new menu_item[NUM_RASTER_MENU_ITEMS]
 						{
 							{"Save GR", gtk_menu_item_new(),
-								{
-									"activate",
-									G_CALLBACK(on_save_gr_raster),
-									control,
-									false
-								},
+								{ "activate", G_CALLBACK(on_save_gr_raster), control, false },
 								{}
 							},
 							{"Save GO", gtk_menu_item_new(),
-								{
-									"activate",
-									G_CALLBACK(on_save_go_raster),
-									control,
-									false
-								},
+								{ "activate", G_CALLBACK(on_save_go_raster), control, false },
 								{}
 							},
 							{"Save PC", gtk_menu_item_new(),
-								{
-									"activate",
-									G_CALLBACK(on_save_pc_raster),
-									control,
-									false
-								},
+								{ "activate", G_CALLBACK(on_save_pc_raster), control, false },
 								{}
 							},
 							{"Save DCN", gtk_menu_item_new(),
-								{
-									"activate",
-									G_CALLBACK(on_save_nc_raster),
-									control,
-									false
-								},
+								{ "activate", G_CALLBACK(on_save_nc_raster), control, false },
 								{}
 							},
-							{"Save CF", gtk_menu_item_new(),
-								{
-									"activate",
-									G_CALLBACK(on_save_io_raster),
-									control,
-									false
-								},
+							{"Save IO", gtk_menu_item_new(),
+								{ "activate", G_CALLBACK(on_save_io_raster), control, false },
 								{}
 							},
 							{"Save BC", gtk_menu_item_new(),
-								{
-									"activate",
-									G_CALLBACK(on_save_bc_raster),
-									control,
-									false
-								},
+								{ "activate", G_CALLBACK(on_save_bc_raster), control, false },
 								{}
 							},
 							{"Save SC", gtk_menu_item_new(),
-								{
-									"activate",
-									G_CALLBACK(on_save_sc_raster),
-									control,
-									false
-								},
+								{ "activate", G_CALLBACK(on_save_sc_raster), control, false },
 								{}
 							},
 							{"Save MF", gtk_menu_item_new(),
-								{
-									"activate",
-									G_CALLBACK(on_save_mf_raster),
-									control,
-									false
-								},
+								{ "activate", G_CALLBACK(on_save_mf_raster), control, false },
 								{}
 							},
 						}
@@ -1285,12 +1139,7 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 					{gtk_menu_new(), NUM_ANALYSIS_MENU_ITEMS, new menu_item[NUM_ANALYSIS_MENU_ITEMS]
 						{
 							{"Firing Rates", gtk_menu_item_new(),
-								{
-									"activate",
-									G_CALLBACK(on_firing_rates_window),
-									&gui,
-									false
-								},
+								{ "activate", G_CALLBACK(on_firing_rates_window), &gui, false },
 								{}
 							},
 						}
@@ -1300,12 +1149,7 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 					{gtk_menu_new(), NUM_TUNING_MENU_ITEMS, new menu_item[NUM_TUNING_MENU_ITEMS]
 						{
 							{"Tuning", gtk_menu_item_new(),
-								{
-									"activate",
-									G_CALLBACK(on_tuning_window),
-									&gui,
-									false
-								},
+								{ "activate", G_CALLBACK(on_tuning_window), &gui, false },
 								{}
 							},
 						}
@@ -1317,158 +1161,68 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 			.window = NULL,
 			.grid = NULL,
 			.headers = {
-				{
-					NULL, "Cell", 0, 0
-				},
-				{
-					NULL, "Non-CS r_mean", 1, 0
-				},
-				{
-					NULL, "Non-CS r_median", 2, 0
-				},
-				{
-					NULL, "CS r_mean", 3, 0
-				},
-				{
-					NULL, "CS r_median", 4, 0
-				}
+				{ NULL,            "Cell", 0, 0 },
+				{ NULL,   "Non-CS r_mean", 1, 0 },
+				{ NULL, "Non-CS r_median", 2, 0 },
+				{ NULL,       "CS r_mean", 3, 0 },
+				{ NULL,     "CS r_median", 4, 0 },
 			},
 			.cell_labels = {
 				{
-					{
-						NULL, "MF", 0, 1
-					},
-					{
-						NULL, "0.00", 1, 1
-					},
-					{
-						NULL, "0.00", 2, 1
-					},
-					{
-						NULL, "0.00", 3, 1
-					},
-					{
-						NULL, "0.00", 4, 1
-					}
+					{ NULL,   "MF", 0, 1 },
+					{ NULL, "0.00", 1, 1 },
+					{ NULL, "0.00", 2, 1 },
+					{ NULL, "0.00", 3, 1 },
+					{ NULL, "0.00", 4, 1 },
 				},
 				{
-					{
-						NULL, "GR", 0, 2
-					},
-					{
-						NULL, "0.00", 1, 2
-					},
-					{
-						NULL, "0.00", 2, 2
-					},
-					{
-						NULL, "0.00", 3, 2
-					},
-					{
-						NULL, "0.00", 4, 2
-					}
+					{ NULL,   "GR", 0, 2 },
+					{ NULL, "0.00", 1, 2 },
+					{ NULL, "0.00", 2, 2 },
+					{ NULL, "0.00", 3, 2 },
+					{ NULL, "0.00", 4, 2 },
 				},
 				{
-					{
-						NULL, "GO", 0, 3
-					},
-					{
-						NULL, "0.00", 1, 3
-					},
-					{
-						NULL, "0.00", 2, 3
-					},
-					{
-						NULL, "0.00", 3, 3
-					},
-					{
-						NULL, "0.00", 4, 3
-					}
+					{ NULL,   "GO", 0, 3 },
+					{ NULL, "0.00", 1, 3 },
+					{ NULL, "0.00", 2, 3 },
+					{ NULL, "0.00", 3, 3 },
+					{ NULL, "0.00", 4, 3 },
 				},
 				{
-					{
-						NULL, "BC", 0, 4
-					},
-					{
-						NULL, "0.00", 1, 4
-					},
-					{
-						NULL, "0.00", 2, 4
-					},
-					{
-						NULL, "0.00", 3, 4
-					},
-					{
-						NULL, "0.00", 4, 4
-					}
+					{ NULL,   "BC", 0, 4 },
+					{ NULL, "0.00", 1, 4 },
+					{ NULL, "0.00", 2, 4 },
+					{ NULL, "0.00", 3, 4 },
+					{ NULL, "0.00", 4, 4 },
 				},
 				{
-					{
-						NULL, "SC", 0, 5
-					},
-					{
-						NULL, "0.00", 1, 5
-					},
-					{
-						NULL, "0.00", 2, 5
-					},
-					{
-						NULL, "0.00", 3, 5
-					},
-					{
-						NULL, "0.00", 4, 5
-					}
+					{ NULL,   "SC", 0, 5 },
+					{ NULL, "0.00", 1, 5 },
+					{ NULL, "0.00", 2, 5 },
+					{ NULL, "0.00", 3, 5 },
+					{ NULL, "0.00", 4, 5 },
 				},
 				{
-					{
-						NULL, "PC", 0, 6
-					},
-					{
-						NULL, "0.00", 1, 6
-					},
-					{
-						NULL, "0.00", 2, 6
-					},
-					{
-						NULL, "0.00", 3, 6
-					},
-					{
-						NULL, "0.00", 4, 6
-					}
+					{ NULL,   "PC", 0, 6 },
+					{ NULL, "0.00", 1, 6 },
+					{ NULL, "0.00", 2, 6 },
+					{ NULL, "0.00", 3, 6 },
+					{ NULL, "0.00", 4, 6 },
 				},
 				{
-					{
-						NULL, "IO", 0, 7
-					},
-					{
-						NULL, "0.00", 1, 7
-					},
-					{
-						NULL, "0.00", 2, 7
-					},
-					{
-						NULL, "0.00", 3, 7
-					},
-					{
-						NULL, "0.00", 4, 7
-					}
+					{ NULL,   "IO", 0, 7 },
+					{ NULL, "0.00", 1, 7 },
+					{ NULL, "0.00", 2, 7 },
+					{ NULL, "0.00", 3, 7 },
+					{ NULL, "0.00", 4, 7 },
 				},
 				{
-					{
-						NULL, "DCN", 0, 8
-					},
-					{
-						NULL, "0.00", 1, 8
-					},
-					{
-						NULL, "0.00", 2, 8
-					},
-					{
-						NULL, "0.00", 3, 8
-					},
-					{
-						NULL, "0.00", 4, 8
-					}
+					{ NULL,  "DCN", 0, 8 },
+					{ NULL, "0.00", 1, 8 },
+					{ NULL, "0.00", 2, 8 },
+					{ NULL, "0.00", 3, 8 },
+					{ NULL, "0.00", 4, 8 },
 				}
 			}
 		},

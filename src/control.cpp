@@ -33,6 +33,10 @@ Control::Control(parsed_commandline &p_cl)
 		get_weights_filenames(p_cl.weights_files);
 		init_sim(p_cl.input_sim_file);
 	}
+	else // user ran executable with no args FIXME: find out how to initialize with gui, couple similar parts of code
+	{
+		set_plasticity_modes("graded", "graded"); 
+	}
 }
 
 Control::~Control()
@@ -63,18 +67,20 @@ void Control::set_plasticity_modes(std::string pfpc_plasticity, std::string mfnc
 {
 	if (pfpc_plasticity == "off") pf_pc_plast = OFF;
 	else if (pfpc_plasticity == "graded") pf_pc_plast = GRADED;
-	else if (pfpc_plasticity == "dual") pf_pc_plast = DUAL;
+	else if (pfpc_plasticity == "binary") pf_pc_plast = BINARY;
 	else if (pfpc_plasticity == "cascade") pf_pc_plast = CASCADE;
+
 
 	if (mfnc_plasticity == "off") mf_nc_plast = OFF;
 	else if (mfnc_plasticity == "graded") mf_nc_plast = GRADED;
 	/* TODO: implement cmdline functionality to enable these */
-	else if (mfnc_plasticity == "dual") mf_nc_plast = DUAL;
+	else if (mfnc_plasticity == "binary") mf_nc_plast = BINARY;
 	else if (mfnc_plasticity == "cascade") mf_nc_plast = CASCADE;
 }
 
 void Control::initialize_session(std::string sess_file)
 {
+	std::cout << "[INFO]: Initializing session...\n";
 	tokenized_file t_file;
 	lexed_file l_file;
 	tokenize_file(sess_file, t_file);
@@ -88,6 +94,7 @@ void Control::initialize_session(std::string sess_file)
 	PSTHColSize = msPreCS + td.cs_lens[0] + msPostCS;
 
 	trials_data_initialized = true;
+	std::cout << "[INFO]: Session initialized.\n";
 }
 
 void Control::init_sim(std::string in_sim_filename)
@@ -409,8 +416,6 @@ void Control::runSession(struct gui *gui)
 				std::cout << "[INFO]: Mean gGRGO   = " << gGRGO_sum / (num_go * csLength) << "\n";
 				std::cout << "[INFO]: Mean gMFGO   = " << gMFGO_sum / (num_go * csLength) << "\n";
 				std::cout << "[INFO]: GR:MF ratio  = " << gGRGO_sum / gMFGO_sum << "\n";
-				std::cout << "[DEBUG]: raster counter: " << raster_counter << "\n";
-				std::cout << "[DEBUG]: psth counter: " << PSTHCounter << "\n";
 			}
 			
 			/* data collection */
@@ -441,7 +446,7 @@ void Control::runSession(struct gui *gui)
 			if (run_state == IN_RUN_PAUSE)
 			{
 				std::cout << "[INFO]: Simulation is paused at end of trial " << trial+1 << ".\n";
-				while(run_state == IN_RUN_PAUSE)
+				while (run_state == IN_RUN_PAUSE)
 				{
 					if (gtk_events_pending()) gtk_main_iteration();
 				}
