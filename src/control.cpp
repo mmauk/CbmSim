@@ -249,7 +249,7 @@ void Control::get_weights_filenames(std::map<std::string, std::string> &weights_
 void Control::initialize_rast_cell_nums()
 {
 	rast_cell_nums[MF] = num_mf;
-	rast_cell_nums[GR] = num_gr; /* may need to change this to lower value for gui */
+	rast_cell_nums[GR] = num_gr; 
 	rast_cell_nums[GO] = num_go;
 	rast_cell_nums[BC] = num_bc;
 	rast_cell_nums[SC] = num_sc;
@@ -260,37 +260,25 @@ void Control::initialize_rast_cell_nums()
 
 void Control::initialize_cell_spikes()
 {
-	cell_spks[MF] = mfs->getAPs();
+	cell_spikes[MF] = mfs->getAPs();
 	/* NOTE: incurs a call to cudaMemcpy from device to host, but initializing so is not repeatedly called */
-	cell_spks[GR] = simCore->getInputNet()->exportAPGR(); 
-	cell_spks[GO] = simCore->getInputNet()->exportAPGO(); 
-	cell_spks[BC] = simCore->getMZoneList()[0]->exportAPBC(); 
-	cell_spks[SC] = simCore->getMZoneList()[0]->exportAPSC();
-	cell_spks[PC] = simCore->getMZoneList()[0]->exportAPPC();
-	cell_spks[IO] = simCore->getMZoneList()[0]->exportAPIO();
-	cell_spks[NC] = simCore->getMZoneList()[0]->exportAPNC();
+	cell_spikes[GR] = simCore->getInputNet()->exportAPGR(); 
+	cell_spikes[GO] = simCore->getInputNet()->exportAPGO(); 
+	cell_spikes[BC] = simCore->getMZoneList()[0]->exportAPBC(); 
+	cell_spikes[SC] = simCore->getMZoneList()[0]->exportAPSC();
+	cell_spikes[PC] = simCore->getMZoneList()[0]->exportAPPC();
+	cell_spikes[IO] = simCore->getMZoneList()[0]->exportAPIO();
+	cell_spikes[NC] = simCore->getMZoneList()[0]->exportAPNC();
 }
 
 void Control::initialize_spike_sums()
 {
-	/* TODO: remove */
-	spike_sums[MF].num_cells  = num_mf;
-	spike_sums[GR].num_cells  = num_gr;
-	spike_sums[GO].num_cells  = num_go;
-	spike_sums[BC].num_cells  = num_bc;
-	spike_sums[SC].num_cells  = num_sc;
-	spike_sums[PC].num_cells  = num_pc;
-	spike_sums[IO].num_cells  = num_io;
-	spike_sums[NC].num_cells = num_nc;
-
-	FOREACH(spike_sums, ssp)
+	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
-		ssp->non_cs_spike_sum = 0;
-		ssp->cs_spike_sum     = 0;
-		ssp->non_cs_spike_counter = new uint32_t[ssp->num_cells];
-		ssp->cs_spike_counter = new uint32_t[ssp->num_cells];
-		memset((void *)ssp->non_cs_spike_counter, 0, ssp->num_cells * sizeof(uint32_t));
-		memset((void *)ssp->cs_spike_counter, 0, ssp->num_cells * sizeof(uint32_t));
+		spike_sums[i].non_cs_spike_sum = 0;
+		spike_sums[i].cs_spike_sum = 0;
+		spike_sums[i].non_cs_spike_counter = (uint32_t *)calloc(rast_cell_nums[i], sizeof(uint32_t));
+		spike_sums[i].cs_spike_counter = (uint32_t *)calloc(rast_cell_nums[i], sizeof(uint32_t));
 	}
 	spike_sums_initialized = true;
 }
@@ -347,7 +335,6 @@ void Control::initialize_psths()
 
 void Control::runSession(struct gui *gui)
 {
-	float medTrials;
 	double start, end;
 	int goSpkCounter[num_go];
 	if (!use_gui) run_state = IN_RUN_NO_PAUSE;
@@ -363,7 +350,7 @@ void Control::runSession(struct gui *gui)
 		//uint32_t percentCS    = td.cs_percents[trial]; // unused for now
 		uint32_t useUS        = td.use_uss[trial];
 		uint32_t onsetUS      = td.us_onsets[trial];
-		
+
 		int PSTHCounter = 0;
 		float gGRGO_sum = 0;
 		float gMFGO_sum = 0;
@@ -393,7 +380,7 @@ void Control::runSession(struct gui *gui)
 			simCore->updateTrueMFs(isTrueMF);
 			simCore->updateMFInput(mfAP);
 			simCore->calcActivity(spillFrac, pf_pc_plast, mf_nc_plast); 
-			//update_spike_sums(ts, onsetCS, onsetCS + csLength);
+			update_spike_sums(ts, onsetCS, onsetCS + csLength);
 
 			if (ts >= onsetCS && ts < onsetCS + csLength)
 			{
@@ -412,7 +399,7 @@ void Control::runSession(struct gui *gui)
 			/* upon offset of CS, report what we got*/
 			if (ts == onsetCS + csLength)
 			{
-				countGOSpikes(goSpkCounter, medTrials);
+				countGOSpikes(goSpkCounter);
 				std::cout << "[INFO]: Mean gGRGO   = " << gGRGO_sum / (num_go * csLength) << "\n";
 				std::cout << "[INFO]: Mean gMFGO   = " << gMFGO_sum / (num_go * csLength) << "\n";
 				std::cout << "[INFO]: GR:MF ratio  = " << gGRGO_sum / gMFGO_sum << "\n";
@@ -452,7 +439,7 @@ void Control::runSession(struct gui *gui)
 				}
 				std::cout << "[INFO]: Continuing...\n";
 			}
-			//reset_spike_sums();
+			reset_spike_sums();
 		}
 		// save gr rasters into new file every trial 
 		//std::string trial_gr_raster_name = OUTPUT_DATA_PATH + get_file_basename(rf_names[GR])
@@ -477,8 +464,8 @@ void Control::reset_spike_sums()
 		{
 			spike_sums[i].cs_spike_sum = 0;
 			spike_sums[i].non_cs_spike_sum = 0;
-			memset((void *)(spike_sums[i].non_cs_spike_counter), 0, spike_sums[i].num_cells * sizeof(uint32_t));
-			memset((void *)(spike_sums[i].cs_spike_counter), 0, spike_sums[i].num_cells * sizeof(uint32_t));
+			memset(spike_sums[i].cs_spike_counter, 0, rast_cell_nums[i] * sizeof(uint32_t));
+			memset(spike_sums[i].non_cs_spike_counter, 0, rast_cell_nums[i] * sizeof(uint32_t));
 		}
 }
 
@@ -549,10 +536,10 @@ void Control::update_spike_sums(int tts, float onset_cs, float offset_cs)
 	{
 		for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 		{
-			for (uint32_t j = 0; j < spike_sums[i].num_cells; j++)
+			for (uint32_t j = 0; j < rast_cell_nums[i]; j++)
 			{
-				spike_sums[i].cs_spike_sum += cell_spks[i][j];
-				spike_sums[i].cs_spike_counter[j] += cell_spks[i][j];
+				spike_sums[i].cs_spike_sum += cell_spikes[i][j];
+				spike_sums[i].cs_spike_counter[j] += cell_spikes[i][j];
 			}
 		}
 	}
@@ -561,10 +548,10 @@ void Control::update_spike_sums(int tts, float onset_cs, float offset_cs)
 	{
 		for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 		{
-			for (uint32_t j = 0; j < spike_sums[i].num_cells; j++)
+			for (uint32_t j = 0; j < rast_cell_nums[i]; j++)
 			{
-				spike_sums[i].non_cs_spike_sum += cell_spks[i][j];
-				spike_sums[i].non_cs_spike_counter[j] += cell_spks[i][j];
+				spike_sums[i].non_cs_spike_sum += cell_spikes[i][j];
+				spike_sums[i].non_cs_spike_counter[j] += cell_spikes[i][j];
 			}
 		}
 	}
@@ -579,26 +566,26 @@ void Control::calculate_firing_rates(float onset_cs, float offset_cs)
 	for (int i = 0; i < NUM_CELL_TYPES; i++)
 	{
 		// sort sums for medians 
-		std::sort(spike_sums[i].non_cs_spike_counter,
-			spike_sums[i].non_cs_spike_counter + spike_sums[i].num_cells);
 		std::sort(spike_sums[i].cs_spike_counter,
-			spike_sums[i].cs_spike_counter + spike_sums[i].num_cells);
+			spike_sums[i].cs_spike_counter + rast_cell_nums[i]);
+		std::sort(spike_sums[i].non_cs_spike_counter,
+			spike_sums[i].non_cs_spike_counter + rast_cell_nums[i]);
 		
 		// calculate medians
 		firing_rates[i].non_cs_median_fr =
-			(spike_sums[i].non_cs_spike_counter[spike_sums[i].num_cells / 2 - 1]
-		   + spike_sums[i].non_cs_spike_counter[spike_sums[i].num_cells / 2]) / (2.0 * non_cs_time_secs);
+			(spike_sums[i].non_cs_spike_counter[rast_cell_nums[i] / 2 - 1]
+		   + spike_sums[i].non_cs_spike_counter[rast_cell_nums[i] / 2]) / (2.0 * non_cs_time_secs);
 		firing_rates[i].cs_median_fr     =
-			(spike_sums[i].cs_spike_counter[spike_sums[i].num_cells / 2 - 1]
-		   + spike_sums[i].cs_spike_counter[spike_sums[i].num_cells / 2]) / (2.0 * cs_time_secs);
+			(spike_sums[i].cs_spike_counter[rast_cell_nums[i] / 2 - 1]
+		   + spike_sums[i].cs_spike_counter[rast_cell_nums[i] / 2]) / (2.0 * cs_time_secs);
 		
 		// calculate means
-		firing_rates[i].non_cs_mean_fr = spike_sums[i].non_cs_spike_sum / (non_cs_time_secs * spike_sums[i].num_cells);
-		firing_rates[i].cs_mean_fr     = spike_sums[i].cs_spike_sum / (cs_time_secs * spike_sums[i].num_cells);
+		firing_rates[i].non_cs_mean_fr = spike_sums[i].non_cs_spike_sum / (non_cs_time_secs * rast_cell_nums[i]);
+		firing_rates[i].cs_mean_fr     = spike_sums[i].cs_spike_sum / (cs_time_secs * rast_cell_nums[i]);
 	}
 }
 
-void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
+void Control::countGOSpikes(int *goSpkCounter)
 {
 	float isi = (td.us_onsets[0] - td.cs_onsets[0]) / 1000.0;
 	std::sort(goSpkCounter, goSpkCounter + num_go);
@@ -608,10 +595,7 @@ void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
 
 	for (int i = 0; i < num_go; i++) goSpkSum += goSpkCounter[i];
 
-	// NOTE: 1.0s below should really be the isi
 	std::cout << "[INFO]: Mean GO Rate: " << goSpkSum / ((float)num_go * isi) << std::endl;
-
-	medTrials += m / isi;
 	std::cout << "[INFO]: Median GO Rate: " << m / isi << std::endl;
 }
 
@@ -626,12 +610,12 @@ void Control::fill_rasters(uint32_t raster_counter, uint32_t psth_counter)
 			 * InNet::exportAPGR makes cudaMemcpy call before returning pointer to mem address */
 			if (CELL_IDS[i] == "GR")
 			{
-				cell_spks[i] = simCore->getInputNet()->exportAPGR();
+				cell_spikes[i] = simCore->getInputNet()->exportAPGR();
 				temp_counter = psth_counter;
 			}
 			for (uint32_t j = 0; j < rast_cell_nums[i]; j++)
 			{
-				rasters[i][temp_counter][j] = cell_spks[i][j];
+				rasters[i][temp_counter][j] = cell_spikes[i][j];
 			}
 		}
 	}
@@ -664,7 +648,7 @@ void Control::fill_psths(uint32_t psth_counter)
 		{
 			for (uint32_t j = 0; j < rast_cell_nums[i]; j++)
 			{
-				psths[i][j][psth_counter] += cell_spks[i][j];
+				psths[i][j][psth_counter] += cell_spikes[i][j];
 			}
 		}
 	}
@@ -672,10 +656,10 @@ void Control::fill_psths(uint32_t psth_counter)
 
 void Control::delete_spike_sums()
 {
-	FOREACH(spike_sums, ssp)
+	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
-		delete[] ssp->non_cs_spike_counter;
-		delete[] ssp->cs_spike_counter;
+		free(spike_sums[i].non_cs_spike_counter);
+		free(spike_sums[i].cs_spike_counter);
 	}
 }
 

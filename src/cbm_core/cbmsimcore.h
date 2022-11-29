@@ -72,7 +72,7 @@ private:
 	int numGRStim    =  0;
 	int startGRStim  =  0;
 
-	unsigned long curTime;
+	uint32_t curTime;
 
 	void construct(CBMState *state, int *mzoneRSeed,
 		int gpuIndStart, int numGPUP2);

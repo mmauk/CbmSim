@@ -6,6 +6,7 @@
  *  Modified on: Jul 22, 2015
  *  	Author: evandelord
  */
+#include <cstring>
 
 #include "poissonregencells.h"
 
@@ -32,6 +33,8 @@ PoissonRegenCells::PoissonRegenCells(int randSeed, float threshDecayTau, unsigne
 	isTrueMF    = (bool *)calloc(num_mf, sizeof(bool));
 	dnCellIndex = (uint32_t *)calloc(num_mf, sizeof(uint32_t));
 	mZoneIndex  = (uint32_t *)calloc(num_mf, sizeof(uint32_t));
+
+	memset(isTrueMF, true, num_mf * sizeof(bool));
 
 	prepCollaterals(randSeedGen->IRandom(0, INT_MAX));
 }
