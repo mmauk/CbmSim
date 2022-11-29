@@ -465,7 +465,7 @@ void Control::runSession(struct gui *gui)
 	
 	if (!use_gui)
 	{
-		//save_rasters();
+		save_rasters();
 		save_psths();
 	}
 	run_state = NOT_IN_RUN;
@@ -522,13 +522,14 @@ void gen_gr_sample(int gr_indices[], int sample_size, int data_size)
 	}
 }
 
-//void Control::save_rasters()
-//{
-//	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
-//	{
-//		save_raster(rf_names[i], i);
-//	}
-//}
+void Control::save_rasters()
+{
+	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
+	{
+		if (!rf_names[i].empty())
+			rast_save_funcs[i](rf_names[i]);
+	}
+}
 
 void Control::save_psths()
 {

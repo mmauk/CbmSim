@@ -190,7 +190,7 @@ class Control
 		void calculate_firing_rates(float onset_cs, float offset_cs);
 		void fill_rasters(uint32_t raster_counter, uint32_t psth_counter);
 		void fill_psths(uint32_t psth_counter);
-		//void save_rasters();
+		void save_rasters();
 		void save_psths();
 
 		void delete_rasters();
