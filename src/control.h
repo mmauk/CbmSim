@@ -29,7 +29,6 @@ enum cell_id {MF, GR, GO, BC, SC, PC, IO, NC};
 
 struct cell_spike_sums
 {
-	uint32_t num_cells;
 	uint32_t non_cs_spike_sum;
 	uint32_t cs_spike_sum;
 	uint32_t *non_cs_spike_counter;
@@ -137,13 +136,12 @@ class Control
 
 		struct cell_spike_sums spike_sums[NUM_CELL_TYPES];
 		struct cell_firing_rates firing_rates[NUM_CELL_TYPES];
-		const uint8_t *cell_spikes[NUM_CELL_TYPES];
 
 		const float *grgoG, *mfgoG, *gogrG, *mfgrG;
 		float *sample_pfpc_syn_weights; //TODO: remove, write function to save at end of session
 		const uint8_t *mfAP, *goSpks;
 		
-		const uint8_t *cell_spks[NUM_CELL_TYPES];
+		const uint8_t *cell_spikes[NUM_CELL_TYPES];
 		uint32_t rast_cell_nums[NUM_CELL_TYPES];
 		uint8_t **rasters[NUM_CELL_TYPES];
 		uint8_t **psths[NUM_CELL_TYPES];
@@ -185,7 +183,7 @@ class Control
 		void reset_rasters(); // TODO: seems like should be deprecated
 		void reset_psths(); 
 
-		void countGOSpikes(int *goSpkCounter, float &medTrials);
+		void countGOSpikes(int *goSpkCounter);
 		void update_spike_sums(int tts, float onset_cs, float offset_cs);
 		void calculate_firing_rates(float onset_cs, float offset_cs);
 		void fill_rasters(uint32_t raster_counter, uint32_t psth_counter);

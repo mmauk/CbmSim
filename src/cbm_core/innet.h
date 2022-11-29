@@ -27,6 +27,7 @@ public:
 
 	const uint8_t* exportAPGO();
 	const uint8_t* exportAPMF();
+	const uint8_t* exportHistMF();
 	const uint8_t* exportAPGR();
 
 	const uint32_t* exportSumGRInputGO();
@@ -50,7 +51,7 @@ public:
 	void updateMFtoGOOut();
 	void updateGOtoGROutParameters(float spillFrac);
 	void updateGOtoGOOut();
-	void resetMFHist(unsigned long t);
+	void resetMFHist(uint32_t t);
 
 	void runGRActivitiesCUDA(cudaStream_t **sts, int streamN);
 	void runSumGRGOOutCUDA(cudaStream_t **sts, int streamN);
@@ -78,7 +79,7 @@ public:
 	void cpyGRGOSumGPUtoHostCUDA(cudaStream_t **sts, int streamN);
 	void cpyGRGOSumGPUtoHostCUDA(cudaStream_t **sts, int streamN,
 		uint32_t **grInputGOSumHost);
-	void runUpdateGRHistoryCUDA(cudaStream_t **sts, int streamN, unsigned long t);
+	void runUpdateGRHistoryCUDA(cudaStream_t **sts, int streamN, uint32_t t);
 
 protected:
 

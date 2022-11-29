@@ -400,9 +400,18 @@ void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum
 #ifdef NO_ASYNC
 		syncCUDA("2iu");
 #endif
-		
+		// temp solution: by default mfnc plast is GRADED. no other
+		// plasticity modes are given for these synapses
+		if (mf_nc_plast != OFF )
+		{
+			zones[i]->updateMFNCSyn(inputNet->exportHistMF(), curTime);
+		}
+			
+#ifdef NO_ASYNC
+		syncCUDA("2iv");
+#endif
 	}
-
+	
 #ifdef NO_ASYNC
 		syncCUDA("2iw");
 #endif

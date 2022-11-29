@@ -303,6 +303,11 @@ const uint8_t* InNet::exportAPMF()
 	return (const uint8_t *)apMFOut;
 }
 
+const uint8_t* InNet::exportHistMF()
+{
+	return (const uint8_t *)as->histMF.get();
+}
+
 const uint8_t* InNet::exportAPGR()
 {
 	cudaError_t error = getGRGPUData<uint8_t>(outputGRGPU, outputGRH);
@@ -535,10 +540,9 @@ void InNet::updateGOtoGOOut()
 	}
 }
 
-void InNet::resetMFHist(unsigned long t)
+void InNet::resetMFHist(uint32_t t)
 {
-	// why unsigned long?
-	if (t % (unsigned long)numTSinMFHist == 0)
+	if (t % (uint32_t)numTSinMFHist == 0)
 	{
 		for(int i = 0; i < num_mf; i++)
 		{
@@ -776,13 +780,13 @@ void InNet::cpyGRGOSumGPUtoHostCUDA(cudaStream_t **sts, int streamN, uint32_t **
 	}
 }
 
-void InNet::runUpdateGRHistoryCUDA(cudaStream_t **sts, int streamN, unsigned long t)
+void InNet::runUpdateGRHistoryCUDA(cudaStream_t **sts, int streamN, uint32_t t)
 {
 	cudaError_t error;
 	for (int i = 0; i < numGPUs; i++)
 	{
 		error=cudaSetDevice(i + gpuIndStart);
-		if (t % (unsigned long)tsPerHistBinGR == 0)
+		if (t % (uint32_t)tsPerHistBinGR == 0)
 		{
 			callUpdateGRHistKernel(sts[i][streamN], updateGRHistNumBlocks, updateGRHistNumGRPerB,
 					apBufGRGPU[i], historyGRGPU[i], apBufGRHistMask);

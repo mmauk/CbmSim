@@ -636,84 +636,71 @@ void MZone::updateMFNCOut()
 		}
 	}
 }
-/*
- * NOTE: it is okay that we are passing the unique ptr by value, since we only read from it, not write
- */
-//void MZone::updateMFNCSyn(const std::unique_ptr<uint8_t[]> histMF, unsigned long t)
-//{
-//	
-//	bool reset;
-//	float avgAllAPPC;
-//	bool doLTD;
-//	bool doLTP;
-//
-//#ifdef DEBUGOUT
-//	float sumSynW;
-//#endif
-//	if(t % ap->tsPerPopHistBinPC == 0) return;
-//
-//	//histMFInput = histMF;
-//
-//	as->histPCPopActSum = (as->histPCPopActSum) - (as->histPCPopAct[as->histPCPopActCurBinN]) + (as->pcPopAct);
-//	as->histPCPopAct[as->histPCPopActCurBinN] = as->pcPopAct;
-//	as->pcPopAct = 0;
-//	as->histPCPopActCurBinN++;
-//	as->histPCPopActCurBinN %= ap->numPopHistBinsPC;
-//
-//	avgAllAPPC = ((float)as->histPCPopActSum) / ap->numPopHistBinsPC;
-//
-//#ifdef DEBUGOUT
-//	std::cout << "avgAllAPPC: " << avgAllAPPC << std::endl;
-//#endif
-//
-//	doLTD = false;
-//	doLTP = false;
-//	if (avgAllAPPC >= ap->synLTDPCPopActThreshMFtoNC && !as->noLTDMFNC)
-//	{
-//		doLTD = true;
-//		as->noLTDMFNC = true;
-//	}
-//	else if (avgAllAPPC < ap->synLTDPCPopActThreshMFtoNC)
-//	{
-//		as->noLTDMFNC = false;
-//	}
-//
-//	if (avgAllAPPC <= ap->synLTPPCPopActThreshMFtoNC && !as->noLTPMFNC)
-//	{
-//		doLTP = true;
-//		as->noLTPMFNC = true;
-//	}
-//	else if (avgAllAPPC > ap->synLTPPCPopActThreshMFtoNC)
-//	{
-//		as->noLTPMFNC = false;
-//	}
-//
-//#ifdef DEBUGOUT
-//	sumSynW = 0;
-//#endif
-//	for (int i = 0; i < NUM_NC; i++)
-//	{
-//		for(int j = 0; j < num_p_nc_from_mf_to_nc; j++)
-//		{
-//			float synWDelta;
-//			synWDelta = histMF[cs->pNCfromMFtoNC[i][j]] * (doLTD * ap->synLTDStepSizeMFtoNC +
-//					doLTP * ap->synLTPStepSizeMFtoNC);
-//			as->mfSynWeightNC[i][j] += synWDelta;
-//			as->mfSynWeightNC[i][j] *= as->mfSynWeightNC[i][j] > 0;
-//			as->mfSynWeightNC[i][j] *= as->mfSynWeightNC[i][j] <= 1; 
-//			as->mfSynWeightNC[i][j] += as->mfSynWeightNC[i][j] > 1;
-//			
-//			//Now uses isTrueMF to take collaterals into account
-//			as->mfSynWeightNC[i][j] *= isTrueMF[cs->pNCfromMFtoNC[i][j]];
-//#ifdef DEBUGOUT
-//			sumSynW += as->mfSynWeightNC[i][j];
-//#endif
-//		}
-//	}
-//#ifdef DEBUGOUT
-//	std::cout << sumSynW / NUM_MF << std::endl;
-//#endif
-//}
+
+void MZone::updateMFNCSyn(const uint8_t *histMF, uint32_t t)
+{
+
+#ifdef DEBUGOUT
+	float sumSynW = 0;
+#endif
+	if (t % (uint32_t)tsPerPopHistBinPC == 0) return;
+
+	as->histPCPopActSum = (as->histPCPopActSum) - (as->histPCPopAct[as->histPCPopActCurBinN]) + (as->pcPopAct);
+	as->histPCPopAct[as->histPCPopActCurBinN] = as->pcPopAct;
+	as->pcPopAct = 0;
+	as->histPCPopActCurBinN++;
+	as->histPCPopActCurBinN %= (uint32_t)numPopHistBinsPC;
+
+	float avgAllAPPC = ((float)as->histPCPopActSum) / numPopHistBinsPC;
+
+#ifdef DEBUGOUT
+	std::cout << "avgAllAPPC: " << avgAllAPPC << std::endl;
+#endif
+
+	bool doLTD = false;
+	bool doLTP = false;
+	if (avgAllAPPC >= synLTDPCPopActThreshMFtoNC && !as->noLTDMFNC)
+	{
+		doLTD = true;
+		as->noLTDMFNC = true;
+	}
+	else if (avgAllAPPC < synLTDPCPopActThreshMFtoNC)
+	{
+		as->noLTDMFNC = false;
+	}
+
+	if (avgAllAPPC <= synLTPPCPopActThreshMFtoNC && !as->noLTPMFNC)
+	{
+		doLTP = true;
+		as->noLTPMFNC = true;
+	}
+	else if (avgAllAPPC > synLTPPCPopActThreshMFtoNC)
+	{
+		as->noLTPMFNC = false;
+	}
+
+	for (int i = 0; i < num_nc; i++)
+	{
+		for(int j = 0; j < num_p_nc_from_mf_to_nc; j++)
+		{
+			float synWDelta = histMF[cs->pNCfromMFtoNC[i][j]] * (doLTD * synLTDStepSizeMFtoNC +
+					doLTP * synLTPStepSizeMFtoNC);
+			as->mfSynWeightNC[i * num_p_nc_from_mf_to_nc + j] += synWDelta;
+			as->mfSynWeightNC[i * num_p_nc_from_mf_to_nc + j] *= as->mfSynWeightNC[i * num_p_nc_from_mf_to_nc + j] > 0;
+			as->mfSynWeightNC[i * num_p_nc_from_mf_to_nc + j] *= as->mfSynWeightNC[i * num_p_nc_from_mf_to_nc + j] <= 1; 
+			as->mfSynWeightNC[i * num_p_nc_from_mf_to_nc + j] += as->mfSynWeightNC[i * num_p_nc_from_mf_to_nc + j] > 1;
+			
+			//Now uses isTrueMF to take collaterals into account
+			as->mfSynWeightNC[i * num_p_nc_from_mf_to_nc + j] *= isTrueMF[cs->pNCfromMFtoNC[i][j]];
+#ifdef DEBUGOUT
+			sumSynW += as->mfSynWeightNC[i * num_p_nc_from_mf_to_nc + j];
+#endif
+		}
+	}
+#ifdef DEBUGOUT
+	std::cout << sumSynW / NUM_MF << std::endl;
+#endif
+}
 
 void MZone::runPFPCOutCUDA(cudaStream_t **sts, int streamN)
 {
@@ -746,10 +733,10 @@ void MZone::cpyPFPCSumCUDA(cudaStream_t **sts, int streamN)
 	}
 }
 
-void MZone::runPFPCPlastCUDA(cudaStream_t **sts, int streamN, unsigned long t)
+void MZone::runPFPCPlastCUDA(cudaStream_t **sts, int streamN, uint32_t t)
 {
 	cudaError_t error;
-	if (t % (unsigned long)tsPerHistBinGR == 0)
+	if (t % (uint32_t)tsPerHistBinGR == 0)
 	{
 		int curGROffset;
 		int curGPUInd;
@@ -920,6 +907,14 @@ void MZone::load_pfpc_weights_from_file(std::fstream &in_file_buf)
 				num_gr * sizeof(float),
 				true,
 				in_file_buf);
+	
+	for (int i = 0; i < numGPUs; i++)
+	{
+		cudaSetDevice(i + gpuIndStart);
+		int cpyStartInd = i * numGRPerGPU;
+		cudaMemcpy(pfSynWeightPCGPU[i], &pfSynWeightPCLinear[cpyStartInd],
+				numGRPerGPU * sizeof(float), cudaMemcpyHostToDevice);
+	}
 }
 
 void MZone::load_mfdcn_weights_from_file(std::fstream &in_file_buf)

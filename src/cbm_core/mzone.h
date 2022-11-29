@@ -40,12 +40,12 @@ public:
 	void updateIOOut();
 	void updateNCOut();
 	void updateMFNCOut();
-	//void updateMFNCSyn(const std::unique_ptr<uint8_t[]> histMF, unsigned long t);
+	void updateMFNCSyn(const uint8_t *histMF, uint32_t t);
 
 	void runPFPCOutCUDA(cudaStream_t **sts, int streamN);
 	void runPFPCSumCUDA(cudaStream_t **sts, int streamN);
 	void cpyPFPCSumCUDA(cudaStream_t **sts, int streamN);
-	void runPFPCPlastCUDA(cudaStream_t **sts, int streamN, unsigned long t);
+	void runPFPCPlastCUDA(cudaStream_t **sts, int streamN, uint32_t t);
 
 	void runSumPFSCCUDA(cudaStream_t **sts, int streamN);
 	void cpyPFSCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN);
