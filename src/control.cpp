@@ -316,7 +316,7 @@ void Control::initialize_psth_save_funcs()
 			if (!filename.empty())
 			{
 				std::cout << "[INFO]: Saving " << CELL_IDS[i] << " psth to '" <<  filename << "'\n";
-				write2DArray<uint8_t>(filename, this->psths[i], this->rast_cell_nums[i], this->PSTHColSize);
+				write2DArray<uint8_t>(filename, this->psths[i], this->PSTHColSize, this->rast_cell_nums[i]);
 			}
 		};
 	}
@@ -344,7 +344,7 @@ void Control::initialize_psths()
 	{
 		if (!pf_names[i].empty() || use_gui)
 			// TODO: make data type bigger for psth
-			psths[i] = allocate2DArray<uint8_t>(rast_cell_nums[i], PSTHColSize);
+			psths[i] = allocate2DArray<uint8_t>(PSTHColSize, rast_cell_nums[i]);
 	}
 	psth_arrays_initialized = true;
 }
@@ -658,11 +658,11 @@ void Control::fill_psths(uint32_t psth_counter)
 {
 	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
-		if (!pf_names[i].empty())
+		if (!pf_names[i].empty() || use_gui)
 		{
 			for (uint32_t j = 0; j < rast_cell_nums[i]; j++)
 			{
-				psths[i][j][psth_counter] += cell_spikes[i][j];
+				psths[i][psth_counter][j] += cell_spikes[i][j];
 			}
 		}
 	}
