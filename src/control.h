@@ -147,6 +147,7 @@ class Control
 		uint8_t **psths[NUM_CELL_TYPES];
 
 		uint32_t rast_sizes[NUM_CELL_TYPES]; 
+		std::function<void(std::string)> psth_save_funcs[NUM_CELL_TYPES];
 		std::function<void(std::string)> rast_save_funcs[NUM_CELL_TYPES];
 
 		float **pc_vm_raster;
@@ -173,6 +174,7 @@ class Control
 		void initialize_cell_spikes();
 		void initialize_spike_sums();
 		void initialize_rasters(); 
+		void initialize_psth_save_funcs();
 		void initialize_raster_save_funcs();
 
 		void initialize_psths();

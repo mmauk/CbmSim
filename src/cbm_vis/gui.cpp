@@ -205,6 +205,46 @@ static void on_save_mf_raster(GtkWidget *widget, Control *control)
 	save_file(widget, control, &control->rast_save_funcs[MF], "[ERROR]: Could not save mf raster to file.", DEFAULT_MF_RASTER_FILE_NAME);
 }
 
+static void on_save_gr_psth(GtkWidget *widget, Control *control)
+{
+	save_file(widget, control, &control->psth_save_funcs[GR], "[ERROR]: Could not save gr psth to file.", DEFAULT_GR_PSTH_FILE_NAME);
+} 
+
+static void on_save_go_psth(GtkWidget *widget, Control *control)
+{
+	save_file(widget, control, &control->psth_save_funcs[GO], "[ERROR]: Could not save go psth to file.", DEFAULT_GO_PSTH_FILE_NAME);
+} 
+
+static void on_save_pc_psth(GtkWidget *widget, Control *control)
+{
+	save_file(widget, control, &control->psth_save_funcs[PC], "[ERROR]: Could not save pc psth to file.", DEFAULT_PC_PSTH_FILE_NAME);
+} 
+
+static void on_save_nc_psth(GtkWidget *widget, Control *control)
+{
+	save_file(widget, control, &control->psth_save_funcs[NC], "[ERROR]: Could not save nc psth to file.", DEFAULT_NC_PSTH_FILE_NAME);
+} 
+
+static void on_save_io_psth(GtkWidget *widget, Control *control)
+{
+	save_file(widget, control, &control->psth_save_funcs[IO], "[ERROR]: Could not save io psth to file.", DEFAULT_IO_PSTH_FILE_NAME);
+} 
+
+static void on_save_bc_psth(GtkWidget *widget, Control *control)
+{
+	save_file(widget, control, &control->psth_save_funcs[BC], "[ERROR]: Could not save bc psth to file.", DEFAULT_BC_PSTH_FILE_NAME);
+} 
+
+static void on_save_sc_psth(GtkWidget *widget, Control *control)
+{
+	save_file(widget, control, &control->psth_save_funcs[SC], "[ERROR]: Could not save sc psth to file.", DEFAULT_SC_PSTH_FILE_NAME);
+}
+
+static void on_save_mf_psth(GtkWidget *widget, Control *control)
+{
+	save_file(widget, control, &control->psth_save_funcs[MF], "[ERROR]: Could not save mf psth to file.", DEFAULT_MF_PSTH_FILE_NAME);
+}
+
 //FIXME: below is a stop-gap solution. should be more careful with destroy callback
 gboolean firing_rates_win_visible(struct gui *gui)
 {
@@ -1130,6 +1170,44 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 							},
 							{"Save MF", gtk_menu_item_new(),
 								{ "activate", G_CALLBACK(on_save_mf_raster), control, false },
+								{}
+							},
+						}
+					}
+				},
+				{"PSTH", gtk_menu_item_new(), {},
+					{gtk_menu_new(), NUM_RASTER_MENU_ITEMS, new menu_item[NUM_RASTER_MENU_ITEMS]
+						{
+							{"Save GR", gtk_menu_item_new(),
+								{ "activate", G_CALLBACK(on_save_gr_psth), control, false },
+								{}
+							},
+							{"Save GO", gtk_menu_item_new(),
+								{ "activate", G_CALLBACK(on_save_go_psth), control, false },
+								{}
+							},
+							{"Save PC", gtk_menu_item_new(),
+								{ "activate", G_CALLBACK(on_save_pc_psth), control, false },
+								{}
+							},
+							{"Save DCN", gtk_menu_item_new(),
+								{ "activate", G_CALLBACK(on_save_nc_psth), control, false },
+								{}
+							},
+							{"Save IO", gtk_menu_item_new(),
+								{ "activate", G_CALLBACK(on_save_io_psth), control, false },
+								{}
+							},
+							{"Save BC", gtk_menu_item_new(),
+								{ "activate", G_CALLBACK(on_save_bc_psth), control, false },
+								{}
+							},
+							{"Save SC", gtk_menu_item_new(),
+								{ "activate", G_CALLBACK(on_save_sc_psth), control, false },
+								{}
+							},
+							{"Save MF", gtk_menu_item_new(),
+								{ "activate", G_CALLBACK(on_save_mf_psth), control, false },
 								{}
 							},
 						}

@@ -114,6 +114,7 @@ void Control::init_sim(std::string in_sim_filename)
 	initialize_rast_cell_nums();
 	initialize_cell_spikes();
 	initialize_rasters();
+	initialize_psth_save_funcs();
 	initialize_raster_save_funcs();
 	initialize_psths();
 	initialize_spike_sums();
@@ -306,6 +307,21 @@ void Control::initialize_rasters()
 	raster_arrays_initialized = true;
 }
 
+void Control::initialize_psth_save_funcs()
+{
+	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
+	{
+		psth_save_funcs[i] = [this, i](std::string filename)
+		{
+			if (!filename.empty())
+			{
+				std::cout << "[INFO]: Saving " << CELL_IDS[i] << " psth to '" <<  filename << "'\n";
+				write2DArray<uint8_t>(filename, this->psths[i], this->rast_cell_nums[i], this->PSTHColSize);
+			}
+		};
+	}
+}
+
 void Control::initialize_raster_save_funcs()
 {
 	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
@@ -326,7 +342,7 @@ void Control::initialize_psths()
 {
 	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
-		if (!pf_names[i].empty())
+		if (!pf_names[i].empty() || use_gui)
 			// TODO: make data type bigger for psth
 			psths[i] = allocate2DArray<uint8_t>(rast_cell_nums[i], PSTHColSize);
 	}
@@ -523,10 +539,7 @@ void Control::save_psths()
 	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
 		if (!pf_names[i].empty())
-		{
-			std::cout << "[INFO]: Filling " << CELL_IDS[i] << " psth file...\n";
-			write2DArray<uint8_t>(pf_names[i], psths[i], rast_cell_nums[i], PSTHColSize);
-		}
+			psth_save_funcs[i](pf_names[i]);
 	}
 }
 
