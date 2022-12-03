@@ -295,6 +295,37 @@ static int create_dir_from(const char *base_path, const char *base_name, bool ov
 	return status;
 }
 
+static void create_dir_seq_on_valid_name(GtkWidget *parent_win, const char *dir_base_name, bool overwrite = false)
+{
+	printf("[INFO]: Making directory...\n");
+	GtkDialogFlags flags = GtkDialogFlags(GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT);
+	char *status_str;
+	int status_str_len;
+	if (create_dir_from(OUTPUT_DATA_PATH.c_str(), dir_base_name, overwrite) != 0)
+	{
+		status_str_len = snprintf(NULL, 0, "Could not create directory, '%s'", dir_base_name);
+		status_str = (char *)malloc(status_str_len + 1);
+		sprintf(status_str, "Could not create directory '%s'", dir_base_name);
+		printf("[ERROR]: Could not create directory, '%s'\n", dir_base_name);
+	}
+	else
+	{
+		status_str_len = snprintf(NULL, 0, "Directory successfully created!");
+		status_str = (char *)malloc(status_str_len + 1);
+		sprintf(status_str, "Directory successfully created!");
+		printf("[INFO]: Directory successfully created!\n");
+	}
+	GtkWidget *msg_dialog = gtk_message_dialog_new(GTK_WINDOW(parent_win),
+															  flags,
+															  GTK_MESSAGE_INFO,
+															  GTK_BUTTONS_NONE,
+															  status_str);
+	gtk_widget_show_all(msg_dialog);
+	gtk_dialog_run(GTK_DIALOG(msg_dialog));
+	gtk_widget_destroy(msg_dialog);
+	free(status_str);
+}
+
 static void on_create_dir(GtkWidget *widget, struct gui *gui)
 {
 	GtkDialogFlags flags = GtkDialogFlags(GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT);
@@ -348,10 +379,7 @@ static void on_create_dir(GtkWidget *widget, struct gui *gui)
 					switch (overwrite)
 					{
 						case GTK_RESPONSE_YES:
-							printf("[INFO]: Making directory...\n");
-							if (create_dir_from(OUTPUT_DATA_PATH.c_str(), gtk_entry_get_text(GTK_ENTRY(entry)), true) != 0) // error condition
-								printf("[ERROR]: Could not create directory, '%s'\n", gtk_entry_get_text(GTK_ENTRY(entry)));
-							else printf("[INFO]: Directory successfully created.\n");
+							create_dir_seq_on_valid_name(dialog, gtk_entry_get_text(GTK_ENTRY(entry)), true);
 							open = false;
 							break;
 						case GTK_RESPONSE_NO:
@@ -362,11 +390,9 @@ static void on_create_dir(GtkWidget *widget, struct gui *gui)
 				}
 				else
 				{
-					printf("[INFO]: Making directory...\n");
-					if (create_dir_from(OUTPUT_DATA_PATH.c_str(), gtk_entry_get_text(GTK_ENTRY(entry))) != 0) // error condition
-						printf("[ERROR]: Could not create directory, '%s'\n", gtk_entry_get_text(GTK_ENTRY(entry)));
-					else printf("[INFO]: Directory successfully created.\n");
+					create_dir_seq_on_valid_name(dialog, gtk_entry_get_text(GTK_ENTRY(entry)));
 					open = false;
+					break;
 				}
 				break;
 			default:
