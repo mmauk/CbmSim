@@ -19,8 +19,11 @@
 #include <cstring>
 #include <fstream>
 #include <map>
+#include <ctime>
 
 std::string get_file_basename(std::string full_file_path);
+
+std::string get_current_time_as_string();
 
 void rawBytesRW(char *arr, unsigned long byteLen, bool read, std::fstream &file);
 

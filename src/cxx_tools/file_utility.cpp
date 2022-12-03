@@ -1,3 +1,4 @@
+#include <sstream>
 #include "file_utility.h"
 
 std::string get_file_basename(std::string full_file_path)
@@ -9,6 +10,17 @@ std::string get_file_basename(std::string full_file_path)
 	if (dot != std::string::npos) std::string name = full_file_path.substr(0, dot);
 	else std::string name = full_file_path;
 	return (dot != std::string::npos) ? full_file_path.substr(0, dot) : full_file_path;
+}
+
+std::string get_current_time_as_string()
+{
+	std::stringstream time_stream;
+
+	std::time_t t = std::time(0);
+	std::tm * now = std::localtime(&t);
+
+	time_stream << (now->tm_mon+1) << (now->tm_mday) << (now->tm_year + 1900);
+	return time_stream.str();
 }
 
 void rawBytesRW(char *arr, size_t byteLen, bool read, std::fstream &file)

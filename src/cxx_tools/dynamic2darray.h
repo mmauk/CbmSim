@@ -36,7 +36,7 @@ void write2DArray(std::string out_file_name, Type **inArr,
 
 	if (!out_file_buf.is_open())
 	{
-		fprintf(stderr, "[INFO]: Couldn't open '%s' for writing. Exiting...\n", out_file_name.c_str());
+		fprintf(stderr, "[ERROR]: Couldn't open '%s' for writing. Exiting...\n", out_file_name.c_str());
 		exit(-1);
 	}
 	rawBytesRW((char *)inArr[0], num_row * num_col * sizeof(Type), false, out_file_buf);

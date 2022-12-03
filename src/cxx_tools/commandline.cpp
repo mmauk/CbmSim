@@ -16,6 +16,11 @@
 #include "commandline.h"
 #include <cstdint>
 
+// TODO: place in some global place, or convenience file, as there are duplicates across
+// translation units now
+const int NUM_CELL_TYPES = 8;
+const std::string CELL_IDS[NUM_CELL_TYPES] = {"MF", "GR", "GO", "BC", "SC", "PC", "IO", "NC"}; 
+
 const std::vector<std::string> command_line_single_opts
 {
 	"--pfpc-off",
@@ -59,6 +64,32 @@ std::string get_opt_param(std::vector<std::string> &token_buf, std::string opt)
 		return std::string(*tp);
 	}
 	return "";
+}
+
+void fill_opt_map(std::map<std::string, bool> &opt_map, std::string opt, std::string param)
+{
+	// if the parameter is a single cell id, take case into account separately
+	if (param.length() == 2)
+	{
+		opt_map[param] = true;
+	}
+	else 
+	{
+		size_t prev_div = 0;
+		size_t curr_div = param.find_first_of(',');
+		while (curr_div != std::string::npos)
+		{
+			opt_map[param.substr(prev_div, curr_div-prev_div)] = true; // creates this new entry
+			prev_div = curr_div + 1;
+			curr_div = param.find(',', curr_div+1);
+		}
+		if (opt_map.empty()) // if we didn't fill the map at all, then we weren't able to find valid tokens
+		{
+			std::cerr << "[IO_ERROR]: Invalid parameter for option '" << opt << "'. Exiting...\n";
+			exit(8);
+		}
+		opt_map[param.substr(prev_div, curr_div)] = true; // take into account last item missed
+	}
 }
 
 void print_usage_info()
@@ -135,11 +166,6 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 		std::string this_param;
 		char opt_char_code;
 		std::vector<std::string>::iterator curr_token_iter;
-		size_t div;
-		std::string plastic_code;
-		std::string raster_code, raster_file_name;
-		std::string psth_code, psth_file_name;
-		std::string weights_code, weights_file_name;
 		switch (opt_sum)
 		{
 			case 2:
@@ -173,55 +199,18 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 						p_cl.input_sim_file = this_param;
 						break;
 					case 'o':
+						// FIXME: for now, regardless mode, add -o arg to both names. later, may deprecated one over other
 						p_cl.output_sim_file = this_param;
+						p_cl.output_basename = this_param;
 						break;
 					case 'r':
-						while (curr_token_iter != tokens.end() && !is_cmd_opt(*curr_token_iter))
-						{
-							div = curr_token_iter->find_first_of(',');
-							if (div == std::string::npos)
-							{
-								std::cerr << "[IO_ERROR]: Comma not given for raster argument '" << *curr_token_iter << "'. Exiting...\n";
-								exit(8);
-								// we have a problem, so exit
-							}
-							raster_code = curr_token_iter->substr(0, div);
-							raster_file_name = curr_token_iter->substr(div+1);
-							p_cl.raster_files[raster_code] = raster_file_name;
-							curr_token_iter++;
-						}
+						fill_opt_map(p_cl.raster_files, this_opt, this_param);
 						break;
 					case 'p':
-						while (curr_token_iter != tokens.end() && !is_cmd_opt(*curr_token_iter))
-						{
-							div = curr_token_iter->find_first_of(',');
-							if (div == std::string::npos)
-							{
-								std::cerr << "[IO_ERROR]: Comma not given for raster argument '" << *curr_token_iter << "'. Exiting...\n";
-								exit(8);
-								// we have a problem, so exit
-							}
-							psth_code = curr_token_iter->substr(0, div);
-							psth_file_name = curr_token_iter->substr(div+1);
-							p_cl.psth_files[psth_code] = psth_file_name;
-							curr_token_iter++;
-						}
+						fill_opt_map(p_cl.psth_files, this_opt, this_param);
 						break;
 					case 'w':
-						while (curr_token_iter != tokens.end() && !is_cmd_opt(*curr_token_iter))
-						{
-							div = curr_token_iter->find_first_of(',');
-							if (div == std::string::npos)
-							{
-								std::cerr << "[IO_ERROR]: Comma not given for weights argument '" << *curr_token_iter << "'. Exiting...\n";
-								exit(9);
-								// we have a problem, so exit
-							}
-							weights_code = curr_token_iter->substr(0, div);
-							weights_file_name = curr_token_iter->substr(div+1);
-							p_cl.weights_files[weights_code] = weights_file_name;
-							curr_token_iter++;
-						}
+						fill_opt_map(p_cl.weights_files, this_opt, this_param);
 						break;
 				}
 				break;
@@ -238,8 +227,9 @@ bool p_cmdline_is_empty(parsed_commandline &p_cl)
 	return p_cl.print_help.empty() && p_cl.vis_mode.empty() &&
 	   p_cl.build_file.empty() && p_cl.session_file.empty() &&
 	   p_cl.input_sim_file.empty() && p_cl.output_sim_file.empty() &&
-	   p_cl.pfpc_plasticity.empty() && p_cl.mfnc_plasticity.empty() &&
-	   p_cl.raster_files.empty() && p_cl.psth_files.empty() && p_cl.weights_files.empty();
+	   p_cl.output_basename.empty() && p_cl.pfpc_plasticity.empty() &&
+	   p_cl.mfnc_plasticity.empty() && p_cl.raster_files.empty() &&
+	   p_cl.psth_files.empty() && p_cl.weights_files.empty();
 }
 
 void validate_commandline(parsed_commandline &p_cl)
@@ -247,7 +237,8 @@ void validate_commandline(parsed_commandline &p_cl)
 	if (p_cmdline_is_empty(p_cl))
 	{
 		p_cl.vis_mode = "GUI";
-		p_cl.output_sim_file = DEFAULT_SIM_OUT_FILE; 
+		// FIXME: for now, will not assign to either -o options. no args, assume want run mode in gui
+		// later, will defer run mode to only tui, as gui callbacks do not require such checks
 		p_cl.mfnc_plasticity = "graded"; 
 		p_cl.mfnc_plasticity = "graded";
 	}
@@ -297,10 +288,12 @@ void validate_commandline(parsed_commandline &p_cl)
 				std::cerr << "[IO_ERROR]: Cannot specify both build and session file. Exiting.\n";
 				exit(6);
 			}
-			if (!p_cl.output_sim_file.empty())
+			if (p_cl.output_basename.empty())
 			{
-				p_cl.output_sim_file = INPUT_DATA_PATH + p_cl.output_sim_file;
+				std::cerr << "[IO_ERROR]: You must specify an output basename. Exiting...\n";
+				exit(7);
 			}
+			// TODO: make a more general algorithm which searches data/ dir for file with this name 
 			if (!p_cl.input_sim_file.empty())
 			{
 				p_cl.input_sim_file = INPUT_DATA_PATH + p_cl.input_sim_file;
@@ -328,27 +321,6 @@ void validate_commandline(parsed_commandline &p_cl)
 				p_cl.mfnc_plasticity = "graded";
 			}
 			else if (p_cl.mfnc_plasticity == "off") std::cout << "[INFO]: Turning MFNC plasticity off...\n";
-			if (!p_cl.raster_files.empty())
-			{
-				for (auto iter = p_cl.raster_files.begin(); iter != p_cl.raster_files.end(); iter++)
-				{
-					iter->second = OUTPUT_DATA_PATH + iter->second;
-				}
-			}
-			if (!p_cl.psth_files.empty())
-			{
-				for (auto iter = p_cl.psth_files.begin(); iter != p_cl.psth_files.end(); iter++)
-				{
-					iter->second = OUTPUT_DATA_PATH + iter->second;
-				}
-			}
-			if (!p_cl.weights_files.empty())
-			{
-				for (auto iter = p_cl.weights_files.begin(); iter != p_cl.weights_files.end(); iter++)
-				{
-					iter->second = OUTPUT_DATA_PATH + iter->second;
-				}
-			}
 			if (p_cl.vis_mode.empty())
 			{
 				std::cout << "[INFO]: Visual mode not specified in run mode. Setting to default value of 'TUI'...\n";
@@ -380,6 +352,7 @@ std::string parsed_commandline_to_str(parsed_commandline &p_cl)
 	p_cl_buf << "{ 'session_file', '" << p_cl.session_file << "' }\n";
 	p_cl_buf << "{ 'input_sim_file', '" << p_cl.input_sim_file << "' }\n";
 	p_cl_buf << "{ 'output_sim_file', '" << p_cl.output_sim_file << "' }\n";
+	p_cl_buf << "{ 'output_basename', '" << p_cl.output_basename << "' }\n";
 	p_cl_buf << "{ 'pfpc_plasticity', '" << p_cl.pfpc_plasticity << "' }\n";
 	p_cl_buf << "{ 'mfnc_plasticity', '" << p_cl.mfnc_plasticity << "' }\n";
 	p_cl_buf << "{ 'raster_files' :\n";

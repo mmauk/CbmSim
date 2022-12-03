@@ -1,5 +1,8 @@
+#include <sys/stat.h>
+
 #include "array_util.h"
 #include "connectivityparams.h"
+#include "commandline.h" // for OUTPUT_DATA_PATH def
 #include "gui.h"
 
 // temp function so gtk doesn't whine abt NULL callbacks
@@ -245,6 +248,104 @@ static void on_save_mf_psth(GtkWidget *widget, Control *control)
 	save_file(widget, control, &control->psth_save_funcs[MF], "[ERROR]: Could not save mf psth to file.", DEFAULT_MF_PSTH_FILE_NAME);
 }
 
+static bool is_valid_dir_name(const char *in_str)
+{
+	int len = snprintf(NULL, 0, "%s", in_str);
+	if (len == 0 || len > 255) return false; // str length must be in the range (0,255]
+	if (len == 1 && in_str[0] == '/') return false; // str cannot be just the path separator character
+	return true;
+}
+
+static bool dir_exists(const char *in_str)
+{
+	int len = snprintf(NULL, 0, "%s", in_str);
+	char *full_path = (char *)malloc(OUTPUT_DATA_PATH.length() + len + 1);
+	strcpy(full_path, OUTPUT_DATA_PATH.c_str());
+	strcat(full_path, in_str);
+	struct stat sb;
+	bool return_val = (stat(full_path, &sb) == 0) ? true : false;
+	free(full_path);
+	return return_val;
+}
+
+static void on_create_dir(GtkWidget *widget, struct gui *gui)
+{
+	GtkDialogFlags flags = GtkDialogFlags(GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT);
+	GtkWidget *dialog = gtk_dialog_new_with_buttons("Choose an Output Directory",
+													 GTK_WINDOW(gui->window),
+													 flags,
+													 "Cancel",
+													 GTK_RESPONSE_CANCEL,
+													 "OK",
+													 GTK_RESPONSE_OK,
+													 NULL);
+	GtkWidget *entry_label = gtk_label_new("Enter a directory name");
+	GtkWidget *entry = gtk_entry_new();
+	GtkWidget *content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+	
+	gtk_container_add(GTK_CONTAINER(content_area), entry_label);
+	gtk_container_add(GTK_CONTAINER(content_area), entry);
+	gtk_widget_show_all(dialog);
+	bool open = true;
+	while (open)
+	{
+		int result = gtk_dialog_run(GTK_DIALOG(dialog));
+		switch (result)
+		{
+			case GTK_RESPONSE_OK:
+				if (!is_valid_dir_name(gtk_entry_get_text(GTK_ENTRY(entry))))
+				{
+					printf("[ERROR]: Directory name entered was invalid!\n");
+					GtkWidget *msg_dialog = gtk_message_dialog_new(GTK_WINDOW(dialog),
+																   flags,
+																   GTK_MESSAGE_INFO,
+																   GTK_BUTTONS_NONE,
+																   "Directory with name '%s' cannot be made.",
+																   gtk_entry_get_text(GTK_ENTRY(entry)));
+					gtk_widget_show_all(msg_dialog);
+					gtk_dialog_run(GTK_DIALOG(msg_dialog));
+					gtk_widget_destroy(msg_dialog);
+					gtk_widget_grab_focus(entry);
+				}
+				else if (dir_exists(gtk_entry_get_text(GTK_ENTRY(entry))))
+				{
+					printf("[WARNING]: file already exists.\n");
+					GtkWidget *msg_dialog = gtk_message_dialog_new(GTK_WINDOW(dialog),
+																   flags,
+																   GTK_MESSAGE_INFO,
+																   GTK_BUTTONS_YES_NO,
+																   "This directory already exists: would you like to overwrite it?");
+					gtk_widget_show_all(msg_dialog);
+					int overwrite = gtk_dialog_run(GTK_DIALOG(msg_dialog));
+					switch (overwrite)
+					{
+						case GTK_RESPONSE_YES:
+							//TODO: implement dir creation
+							printf("[INFO]: making directory...\n");
+							if (!mkdir())
+							open = false;
+							break;
+						case GTK_RESPONSE_NO:
+							gtk_widget_grab_focus(entry);
+							break;
+					}
+					gtk_widget_destroy(msg_dialog);
+				}
+				else
+				{
+					//TODO: implement dir creation
+					printf("[INFO]: making directory...\n");
+					open = false;
+				}
+				break;
+			default:
+				open = false;
+				break;
+		}
+	}
+	gtk_widget_destroy(dialog);
+} 
+
 //FIXME: below is a stop-gap solution. should be more careful with destroy callback
 gboolean firing_rates_win_visible(struct gui *gui)
 {
@@ -280,8 +381,8 @@ gboolean update_fr_labels(struct gui *gui)
 
 static void on_firing_rates_window(GtkWidget *widget, struct gui *gui)
 {
-	gui->frw.window = gtk_window_new(GTK_WINDOW_TOPLEVEL),
-	gui->frw.grid = gtk_grid_new(),
+	gui->frw.window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	gui->frw.grid = gtk_grid_new();
 
 	// set window props
 	gtk_window_set_title(GTK_WINDOW(gui->frw.window), "Firing Rates");
@@ -971,7 +1072,6 @@ static void set_gui_radio_button_attribs(struct gui *gui)
 
 static void set_gui_menu_item_helper(struct menu_item *menu_item); /* forward declare */
 
-// TODO: debug
 static void set_gui_menu_helper(struct menu *menu)
 {
    FOREACH_NELEM(menu->menu_items, menu->num_menu_items, mi)
@@ -1107,6 +1207,8 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 								{ "activate", G_CALLBACK(on_save_sim), control, false },
 								{}
 							},
+							{"Create Output Dir", gtk_menu_item_new(),
+								{"activate", G_CALLBACK(on_create_dir), &gui, false}, {}},
 							{"", gtk_separator_menu_item_new(), {}, {}},
 							{"Quit", gtk_menu_item_new(),
 								{ "activate", G_CALLBACK(on_quit), control, false },
@@ -1321,9 +1423,32 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 	gtk_box_pack_start(GTK_BOX(v_box), gui.menu_bar.menu, FALSE, TRUE, 0);
 	gtk_box_pack_start(GTK_BOX(v_box), gui.grid, FALSE, TRUE, 0);
 
-	// show and run
+	//GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT;
+	//GtkWidget *dialog = gtk_message_dialog_new (GTK_WINDOW(gui.window),
+	//								 GTK_DIALOG_MODAL,
+	//								 GTK_MESSAGE_INFO,
+	//								 GTK_BUTTONS_NONE,
+	//								 "CbmSim - A Cerebellar Simulator\n\n"
+	//								 "Welcome to the Cerebellar Simulator! The goal of this software is to\n"
+	//								 "simulate dynamics of the micro-circuitry within the cerebellar cortex.\n"
+	//								 "See the \"help\" menu to get started and for further information on the\n"
+	//								 "various features included in this program. Also, see the \"about\" menu\n"
+	//								 "for more information about the history of this project's development");
+	//GtkWidget *msg_area = gtk_message_dialog_get_message_area(GTK_MESSAGE_DIALOG(dialog));
+	//GtkWidget *check_btn_label = gtk_label_new("hello world");
+	//GtkWidget *dialog_check_btn = gtk_check_button_new_with_label("Don't show me this again.");
+	//gtk_box_pack_start(GTK_BOX(msg_area), check_btn_label, FALSE, TRUE, 0);
+	//gtk_box_pack_start(GTK_BOX(msg_area), dialog_check_btn, FALSE, TRUE, 0);
+
+	// show main widnow 
 	gtk_widget_show_all(gui.window);
 	gtk_widget_hide(gui.normal_buttons[1].widget);
+
+	// present the dialog 
+	//gtk_dialog_run (GTK_DIALOG(dialog));
+	//gtk_widget_destroy (dialog);
+
+	// run main event loop after dialog is exited out of 
 	gtk_main();
 
 	// manually delete objects we created

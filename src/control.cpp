@@ -1,3 +1,4 @@
+#include <sys/stat.h> // mkdir (POSIX ONLY)
 #include <iomanip>
 #include <gtk/gtk.h>
 
@@ -7,8 +8,7 @@
 #include "array_util.h"
 #include "gui.h" /* tenuous inclide at best :pogO: */
 
-
-const std::string BIN_EXT = "bin";
+const std::string BIN_EXT = ".bin";
 const std::string CELL_IDS[NUM_CELL_TYPES] = {"MF", "GR", "GO", "BC", "SC", "PC", "IO", "NC"}; 
 
 Control::Control(parsed_commandline &p_cl)
@@ -28,9 +28,18 @@ Control::Control(parsed_commandline &p_cl)
 	{
 		initialize_session(p_cl.session_file);
 		set_plasticity_modes(p_cl.pfpc_plasticity, p_cl.mfnc_plasticity);
-		get_raster_filenames(p_cl.raster_files);
-		get_psth_filenames(p_cl.psth_files);
-		get_weights_filenames(p_cl.weights_files);
+		data_out_path = OUTPUT_DATA_PATH + p_cl.output_basename;
+		// NOTE: make the output directory here, so in case of error, user not
+		// run an entire simulation just to not have files save
+		int status = mkdir(data_out_path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
+		if (status == -1)
+		{
+			std::cerr << "[ERROR]: Could not create directory '" << data_out_path << "'. Exiting...\n";
+			exit(10);
+		}
+		create_raster_filenames(p_cl);
+		create_psth_filenames(p_cl);
+		create_weights_filenames(p_cl);
 		init_sim(p_cl.input_sim_file);
 	}
 	else // user ran executable with no args FIXME: find out how to initialize with gui, couple similar parts of code
@@ -140,26 +149,33 @@ void Control::reset_sim(std::string in_sim_filename)
 
 void Control::save_sim_to_file(std::string outSimFile)
 {
-	std::fstream outSimFileBuffer(outSimFile.c_str(), std::ios::out | std::ios::binary);
-	write_con_params(outSimFileBuffer);
-	if (!simCore) simState->writeState(outSimFileBuffer);
-	else simCore->writeState(outSimFileBuffer);
-	outSimFileBuffer.close();
+	if (!outSimFile.empty())
+	{
+		std::cout << "[INFO]: Saving simulation to file...\n";
+		std::fstream outSimFileBuffer(outSimFile.c_str(), std::ios::out | std::ios::binary);
+		write_con_params(outSimFileBuffer);
+		if (!simCore) simState->writeState(outSimFileBuffer);
+		else simCore->writeState(outSimFileBuffer);
+		outSimFileBuffer.close();
+	}
 }
 
 void Control::save_pfpc_weights_to_file(std::string out_pfpc_file)
 {
-	// TODO: make a boolean on weights loaded
-	if (!simCore)
+	if (!out_pfpc_file.empty())
 	{
-		fprintf(stderr, "[ERROR]: Trying to write uninitialized weights to file.\n");
-		fprintf(stderr, "[ERROR]: (Hint: Try initializing a sim or loading the weights first.)\n");
-		return;
+		std::cout << "[INFO]: Saving granule to purkinje weigths to file...\n";
+		if (!simCore)
+		{
+			fprintf(stderr, "[ERROR]: Trying to write uninitialized weights to file.\n");
+			fprintf(stderr, "[ERROR]: (Hint: Try initializing a sim or loading the weights first.)\n");
+			return;
+		}
+		const float *pfpc_weights = simCore->getMZoneList()[0]->exportPFPCWeights();
+		std::fstream outPFPCFileBuffer(out_pfpc_file.c_str(), std::ios::out | std::ios::binary);
+		rawBytesRW((char *)pfpc_weights, num_gr * sizeof(float), false, outPFPCFileBuffer);
+		outPFPCFileBuffer.close();
 	}
-	const float *pfpc_weights = simCore->getMZoneList()[0]->exportPFPCWeights();
-	std::fstream outPFPCFileBuffer(out_pfpc_file.c_str(), std::ios::out | std::ios::binary);
-	rawBytesRW((char *)pfpc_weights, num_gr * sizeof(float), false, outPFPCFileBuffer);
-	outPFPCFileBuffer.close();
 }
 
 void Control::load_pfpc_weights_from_file(std::string in_pfpc_file)
@@ -177,17 +193,21 @@ void Control::load_pfpc_weights_from_file(std::string in_pfpc_file)
 
 void Control::save_mfdcn_weights_to_file(std::string out_mfdcn_file)
 {
-	if (!simCore)
+	if (!out_mfdcn_file.empty())
 	{
-		fprintf(stderr, "[ERROR]: Trying to write uninitialized weights to file.\n");
-		fprintf(stderr, "[ERROR]: (Hint: Try initializing a sim or loading the weights first.)\n");
-		return;
+		std::cout << "[INFO]: Saving mossy fiber to deep nucleus weigths to file...\n";
+		if (!simCore)
+		{
+			fprintf(stderr, "[ERROR]: Trying to write uninitialized weights to file.\n");
+			fprintf(stderr, "[ERROR]: (Hint: Try initializing a sim or loading the weights first.)\n");
+			return;
+		}
+		// TODO: make a export function for mfdcn weights
+		const float *mfdcn_weights = simCore->getMZoneList()[0]->exportMFDCNWeights();
+		std::fstream outMFDCNFileBuffer(out_mfdcn_file.c_str(), std::ios::out | std::ios::binary);
+		rawBytesRW((char *)mfdcn_weights, num_nc * num_p_nc_from_mf_to_nc * sizeof(const float), false, outMFDCNFileBuffer);
+		outMFDCNFileBuffer.close();
 	}
-	// TODO: make a export function for mfdcn weights
-	const float *mfdcn_weights = simCore->getMZoneList()[0]->exportMFDCNWeights();
-	std::fstream outMFDCNFileBuffer(out_mfdcn_file.c_str(), std::ios::out | std::ios::binary);
-	rawBytesRW((char *)mfdcn_weights, num_nc * num_p_nc_from_mf_to_nc * sizeof(const float), false, outMFDCNFileBuffer);
-	outMFDCNFileBuffer.close();
 }
 
 void Control::load_mfdcn_weights_from_file(std::string in_mfdcn_file)
@@ -204,45 +224,57 @@ void Control::load_mfdcn_weights_from_file(std::string in_mfdcn_file)
 }
 
 // TODO: combine two below funcs into one for generality
-void Control::get_raster_filenames(std::map<std::string, std::string> &raster_files)
+void Control::create_raster_filenames(parsed_commandline &p_cl)
 {
-	if (!raster_files.empty())
+	if (!p_cl.raster_files.empty())
 	{
 		for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 		{
-			if (raster_files.find(CELL_IDS[i]) != raster_files.end())
+			std::string cell_id = CELL_IDS[i];
+			if (p_cl.raster_files[cell_id])
 			{
-				rf_names[i] = raster_files[CELL_IDS[i]];
+				rf_names[i] = data_out_path + "/" + p_cl.output_basename
+											+ "_" + cell_id + "_RASTER_"
+											+ get_current_time_as_string()
+											+ BIN_EXT;
 			}
 		}
 	}
 }
 
-void Control::get_psth_filenames(std::map<std::string, std::string> &psth_files)
+void Control::create_psth_filenames(parsed_commandline &p_cl)
 {
-	if (!psth_files.empty())
+	if (!p_cl.psth_files.empty())
 	{
 		for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 		{
-			if (psth_files.find(CELL_IDS[i]) != psth_files.end())
+			std::string cell_id = CELL_IDS[i];
+			if (p_cl.psth_files[cell_id])
 			{
-				pf_names[i] = psth_files[CELL_IDS[i]];
+				pf_names[i] = data_out_path + "/" + p_cl.output_basename
+							+ "_" + cell_id + "_PSTH_"
+							+ get_current_time_as_string()
+							+ BIN_EXT;
 			}
 		}
 	}
 }
 
-void Control::get_weights_filenames(std::map<std::string, std::string> &weights_files)
+void Control::create_weights_filenames(parsed_commandline &p_cl)
 {
-	if (!weights_files.empty())
+	if (!p_cl.weights_files.empty())
 	{
-		if (weights_files.find("PFPC") != weights_files.end())
+		if (p_cl.weights_files["PFPC"])
 		{
-			pf_pc_weights_file = weights_files["PFPC"];
+			pf_pc_weights_file = data_out_path + "/" + p_cl.output_basename
+							   + "_PFPC_WEIGHTS_" + get_current_time_as_string()
+							   + BIN_EXT;
 		}
-		if (weights_files.find("MFNC") != weights_files.end())
+		if (p_cl.weights_files["MFNC"])
 		{
-			mf_nc_weights_file = weights_files["MFNC"];
+			mf_nc_weights_file = data_out_path + "/" + p_cl.output_basename
+							   + "_MFNC_WEIGHTS_" + get_current_time_as_string()
+							   + BIN_EXT;
 		}
 	}
 }
@@ -396,7 +428,6 @@ void Control::runSession(struct gui *gui)
 			simCore->updateTrueMFs(isTrueMF);
 			simCore->updateMFInput(mfAP);
 			simCore->calcActivity(spillFrac, pf_pc_plast, mf_nc_plast); 
-			update_spike_sums(ts, onsetCS, onsetCS + csLength);
 
 			if (ts >= onsetCS && ts < onsetCS + csLength)
 			{
@@ -432,6 +463,7 @@ void Control::runSession(struct gui *gui)
 
 			if (use_gui)
 			{
+				update_spike_sums(ts, onsetCS, onsetCS + csLength);
 				if (gtk_events_pending()) gtk_main_iteration();
 			}
 		}
@@ -470,7 +502,15 @@ void Control::runSession(struct gui *gui)
 	{
 		save_rasters();
 		save_psths();
+		// TODO: place all next files into class attrib,
+		// so that once fully develop -o opt in run mode and tui or gui mode,
+		// calls will implicitly use this class's private attribs, as we are moving
+		// away from file dialogue in favour of auto-generated file names
+		save_pfpc_weights_to_file(pf_pc_weights_file);
+		save_mfdcn_weights_to_file(mf_nc_weights_file);
+		//control->save_sim_to_file(p_cl.output_sim_file);
 	}
+
 	run_state = NOT_IN_RUN;
 }
 

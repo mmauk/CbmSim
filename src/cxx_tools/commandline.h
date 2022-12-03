@@ -27,11 +27,12 @@ typedef struct
 	std::string session_file;
 	std::string input_sim_file;
 	std::string output_sim_file;
+	std::string output_basename;
 	std::string pfpc_plasticity;
 	std::string mfnc_plasticity;
-	std::map<std::string, std::string> raster_files;
-	std::map<std::string, std::string> psth_files;
-	std::map<std::string, std::string> weights_files;
+	std::map<std::string, bool> raster_files;
+	std::map<std::string, bool> psth_files;
+	std::map<std::string, bool> weights_files;
 } parsed_commandline;
 
 void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl);
