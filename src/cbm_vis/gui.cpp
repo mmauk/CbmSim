@@ -268,6 +268,33 @@ static bool dir_exists(const char *in_str)
 	return return_val;
 }
 
+// create directory from a base path concatenated with base_name
+// assume user has validated the name of the directory to be made,
+// and that the full path (base_path + base_name) does not already exist
+static int create_dir_from(const char *base_path, const char *base_name, bool overwrite = false)
+{
+	int base_path_len = snprintf(NULL, 0, "%s", base_path);
+	int base_name_len = snprintf(NULL, 0, "%s", base_name);
+	char *full_path = (char *)malloc(base_path_len + base_name_len + 1 + 1);
+	strcpy(full_path, base_path);
+	if (base_path[base_path_len-1] != '/')  // add in extra path separator token if not present in base_path
+		strcat(full_path, "/");
+	strcat(full_path, base_name);
+	int status = 0;
+	if (overwrite)
+	{
+		printf("[INFO]: Deleting existing directory '%s'...\n", full_path);
+		char *command = (char *)malloc(7 + base_path_len + base_name_len + 1);
+		sprintf(command, "rm -rf %s", full_path);
+		//printf("%s\n", command);
+		status += system(command);
+		free(command);
+	}
+	status += mkdir(full_path, 0775);
+	free(full_path);
+	return status;
+}
+
 static void on_create_dir(GtkWidget *widget, struct gui *gui)
 {
 	GtkDialogFlags flags = GtkDialogFlags(GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT);
@@ -314,15 +341,17 @@ static void on_create_dir(GtkWidget *widget, struct gui *gui)
 																   flags,
 																   GTK_MESSAGE_INFO,
 																   GTK_BUTTONS_YES_NO,
-																   "This directory already exists: would you like to overwrite it?");
+																   "This directory already exists: would you like to overwrite it?\n"
+																   "(Doing so will erase the current directory and all of its content.)");
 					gtk_widget_show_all(msg_dialog);
 					int overwrite = gtk_dialog_run(GTK_DIALOG(msg_dialog));
 					switch (overwrite)
 					{
 						case GTK_RESPONSE_YES:
-							//TODO: implement dir creation
-							printf("[INFO]: making directory...\n");
-							if (!mkdir())
+							printf("[INFO]: Making directory...\n");
+							if (create_dir_from(OUTPUT_DATA_PATH.c_str(), gtk_entry_get_text(GTK_ENTRY(entry)), true) != 0) // error condition
+								printf("[ERROR]: Could not create directory, '%s'\n", gtk_entry_get_text(GTK_ENTRY(entry)));
+							else printf("[INFO]: Directory successfully created.\n");
 							open = false;
 							break;
 						case GTK_RESPONSE_NO:
@@ -333,8 +362,10 @@ static void on_create_dir(GtkWidget *widget, struct gui *gui)
 				}
 				else
 				{
-					//TODO: implement dir creation
-					printf("[INFO]: making directory...\n");
+					printf("[INFO]: Making directory...\n");
+					if (create_dir_from(OUTPUT_DATA_PATH.c_str(), gtk_entry_get_text(GTK_ENTRY(entry))) != 0) // error condition
+						printf("[ERROR]: Could not create directory, '%s'\n", gtk_entry_get_text(GTK_ENTRY(entry)));
+					else printf("[INFO]: Directory successfully created.\n");
 					open = false;
 				}
 				break;
