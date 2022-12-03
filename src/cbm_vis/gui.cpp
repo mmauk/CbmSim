@@ -256,7 +256,7 @@ static bool is_valid_dir_name(const char *in_str)
 	return true;
 }
 
-static bool dir_exists(const char *in_str)
+static bool output_dir_exists(const char *in_str)
 {
 	int len = snprintf(NULL, 0, "%s", in_str);
 	char *full_path = (char *)malloc(OUTPUT_DATA_PATH.length() + len + 1);
@@ -268,10 +268,10 @@ static bool dir_exists(const char *in_str)
 	return return_val;
 }
 
-// create directory from a base path concatenated with base_name
-// assume user has validated the name of the directory to be made,
-// and that the full path (base_path + base_name) does not already exist
-static int create_dir_from(const char *base_path, const char *base_name, bool overwrite = false)
+// performs a concatenation of the two given strings, checks whether the
+// path separator token exists after the base path
+// caller owns the data that this function returns
+char *create_dir_name_from(const char *base_path, const char *base_name)
 {
 	int base_path_len = snprintf(NULL, 0, "%s", base_path);
 	int base_name_len = snprintf(NULL, 0, "%s", base_name);
@@ -280,13 +280,22 @@ static int create_dir_from(const char *base_path, const char *base_name, bool ov
 	if (base_path[base_path_len-1] != '/')  // add in extra path separator token if not present in base_path
 		strcat(full_path, "/");
 	strcat(full_path, base_name);
+	return full_path;
+}
+
+// create directory from a base path concatenated with base_name
+// assume user has validated the name of the directory to be made,
+// and that the full path (base_path + base_name) does not already exist
+static int create_dir_from(const char *base_path, const char *base_name, bool overwrite = false)
+{
+	char *full_path = create_dir_name_from(base_path, base_name);
 	int status = 0;
 	if (overwrite)
 	{
 		printf("[INFO]: Deleting existing directory '%s'...\n", full_path);
-		char *command = (char *)malloc(7 + base_path_len + base_name_len + 1);
+		int full_path_len = snprintf(NULL, 0, "%s", full_path);
+		char *command = (char *)malloc(7 + full_path_len + 1);
 		sprintf(command, "rm -rf %s", full_path);
-		//printf("%s\n", command);
 		status += system(command);
 		free(command);
 	}
@@ -365,7 +374,7 @@ static void on_create_dir(GtkWidget *widget, struct gui *gui)
 					gtk_widget_destroy(msg_dialog);
 					gtk_widget_grab_focus(entry);
 				}
-				else if (dir_exists(gtk_entry_get_text(GTK_ENTRY(entry))))
+				else if (output_dir_exists(gtk_entry_get_text(GTK_ENTRY(entry))))
 				{
 					printf("[WARNING]: file already exists.\n");
 					GtkWidget *msg_dialog = gtk_message_dialog_new(GTK_WINDOW(dialog),
@@ -379,7 +388,14 @@ static void on_create_dir(GtkWidget *widget, struct gui *gui)
 					switch (overwrite)
 					{
 						case GTK_RESPONSE_YES:
+							// FIXME: reduce redundancy between this branch and the following else branch
 							create_dir_seq_on_valid_name(dialog, gtk_entry_get_text(GTK_ENTRY(entry)), true);
+							if (gui->ctrl_ptr != NULL)
+							{
+								char *full_path = create_dir_name_from(OUTPUT_DATA_PATH.c_str(), gtk_entry_get_text(GTK_ENTRY(entry))); 
+								gui->ctrl_ptr->data_out_path = std::string(full_path); // data is safely copied to data_out_path
+								free(full_path); // free current allocated memory
+							}
 							open = false;
 							break;
 						case GTK_RESPONSE_NO:
@@ -391,6 +407,12 @@ static void on_create_dir(GtkWidget *widget, struct gui *gui)
 				else
 				{
 					create_dir_seq_on_valid_name(dialog, gtk_entry_get_text(GTK_ENTRY(entry)));
+					if (gui->ctrl_ptr != NULL)
+					{
+						char *full_path = create_dir_name_from(OUTPUT_DATA_PATH.c_str(), gtk_entry_get_text(GTK_ENTRY(entry))); 
+						gui->ctrl_ptr->data_out_path = std::string(full_path); // data is safely copied to data_out_path
+						free(full_path); // free current allocated memory
+					}
 					open = false;
 					break;
 				}
