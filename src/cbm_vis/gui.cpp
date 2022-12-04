@@ -394,6 +394,7 @@ static void on_create_dir(GtkWidget *widget, struct gui *gui)
 							{
 								char *full_path = create_dir_name_from(OUTPUT_DATA_PATH.c_str(), gtk_entry_get_text(GTK_ENTRY(entry))); 
 								gui->ctrl_ptr->data_out_path = std::string(full_path); // data is safely copied to data_out_path
+								gui->ctrl_ptr->data_out_base_name = std::string(gtk_entry_get_text(GTK_ENTRY(entry)));
 								free(full_path); // free current allocated memory
 							}
 							open = false;
@@ -411,6 +412,7 @@ static void on_create_dir(GtkWidget *widget, struct gui *gui)
 					{
 						char *full_path = create_dir_name_from(OUTPUT_DATA_PATH.c_str(), gtk_entry_get_text(GTK_ENTRY(entry))); 
 						gui->ctrl_ptr->data_out_path = std::string(full_path); // data is safely copied to data_out_path
+						gui->ctrl_ptr->data_out_base_name = std::string(gtk_entry_get_text(GTK_ENTRY(entry)));
 						free(full_path); // free current allocated memory
 					}
 					open = false;

@@ -17,9 +17,12 @@ std::string get_current_time_as_string()
 	std::stringstream time_stream;
 
 	std::time_t t = std::time(0);
-	std::tm * now = std::localtime(&t);
+	std::tm *now = std::localtime(&t);
 
-	time_stream << (now->tm_mon+1) << (now->tm_mday) << (now->tm_year + 1900);
+	if (now->tm_mon + 1 < 10) time_stream << "0";
+	time_stream << (now->tm_mon+1);
+	if (now->tm_mday < 10) time_stream << "0";
+	time_stream << (now->tm_mday) << (now->tm_year + 1900);
 	return time_stream.str();
 }
 

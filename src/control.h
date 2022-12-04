@@ -128,7 +128,13 @@ class Control
 		enum plasticity pf_pc_plast = GRADED;
 		enum plasticity mf_nc_plast = GRADED;
 
+		// will need both path name and basename to
+		// 1) automatically create output file names and
+		// 2) create the output directory
 		std::string data_out_path = "";
+		std::string data_out_base_name = "";
+
+		std::string out_sim_name = "";
 
 		std::string rf_names[NUM_CELL_TYPES];
 		std::string pf_names[NUM_CELL_TYPES]; 
@@ -169,6 +175,7 @@ class Control
 		void save_mfdcn_weights_to_file(std::string out_mfdcn_file);
 		void load_mfdcn_weights_from_file(std::string in_mfdcn_file);
 
+		void create_out_sim_filename(parsed_commandline &p_cl);
 		void create_raster_filenames(parsed_commandline &p_cl);
 		void create_psth_filenames(parsed_commandline &p_cl);
 		void create_weights_filenames(parsed_commandline &p_cl);
