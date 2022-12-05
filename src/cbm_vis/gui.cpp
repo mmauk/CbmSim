@@ -5,6 +5,22 @@
 #include "commandline.h" // for OUTPUT_DATA_PATH def
 #include "gui.h"
 
+std::map<std::string, bool> init_all_rast_or_psth_map {
+	{"MF", true}, 
+	{"GR", true},
+	{"GO", true},
+	{"BC", true},
+	{"SC", true},
+	{"PC", true},
+	{"IO", true},
+	{"NC", true},
+};
+
+std::map<std::string, bool> init_all_weights_map = {
+	{ "PFPC", true },
+	{ "MFNC", true },
+};
+
 // temp function so gtk doesn't whine abt NULL callbacks
 static void null_callback(GtkWidget *widget, gpointer data) {}
 
@@ -143,14 +159,55 @@ static void on_load_sim_file(GtkWidget *widget, Control *control)
 	load_file(widget, control, &Control::init_sim, "[ERROR]: Could not open simulation file.");
 }
 
-static void on_save_sim(GtkWidget *widget, Control *control)
+// FIXME: initialize filenames from output_sim_name, coming from either:
+// a) commandline
+static void on_save_file(GtkWidget *widget, save_data *data)
 {
-	save_file(widget, control, &Control::save_sim_to_file, "[ERROR]: Could not save sim file.", DEFAULT_SIM_FILE_NAME);
-}
-
-static void on_save_pfpc_weights(GtkWidget *widget, Control *control)
-{
-	save_file(widget, control, &Control::save_pfpc_weights_to_file, "[ERROR]: Could not save pf-pc weights to file.", DEFAULT_PFPC_WEIGHT_NAME);
+	if (data->opt == data->opt % (2 * NUM_CELL_TYPES))
+	{
+		if (data->opt == data->opt % NUM_CELL_TYPES)
+		{
+			if (!data->ctrl_ptr->raster_filenames_created)
+			{
+				data->ctrl_ptr->create_raster_filenames(init_all_rast_or_psth_map);
+			}
+			data->ctrl_ptr->rast_save_funcs[data->opt]();
+		}
+		else
+		{
+			if (!data->ctrl_ptr->psth_filenames_created)
+			{
+				data->ctrl_ptr->create_psth_filenames(init_all_rast_or_psth_map);
+			}
+			// FIXME: place all psth and rast save funcs in a general save func so that
+			// we don't have to do this hacky modding out just to get the correct index
+			data->ctrl_ptr->psth_save_funcs[data->opt % NUM_CELL_TYPES]();
+		}
+	}
+	else if (data->opt == PFPC)
+	{
+		if (!data->ctrl_ptr->pfpc_weights_filenames_created)
+		{
+			data->ctrl_ptr->create_weights_filenames(init_all_weights_map);
+		}
+		data->ctrl_ptr->save_pfpc_weights_to_file();
+	}
+	else if (data->opt == MFNC)
+	{
+		if (!data->ctrl_ptr->mfnc_weights_filenames_created)
+		{
+			data->ctrl_ptr->create_weights_filenames(init_all_weights_map);
+		}
+		data->ctrl_ptr->save_mfdcn_weights_to_file();
+	}
+	else
+	{
+		if (!data->ctrl_ptr->out_sim_filename_created)
+		{
+			data->ctrl_ptr->create_out_sim_filename();
+		}
+		data->ctrl_ptr->save_sim_to_file();
+	}
 }
 
 static void on_load_pfpc_weights(GtkWidget *widget, Control *control)
@@ -158,94 +215,9 @@ static void on_load_pfpc_weights(GtkWidget *widget, Control *control)
 	load_file(widget, control, &Control::load_pfpc_weights_from_file, "[ERROR]: Could not open pf-pc weights file.");
 }
 
-static void on_save_mfdcn_weights(GtkWidget *widget, Control *control)
-{
-	save_file(widget, control, &Control::save_mfdcn_weights_to_file, "[ERROR]: Could not save mf-dcn weights to file.", DEFAULT_MFDCN_WEIGHT_NAME);
-} 
-
 static void on_load_mfdcn_weights(GtkWidget *widget, Control *control)
 {
 	load_file(widget, control, &Control::load_mfdcn_weights_from_file, "[ERROR]: Could not open mf-dcn weights file.");
-}
-
-static void on_save_gr_raster(GtkWidget *widget, Control *control)
-{
-	save_file(widget, control, &control->rast_save_funcs[GR], "[ERROR]: Could not save gr raster to file.", DEFAULT_GR_RASTER_FILE_NAME);
-} 
-
-static void on_save_go_raster(GtkWidget *widget, Control *control)
-{
-	save_file(widget, control, &control->rast_save_funcs[GO], "[ERROR]: Could not save go raster to file.", DEFAULT_GO_RASTER_FILE_NAME);
-} 
-
-static void on_save_pc_raster(GtkWidget *widget, Control *control)
-{
-	save_file(widget, control, &control->rast_save_funcs[PC], "[ERROR]: Could not save pc raster to file.", DEFAULT_PC_RASTER_FILE_NAME);
-} 
-
-static void on_save_nc_raster(GtkWidget *widget, Control *control)
-{
-	save_file(widget, control, &control->rast_save_funcs[NC], "[ERROR]: Could not save nc raster to file.", DEFAULT_NC_RASTER_FILE_NAME);
-} 
-
-static void on_save_io_raster(GtkWidget *widget, Control *control)
-{
-	save_file(widget, control, &control->rast_save_funcs[IO], "[ERROR]: Could not save io raster to file.", DEFAULT_IO_RASTER_FILE_NAME);
-} 
-
-static void on_save_bc_raster(GtkWidget *widget, Control *control)
-{
-	save_file(widget, control, &control->rast_save_funcs[BC], "[ERROR]: Could not save bc raster to file.", DEFAULT_BC_RASTER_FILE_NAME);
-} 
-
-static void on_save_sc_raster(GtkWidget *widget, Control *control)
-{
-	save_file(widget, control, &control->rast_save_funcs[SC], "[ERROR]: Could not save sc raster to file.", DEFAULT_SC_RASTER_FILE_NAME);
-}
-
-static void on_save_mf_raster(GtkWidget *widget, Control *control)
-{
-	save_file(widget, control, &control->rast_save_funcs[MF], "[ERROR]: Could not save mf raster to file.", DEFAULT_MF_RASTER_FILE_NAME);
-}
-
-static void on_save_gr_psth(GtkWidget *widget, Control *control)
-{
-	save_file(widget, control, &control->psth_save_funcs[GR], "[ERROR]: Could not save gr psth to file.", DEFAULT_GR_PSTH_FILE_NAME);
-} 
-
-static void on_save_go_psth(GtkWidget *widget, Control *control)
-{
-	save_file(widget, control, &control->psth_save_funcs[GO], "[ERROR]: Could not save go psth to file.", DEFAULT_GO_PSTH_FILE_NAME);
-} 
-
-static void on_save_pc_psth(GtkWidget *widget, Control *control)
-{
-	save_file(widget, control, &control->psth_save_funcs[PC], "[ERROR]: Could not save pc psth to file.", DEFAULT_PC_PSTH_FILE_NAME);
-} 
-
-static void on_save_nc_psth(GtkWidget *widget, Control *control)
-{
-	save_file(widget, control, &control->psth_save_funcs[NC], "[ERROR]: Could not save nc psth to file.", DEFAULT_NC_PSTH_FILE_NAME);
-} 
-
-static void on_save_io_psth(GtkWidget *widget, Control *control)
-{
-	save_file(widget, control, &control->psth_save_funcs[IO], "[ERROR]: Could not save io psth to file.", DEFAULT_IO_PSTH_FILE_NAME);
-} 
-
-static void on_save_bc_psth(GtkWidget *widget, Control *control)
-{
-	save_file(widget, control, &control->psth_save_funcs[BC], "[ERROR]: Could not save bc psth to file.", DEFAULT_BC_PSTH_FILE_NAME);
-} 
-
-static void on_save_sc_psth(GtkWidget *widget, Control *control)
-{
-	save_file(widget, control, &control->psth_save_funcs[SC], "[ERROR]: Could not save sc psth to file.", DEFAULT_SC_PSTH_FILE_NAME);
-}
-
-static void on_save_mf_psth(GtkWidget *widget, Control *control)
-{
-	save_file(widget, control, &control->psth_save_funcs[MF], "[ERROR]: Could not save mf psth to file.", DEFAULT_MF_PSTH_FILE_NAME);
 }
 
 static bool is_valid_dir_name(const char *in_str)
@@ -395,6 +367,7 @@ static void on_create_dir(GtkWidget *widget, struct gui *gui)
 								char *full_path = create_dir_name_from(OUTPUT_DATA_PATH.c_str(), gtk_entry_get_text(GTK_ENTRY(entry))); 
 								gui->ctrl_ptr->data_out_path = std::string(full_path); // data is safely copied to data_out_path
 								gui->ctrl_ptr->data_out_base_name = std::string(gtk_entry_get_text(GTK_ENTRY(entry)));
+								gui->ctrl_ptr->data_out_dir_created = true;
 								free(full_path); // free current allocated memory
 							}
 							open = false;
@@ -413,6 +386,7 @@ static void on_create_dir(GtkWidget *widget, struct gui *gui)
 						char *full_path = create_dir_name_from(OUTPUT_DATA_PATH.c_str(), gtk_entry_get_text(GTK_ENTRY(entry))); 
 						gui->ctrl_ptr->data_out_path = std::string(full_path); // data is safely copied to data_out_path
 						gui->ctrl_ptr->data_out_base_name = std::string(gtk_entry_get_text(GTK_ENTRY(entry)));
+						gui->ctrl_ptr->data_out_dir_created = true;
 						free(full_path); // free current allocated memory
 					}
 					open = false;
@@ -1216,6 +1190,14 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 		return 1;
 	}
 
+	save_data save_data[NUM_SAVE_OPTS] = {
+		{control, MF_RAST}, {control, GR_RAST}, {control, GO_RAST}, {control, BC_RAST},
+		{control, SC_RAST}, {control, PC_RAST}, {control, IO_RAST}, {control, NC_RAST},
+		{control, MF_PSTH}, {control, GR_PSTH}, {control, GO_PSTH}, {control, BC_PSTH},
+		{control, SC_PSTH}, {control, PC_PSTH}, {control, IO_PSTH}, {control, NC_PSTH},
+		{control, PFPC}, {control, MFNC}, {control, SIM}
+	};
+
 	struct gui gui = {
 		.window = gtk_window_new(GTK_WINDOW_TOPLEVEL),
 		.grid = gtk_grid_new(),
@@ -1285,7 +1267,7 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 								}
 							},
 							{"Save Sim", gtk_menu_item_new(),
-								{ "activate", G_CALLBACK(on_save_sim), control, false },
+								{ "activate", G_CALLBACK(on_save_file), &save_data[SIM], false },
 								{}
 							},
 							{"Create Output Dir", gtk_menu_item_new(),
@@ -1302,7 +1284,7 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 					{gtk_menu_new(), NUM_WEIGHTS_MENU_ITEMS, new menu_item[NUM_WEIGHTS_MENU_ITEMS]
 						{
 							{"Save PF-PC", gtk_menu_item_new(),
-								{ "activate", G_CALLBACK(on_save_pfpc_weights), control, false },
+								{ "activate", G_CALLBACK(on_save_file), &save_data[PFPC], false },
 								{}
 							},
 							{"Load PF-PC", gtk_menu_item_new(),
@@ -1310,7 +1292,7 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 								{}
 							},
 							{"Save MF-DN", gtk_menu_item_new(),
-								{ "activate", G_CALLBACK(on_save_mfdcn_weights), control, false },
+								{ "activate", G_CALLBACK(on_save_file), &save_data[MFNC], false },
 								{}
 							},
 							{"Load MF-DN", gtk_menu_item_new(),
@@ -1324,35 +1306,35 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 					{gtk_menu_new(), NUM_RASTER_MENU_ITEMS, new menu_item[NUM_RASTER_MENU_ITEMS]
 						{
 							{"Save GR", gtk_menu_item_new(),
-								{ "activate", G_CALLBACK(on_save_gr_raster), control, false },
+								{ "activate", G_CALLBACK(on_save_file), &save_data[GR_RAST], false },
 								{}
 							},
 							{"Save GO", gtk_menu_item_new(),
-								{ "activate", G_CALLBACK(on_save_go_raster), control, false },
+								{ "activate", G_CALLBACK(on_save_file), &save_data[GO_RAST], false },
 								{}
 							},
 							{"Save PC", gtk_menu_item_new(),
-								{ "activate", G_CALLBACK(on_save_pc_raster), control, false },
+								{ "activate", G_CALLBACK(on_save_file), &save_data[PC_RAST], false },
 								{}
 							},
 							{"Save DCN", gtk_menu_item_new(),
-								{ "activate", G_CALLBACK(on_save_nc_raster), control, false },
+								{ "activate", G_CALLBACK(on_save_file), &save_data[NC_RAST], false },
 								{}
 							},
 							{"Save IO", gtk_menu_item_new(),
-								{ "activate", G_CALLBACK(on_save_io_raster), control, false },
+								{ "activate", G_CALLBACK(on_save_file), &save_data[IO_RAST], false },
 								{}
 							},
 							{"Save BC", gtk_menu_item_new(),
-								{ "activate", G_CALLBACK(on_save_bc_raster), control, false },
+								{ "activate", G_CALLBACK(on_save_file), &save_data[BC_RAST], false },
 								{}
 							},
 							{"Save SC", gtk_menu_item_new(),
-								{ "activate", G_CALLBACK(on_save_sc_raster), control, false },
+								{ "activate", G_CALLBACK(on_save_file), &save_data[SC_RAST], false },
 								{}
 							},
 							{"Save MF", gtk_menu_item_new(),
-								{ "activate", G_CALLBACK(on_save_mf_raster), control, false },
+								{ "activate", G_CALLBACK(on_save_file), &save_data[MF_RAST], false },
 								{}
 							},
 						}
@@ -1362,35 +1344,35 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 					{gtk_menu_new(), NUM_RASTER_MENU_ITEMS, new menu_item[NUM_RASTER_MENU_ITEMS]
 						{
 							{"Save GR", gtk_menu_item_new(),
-								{ "activate", G_CALLBACK(on_save_gr_psth), control, false },
+								{ "activate", G_CALLBACK(on_save_file), &save_data[GR_PSTH], false },
 								{}
 							},
 							{"Save GO", gtk_menu_item_new(),
-								{ "activate", G_CALLBACK(on_save_go_psth), control, false },
+								{ "activate", G_CALLBACK(on_save_file), &save_data[GO_PSTH], false },
 								{}
 							},
 							{"Save PC", gtk_menu_item_new(),
-								{ "activate", G_CALLBACK(on_save_pc_psth), control, false },
+								{ "activate", G_CALLBACK(on_save_file), &save_data[PC_PSTH], false },
 								{}
 							},
 							{"Save DCN", gtk_menu_item_new(),
-								{ "activate", G_CALLBACK(on_save_nc_psth), control, false },
+								{ "activate", G_CALLBACK(on_save_file), &save_data[NC_PSTH], false },
 								{}
 							},
 							{"Save IO", gtk_menu_item_new(),
-								{ "activate", G_CALLBACK(on_save_io_psth), control, false },
+								{ "activate", G_CALLBACK(on_save_file), &save_data[IO_PSTH], false },
 								{}
 							},
 							{"Save BC", gtk_menu_item_new(),
-								{ "activate", G_CALLBACK(on_save_bc_psth), control, false },
+								{ "activate", G_CALLBACK(on_save_file), &save_data[BC_PSTH], false },
 								{}
 							},
 							{"Save SC", gtk_menu_item_new(),
-								{ "activate", G_CALLBACK(on_save_sc_psth), control, false },
+								{ "activate", G_CALLBACK(on_save_file), &save_data[SC_PSTH], false },
 								{}
 							},
 							{"Save MF", gtk_menu_item_new(),
-								{ "activate", G_CALLBACK(on_save_mf_psth), control, false },
+								{ "activate", G_CALLBACK(on_save_file), &save_data[MF_PSTH], false },
 								{}
 							},
 						}

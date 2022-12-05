@@ -23,6 +23,14 @@
 
 // TODO: place in a common place, as gui uses a constant like this too
 #define NUM_CELL_TYPES 8
+#define NUM_WEIGHTS_TYPES 2
+#define NUM_SAVE_OPTS 19
+enum save_opts {
+	MF_RAST, GR_RAST, GO_RAST, BC_RAST, SC_RAST, PC_RAST, IO_RAST, NC_RAST,
+	MF_PSTH, GR_PSTH, GO_PSTH, BC_PSTH, SC_PSTH, PC_PSTH, IO_PSTH, NC_PSTH,
+	PFPC, MFNC,
+	SIM};
+
 
 // convenience enum for indexing cell arrays
 enum cell_id {MF, GR, GO, BC, SC, PC, IO, NC};
@@ -67,6 +75,14 @@ class Control
 		bool raster_arrays_initialized = false;
 		bool psth_arrays_initialized   = false;
 		bool spike_sums_initialized    = false;
+
+		bool data_out_dir_created     = false;
+		bool out_sim_filename_created = false;
+		bool raster_filenames_created = false;
+		bool psth_filenames_created   = false;
+		bool pfpc_weights_filenames_created = false;
+		bool mfnc_weights_filenames_created = false;
+
 		enum sim_run_state run_state   = NOT_IN_RUN; 
 
 		// params that I do not know how to categorize
@@ -139,8 +155,8 @@ class Control
 		std::string rf_names[NUM_CELL_TYPES];
 		std::string pf_names[NUM_CELL_TYPES]; 
 
-		std::string pf_pc_weights_file = "";
-		std::string mf_nc_weights_file = "";
+		std::string pfpc_weights_file = "";
+		std::string mfnc_weights_file = "";
 
 		struct cell_spike_sums spike_sums[NUM_CELL_TYPES];
 		struct cell_firing_rates firing_rates[NUM_CELL_TYPES];
@@ -155,8 +171,8 @@ class Control
 		uint8_t **psths[NUM_CELL_TYPES];
 
 		uint32_t rast_sizes[NUM_CELL_TYPES]; 
-		std::function<void(std::string)> psth_save_funcs[NUM_CELL_TYPES];
-		std::function<void(std::string)> rast_save_funcs[NUM_CELL_TYPES];
+		std::function<void()> psth_save_funcs[NUM_CELL_TYPES];
+		std::function<void()> rast_save_funcs[NUM_CELL_TYPES];
 
 		float **pc_vm_raster;
 		float **nc_vm_raster;
@@ -169,16 +185,16 @@ class Control
 		void init_sim(std::string in_sim_filename);
 		void reset_sim(std::string in_sim_filename);
 
-		void save_sim_to_file(std::string outSimFile);
-		void save_pfpc_weights_to_file(std::string out_pfpc_file);
+		void save_sim_to_file();
+		void save_pfpc_weights_to_file();
 		void load_pfpc_weights_from_file(std::string in_pfpc_file);
-		void save_mfdcn_weights_to_file(std::string out_mfdcn_file);
+		void save_mfdcn_weights_to_file();
 		void load_mfdcn_weights_from_file(std::string in_mfdcn_file);
 
-		void create_out_sim_filename(parsed_commandline &p_cl);
-		void create_raster_filenames(parsed_commandline &p_cl);
-		void create_psth_filenames(parsed_commandline &p_cl);
-		void create_weights_filenames(parsed_commandline &p_cl);
+		void create_out_sim_filename();
+		void create_raster_filenames(std::map<std::string, bool> &rast_map);
+		void create_psth_filenames(std::map<std::string, bool> &psth_map);
+		void create_weights_filenames(std::map<std::string, bool> &weights_map);
 		void initialize_rast_cell_nums();
 		void initialize_cell_spikes();
 		void initialize_spike_sums();

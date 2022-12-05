@@ -68,6 +68,12 @@
 #define DEFAULT_SC_PSTH_FILE_NAME "sc_psth.bin"
 #define DEFAULT_MF_PSTH_FILE_NAME "mf_psth.bin"
 
+typedef struct
+{
+	Control *ctrl_ptr;
+	enum save_opts opt;
+} save_data;
+
 struct signal
 {
 	const gchar *signal;

@@ -37,7 +37,9 @@ int main(int argc, char **argv)
 		if (!p_cl.build_file.empty())
 		{
 			control->build_sim();
-			control->save_sim_to_file(p_cl.output_sim_file);
+			// FIXME: reconsider interpretation of -o flag in build mode,
+			// then implement that interpretation
+			//control->save_sim_to_file(p_cl.output_sim_file);
 		}
 		else if (!p_cl.session_file.empty())
 		{
