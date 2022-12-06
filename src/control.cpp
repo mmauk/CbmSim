@@ -246,7 +246,7 @@ void Control::create_raster_filenames(std::map<std::string, bool> &rast_map)
 		for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 		{
 			std::string cell_id = CELL_IDS[i];
-			if (rast_map[cell_id])
+			if (rast_map[cell_id] || use_gui)
 			{
 				rf_names[i] = data_out_path + "/" + data_out_base_name
 											+ "_" + cell_id + "_RASTER_"
@@ -265,7 +265,7 @@ void Control::create_psth_filenames(std::map<std::string, bool> &psth_map)
 		for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 		{
 			std::string cell_id = CELL_IDS[i];
-			if (psth_map[cell_id])
+			if (psth_map[cell_id] || use_gui)
 			{
 				pf_names[i] = data_out_path + "/" + data_out_base_name 
 							+ "_" + cell_id + "_PSTH_"
@@ -281,14 +281,14 @@ void Control::create_weights_filenames(std::map<std::string, bool> &weights_map)
 {
 	if (data_out_dir_created)
 	{
-		if (weights_map["PFPC"])
+		if (weights_map["PFPC"] || use_gui)
 		{
 			pfpc_weights_file = data_out_path + "/" + data_out_base_name
 							   + "_PFPC_WEIGHTS_" + get_current_time_as_string()
 							   + BIN_EXT;
 			pfpc_weights_filenames_created = true; // only useful so far for gui...
 		}
-		if (weights_map["MFNC"])
+		if (weights_map["MFNC"] || use_gui)
 		{
 			mfnc_weights_file = data_out_path + "/" + data_out_base_name
 							   + "_MFNC_WEIGHTS_" + get_current_time_as_string()

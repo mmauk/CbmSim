@@ -68,8 +68,8 @@ std::string get_opt_param(std::vector<std::string> &token_buf, std::string opt)
 
 void fill_opt_map(std::map<std::string, bool> &opt_map, std::string opt, std::string param)
 {
-	// if the parameter is a single cell id, take case into account separately
-	if (param.length() == 2)
+	// if the parameter is a single cell id or weight id, take case into account separately
+	if (param.length() == 2 || param.length() == 4)
 	{
 		opt_map[param] = true;
 	}
