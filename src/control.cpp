@@ -442,6 +442,7 @@ void Control::runSession(struct gui *gui)
 	{
 		save_rasters();
 		save_psths();
+		save_sim_to_file();
 	}
 	run_state = NOT_IN_RUN;
 }
