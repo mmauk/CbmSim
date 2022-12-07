@@ -1,6 +1,7 @@
 #include <iomanip>
 #include <gtk/gtk.h>
 
+#include "logger.h"
 #include "control.h"
 #include "file_parse.h"
 #include "tty.h"
@@ -95,7 +96,7 @@ void Control::set_plasticity_modes(parsed_commandline &p_cl)
 
 void Control::init_sim(parsed_sess_file &s_file, std::string in_sim_filename)
 {
-	std::cout << "[INFO]: Initializing simulation...\n";
+	LOG_DEBUG("Initializing simulation...");
 	std::fstream sim_file_buf(in_sim_filename.c_str(), std::ios::in | std::ios::binary);
 	read_con_params(sim_file_buf);
 	populate_act_params(s_file);
@@ -114,7 +115,7 @@ void Control::init_sim(parsed_sess_file &s_file, std::string in_sim_filename)
 	initialize_spike_sums();
 	sim_file_buf.close();
 	sim_initialized = true;
-	std::cout << "[INFO]: Simulation initialized.\n";
+	LOG_DEBUG("Simulation initialized.");
 }
 
 void Control::reset_sim(std::string in_sim_filename)
@@ -442,7 +443,7 @@ void Control::runSession(struct gui *gui)
 	{
 		save_rasters();
 		save_psths();
-		save_sim_to_file();
+		//save_sim_to_file();
 	}
 	run_state = NOT_IN_RUN;
 }

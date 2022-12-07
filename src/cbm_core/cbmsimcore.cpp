@@ -5,6 +5,7 @@
  *      Author: consciousness
  */
 
+#include "logger.h"
 #include "cbmsimcore.h"
 
 //#define NO_ASYNC
@@ -79,7 +80,7 @@ void CBMSimCore::initCUDAStreams()
 	// TODO: use assert, try, and catch for these types of errors
 	error = cudaGetDeviceCount(&maxNumGPUs);
 
-	std::cerr << "CUDA max num devices: " << maxNumGPUs << ", "
+	LOG_DEBUG("CUDA max num devices: %d", maxNumGPUs);
 		<< cudaGetErrorString(error) << std::endl;
 	std::cerr << "CUDA num devices: " << numGPUs << ", starting at GPU# "
 		<< gpuIndStart << std::endl;
@@ -489,11 +490,11 @@ void CBMSimCore::construct(CBMState *state,
 	{
 		numGPUs = 1;
 	}
-	std::cout << " calculated (?) number of GPUs: " << numGPUs << std::endl;
+	LOG_DEBUG("Calculated (?) number of GPUs: %d", numGPUs);
 
-	std::cout << "initializing cuda streams..." << std::endl;
+	LOG_DEBUG("Initializing cuda streams...");
 	initCUDAStreams();
-	std::cout << "finished initialzing cuda streams." << std::endl;
+	LOG_DEBUG("Finished initialzing cuda streams.");
 
 	// NOTE: inputNet has internal cp, no need to pass to constructor
 	inputNet = new InNet(state->getInnetConStateInternal(),

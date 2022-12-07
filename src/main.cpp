@@ -21,16 +21,11 @@
 #include "file_parse.h"
 #include "logger.h"
 
-int main(int argc, char **argv)
+int main(int argc, char **argv) 
 {
 	logger_initConsoleLogger(stderr);
-	logger_setLevel(LogLevel_DEBUG);
-	LOG_INFO("console logging");
-	return 0;
-}
+	logger_setLevel(LogLevel_INFO);
 
-int main2(int argc, char **argv) 
-{
 	parsed_commandline p_cl = {};
 	parse_commandline(&argc, &argv, p_cl); /* includes validation step */
 
@@ -49,11 +44,11 @@ int main2(int argc, char **argv)
 		if (p_cl.vis_mode == "TUI")
 		{
 			control->runSession(NULL);
-			if (!p_cl.output_sim_file.empty())
-			{
-				std::cout << "[INFO]: Saving simulation to file...\n";
-				control->save_sim_to_file(p_cl.output_sim_file);
-			}
+			//if (!p_cl.output_sim_file.empty())
+			//{
+			//	std::cout << "[INFO]: Saving simulation to file...\n";
+			//	control->save_sim_to_file(p_cl.output_sim_file);
+			//}
 		}
 		else if (p_cl.vis_mode == "GUI")
 		{

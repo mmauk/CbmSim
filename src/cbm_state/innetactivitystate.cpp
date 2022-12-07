@@ -6,15 +6,15 @@
  *  Updated on: March, 2022
  *      Author: the gallogly
  */ 
-
+#include "logger.h"
 #include "innetactivitystate.h"
 
 InNetActivityState::InNetActivityState()
 {
-	std::cout << "[INFO]: Allocating and initializing innet activity state..." << std::endl;
+	LOG_DEBUG("Allocating and initializing innet activity state...");
 	allocateMemory();
 	initializeVals();
-	std::cout << "[INFO]: Finished allocating and initializing innet activity state." << std::endl;
+	LOG_DEBUG("Finished allocating and initializing innet activity state.");
 }
 
 InNetActivityState::InNetActivityState(std::fstream &infile)

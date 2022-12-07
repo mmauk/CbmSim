@@ -8,6 +8,7 @@
 #include <iostream>
 #include <algorithm> /* std::fill */
 
+#include "logger.h"
 #include "file_utility.h"
 #include "sfmt.h"
 #include "connectivityparams.h"
@@ -18,8 +19,10 @@ MZoneActivityState::MZoneActivityState() {}
 
 MZoneActivityState::MZoneActivityState(int randSeed)
 {
+	LOG_DEBUG("Allocating and initializing mzone activity state...");
 	allocateMemory();
 	initializeVals(randSeed);
+	LOG_DEBUG("Finished allocating and initializing mzone activity state.");
 }
 
 MZoneActivityState::MZoneActivityState(std::fstream &infile)
