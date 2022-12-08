@@ -31,15 +31,9 @@ echo "DONE WITH FORGETTING"
 
     #Extinguishing
 echo "STARTING WITH EXTINGUISHING"
-for k in {1..50} 
-do
-    ./cbm_sim -i bunny_1_readytoextinguish.sim -s GS_test_extinction.sess -o bunny_1_howyoudoing.sim
-    rm ../data/inputs/bunny_1_readytoextinguish.sim
 
-    ./cbm_sim -i bunny_1_howyoudoing.sim -s GS_test_probe.sess -p --raster PC,bunny1_pc_raster_probe_${k}_ext.bin \
-        MF,bunny1_mf_raster_probe_${k}_ext.bin --weights PFPC,bunny1_weights_PFPC_probe_${k}_ext.bin -o bunny_1_readytoextinguish.sim
-    rm ../data/inputs/bunny_1_howyoudoing.sim
-    echo "Done with iteration $k of extinction"
-done
+./cbm_sim -i bunny_1_readytoextinguish.sim -s GS_test_extinction.sess -o bunny_1_howyoudoing.sim
+rm ../data/inputs/bunny_1_readytoextinguish.sim
+
 echo "DONE"
 

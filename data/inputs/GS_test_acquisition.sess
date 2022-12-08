@@ -7,13 +7,13 @@ begin filetype run
 	begin section trial_def
 
 		// trial defs 
-		def trial isi_500_paired_trial
+		def trial isi_1000_paired_trial
 			int use_cs 1
-			int cs_onset 550
-			int cs_len 500 
+			int cs_onset 400
+			int cs_len 1000 
 			float cs_percent 100.0
 			int use_us 1
-			int us_onset 1050
+			int us_onset 1400
 		end
 
 		// block defs 
@@ -22,9 +22,15 @@ begin filetype run
 		//end 
 
 		// session defs
-		def session isi_500_session
-			isi_500_paired_trial 500
+		def session isi_1000_session
+			isi_1000_paired_trial 500
 		end 
+	end
+
+	begin section trial_spec
+		int trialTime 5000
+		int msPreCS 400
+		int msPostCS 400
 	end
 
 	begin section mf_input
@@ -56,12 +62,6 @@ begin filetype run
 
 		float fracImport  0.0
 		float fracOverlap 0.2
-	end
-
-	begin section trial_spec
-		int trialTime 5000
-		int msPreCS 550
-		int msPostCS 550
 	end
 
 	begin section activity
