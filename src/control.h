@@ -92,7 +92,7 @@ class Control
 
 		// sim params -> TODO: place in simcore
 		uint32_t gpuIndex = 0;
-		uint32_t gpuP2    = 2;
+		uint32_t gpuP2    = 1;
 
 		uint32_t trial;
 		uint32_t raster_counter;
@@ -135,7 +135,7 @@ class Control
 		float fracOverlap = 0.2;
 
 		uint32_t trialTime = 0; 
-	
+		const uint32_t pre_collection_ts = 2000;
 		// raster measurement params. 
 		uint32_t msPreCS = 0;
 		uint32_t msPostCS = 0;
@@ -186,9 +186,9 @@ class Control
 		void reset_sim(std::string in_sim_filename);
 
 		void save_sim_to_file();
-		void save_pfpc_weights_to_file();
+		void save_pfpc_weights_to_file(int32_t trial = -1);
 		void load_pfpc_weights_from_file(std::string in_pfpc_file);
-		void save_mfdcn_weights_to_file();
+		void save_mfdcn_weights_to_file(int32_t trial = -1);
 		void load_mfdcn_weights_from_file(std::string in_mfdcn_file);
 
 		void create_out_sim_filename();
@@ -215,6 +215,8 @@ class Control
 		void calculate_firing_rates(float onset_cs, float offset_cs);
 		void fill_rasters(uint32_t raster_counter, uint32_t psth_counter);
 		void fill_psths(uint32_t psth_counter);
+		void save_weights();
+		void save_gr_raster();
 		void save_rasters();
 		void save_psths();
 

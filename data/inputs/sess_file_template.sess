@@ -1,4 +1,4 @@
-// this is the new format for the experiment file.
+// this is the new format for the session file.
 // the aim is to make this format more general and
 // more forgiving to the end user.
 
@@ -7,32 +7,18 @@ begin filetype run
 	begin section trial_def
 
 		// trial defs 
-		def trial isi_250_paired_trial
+		def trial isi_1000_paired_trial
 			int use_cs 1
 			int cs_onset 400
-			int cs_len 250 
+			int cs_len 1000
 			float cs_percent 100.0
 			int use_us 1
-			int us_onset 650
+			int us_onset 1400 
 		end
-
-		def trial probe_trial
-			int use_cs 1
-			int cs_onset 400
-			int cs_len 250
-			float cs_percent 100.0
-			int use_us 0
-			int us_onset 650
-		end
-
-		// block defs 
-		def block isi_250_block
-			isi_250_paired_trial 10
-		end 
 
 		// session defs
-		def session isi_250_session
-			isi_250_block 10
+		def session isi_1000_session
+			isi_1000_paired_trial 3
 		end 
 	end
 
@@ -70,8 +56,13 @@ begin filetype run
 	begin section trial_spec
 		int trialTime 5000
 		int msPreCS 400
-		int msPostCS 406
+		int msPostCS 400
 	end
+
+// generally, this section will not need to be modified by the end-user.
+// the only instance would be when the end-user desires to tune the simulation
+// to different modes of input to the simulation, or when homeostatic plasticity
+// is being tested
 
 	begin section activity
 		float coupleRiRjRatioGO 0.0

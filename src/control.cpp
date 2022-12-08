@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <gtk/gtk.h>
 
+#include "logger.h"
 #include "control.h"
 #include "file_parse.h"
 #include "tty.h"
@@ -37,8 +38,7 @@ Control::Control(parsed_commandline &p_cl)
 		int status = mkdir(data_out_path.c_str(), 0775);
 		if (status == -1)
 		{
-			std::cerr << "[ERROR]: Could not create directory '" << data_out_path << "'. Maybe it already exists\n"
-					  << "[ERROR]: Exiting...\n";
+			LOG_FATAL("Could not create directory '%s'. Maybe it already exists. Exiting...", data_out_path.c_str());
 			exit(10);
 		}
 		data_out_dir_created = true;
@@ -95,7 +95,7 @@ void Control::set_plasticity_modes(std::string pfpc_plasticity, std::string mfnc
 
 void Control::initialize_session(std::string sess_file)
 {
-	std::cout << "[INFO]: Initializing session...\n";
+	LOG_DEBUG("Initializing session...");
 	tokenized_file t_file;
 	lexed_file l_file;
 	tokenize_file(sess_file, t_file);
@@ -109,12 +109,12 @@ void Control::initialize_session(std::string sess_file)
 	PSTHColSize = msPreCS + td.cs_lens[0] + msPostCS;
 
 	trials_data_initialized = true;
-	std::cout << "[INFO]: Session initialized.\n";
+	LOG_DEBUG("Session initialized.");
 }
 
 void Control::init_sim(std::string in_sim_filename)
 {
-	std::cout << "[INFO]: Initializing simulation...\n";
+	LOG_DEBUG("Initializing simulation...");
 	std::fstream sim_file_buf(in_sim_filename.c_str(), std::ios::in | std::ios::binary);
 	read_con_params(sim_file_buf);
 	populate_act_params(s_file); // FIXME: place act params in separate file so we don't have to make s_file class attrib
@@ -135,7 +135,7 @@ void Control::init_sim(std::string in_sim_filename)
 	initialize_spike_sums();
 	sim_file_buf.close();
 	sim_initialized = true;
-	std::cout << "[INFO]: Simulation initialized.\n";
+	LOG_DEBUG("Simulation initialized.");
 }
 
 void Control::reset_sim(std::string in_sim_filename)
@@ -157,7 +157,7 @@ void Control::save_sim_to_file()
 {
 	if (!out_sim_name.empty())
 	{
-		std::cout << "[INFO]: Saving simulation to '" << out_sim_name << "'\n";
+		LOG_DEBUG("Saving simulation to '%s'", out_sim_name.c_str());
 		std::fstream outSimFileBuffer(out_sim_name.c_str(), std::ios::out | std::ios::binary);
 		write_con_params(outSimFileBuffer);
 		if (!simCore) simState->writeState(outSimFileBuffer);
@@ -166,11 +166,17 @@ void Control::save_sim_to_file()
 	}
 }
 
-void Control::save_pfpc_weights_to_file()
+void Control::save_pfpc_weights_to_file(int32_t trial)
 {
 	if (pfpc_weights_filenames_created)
 	{
-		std::cout << "[INFO]: Saving PFPC weights to '" << pfpc_weights_file << "'\n";
+		std::string curr_pfpc_weights_filename = pfpc_weights_file;
+		if (trial != -1) // nonnegative indicates we want to leave the weights file as is
+		{
+			curr_pfpc_weights_filename = data_out_path + "/" + get_file_basename(pfpc_weights_file)
+									   + "_TRIAL_" + std::to_string(trial) + BIN_EXT;
+		}
+		LOG_DEBUG("Saving granule to purkinje weights to file '%s'", curr_pfpc_weights_filename.c_str());
 		if (!simCore)
 		{
 			fprintf(stderr, "[ERROR]: Trying to write uninitialized weights to file.\n");
@@ -178,7 +184,7 @@ void Control::save_pfpc_weights_to_file()
 			return;
 		}
 		const float *pfpc_weights = simCore->getMZoneList()[0]->exportPFPCWeights();
-		std::fstream outPFPCFileBuffer(pfpc_weights_file.c_str(), std::ios::out | std::ios::binary);
+		std::fstream outPFPCFileBuffer(curr_pfpc_weights_filename.c_str(), std::ios::out | std::ios::binary);
 		rawBytesRW((char *)pfpc_weights, num_gr * sizeof(float), false, outPFPCFileBuffer);
 		outPFPCFileBuffer.close();
 	}
@@ -197,11 +203,17 @@ void Control::load_pfpc_weights_from_file(std::string in_pfpc_file)
 	inPFPCFileBuffer.close();
 } 
 
-void Control::save_mfdcn_weights_to_file()
+void Control::save_mfdcn_weights_to_file(int32_t trial)
 {
 	if (mfnc_weights_filenames_created)
 	{
-		std::cout << "[INFO]: Saving MFNC weights to '" << mfnc_weights_file << "'\n";
+		std::string curr_mfnc_weights_filename = mfnc_weights_file;
+		if (trial != -1) // nonnegative indicates we want to leave the weights file as is
+		{
+			curr_mfnc_weights_filename = data_out_path + "/" + get_file_basename(curr_mfnc_weights_filename)
+									   + "_TRIAL_" + std::to_string(trial) + BIN_EXT;
+		}
+		LOG_DEBUG("Saving mossy fiber to deep nucleus weigths to file '%s'", curr_mfnc_weights_filename.c_str());
 		if (!simCore)
 		{
 			fprintf(stderr, "[ERROR]: Trying to write uninitialized weights to file.\n");
@@ -210,7 +222,7 @@ void Control::save_mfdcn_weights_to_file()
 		}
 		// TODO: make a export function for mfdcn weights
 		const float *mfdcn_weights = simCore->getMZoneList()[0]->exportMFDCNWeights();
-		std::fstream outMFDCNFileBuffer(out_sim_name.c_str(), std::ios::out | std::ios::binary);
+		std::fstream outMFDCNFileBuffer(curr_mfnc_weights_filename.c_str(), std::ios::out | std::ios::binary);
 		rawBytesRW((char *)mfdcn_weights, num_nc * num_p_nc_from_mf_to_nc * sizeof(const float), false, outMFDCNFileBuffer);
 		outMFDCNFileBuffer.close();
 	}
@@ -366,7 +378,7 @@ void Control::initialize_psth_save_funcs()
 		{
 			if (!pf_names[i].empty())
 			{
-				std::cout << "[INFO]: Saving " << CELL_IDS[i] << " psth to '" <<  pf_names[i] << "'\n";
+				LOG_DEBUG("Saving %s psth to '%s'", CELL_IDS[i].c_str(), pf_names[i].c_str());
 				write2DArray<uint8_t>(pf_names[i], this->psths[i], this->PSTHColSize, this->rast_cell_nums[i]);
 			}
 		};
@@ -382,7 +394,7 @@ void Control::initialize_raster_save_funcs()
 			if (!rf_names[i].empty() && CELL_IDS[i] != "GR")
 			{
 				uint32_t row_size = (CELL_IDS[i] == "GR") ? this->PSTHColSize : this->PSTHColSize * this->td.num_trials;
-				std::cout << "[INFO]: Saving " << CELL_IDS[i] << " raster to '" <<  rf_names[i] << "'\n";
+				LOG_DEBUG("Saving %s raster to '%s'", CELL_IDS[i].c_str(), rf_names[i].c_str());
 				write2DArray<uint8_t>(rf_names[i], this->rasters[i], row_size, this->rast_cell_nums[i]);
 			}
 		};
@@ -412,19 +424,19 @@ void Control::runSession(struct gui *gui)
 		std::string trialName = td.trial_names[trial];
 
 		uint32_t useCS        = td.use_css[trial];
-		uint32_t onsetCS      = td.cs_onsets[trial];
+		uint32_t onsetCS      = pre_collection_ts + td.cs_onsets[trial];
 		uint32_t csLength     = td.cs_lens[trial];
 		//uint32_t percentCS    = td.cs_percents[trial]; // unused for now
 		uint32_t useUS        = td.use_uss[trial];
-		uint32_t onsetUS      = td.us_onsets[trial];
-
+		uint32_t onsetUS      = pre_collection_ts + td.us_onsets[trial];
+		
 		int PSTHCounter = 0;
 		float gGRGO_sum = 0;
 		float gMFGO_sum = 0;
 
 		memset(goSpkCounter, 0, num_go * sizeof(int));
 
-		std::cout << "[INFO]: Trial number: " << trial + 1 << "\n";
+		LOG_INFO("Trial number: %d", trial + 1);
 		start = omp_get_wtime();
 		for (uint32_t ts = 0; ts < trialTime; ts++)
 		{
@@ -466,9 +478,9 @@ void Control::runSession(struct gui *gui)
 			if (ts == onsetCS + csLength)
 			{
 				countGOSpikes(goSpkCounter);
-				std::cout << "[INFO]: Mean gGRGO   = " << gGRGO_sum / (num_go * csLength) << "\n";
-				std::cout << "[INFO]: Mean gMFGO   = " << gMFGO_sum / (num_go * csLength) << "\n";
-				std::cout << "[INFO]: GR:MF ratio  = " << gGRGO_sum / gMFGO_sum << "\n";
+				LOG_DEBUG("Mean gGRGO   = %0.4f", gGRGO_sum / (num_go * csLength));
+				LOG_DEBUG("Mean gMFGO   = %0.5f", gMFGO_sum / (num_go * csLength));
+				LOG_DEBUG("GR:MF ratio  = %0.2f", gGRGO_sum / gMFGO_sum);
 			}
 			
 			/* data collection */
@@ -487,7 +499,7 @@ void Control::runSession(struct gui *gui)
 			}
 		}
 		end = omp_get_wtime();
-		std::cout << "[INFO]: '" << trialName << "' took " << (end - start) << "s.\n";
+		LOG_INFO("'%s' took %0.2fs", trialName.c_str(), end - start);
 		
 		if (use_gui)
 		{
@@ -499,30 +511,28 @@ void Control::runSession(struct gui *gui)
 			}
 			if (run_state == IN_RUN_PAUSE)
 			{
-				std::cout << "[INFO]: Simulation is paused at end of trial " << trial+1 << ".\n";
-				while (run_state == IN_RUN_PAUSE)
+				LOG_DEBUG("Simulation is paused at end of trial %d.", trial + 1);
+				while(run_state == IN_RUN_PAUSE)
 				{
 					if (gtk_events_pending()) gtk_main_iteration();
 				}
-				std::cout << "[INFO]: Continuing...\n";
+				LOG_DEBUG("Continuing...");
 			}
 			reset_spike_sums();
 		}
 		// save gr rasters into new file every trial 
-		//std::string trial_gr_raster_name = OUTPUT_DATA_PATH + get_file_basename(rf_names[GR])
-		//							  + "_trial_" + std::to_string(trial) + "." + BIN_EXT;
-		//save_raster(trial_gr_raster_name, GR);
+		save_gr_raster();
+		save_pfpc_weights_to_file(trial);
+		save_mfdcn_weights_to_file(trial);
 		trial++;
 	}
-	if (run_state == NOT_IN_RUN) std::cout << "[INFO]: Simulation terminated.\n";
-	else if (run_state == IN_RUN_NO_PAUSE) std::cout << "[INFO]: Simulation Completed.\n";
+	if (run_state == NOT_IN_RUN) LOG_INFO("Simulation terminated.");
+	else if (run_state == IN_RUN_NO_PAUSE) LOG_INFO("Simulation Completed.");
 	
 	if (!use_gui)
 	{
 		save_rasters();
 		save_psths();
-		save_pfpc_weights_to_file();
-		save_mfdcn_weights_to_file();
 		save_sim_to_file();
 	}
 
@@ -577,6 +587,17 @@ void gen_gr_sample(int gr_indices[], int sample_size, int data_size)
 			chosen[index] = true;
 			counter++;
 		} 
+	}
+}
+
+void Control::save_gr_raster()
+{
+	if (!rf_names[GR].empty())
+	{
+		std::string trial_raster_name = OUTPUT_DATA_PATH + get_file_basename(rf_names[GR])
+									  + "_trial_" + std::to_string(trial) + "." + BIN_EXT;
+		LOG_DEBUG("Saving granule raster to file...");
+		write2DArray<uint8_t>(trial_raster_name, rasters[GR], num_gr, PSTHColSize);
 	}
 }
 
@@ -664,8 +685,8 @@ void Control::countGOSpikes(int *goSpkCounter)
 
 	for (int i = 0; i < num_go; i++) goSpkSum += goSpkCounter[i];
 
-	std::cout << "[INFO]: Mean GO Rate: " << goSpkSum / ((float)num_go * isi) << std::endl;
-	std::cout << "[INFO]: Median GO Rate: " << m / isi << std::endl;
+	LOG_DEBUG("Mean GO Rate: %0.2f", goSpkSum / ((float)num_go * isi));
+	LOG_DEBUG("Median GO Rate: %0.1f", m / isi);
 }
 
 void Control::fill_rasters(uint32_t raster_counter, uint32_t psth_counter)

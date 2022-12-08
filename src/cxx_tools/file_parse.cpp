@@ -11,6 +11,8 @@
 #include <fstream>
 #include <sstream>
 #include <regex>
+
+#include "logger.h"
 #include "file_parse.h"
 
 // regex strings for matching variable identifiers and variable values
@@ -78,7 +80,7 @@ void tokenize_file(std::string in_file, tokenized_file &t_file)
 	std::ifstream in_file_buf(in_file.c_str());
 	if (!in_file_buf.is_open())
 	{
-		std::cerr << "[IO_ERROR]: Could not open file. Exiting..." << std::endl;
+		LOG_FATAL("Could not open file '%s'. Exiting...", in_file.c_str());
 		exit(3);
 	}
 
@@ -389,7 +391,7 @@ void parse_lexed_sess_file(lexed_file &l_file, parsed_sess_file &s_file)
 		}
 		else if (ltp->lex != NEW_LINE)
 		{
-			std::cerr << "[IO_ERROR]: Unidentified token. Exiting...\n";
+			LOG_FATAL("Unidentified token. Exiting...");
 			exit(1);
 		}
 		ltp++;
@@ -400,12 +402,12 @@ void parse_lexed_sess_file(lexed_file &l_file, parsed_sess_file &s_file)
 	{
 		if (next_lt->raw_token != "filetype")
 		{
-			std::cerr << "[IO_ERROR]: First interpretable line does not specify filetype. Exiting...\n";
+			LOG_FATAL("First interpretable line does not specify filetype. Exiting...");
 			exit(2);
 		}
 		else if (second_next_lt->raw_token != "run")
 		{
-			std::cerr << "[IO_ERROR]: '" << second_next_lt->raw_token << "' does not indicate an experiment file. Exiting...\n";
+			LOG_FATAL("'%s' does not indicate a session file. Exiting...", second_next_lt->raw_token.c_str());
 			exit(3);
 		}
 		else
@@ -416,7 +418,7 @@ void parse_lexed_sess_file(lexed_file &l_file, parsed_sess_file &s_file)
 	}
 	else
 	{
-		std::cerr << "[IO_ERROR]: Unidentified token after '" << ltp->raw_token << "'. Exiting...\n";
+		LOG_FATAL("Unidentified token after '%s'. Exiting...", ltp->raw_token.c_str());
 		exit(4);
 	}
 }
@@ -527,7 +529,7 @@ void parse_lexed_build_file(lexed_file &l_file, parsed_build_file &b_file)
 		}
 		else if (ltp->lex != NEW_LINE)
 		{
-			std::cerr << "[IO_ERROR]: Unidentified token. Exiting...\n";
+			LOG_FATAL("Unidentified token. Exiting...");
 			exit(1);
 		}
 		ltp++;
@@ -538,12 +540,12 @@ void parse_lexed_build_file(lexed_file &l_file, parsed_build_file &b_file)
 	{
 		if (next_lt->raw_token != "filetype")
 		{
-			std::cerr << "[IO_ERROR]: First interpretable line does not specify filetype. Exiting...\n";
+			LOG_FATAL("First interpretable line does not specify filetype. Exiting...");
 			exit(2);
 		}
 		else if (second_next_lt->raw_token != "build")
 		{
-			std::cerr << "[IO_ERROR]: '" << second_next_lt->raw_token << "' does not indicate a build file. Exiting...\n";
+			LOG_FATAL("'%s' does not indicate a build file. Exiting...", second_next_lt->raw_token.c_str());
 			exit(3);
 		}
 		else
@@ -554,7 +556,7 @@ void parse_lexed_build_file(lexed_file &l_file, parsed_build_file &b_file)
 	}
 	else
 	{
-		std::cerr << "[IO_ERROR]: Unidentified token after '" << ltp->raw_token << "'. Exiting...\n";
+		LOG_FATAL("Unidentified token after '%s'. Exiting...", ltp->raw_token.c_str());
 		exit(4);
 	}
 }

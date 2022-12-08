@@ -4,6 +4,9 @@ begin filetype build
 //     - num_cell type variables are not in original conParams_binChoice2_1.txt
 //     - num_p_cellA_to_cellB type variables are not in original conParams_binChoice2_t.txt
 
+// this file aims to give the simulation all the parameters necessary to conduct synaptogenesis
+// as well as to initialize all activity arrays with non-zero initial values.
+
 	begin section connectivity 
 		// cell numbers
 		int mf_x 128

@@ -21,9 +21,13 @@
 #include "gui.h"
 #include "commandline.h"
 #include "file_parse.h"
+#include "logger.h"
 
 int main(int argc, char **argv) 
 {
+	logger_initConsoleLogger(stderr);
+	logger_setLevel(LogLevel_DEBUG);
+
 	parsed_commandline p_cl = {};
 	parse_and_validate_parsed_commandline(&argc, &argv, p_cl);
 
