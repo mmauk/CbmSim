@@ -14,7 +14,7 @@
 
 #define NUM_SUB_MENU_ITEMS 5
 
-#define NUM_FILE_MENU_ITEMS 5
+#define NUM_FILE_MENU_ITEMS 4
 #define NUM_WEIGHTS_MENU_ITEMS 4
 #define NUM_RASTER_MENU_ITEMS 8
 #define NUM_ANALYSIS_MENU_ITEMS 1
@@ -108,7 +108,6 @@ struct tuning_button
 	int digits_to_display;
 	struct tuning_button_label label;
 	struct signal signal;
-
 };
 
 struct tuning_window
@@ -146,7 +145,6 @@ struct gui
 	struct menu menu_bar;
 	struct firing_rate_window frw;
 	Control *ctrl_ptr;
-	
 };
 
 gboolean firing_rates_win_visible(struct gui *gui);
