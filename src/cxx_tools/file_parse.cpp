@@ -423,6 +423,14 @@ void parse_lexed_sess_file(lexed_file &l_file, parsed_sess_file &s_file)
 	}
 }
 
+void cp_parsed_sess_file(parsed_sess_file &from_s_file, parsed_sess_file &to_s_file)
+{
+	to_s_file.parsed_trial_info.trial_map = from_s_file.parsed_trial_info.trial_map;
+	to_s_file.parsed_trial_info.block_map = from_s_file.parsed_trial_info.block_map;
+	to_s_file.parsed_trial_info.session = from_s_file.parsed_trial_info.session;
+	to_s_file.parsed_var_sections = from_s_file.parsed_var_sections;
+}
+
 /*
  * Implementation Notes:
  *     meant for parsing var sections in parsed_build files. loops until the end lex {END_MARKER, "end"} is

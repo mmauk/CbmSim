@@ -56,7 +56,7 @@ typedef struct
 	uint32_t *use_css;
 	uint32_t *cs_onsets;
 	uint32_t *cs_lens;
-	float       *cs_percents;
+	float    *cs_percents;
 	uint32_t *use_uss;
 	uint32_t *us_onsets;
 } trials_data;
@@ -129,6 +129,12 @@ void lex_tokenized_file(tokenized_file &t_file, lexed_file &l_file);
  *
  */
 void parse_lexed_sess_file(lexed_file &l_file, parsed_sess_file &s_file);
+
+/*
+ * Description:
+ *     takes in parsed_session_file 'from_s_file' and copies its data into 'to_s_file'
+ */
+void cp_parsed_sess_file(parsed_sess_file &from_s_file, parsed_sess_file &to_s_file);
 
 /*
  * Description:

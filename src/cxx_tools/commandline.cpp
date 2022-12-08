@@ -344,6 +344,23 @@ void parse_and_validate_parsed_commandline(int *argc, char ***argv, parsed_comma
 	validate_commandline(p_cl);
 }
 
+void cp_parsed_commandline(parsed_commandline &from_p_cl, parsed_commandline &to_p_cl)
+{
+	to_p_cl.print_help      = from_p_cl.print_help;
+	to_p_cl.vis_mode        = from_p_cl.vis_mode;
+	to_p_cl.build_file      = from_p_cl.build_file;
+	to_p_cl.session_file    = from_p_cl.session_file;
+	to_p_cl.input_sim_file  = from_p_cl.input_sim_file;
+	to_p_cl.output_sim_file = from_p_cl.output_sim_file;
+	to_p_cl.output_basename = from_p_cl.output_basename;
+	to_p_cl.pfpc_plasticity = from_p_cl.pfpc_plasticity;
+	to_p_cl.mfnc_plasticity = from_p_cl.mfnc_plasticity;
+	
+	to_p_cl.raster_files  = from_p_cl.raster_files;
+	to_p_cl.psth_files    = from_p_cl.psth_files;
+	to_p_cl.weights_files = from_p_cl.weights_files;
+}
+
 std::string parsed_commandline_to_str(parsed_commandline &p_cl)
 {
 	std::stringstream p_cl_buf;

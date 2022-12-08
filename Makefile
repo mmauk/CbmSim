@@ -7,6 +7,7 @@
 ROOT         := ./
 BUILD_DIR    := $(ROOT)build/
 SRC_DIR      := $(ROOT)src/
+LOG_DIR      := $(ROOT)logs/
 DATA_DIR     := $(ROOT)data/
 DATA_IN_DIR  := $(DATA_DIR)inputs
 DATA_OUT_DIR := $(DATA_DIR)outputs
@@ -41,10 +42,10 @@ NVCC       := nvcc
 NVCC_FLAGS := -arch=native -Xcompiler -fPIC -O3
 
 CPP       := g++-11
-CPP_FLAGS := -m64 -pipe -std=c++14 -fopenmp -O3 -fPIC
+CPP_FLAGS := -m64 -pipe -std=c++14 -fopenmp -g -fPIC
 
 LD       := g++-11
-LD_FLAGS := -m64 -fopenmp -O3
+LD_FLAGS := -m64 -fopenmp -g
 
 CHK_DIR_EXISTS   := test -d
 MKDIR            := mkdir -p
@@ -53,7 +54,7 @@ RM               := rm -rf
 
 VPATH := $(shell echo "${INC_DIRS}" | sed -e 's/ /:/g') 
 
-first: $(DATA_IN_DIR) $(DATA_OUT_DIR) $(BUILD_DIR) $(TARGET)
+first: $(LOG_DIR) $(DATA_IN_DIR) $(DATA_OUT_DIR) $(BUILD_DIR) $(TARGET)
 
 $(BUILD_DIR)%.o: %.cu
 	$(NVCC) $(NVCC_FLAGS) $(CUDA_INC_FLAGS) -c $< -o $@
@@ -63,6 +64,9 @@ $(BUILD_DIR)%.o: %.cpp
 
 $(TARGET): $(OBJS)
 	$(LD) $(LD_FLAGS) $^ -o $@ $(LIB_FLAGS) 
+
+$(LOG_DIR):
+	@$(CHK_DIR_EXISTS) $(LOG_DIR) || $(MKDIR) $(LOG_DIR)
 
 $(DATA_IN_DIR):
 	@$(CHK_DIR_EXISTS) $(DATA_IN_DIR) || $(MKDIR) $(DATA_IN_DIR)

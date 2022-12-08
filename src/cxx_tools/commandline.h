@@ -41,6 +41,8 @@ void validate_commandline(parsed_commandline &p_cl);
 
 void parse_and_validate_parsed_commandline(int *argc, char ***argv, parsed_commandline &p_cl);
 
+void cp_parsed_commandline(parsed_commandline &from_p_cl, parsed_commandline &to_p_cl);
+
 std::string parsed_commandline_to_str(parsed_commandline &p_cl);
 
 std::ostream &operator<<(std::ostream &os, parsed_commandline &p_cl);

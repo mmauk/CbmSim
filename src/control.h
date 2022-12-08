@@ -31,7 +31,6 @@ enum save_opts {
 	PFPC, MFNC,
 	SIM};
 
-
 // convenience enum for indexing cell arrays
 enum cell_id {MF, GR, GO, BC, SC, PC, IO, NC};
 
@@ -52,6 +51,22 @@ struct cell_firing_rates
 };
 
 enum sim_run_state {NOT_IN_RUN, IN_RUN_NO_PAUSE, IN_RUN_PAUSE};
+enum when {BEFORE_RUN, AFTER_RUN};
+
+typedef struct 
+{
+	std::string start_date;
+	std::string locale;
+	std::string start_time;
+	std::string end_time;
+	std::string sim_version;
+	std::string username;
+	parsed_commandline p_cl;
+	parsed_sess_file s_file;
+} info_file_data;
+
+void cp_to_info_file_data(parsed_commandline &p_cl, parsed_sess_file &s_file, info_file_data &if_data);
+void set_info_file_str_props(enum when, info_file_data &if_data);
 
 class Control 
 {
@@ -62,6 +77,7 @@ class Control
 		// Objects
 		parsed_sess_file s_file;
 		trials_data td;
+		info_file_data if_data;
 		CBMState *simState     = NULL;
 		CBMSimCore *simCore    = NULL;
 		ECMFPopulation *mfFreq = NULL;
@@ -76,14 +92,16 @@ class Control
 		bool psth_arrays_initialized   = false;
 		bool spike_sums_initialized    = false;
 
-		bool data_out_dir_created     = false;
-		bool out_sim_filename_created = false;
-		bool raster_filenames_created = false;
-		bool psth_filenames_created   = false;
+		bool data_out_dir_created      = false;
+		bool out_sim_filename_created  = false;
+		bool out_info_filename_created = false;
+		bool raster_filenames_created  = false;
+		bool psth_filenames_created    = false;
+
 		bool pfpc_weights_filenames_created = false;
 		bool mfnc_weights_filenames_created = false;
 
-		enum sim_run_state run_state   = NOT_IN_RUN; 
+		enum sim_run_state run_state = NOT_IN_RUN; 
 
 		// params that I do not know how to categorize
 		float goMin = 0.26; 
@@ -147,10 +165,11 @@ class Control
 		// will need both path name and basename to
 		// 1) automatically create output file names and
 		// 2) create the output directory
-		std::string data_out_path = "";
+		std::string data_out_path      = "";
 		std::string data_out_base_name = "";
 
-		std::string out_sim_name = "";
+		std::string out_sim_name  = "";
+		std::string out_info_name = "";
 
 		std::string rf_names[NUM_CELL_TYPES];
 		std::string pf_names[NUM_CELL_TYPES]; 
@@ -192,6 +211,7 @@ class Control
 		void load_mfdcn_weights_from_file(std::string in_mfdcn_file);
 
 		void create_out_sim_filename();
+		void create_out_info_filename();
 		void create_raster_filenames(std::map<std::string, bool> &rast_map);
 		void create_psth_filenames(std::map<std::string, bool> &psth_map);
 		void create_weights_filenames(std::map<std::string, bool> &weights_map);

@@ -1,4 +1,5 @@
 #include <sys/stat.h> // mkdir (POSIX ONLY)
+#include <pwd.h> // for getpwuid 
 #include <iomanip>
 #include <gtk/gtk.h>
 
@@ -9,6 +10,9 @@
 #include "array_util.h"
 #include "gui.h" /* tenuous inclide at best :pogO: */
 
+const std::string SIM_VERSION = "0.0.1";
+
+const std::string TXT_EXT = ".txt";
 const std::string BIN_EXT = ".bin";
 const std::string SIM_EXT = ".sim";
 const std::string CELL_IDS[NUM_CELL_TYPES] = {"MF", "GR", "GO", "BC", "SC", "PC", "IO", "NC"}; 
@@ -29,6 +33,7 @@ Control::Control(parsed_commandline &p_cl)
 	else if (!p_cl.session_file.empty())
 	{
 		initialize_session(p_cl.session_file);
+		cp_to_info_file_data(p_cl, s_file, if_data);
 		set_plasticity_modes(p_cl.pfpc_plasticity, p_cl.mfnc_plasticity);
 		// assume that validated commandline opts includes 1) input file 2) session file 3) output directory name
 		data_out_path = OUTPUT_DATA_PATH + p_cl.output_basename;
@@ -43,6 +48,7 @@ Control::Control(parsed_commandline &p_cl)
 		}
 		data_out_dir_created = true;
 		create_out_sim_filename(); //default
+		create_out_info_filename(); //default
 		create_raster_filenames(p_cl.raster_files); //optional
 		create_psth_filenames(p_cl.psth_files); //optional
 		create_weights_filenames(p_cl.weights_files); //optional
@@ -88,7 +94,6 @@ void Control::set_plasticity_modes(std::string pfpc_plasticity, std::string mfnc
 
 	if (mfnc_plasticity == "off") mf_nc_plast = OFF;
 	else if (mfnc_plasticity == "graded") mf_nc_plast = GRADED;
-	/* TODO: implement cmdline functionality to enable these */
 	else if (mfnc_plasticity == "binary") mf_nc_plast = BINARY;
 	else if (mfnc_plasticity == "cascade") mf_nc_plast = CASCADE;
 }
@@ -171,7 +176,7 @@ void Control::save_pfpc_weights_to_file(int32_t trial)
 	if (pfpc_weights_filenames_created)
 	{
 		std::string curr_pfpc_weights_filename = pfpc_weights_file;
-		if (trial != -1) // nonnegative indicates we want to leave the weights file as is
+		if (trial != -1) // nonnegative indicates we want to append the trial to the file basename
 		{
 			curr_pfpc_weights_filename = data_out_path + "/" + get_file_basename(pfpc_weights_file)
 									   + "_TRIAL_" + std::to_string(trial) + BIN_EXT;
@@ -179,8 +184,8 @@ void Control::save_pfpc_weights_to_file(int32_t trial)
 		LOG_DEBUG("Saving granule to purkinje weights to file '%s'", curr_pfpc_weights_filename.c_str());
 		if (!simCore)
 		{
-			fprintf(stderr, "[ERROR]: Trying to write uninitialized weights to file.\n");
-			fprintf(stderr, "[ERROR]: (Hint: Try initializing a sim or loading the weights first.)\n");
+			LOG_ERROR("Trying to write uninitialized weights to file.");
+			LOG_ERROR("(Hint: Try initializing a sim or loading the weights first.)");
 			return;
 		}
 		const float *pfpc_weights = simCore->getMZoneList()[0]->exportPFPCWeights();
@@ -194,8 +199,8 @@ void Control::load_pfpc_weights_from_file(std::string in_pfpc_file)
 {
 	if (!simCore)
 	{
-		fprintf(stderr, "[ERROR]: Trying to read weights to uninitialized simulation.\n");
-		fprintf(stderr, "[ERROR]: (Hint: Try initializing a sim first.)\n");
+		LOG_ERROR("Trying to read weights to uninitialized simulation.");
+		LOG_ERROR("(Hint: Try initializing a sim first.)");
 		return;
 	}
 	std::fstream inPFPCFileBuffer(in_pfpc_file.c_str(), std::ios::in | std::ios::binary);
@@ -208,7 +213,7 @@ void Control::save_mfdcn_weights_to_file(int32_t trial)
 	if (mfnc_weights_filenames_created)
 	{
 		std::string curr_mfnc_weights_filename = mfnc_weights_file;
-		if (trial != -1) // nonnegative indicates we want to leave the weights file as is
+		if (trial != -1) // nonnegative indicates we want to append the trial to the file basename
 		{
 			curr_mfnc_weights_filename = data_out_path + "/" + get_file_basename(curr_mfnc_weights_filename)
 									   + "_TRIAL_" + std::to_string(trial) + BIN_EXT;
@@ -216,8 +221,8 @@ void Control::save_mfdcn_weights_to_file(int32_t trial)
 		LOG_DEBUG("Saving mossy fiber to deep nucleus weigths to file '%s'", curr_mfnc_weights_filename.c_str());
 		if (!simCore)
 		{
-			fprintf(stderr, "[ERROR]: Trying to write uninitialized weights to file.\n");
-			fprintf(stderr, "[ERROR]: (Hint: Try initializing a sim or loading the weights first.)\n");
+			LOG_ERROR("Trying to write uninitialized weights to file.");
+			LOG_ERROR("(Hint: Try initializing a sim or loading the weights first.)");
 			return;
 		}
 		// TODO: make a export function for mfdcn weights
@@ -232,8 +237,8 @@ void Control::load_mfdcn_weights_from_file(std::string in_mfdcn_file)
 {
 	if (!simCore)
 	{
-		fprintf(stderr, "[ERROR]: Trying to read weights to uninitialized simulation.\n");
-		fprintf(stderr, "[ERROR]: (Hint: Try initializing a sim first.)\n");
+		LOG_ERROR("Trying to read weights to uninitialized simulation.");
+		LOG_ERROR("(Hint: Try initializing a sim first.)");
 		return;
 	}
 	std::fstream inMFDCNFileBuffer(in_mfdcn_file.c_str(), std::ios::in | std::ios::binary);
@@ -247,6 +252,15 @@ void Control::create_out_sim_filename()
 	{
 		out_sim_name = data_out_path + "/" + data_out_base_name + SIM_EXT;
 		out_sim_filename_created = true;
+	}
+}
+
+void Control::create_out_info_filename()
+{
+	if (data_out_dir_created)
+	{
+		out_info_name = data_out_path + "/" + data_out_base_name + TXT_EXT;
+		out_info_filename_created = true;
 	}
 }
 
@@ -414,6 +428,7 @@ void Control::initialize_psths()
 
 void Control::runSession(struct gui *gui)
 {
+	set_info_file_str_props(BEFORE_RUN, if_data);
 	double start, end;
 	int goSpkCounter[num_go];
 	if (!use_gui) run_state = IN_RUN_NO_PAUSE;
@@ -537,6 +552,7 @@ void Control::runSession(struct gui *gui)
 	}
 
 	run_state = NOT_IN_RUN;
+	set_info_file_str_props(AFTER_RUN, if_data);
 }
 
 void Control::reset_spike_sums()
@@ -772,6 +788,58 @@ void Control::delete_psths()
 	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
 		if (!pf_names[i].empty()) delete2DArray<uint8_t>(psths[i]);
+	}
+}
+
+void cp_to_info_file_data(parsed_commandline &p_cl, parsed_sess_file &s_file, info_file_data &if_data)
+{
+	cp_parsed_commandline(p_cl, if_data.p_cl);
+	cp_parsed_sess_file(s_file, if_data.s_file);
+}
+
+const char *get_user_name()
+{
+	uid_t uid = geteuid();
+	struct passwd *pw = getpwuid(uid);
+	if (pw)
+	{
+		return pw->pw_name;
+	}
+	
+	return "";
+}
+
+void set_info_file_str_props(enum when when, info_file_data &if_data)
+{
+	std::time_t t = std::time(0);
+	std::tm *now = std::localtime(&t);
+	std::stringstream formatter;
+	if (when == BEFORE_RUN)
+	{
+		formatter << std::put_time(now, DEFAULT_DATE_FORMAT.c_str());
+		if_data.start_date = formatter.str();
+		std::stringstream().swap(formatter);
+		formatter << std::put_time(now, "%z %Z");
+		if_data.locale = formatter.str();
+		std::stringstream().swap(formatter);
+		formatter << std::put_time(now, DEFAULT_TIME_FORMAT.c_str());
+		if_data.start_time = formatter.str();
+		std::stringstream().swap(formatter);
+		if_data.sim_version = SIM_VERSION;
+		std::string user_name = std::string(get_user_name());
+		if (user_name.empty())
+		{
+			LOG_ERROR("Could not obtain username when setting information file properties."); 
+			LOG_ERROR("Username will be omitted from generated info file");
+			return;
+		}
+		if_data.username = user_name;
+	}
+	else
+	{
+		formatter << std::put_time(now, DEFAULT_TIME_FORMAT.c_str());
+		if_data.end_time = formatter.str();
+		std::stringstream().swap(formatter);
 	}
 }
 
