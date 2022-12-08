@@ -7,7 +7,6 @@
 #include "array_util.h"
 #include "gui.h" /* tenuous inclide at best :pogO: */
 
-
 const std::string BIN_EXT = "bin";
 const std::string CELL_IDS[NUM_CELL_TYPES] = {"MF", "GR", "GO", "BC", "SC", "PC", "IO", "NC"}; 
 
@@ -334,11 +333,11 @@ void Control::runSession(struct gui *gui)
 		std::string trialName = td.trial_names[trial];
 
 		uint32_t useCS        = td.use_css[trial];
-		uint32_t onsetCS      = td.cs_onsets[trial];
+		uint32_t onsetCS      = pre_collection_ts + td.cs_onsets[trial];
 		uint32_t csLength     = td.cs_lens[trial];
 		uint32_t percentCS    = td.cs_percents[trial];
 		uint32_t useUS        = td.use_uss[trial];
-		uint32_t onsetUS      = td.us_onsets[trial];
+		uint32_t onsetUS      = pre_collection_ts + td.us_onsets[trial];
 		
 		int PSTHCounter = 0;
 		float gGRGO_sum = 0;
@@ -432,6 +431,7 @@ void Control::runSession(struct gui *gui)
 		}
 		// save gr rasters into new file every trial 
 		save_gr_raster();
+		save_weights();
 		trial++;
 	}
 	if (run_state == NOT_IN_RUN) std::cout << "[INFO]: Simulation terminated.\n";
@@ -493,6 +493,24 @@ void gen_gr_sample(int gr_indices[], int sample_size, int data_size)
 			chosen[index] = true;
 			counter++;
 		} 
+	}
+}
+
+void Control::save_weights()
+{
+	if (!pf_pc_weights_file.empty())
+	{
+		std::string trial_pfpc_weights_name = OUTPUT_DATA_PATH + get_file_basename(pf_pc_weights_file)
+											+ "_trial_" + std::to_string(trial) + "." + BIN_EXT;
+		std::cout << "[INFO]: Saving granule to purkinje weights to file...\n";
+		save_pfpc_weights_to_file(trial_pfpc_weights_name);
+	}
+	if (!mf_nc_weights_file.empty())
+	{
+		std::string trial_mfnc_weights_name = OUTPUT_DATA_PATH + get_file_basename(mf_nc_weights_file)
+											+ "_trial_" + std::to_string(trial) + "." + BIN_EXT;
+		std::cout << "[INFO]: Saving mossy fiber to deep nucleus weigths to file...\n";
+		save_mfdcn_weights_to_file(trial_mfnc_weights_name);
 	}
 }
 

@@ -80,7 +80,7 @@ class Control
 		float inputStrength = 0.0;
 
 		// sim params -> TODO: place in simcore
-		int gpuIndex = 2;
+		int gpuIndex = 0;
 		int gpuP2    = 2;
 
 		int trial;
@@ -124,7 +124,7 @@ class Control
 		float fracOverlap = 0.2;
 
 		int trialTime = 0; 
-	
+		const uint32_t pre_collection_ts = 2000;
 		// raster measurement params. 
 		int msPreCS = 0;
 		int msPostCS = 0;
@@ -190,6 +190,7 @@ class Control
 		void calculate_firing_rates(float onset_cs, float offset_cs);
 		void fill_rasters(uint32_t raster_counter, uint32_t psth_counter, struct gui *gui);
 		void fill_psths(uint32_t psth_counter);
+		void save_weights();
 		void save_gr_raster();
 		void save_rasters();
 		void save_psths();
