@@ -81,29 +81,31 @@ void CBMSimCore::initCUDAStreams()
 	error = cudaGetDeviceCount(&maxNumGPUs);
 
 	LOG_DEBUG("CUDA max num devices: %d", maxNumGPUs);
-		<< cudaGetErrorString(error) << std::endl;
-	std::cerr << "CUDA num devices: " << numGPUs << ", starting at GPU# "
-		<< gpuIndStart << std::endl;
+	LOG_DEBUG("%s", cudaGetErrorString(error));
+	LOG_DEBUG("CUDA num devices: %d, starting at GPU %d", numGPUs, gpuIndStart);
 
 	streams = new cudaStream_t*[numGPUs];
 
 	for (int i = 0; i < numGPUs; i++)
 	{
 		error = cudaSetDevice(i + gpuIndStart);
-		std::cerr << "selecting device #" << i << ": " << cudaGetErrorString(error) << std::endl;
+		LOG_DEBUG("Selecting device %d", i);
+		LOG_DEBUG("%s", cudaGetErrorString(error));
 		streams[i] = new cudaStream_t[8];
-		std::cerr << "resetting device #" << i << ": " << cudaGetErrorString(error) << std::endl;
+		LOG_DEBUG("Resetting device %d", i);
+		LOG_DEBUG("%s", cudaGetErrorString(error));
 		cudaDeviceSynchronize();
 
 		for (int j = 0; j < 8; j++)
 		{
 			error = cudaStreamCreate(&streams[i][j]);
-			std::cerr << "initializing stream " << j << " for device " << i <<
-					": "<<cudaGetErrorString(error) << std::endl;
+			LOG_DEBUG("Initializing stream %d for device %d",j, i);
+			LOG_DEBUG("%s", cudaGetErrorString(error));
 		}
 		cudaDeviceSynchronize();
 		error = cudaGetLastError();
-		std::cerr << "CUDA dev " << i << ": " << cudaGetErrorString(error) << std::endl;
+		LOG_DEBUG("Cuda device %d", i);
+		LOG_DEBUG("%s", cudaGetErrorString(error));
 	}
 }
 
@@ -119,21 +121,19 @@ void CBMSimCore::syncCUDA(std::string title)
 	{
 		error = cudaSetDevice(i + gpuIndStart);
 #ifdef DISP_CUDA_ERR
-		std::cerr << "sync point " << title << ": switching to gpu #" << i <<
-				": " << cudaGetErrorString(error) << std::endl;
+		LOG_TRACE("sync point  %s, switching to gpu %d", title.c_str(), i);
+		LOG_TRACE("%s", cudaGetErrorString(error));
 #endif
-
 		error = cudaDeviceSynchronize();
 #ifdef DISP_CUDA_ERR
-		std::cerr << "sync point " << title << ": sync for gpu #" << i <<
-				": " << cudaGetErrorString(error) << std::endl;
+		LOG_TRACE("sync point  %s, switching to gpu %d", title.c_str(), i);
+		LOG_TRACE("%s", cudaGetErrorString(error));
 #endif
 	}
 }
 
 void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum plasticity mf_nc_plast)
 {
-	cudaError_t error;
 	syncCUDA("1");
 
 	curTime++;
@@ -509,10 +509,9 @@ void CBMSimCore::construct(CBMState *state,
 			state->getMZoneActStateInternal(i), mzoneRSeed[i], inputNet->getApBufGRGPUPointer(),
 			inputNet->getHistGRGPUPointer(), this->gpuIndStart, numGPUs);
 	}
-	std::cout << "Mzone construction complete" << std::endl;
-	
+	LOG_DEBUG("Mzone construction complete");
 	initAuxVars();
-	std::cout << "AuxVars good" << std::endl;
+	LOG_DEBUG("AuxVars good");
 
 	simState = state; // shallow copy
 }

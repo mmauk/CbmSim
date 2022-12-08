@@ -13,8 +13,10 @@
 #include <sstream>
 #include <algorithm>
 #include <utility>
-#include "commandline.h"
 #include <cstdint>
+
+#include "logger.h"
+#include "commandline.h"
 
 const std::vector<std::string> command_line_single_opts
 {
@@ -152,8 +154,8 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 		switch (opt_sum)
 		{
 			case 2:
-				std::cerr << "[IO_ERROR]: Specified both short and long command line option. You can specify only one\n"
-						  << "[IO_ERROR]: argumnet for each command line argument type. Exiting...\n";
+				LOG_FATAL("Specified both short and long command line option.");
+				LOG_FATAL("You can specify only one argument for each command line argument type. Exiting...");
 				exit(9);
 				break;
 			case 1:
@@ -190,7 +192,7 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 							div = curr_token_iter->find_first_of(',');
 							if (div == std::string::npos)
 							{
-								std::cerr << "[IO_ERROR]: Comma not given for raster argument '" << *curr_token_iter << "'. Exiting...\n";
+								LOG_FATAL("Comma not given for raster argument '%s'. Exiting...", (*curr_token_iter).c_str());
 								exit(8);
 								// we have a problem, so exit
 							}
@@ -206,7 +208,7 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 							div = curr_token_iter->find_first_of(',');
 							if (div == std::string::npos)
 							{
-								std::cerr << "[IO_ERROR]: Comma not given for raster argument '" << *curr_token_iter << "'. Exiting...\n";
+								LOG_FATAL("Comma not given for raster argument '%s'. Exiting...", (*curr_token_iter).c_str());
 								exit(8);
 								// we have a problem, so exit
 							}
@@ -222,7 +224,7 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 							div = curr_token_iter->find_first_of(',');
 							if (div == std::string::npos)
 							{
-								std::cerr << "[IO_ERROR]: Comma not given for weights argument '" << *curr_token_iter << "'. Exiting...\n";
+								LOG_FATAL("Comma not given for raster argument '%s'. Exiting...", (*curr_token_iter).c_str());
 								exit(9);
 								// we have a problem, so exit
 							}
@@ -256,18 +258,18 @@ void validate_commandline(parsed_commandline &p_cl)
 	{
 		if (!p_cl.session_file.empty())
 		{
-			std::cerr << "[IO_ERROR]: Cannot specify both session and build file. Exiting.\n";
+			LOG_FATAL("Cannot specify both session and build file. Exiting...");
 			exit(5);
 		}
 		if (p_cl.output_sim_file.empty())
 		{
-			std::cout << "[INFO]: Output simulation file not specified. Using default value...\n";
+			LOG_DEBUG("Output simulation file not specified. Using default value...");
 			p_cl.output_sim_file = DEFAULT_SIM_OUT_FILE; 
 		}
 		else p_cl.output_sim_file = INPUT_DATA_PATH + p_cl.output_sim_file;
 		if (!p_cl.vis_mode.empty() || !p_cl.input_sim_file.empty() || !p_cl.raster_files.empty())
 		{
-			std::cout << "[INFO]: Ignoring additional arguments in build mode.\n";
+			LOG_DEBUG("Ignoring additional arguments in build mode.");
 		}
 		p_cl.build_file = INPUT_DATA_PATH + p_cl.build_file;
 	}
@@ -275,7 +277,7 @@ void validate_commandline(parsed_commandline &p_cl)
 	{
 		if (!p_cl.build_file.empty())
 		{
-			std::cerr << "[IO_ERROR]: Cannot specify both build and session file. Exiting.\n";
+			LOG_FATAL("Cannot specify both build and session file. Exiting.");
 			exit(6);
 		}
 		if (!p_cl.output_sim_file.empty())
@@ -288,27 +290,27 @@ void validate_commandline(parsed_commandline &p_cl)
 		}
 		else
 		{
-			std::cerr << "[IO_ERROR]: No input simulation specified in run mode. Exiting...\n";
+			LOG_FATAL("No input simulation specified in run mode. Exiting...");
 			exit(8);
 		}
 		if (p_cl.pfpc_plasticity.empty())
 		{
-			std::cout << "[INFO]: Turning PFPC plasticity on to default mode 'graded'...\n";
+			LOG_DEBUG("Turning PFPC plasticity on to default mode 'graded'...");
 			p_cl.pfpc_plasticity = "graded";
 		}
 		else
 		{
 			// just notify user what we already set above
-			if (p_cl.pfpc_plasticity == "dual") std::cout << "[INFO]: Turning PFPC plasticity on in 'dual' mode...\n";
-			else if (p_cl.pfpc_plasticity == "cascade") std::cout << "[INFO]: Turning PFPC plasticity on in 'cascade' mode...\n";
-			else if (p_cl.pfpc_plasticity == "off") std::cout << "[INFO]: Turning PFPC plasticity off..\n";
+			if (p_cl.pfpc_plasticity == "dual") LOG_DEBUG("Turning PFPC plasticity on in 'dual' mode...");
+			else if (p_cl.pfpc_plasticity == "cascade") LOG_DEBUG("Turning PFPC plasticity on in 'cascade' mode...");
+			else if (p_cl.pfpc_plasticity == "off") LOG_DEBUG("Turning PFPC plasticity off..");
 		}
 		if (p_cl.mfnc_plasticity.empty())
 		{
-			std::cout << "[INFO]: Turning MFNC plasticity on to default mode 'graded'...\n";
+			LOG_DEBUG("Turning MFNC plasticity on to default mode 'graded'...");
 			p_cl.mfnc_plasticity = "graded";
 		}
-		else if (p_cl.mfnc_plasticity == "off") std::cout << "[INFO]: Turning MFNC plasticity off...\n";
+		else if (p_cl.mfnc_plasticity == "off") LOG_DEBUG("Turning MFNC plasticity off...");
 		if (!p_cl.raster_files.empty())
 		{
 			for (auto iter = p_cl.raster_files.begin(); iter != p_cl.raster_files.end(); iter++)
@@ -332,15 +334,14 @@ void validate_commandline(parsed_commandline &p_cl)
 		}
 		if (p_cl.vis_mode.empty())
 		{
-			std::cout << "[INFO]: Visual mode not specified in run mode. Setting to default value of 'TUI'...\n";
+			LOG_DEBUG("Visual mode not specified in run mode. Setting to default value of 'TUI'...");
 			p_cl.vis_mode = "TUI";
 		}
 		p_cl.session_file = INPUT_DATA_PATH + p_cl.session_file;
 	}
 	else
 	{
-		std::cerr << "[IO_ERROR]: Run mode not specified. You must provide either {-b|--build} or {-s|--session}\n"
-				  << "[IO_ERROR]: arguments. Exiting...\n";
+		LOG_FATAL("Run mode not specified. You must provide either {-b|--build} or {-s|--session} arguments. Exiting...");
 		exit(7);
 	}
 }

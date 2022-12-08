@@ -346,7 +346,7 @@ void Control::runSession(struct gui *gui)
 
 		memset(goSpkCounter, 0, num_go * sizeof(int));
 
-		std::cout << "[INFO]: Trial number: " << trial + 1 << "\n";
+		LOG_INFO("Trial number: %d", trial + 1);
 		start = omp_get_wtime();
 		for (int ts = 0; ts < trialTime; ts++)
 		{
@@ -389,9 +389,9 @@ void Control::runSession(struct gui *gui)
 			if (ts == onsetCS + csLength)
 			{
 				countGOSpikes(goSpkCounter, medTrials);
-				std::cout << "[INFO]: Mean gGRGO   = " << gGRGO_sum / (num_go * csLength) << "\n";
-				std::cout << "[INFO]: Mean gMFGO   = " << gMFGO_sum / (num_go * csLength) << "\n";
-				std::cout << "[INFO]: GR:MF ratio  = " << gGRGO_sum / gMFGO_sum << "\n";
+				LOG_DEBUG("Mean gGRGO   = %0.4f", gGRGO_sum / (num_go * csLength));
+				LOG_DEBUG("Mean gMFGO   = %0.5f", gMFGO_sum / (num_go * csLength));
+				LOG_DEBUG("GR:MF ratio  = %0.2f", gGRGO_sum / gMFGO_sum);
 			}
 			
 			/* data collection */
@@ -409,7 +409,7 @@ void Control::runSession(struct gui *gui)
 			}
 		}
 		end = omp_get_wtime();
-		std::cout << "[INFO]: '" << trialName << "' took " << (end - start) << "s.\n";
+		LOG_INFO("'%s' took %0.2fs", trialName.c_str(), end - start);
 		
 		if (gui != NULL)
 		{
@@ -421,12 +421,12 @@ void Control::runSession(struct gui *gui)
 			}
 			if (run_state == IN_RUN_PAUSE)
 			{
-				std::cout << "[INFO]: Simulation is paused at end of trial " << trial+1 << ".\n";
+				LOG_DEBUG("Simulation is paused at end of trial %d.", trial + 1);
 				while(run_state == IN_RUN_PAUSE)
 				{
 					if (gtk_events_pending()) gtk_main_iteration();
 				}
-				std::cout << "[INFO]: Continuing...\n";
+				LOG_DEBUG("Continuing...");
 			}
 			//reset_spike_sums();
 		}
@@ -435,8 +435,8 @@ void Control::runSession(struct gui *gui)
 		save_weights();
 		trial++;
 	}
-	if (run_state == NOT_IN_RUN) std::cout << "[INFO]: Simulation terminated.\n";
-	else if (run_state == IN_RUN_NO_PAUSE) std::cout << "[INFO]: Simulation Completed.\n";
+	if (run_state == NOT_IN_RUN) LOG_INFO("Simulation terminated.");
+	else if (run_state == IN_RUN_NO_PAUSE) LOG_INFO("Simulation Completed.");
 	
 	if (gui == NULL)
 	{
@@ -504,14 +504,14 @@ void Control::save_weights()
 	{
 		std::string trial_pfpc_weights_name = OUTPUT_DATA_PATH + get_file_basename(pf_pc_weights_file)
 											+ "_trial_" + std::to_string(trial) + "." + BIN_EXT;
-		std::cout << "[INFO]: Saving granule to purkinje weights to file...\n";
+		LOG_DEBUG("Saving granule to purkinje weights to file...");
 		save_pfpc_weights_to_file(trial_pfpc_weights_name);
 	}
 	if (!mf_nc_weights_file.empty())
 	{
 		std::string trial_mfnc_weights_name = OUTPUT_DATA_PATH + get_file_basename(mf_nc_weights_file)
 											+ "_trial_" + std::to_string(trial) + "." + BIN_EXT;
-		std::cout << "[INFO]: Saving mossy fiber to deep nucleus weigths to file...\n";
+		LOG_DEBUG("Saving mossy fiber to deep nucleus weigths to file...");
 		save_mfdcn_weights_to_file(trial_mfnc_weights_name);
 	}
 }
@@ -522,7 +522,7 @@ void Control::save_gr_raster()
 	{
 		std::string trial_raster_name = OUTPUT_DATA_PATH + get_file_basename(rf_names[GR])
 									  + "_trial_" + std::to_string(trial) + "." + BIN_EXT;
-		std::cout << "[INFO]: GR Raster file name: " << trial_raster_name << "\n";
+		LOG_DEBUG("Saving granule raster to file...");
 		write2DArray<uint8_t>(trial_raster_name, rasters[GR], num_gr, PSTHColSize);
 	}
 }
@@ -533,7 +533,7 @@ void Control::save_rasters()
 	{
 		if (!rf_names[i].empty() && CELL_IDS[i] != "GR")
 		{
-			std::cout << "[INFO]: Filling " << CELL_IDS[i] << " raster file...\n";
+			LOG_DEBUG("Saving %s raster to file...", CELL_IDS[i].c_str());
 			write2DArray<uint8_t>(rf_names[i], rasters[i], rast_cell_nums[i], PSTHColSize * td.num_trials);
 		}
 	}
@@ -545,7 +545,7 @@ void Control::save_psths()
 	{
 		if (!pf_names[i].empty())
 		{
-			std::cout << "[INFO]: Filling " << CELL_IDS[i] << " psth file...\n";
+			LOG_DEBUG("Saving %s psth to file...", CELL_IDS[i].c_str());
 			write2DArray<uint8_t>(pf_names[i], psths[i], rast_cell_nums[i], PSTHColSize);
 		}
 	}
@@ -618,10 +618,10 @@ void Control::countGOSpikes(int *goSpkCounter, float &medTrials)
 	for (int i = 0; i < num_go; i++) goSpkSum += goSpkCounter[i];
 
 	// NOTE: 1.0s below should really be the isi
-	std::cout << "[INFO]: Mean GO Rate: " << goSpkSum / ((float)num_go * isi) << std::endl;
+	LOG_DEBUG("Mean GO Rate: %0.2f", goSpkSum / ((float)num_go * isi));
 
 	medTrials += m / isi;
-	std::cout << "[INFO]: Median GO Rate: " << m / isi << std::endl;
+	LOG_DEBUG("Median GO Rate: %0.1f", m / isi);
 }
 
 void Control::fill_rasters(uint32_t raster_counter, uint32_t psth_counter, struct gui *gui)

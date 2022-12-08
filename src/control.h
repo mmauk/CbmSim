@@ -81,7 +81,7 @@ class Control
 
 		// sim params -> TODO: place in simcore
 		int gpuIndex = 0;
-		int gpuP2    = 2;
+		int gpuP2    = 1;
 
 		int trial;
 		uint32_t raster_counter;

@@ -24,7 +24,7 @@
 int main(int argc, char **argv) 
 {
 	logger_initConsoleLogger(stderr);
-	logger_setLevel(LogLevel_INFO);
+	logger_setLevel(LogLevel_DEBUG);
 
 	parsed_commandline p_cl = {};
 	parse_commandline(&argc, &argv, p_cl); /* includes validation step */
