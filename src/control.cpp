@@ -10,6 +10,8 @@
 #include "array_util.h"
 #include "gui.h" /* tenuous inclide at best :pogO: */
 
+const uint32_t INFO_FILE_COL_WIDTH = 79;
+
 const std::string SIM_VERSION = "0.0.1";
 
 const std::string TXT_EXT = ".txt";
@@ -160,7 +162,7 @@ void Control::reset_sim(std::string in_sim_filename)
 
 void Control::save_sim_to_file()
 {
-	if (!out_sim_name.empty())
+	if (out_sim_filename_created)
 	{
 		LOG_DEBUG("Saving simulation to '%s'", out_sim_name.c_str());
 		std::fstream outSimFileBuffer(out_sim_name.c_str(), std::ios::out | std::ios::binary);
@@ -168,6 +170,121 @@ void Control::save_sim_to_file()
 		if (!simCore) simState->writeState(outSimFileBuffer);
 		else simCore->writeState(outSimFileBuffer);
 		outSimFileBuffer.close();
+	}
+}
+
+void Control::save_info_to_file()
+{
+	if (out_info_filename_created)
+	{
+		std::fstream out_info_file_buf(out_info_name.c_str(), std::ios::out);
+		out_info_file_buf << "########################### CBM_SIM SESSION INFO #############################\n"; 
+		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+		out_info_file_buf << "#" << "RUN_START_DATE" << "(" << DEFAULT_DATE_FORMAT << ") : " << if_data.start_date  << "#\n";
+		out_info_file_buf << "#" << "RUN_START_TIME" << "(" << if_data.locale << ") (" << DEFAULT_TIME_FORMAT << ") : " << if_data.start_time  << "#\n";
+		out_info_file_buf << "#" << "RUN_END_DATE" << "(" << DEFAULT_DATE_FORMAT << ") : " << if_data.end_date  << "#\n";
+		out_info_file_buf << "#" << "RUN_END_TIME" << "(" << if_data.locale << ") (" << DEFAULT_TIME_FORMAT << ") : " << if_data.end_time  << "#\n";
+		out_info_file_buf << "#" << "CBM_SIM_VERSION" << ": " << if_data.sim_version << "#\n";
+		out_info_file_buf << "#" << "GENERATED_BY" << ": " << if_data.username << "#\n";
+		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+		out_info_file_buf << "#" << std::setfill('#') << std::setw(INFO_FILE_COL_WIDTH) << "\n";
+		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+		out_info_file_buf << "############################## COMMANDLINE INFO ##############################\n";
+		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+		out_info_file_buf << "#" << "COMMAND" << ": cbm_sim" << "#\n";
+		out_info_file_buf << "#" << "VISUAL_MODE" << ": " << if_data.p_cl.vis_mode << "#\n";
+		out_info_file_buf << "#" << "INPUT FILE" << ": " << if_data.p_cl.input_sim_file << "#\n";
+		out_info_file_buf << "#" << "SESSION FILE" << ": " << if_data.p_cl.session_file << "#\n";
+		out_info_file_buf << "#" << "OUTPUT FILE" << ": " << if_data.p_cl.output_sim_file << "#\n";
+		out_info_file_buf << "#" << "PFPC PLASTICITY" << ": " << if_data.p_cl.pfpc_plasticity << "#\n";
+		out_info_file_buf << "#" << "MFNC PLASTICITY" << ": " << if_data.p_cl.mfnc_plasticity << "#\n";
+		out_info_file_buf << "# FILES SAVED#\n";
+		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+
+		for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
+		{
+			out_info_file_buf << "#" << "RASTER" << "#\n";
+			if (!rf_names[i].empty())
+			{
+				out_info_file_buf << "#" << CELL_IDS[i] << ": " << rf_names[i] << "#\n";
+				out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+			}
+		}
+
+		for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
+		{
+			out_info_file_buf << "#" << "PSTH" << "#\n";
+			if (!pf_names[i].empty())
+			{
+				out_info_file_buf << "#" << CELL_IDS[i] << ": " << pf_names[i] << "#\n";
+				out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+			}
+		}
+
+		for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
+		{
+			out_info_file_buf << "#" << "WEIGHTS" << "#\n";
+			if (!pfpc_weights_file.empty())
+			{
+				out_info_file_buf << "#" << "PFPC" << ": " << pfpc_weights_file << "#\n";
+				out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+			}
+			if (!mfnc_weights_file.empty())
+			{
+				out_info_file_buf << "#" << "MFNC" << ": " << mfnc_weights_file << "#\n";
+				out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+			}
+		}
+
+		out_info_file_buf << "################################ SESSION INFO ################################\n";
+		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+		out_info_file_buf << "#" << "DEFINED TRIALS" <<  ": " << "#\n";
+		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+		for (auto trial : if_data.s_file.parsed_trial_info.trial_map)
+		{
+			out_info_file_buf << "#" << trial.first << "\n";
+			out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+			for (auto vars : trial.second)
+			{
+				out_info_file_buf << "#" << vars.second.identifier << ": " << vars.second.value << "\n";
+			}
+			out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+		}
+
+		out_info_file_buf << "#" << "DEFINED BLOCKS" <<  ": " << "#\n";
+		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+		for (auto block : if_data.s_file.parsed_trial_info.block_map)
+		{
+			out_info_file_buf << "#" << block.first << "\n";
+			out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+			for (auto pair : block.second)
+			{
+				out_info_file_buf << "#" << pair.first << ": " << pair.second << "\n";
+			}
+			out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+		}
+
+		// where do I store the session name?
+		out_info_file_buf << "#" << "DEFINED SESSION" <<  ": " << "#\n";
+		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+		for (auto pair : if_data.s_file.parsed_trial_info.session)
+		{
+			out_info_file_buf << "#" << pair.first << ": " << pair.second << "\n";
+			out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+		}
+
+		out_info_file_buf << "#" << "TOTAL_NUM_TRIALS" << ": " << td.num_trials << "#\n";
+		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+		out_info_file_buf << "#" << "PRE-CS-MS" << ": " << msPreCS << "#\n";
+		out_info_file_buf << "#" << "POST-CS-MS" << ": " << msPostCS << "#\n";
+		// FIXME: what if the user defined a session to consist of blocks or sets of trials at multiple ISI?
+		// ... then maybe that would be a bad session definition
+		out_info_file_buf << "#" << "ISI" << ": " << (td.us_onsets[0] - td.cs_onsets[0]) << "#\n";
+		out_info_file_buf << "#" << "TRIAL TIME" << ": " << trialTime << "#\n";
+		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+		out_info_file_buf << "#" << "COLLATERALS" << ": " << ((collaterals_off) ? "OFF" : "ON") << "#\n";
+		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+		out_info_file_buf << "##############################################################################\n";
 	}
 }
 
@@ -543,16 +660,16 @@ void Control::runSession(struct gui *gui)
 	}
 	if (run_state == NOT_IN_RUN) LOG_INFO("Simulation terminated.");
 	else if (run_state == IN_RUN_NO_PAUSE) LOG_INFO("Simulation Completed.");
+	run_state = NOT_IN_RUN;
+	set_info_file_str_props(AFTER_RUN, if_data);
 	
 	if (!use_gui)
 	{
 		save_rasters();
 		save_psths();
 		save_sim_to_file();
+		save_info_to_file();
 	}
-
-	run_state = NOT_IN_RUN;
-	set_info_file_str_props(AFTER_RUN, if_data);
 }
 
 void Control::reset_spike_sums()
@@ -837,6 +954,9 @@ void set_info_file_str_props(enum when when, info_file_data &if_data)
 	}
 	else
 	{
+		formatter << std::put_time(now, DEFAULT_DATE_FORMAT.c_str());
+		if_data.end_date = formatter.str();
+		std::stringstream().swap(formatter);
 		formatter << std::put_time(now, DEFAULT_TIME_FORMAT.c_str());
 		if_data.end_time = formatter.str();
 		std::stringstream().swap(formatter);

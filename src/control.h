@@ -56,6 +56,7 @@ enum when {BEFORE_RUN, AFTER_RUN};
 typedef struct 
 {
 	std::string start_date;
+	std::string end_date;
 	std::string locale;
 	std::string start_time;
 	std::string end_time;
@@ -205,6 +206,7 @@ class Control
 		void reset_sim(std::string in_sim_filename);
 
 		void save_sim_to_file();
+		void save_info_to_file();
 		void save_pfpc_weights_to_file(int32_t trial = -1);
 		void load_pfpc_weights_from_file(std::string in_pfpc_file);
 		void save_mfdcn_weights_to_file(int32_t trial = -1);
