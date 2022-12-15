@@ -31,6 +31,16 @@ Control::Control(parsed_commandline &p_cl)
 		lex_tokenized_file(t_file, l_file);
 		parse_lexed_build_file(l_file, pb_file);
 		if (!con_params_populated) populate_con_params(pb_file);
+		data_out_path = OUTPUT_DATA_PATH + p_cl.output_basename;
+		data_out_base_name = p_cl.output_basename;
+		int status = mkdir(data_out_path.c_str(), 0775);
+		if (status == -1)
+		{
+			LOG_FATAL("Could not create directory '%s'. Maybe it already exists. Exiting...", data_out_path.c_str());
+			exit(10);
+		}
+		data_out_dir_created = true;
+		create_out_sim_filename(); //default
 	}
 	else if (!p_cl.session_file.empty())
 	{
@@ -179,111 +189,123 @@ void Control::save_info_to_file()
 	{
 		std::fstream out_info_file_buf(out_info_name.c_str(), std::ios::out);
 		out_info_file_buf << "########################### CBM_SIM SESSION INFO #############################\n"; 
-		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
-		out_info_file_buf << "#" << "RUN_START_DATE" << "(" << DEFAULT_DATE_FORMAT << ") : " << if_data.start_date  << "#\n";
-		out_info_file_buf << "#" << "RUN_START_TIME" << "(" << if_data.locale << ") (" << DEFAULT_TIME_FORMAT << ") : " << if_data.start_time  << "#\n";
-		out_info_file_buf << "#" << "RUN_END_DATE" << "(" << DEFAULT_DATE_FORMAT << ") : " << if_data.end_date  << "#\n";
-		out_info_file_buf << "#" << "RUN_END_TIME" << "(" << if_data.locale << ") (" << DEFAULT_TIME_FORMAT << ") : " << if_data.end_time  << "#\n";
-		out_info_file_buf << "#" << "CBM_SIM_VERSION" << ": " << if_data.sim_version << "#\n";
-		out_info_file_buf << "#" << "GENERATED_BY" << ": " << if_data.username << "#\n";
-		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
-		out_info_file_buf << "#" << std::setfill('#') << std::setw(INFO_FILE_COL_WIDTH) << "\n";
-		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
+		out_info_file_buf << "#" << std::setw(16) << "RUN_START_DATE"
+						  << std::setw(22) << std::right << DEFAULT_DATE_FORMAT << " : " << std::setw(35) << std::left
+						  << if_data.start_date << "#\n";
+		out_info_file_buf << "#" << std::right << std::setw(16) << "RUN_START_TIME"
+						  << std::setw(11) << std::right << if_data.locale << " " << DEFAULT_TIME_FORMAT << " : "
+						  << std::setw(35) << std::left << if_data.start_time << "#\n";
+		out_info_file_buf << "#" << std::right << std::setw(14) << "RUN_END_DATE"
+						  << std::setw(24) << std::right << DEFAULT_DATE_FORMAT << " : " << std::setw(35) << std::left
+						  << if_data.end_date << "#\n";
+		out_info_file_buf << "#" << std::right << std::setw(14) << "RUN_END_TIME"
+						  << std::setw(13) << std::right << if_data.locale << " " << DEFAULT_TIME_FORMAT << " : "
+						  << std::setw(35) << std::left << if_data.end_time << "#\n";
+		out_info_file_buf << "#" << std::right << std::setw(17) << "CBM_SIM_VERSION"
+						  << std::setw(24) << " : " << std::setw(35) << std::left 
+						  << if_data.sim_version << "#\n";
+		out_info_file_buf << "#" << std::right << std::setw(14) << "GENERATED_BY"
+						  << std::setw(27) << " : " << std::setw(35) << std::left
+						  << if_data.username << "#\n";
+		out_info_file_buf << "#" << std::right << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
+		out_info_file_buf << "#" << std::setfill('#') << std::setw(INFO_FILE_COL_WIDTH-1) << "\n";
+		out_info_file_buf << "#" << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
 		out_info_file_buf << "############################## COMMANDLINE INFO ##############################\n";
-		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
 		out_info_file_buf << "#" << "COMMAND" << ": cbm_sim" << "#\n";
 		out_info_file_buf << "#" << "VISUAL_MODE" << ": " << if_data.p_cl.vis_mode << "#\n";
-		out_info_file_buf << "#" << "INPUT FILE" << ": " << if_data.p_cl.input_sim_file << "#\n";
-		out_info_file_buf << "#" << "SESSION FILE" << ": " << if_data.p_cl.session_file << "#\n";
+		out_info_file_buf << "#" << "INPUT FILE" << ": " << if_data.p_cl.input_sim_file << "#\n"; out_info_file_buf << "#" << "SESSION FILE" << ": " << if_data.p_cl.session_file << "#\n";
 		out_info_file_buf << "#" << "OUTPUT FILE" << ": " << if_data.p_cl.output_sim_file << "#\n";
 		out_info_file_buf << "#" << "PFPC PLASTICITY" << ": " << if_data.p_cl.pfpc_plasticity << "#\n";
 		out_info_file_buf << "#" << "MFNC PLASTICITY" << ": " << if_data.p_cl.mfnc_plasticity << "#\n";
-		out_info_file_buf << "# FILES SAVED#\n";
-		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+		out_info_file_buf << "#" << "FILES SAVED" << "#\n";
+		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
 
+		out_info_file_buf << "#" << "RASTER" << "#\n";
 		for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 		{
-			out_info_file_buf << "#" << "RASTER" << "#\n";
 			if (!rf_names[i].empty())
 			{
 				out_info_file_buf << "#" << CELL_IDS[i] << ": " << rf_names[i] << "#\n";
-				out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+				out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
 			}
 		}
 
+		out_info_file_buf << "#" << "PSTH" << "#\n";
 		for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 		{
-			out_info_file_buf << "#" << "PSTH" << "#\n";
 			if (!pf_names[i].empty())
 			{
 				out_info_file_buf << "#" << CELL_IDS[i] << ": " << pf_names[i] << "#\n";
-				out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+				out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
 			}
 		}
 
+		out_info_file_buf << "#" << "WEIGHTS" << "#\n";
 		for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 		{
-			out_info_file_buf << "#" << "WEIGHTS" << "#\n";
 			if (!pfpc_weights_file.empty())
 			{
 				out_info_file_buf << "#" << "PFPC" << ": " << pfpc_weights_file << "#\n";
-				out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+				out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
 			}
 			if (!mfnc_weights_file.empty())
 			{
 				out_info_file_buf << "#" << "MFNC" << ": " << mfnc_weights_file << "#\n";
-				out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+				out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
 			}
 		}
+		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
 
 		out_info_file_buf << "################################ SESSION INFO ################################\n";
-		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
 		out_info_file_buf << "#" << "DEFINED TRIALS" <<  ": " << "#\n";
-		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
 		for (auto trial : if_data.s_file.parsed_trial_info.trial_map)
 		{
 			out_info_file_buf << "#" << trial.first << "\n";
-			out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+			out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
 			for (auto vars : trial.second)
 			{
 				out_info_file_buf << "#" << vars.second.identifier << ": " << vars.second.value << "\n";
 			}
-			out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+			out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
 		}
 
 		out_info_file_buf << "#" << "DEFINED BLOCKS" <<  ": " << "#\n";
-		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
 		for (auto block : if_data.s_file.parsed_trial_info.block_map)
 		{
 			out_info_file_buf << "#" << block.first << "\n";
-			out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+			out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
 			for (auto pair : block.second)
 			{
 				out_info_file_buf << "#" << pair.first << ": " << pair.second << "\n";
 			}
-			out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+			out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
 		}
 
 		// where do I store the session name?
 		out_info_file_buf << "#" << "DEFINED SESSION" <<  ": " << "#\n";
-		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
 		for (auto pair : if_data.s_file.parsed_trial_info.session)
 		{
 			out_info_file_buf << "#" << pair.first << ": " << pair.second << "\n";
-			out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+			out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
 		}
 
 		out_info_file_buf << "#" << "TOTAL_NUM_TRIALS" << ": " << td.num_trials << "#\n";
-		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
 		out_info_file_buf << "#" << "PRE-CS-MS" << ": " << msPreCS << "#\n";
 		out_info_file_buf << "#" << "POST-CS-MS" << ": " << msPostCS << "#\n";
 		// FIXME: what if the user defined a session to consist of blocks or sets of trials at multiple ISI?
 		// ... then maybe that would be a bad session definition
 		out_info_file_buf << "#" << "ISI" << ": " << (td.us_onsets[0] - td.cs_onsets[0]) << "#\n";
 		out_info_file_buf << "#" << "TRIAL TIME" << ": " << trialTime << "#\n";
-		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
 		out_info_file_buf << "#" << "COLLATERALS" << ": " << ((collaterals_off) ? "OFF" : "ON") << "#\n";
-		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH) << "#\n"; 
+		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
 		out_info_file_buf << "##############################################################################\n";
 	}
 }
@@ -668,7 +690,7 @@ void Control::runSession(struct gui *gui)
 		save_rasters();
 		save_psths();
 		save_sim_to_file();
-		save_info_to_file();
+		//save_info_to_file();
 	}
 }
 
@@ -936,7 +958,7 @@ void set_info_file_str_props(enum when when, info_file_data &if_data)
 		formatter << std::put_time(now, DEFAULT_DATE_FORMAT.c_str());
 		if_data.start_date = formatter.str();
 		std::stringstream().swap(formatter);
-		formatter << std::put_time(now, "%z %Z");
+		formatter << std::put_time(now, DEFAULT_LOCALE_FORMAT.c_str());
 		if_data.locale = formatter.str();
 		std::stringstream().swap(formatter);
 		formatter << std::put_time(now, DEFAULT_TIME_FORMAT.c_str());

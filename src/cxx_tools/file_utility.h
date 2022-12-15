@@ -21,8 +21,9 @@
 #include <map>
 #include <ctime>
 
-const std::string DEFAULT_DATE_FORMAT = "%m_%d_%Y";
-const std::string DEFAULT_TIME_FORMAT = "%H:%M:%S";
+const std::string DEFAULT_DATE_FORMAT = "(%m_%d_%Y)";
+const std::string DEFAULT_TIME_FORMAT = "(%H:%M:%S)";
+const std::string DEFAULT_LOCALE_FORMAT = "(%z %Z)";
 
 std::string get_file_basename(std::string full_file_path);
 
