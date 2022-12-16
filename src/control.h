@@ -11,15 +11,15 @@
 #include <cstdint>
 
 #include "commandline.h"
+#include "info_file.h"
 #include "connectivityparams.h"
 #include "activityparams.h"
 #include "cbmstate.h"
 #include "innetconnectivitystate.h"
 #include "innetactivitystate.h"
-#include "cbmsimcore.h"
 #include "ecmfpopulation.h"
 #include "poissonregencells.h"
-#include "bits.h"
+#include "cbmsimcore.h"
 
 // TODO: place in a common place, as gui uses a constant like this too
 #define NUM_CELL_TYPES 8
@@ -52,23 +52,6 @@ struct cell_firing_rates
 };
 
 enum sim_run_state {NOT_IN_RUN, IN_RUN_NO_PAUSE, IN_RUN_PAUSE};
-enum when {BEFORE_RUN, AFTER_RUN};
-
-typedef struct 
-{
-	std::string start_date;
-	std::string end_date;
-	std::string locale;
-	std::string start_time;
-	std::string end_time;
-	std::string sim_version;
-	std::string username;
-	parsed_commandline p_cl;
-	parsed_sess_file s_file;
-} info_file_data;
-
-void cp_to_info_file_data(parsed_commandline &p_cl, parsed_sess_file &s_file, info_file_data &if_data);
-void set_info_file_str_props(enum when, info_file_data &if_data);
 
 class Control 
 {

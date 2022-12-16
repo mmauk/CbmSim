@@ -1,5 +1,4 @@
 #include <sys/stat.h> // mkdir (POSIX ONLY)
-#include <pwd.h> // for getpwuid 
 #include <iomanip>
 #include <gtk/gtk.h>
 
@@ -10,13 +9,6 @@
 #include "array_util.h"
 #include "gui.h" /* tenuous inclide at best :pogO: */
 
-const uint32_t INFO_FILE_COL_WIDTH = 79;
-
-const std::string SIM_VERSION = "0.0.1";
-
-const std::string TXT_EXT = ".txt";
-const std::string BIN_EXT = ".bin";
-const std::string SIM_EXT = ".sim";
 const std::string CELL_IDS[NUM_CELL_TYPES] = {"MF", "GR", "GO", "BC", "SC", "PC", "IO", "NC"}; 
 
 Control::Control(parsed_commandline &p_cl)
@@ -185,129 +177,7 @@ void Control::save_sim_to_file()
 
 void Control::save_info_to_file()
 {
-	if (out_info_filename_created)
-	{
-		std::fstream out_info_file_buf(out_info_name.c_str(), std::ios::out);
-		out_info_file_buf << "########################### CBM_SIM SESSION INFO #############################\n"; 
-		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
-		out_info_file_buf << "#" << std::setw(16) << "RUN_START_DATE"
-						  << std::setw(22) << std::right << DEFAULT_DATE_FORMAT << " : " << std::setw(35) << std::left
-						  << if_data.start_date << "#\n";
-		out_info_file_buf << "#" << std::right << std::setw(16) << "RUN_START_TIME"
-						  << std::setw(11) << std::right << if_data.locale << " " << DEFAULT_TIME_FORMAT << " : "
-						  << std::setw(35) << std::left << if_data.start_time << "#\n";
-		out_info_file_buf << "#" << std::right << std::setw(14) << "RUN_END_DATE"
-						  << std::setw(24) << std::right << DEFAULT_DATE_FORMAT << " : " << std::setw(35) << std::left
-						  << if_data.end_date << "#\n";
-		out_info_file_buf << "#" << std::right << std::setw(14) << "RUN_END_TIME"
-						  << std::setw(13) << std::right << if_data.locale << " " << DEFAULT_TIME_FORMAT << " : "
-						  << std::setw(35) << std::left << if_data.end_time << "#\n";
-		out_info_file_buf << "#" << std::right << std::setw(17) << "CBM_SIM_VERSION"
-						  << std::setw(24) << " : " << std::setw(35) << std::left 
-						  << if_data.sim_version << "#\n";
-		out_info_file_buf << "#" << std::right << std::setw(14) << "GENERATED_BY"
-						  << std::setw(27) << " : " << std::setw(35) << std::left
-						  << if_data.username << "#\n";
-		out_info_file_buf << "#" << std::right << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
-		out_info_file_buf << "#" << std::setfill('#') << std::setw(INFO_FILE_COL_WIDTH-1) << "\n";
-		out_info_file_buf << "#" << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
-		out_info_file_buf << "############################## COMMANDLINE INFO ##############################\n";
-		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
-		out_info_file_buf << "#" << "COMMAND" << ": cbm_sim" << "#\n";
-		out_info_file_buf << "#" << "VISUAL_MODE" << ": " << if_data.p_cl.vis_mode << "#\n";
-		out_info_file_buf << "#" << "INPUT FILE" << ": " << if_data.p_cl.input_sim_file << "#\n"; out_info_file_buf << "#" << "SESSION FILE" << ": " << if_data.p_cl.session_file << "#\n";
-		out_info_file_buf << "#" << "OUTPUT FILE" << ": " << if_data.p_cl.output_sim_file << "#\n";
-		out_info_file_buf << "#" << "PFPC PLASTICITY" << ": " << if_data.p_cl.pfpc_plasticity << "#\n";
-		out_info_file_buf << "#" << "MFNC PLASTICITY" << ": " << if_data.p_cl.mfnc_plasticity << "#\n";
-		out_info_file_buf << "#" << "FILES SAVED" << "#\n";
-		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
 
-		out_info_file_buf << "#" << "RASTER" << "#\n";
-		for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
-		{
-			if (!rf_names[i].empty())
-			{
-				out_info_file_buf << "#" << CELL_IDS[i] << ": " << rf_names[i] << "#\n";
-				out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
-			}
-		}
-
-		out_info_file_buf << "#" << "PSTH" << "#\n";
-		for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
-		{
-			if (!pf_names[i].empty())
-			{
-				out_info_file_buf << "#" << CELL_IDS[i] << ": " << pf_names[i] << "#\n";
-				out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
-			}
-		}
-
-		out_info_file_buf << "#" << "WEIGHTS" << "#\n";
-		for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
-		{
-			if (!pfpc_weights_file.empty())
-			{
-				out_info_file_buf << "#" << "PFPC" << ": " << pfpc_weights_file << "#\n";
-				out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
-			}
-			if (!mfnc_weights_file.empty())
-			{
-				out_info_file_buf << "#" << "MFNC" << ": " << mfnc_weights_file << "#\n";
-				out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
-			}
-		}
-		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
-
-		out_info_file_buf << "################################ SESSION INFO ################################\n";
-		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
-		out_info_file_buf << "#" << "DEFINED TRIALS" <<  ": " << "#\n";
-		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
-		for (auto trial : if_data.s_file.parsed_trial_info.trial_map)
-		{
-			out_info_file_buf << "#" << trial.first << "\n";
-			out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
-			for (auto vars : trial.second)
-			{
-				out_info_file_buf << "#" << vars.second.identifier << ": " << vars.second.value << "\n";
-			}
-			out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
-		}
-
-		out_info_file_buf << "#" << "DEFINED BLOCKS" <<  ": " << "#\n";
-		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
-		for (auto block : if_data.s_file.parsed_trial_info.block_map)
-		{
-			out_info_file_buf << "#" << block.first << "\n";
-			out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
-			for (auto pair : block.second)
-			{
-				out_info_file_buf << "#" << pair.first << ": " << pair.second << "\n";
-			}
-			out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
-		}
-
-		// where do I store the session name?
-		out_info_file_buf << "#" << "DEFINED SESSION" <<  ": " << "#\n";
-		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
-		for (auto pair : if_data.s_file.parsed_trial_info.session)
-		{
-			out_info_file_buf << "#" << pair.first << ": " << pair.second << "\n";
-			out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
-		}
-
-		out_info_file_buf << "#" << "TOTAL_NUM_TRIALS" << ": " << td.num_trials << "#\n";
-		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
-		out_info_file_buf << "#" << "PRE-CS-MS" << ": " << msPreCS << "#\n";
-		out_info_file_buf << "#" << "POST-CS-MS" << ": " << msPostCS << "#\n";
-		// FIXME: what if the user defined a session to consist of blocks or sets of trials at multiple ISI?
-		// ... then maybe that would be a bad session definition
-		out_info_file_buf << "#" << "ISI" << ": " << (td.us_onsets[0] - td.cs_onsets[0]) << "#\n";
-		out_info_file_buf << "#" << "TRIAL TIME" << ": " << trialTime << "#\n";
-		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
-		out_info_file_buf << "#" << "COLLATERALS" << ": " << ((collaterals_off) ? "OFF" : "ON") << "#\n";
-		out_info_file_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
-		out_info_file_buf << "##############################################################################\n";
-	}
 }
 
 void Control::save_pfpc_weights_to_file(int32_t trial)
@@ -927,61 +797,6 @@ void Control::delete_psths()
 	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
 		if (!pf_names[i].empty()) delete2DArray<uint8_t>(psths[i]);
-	}
-}
-
-void cp_to_info_file_data(parsed_commandline &p_cl, parsed_sess_file &s_file, info_file_data &if_data)
-{
-	cp_parsed_commandline(p_cl, if_data.p_cl);
-	cp_parsed_sess_file(s_file, if_data.s_file);
-}
-
-const char *get_user_name()
-{
-	uid_t uid = geteuid();
-	struct passwd *pw = getpwuid(uid);
-	if (pw)
-	{
-		return pw->pw_name;
-	}
-	
-	return "";
-}
-
-void set_info_file_str_props(enum when when, info_file_data &if_data)
-{
-	std::time_t t = std::time(0);
-	std::tm *now = std::localtime(&t);
-	std::stringstream formatter;
-	if (when == BEFORE_RUN)
-	{
-		formatter << std::put_time(now, DEFAULT_DATE_FORMAT.c_str());
-		if_data.start_date = formatter.str();
-		std::stringstream().swap(formatter);
-		formatter << std::put_time(now, DEFAULT_LOCALE_FORMAT.c_str());
-		if_data.locale = formatter.str();
-		std::stringstream().swap(formatter);
-		formatter << std::put_time(now, DEFAULT_TIME_FORMAT.c_str());
-		if_data.start_time = formatter.str();
-		std::stringstream().swap(formatter);
-		if_data.sim_version = SIM_VERSION;
-		std::string user_name = std::string(get_user_name());
-		if (user_name.empty())
-		{
-			LOG_ERROR("Could not obtain username when setting information file properties."); 
-			LOG_ERROR("Username will be omitted from generated info file");
-			return;
-		}
-		if_data.username = user_name;
-	}
-	else
-	{
-		formatter << std::put_time(now, DEFAULT_DATE_FORMAT.c_str());
-		if_data.end_date = formatter.str();
-		std::stringstream().swap(formatter);
-		formatter << std::put_time(now, DEFAULT_TIME_FORMAT.c_str());
-		if_data.end_time = formatter.str();
-		std::stringstream().swap(formatter);
 	}
 }
 
