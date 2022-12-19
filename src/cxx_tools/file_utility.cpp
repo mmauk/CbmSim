@@ -1,6 +1,12 @@
 #include <sstream>
 #include "file_utility.h"
 
+std::string strip_file_path(std::string full_file_path)
+{
+	size_t sep = full_file_path.find_last_of("\\/");
+	return (sep != std::string::npos) ? full_file_path.substr(sep + 1, full_file_path.size() - sep - 1) : "";
+}
+
 std::string get_file_basename(std::string full_file_path)
 {
 	size_t sep = full_file_path.find_last_of("\\/");

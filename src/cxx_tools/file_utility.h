@@ -15,6 +15,7 @@
 #ifndef FILE_UTILITY_H_
 #define FILE_UTILITY_H_
 
+#include <algorithm>
 #include <string>
 #include <cstring>
 #include <fstream>
@@ -28,6 +29,24 @@ const std::string DEFAULT_LOCALE_FORMAT = "(%z %Z)";
 const std::string TXT_EXT = ".txt";
 const std::string BIN_EXT = ".bin";
 const std::string SIM_EXT = ".sim";
+
+// trim from start (in place)
+inline void ltrim(std::string &s, unsigned char ch)
+{
+	s.erase(s.begin(), std::find_if(s.begin(), s.end(), [ch](unsigned char compare)
+	{
+		return compare != ch;
+	}));
+}
+
+// trim from end (in place)
+inline void rtrim(std::string &s, unsigned char ch) {
+	s.erase(std::find_if(s.rbegin(), s.rend(), [ch](unsigned char compare) {
+		return compare != ch;
+	}).base(), s.end());
+}
+
+std::string strip_file_path(std::string full_file_path);
 
 std::string get_file_basename(std::string full_file_path);
 

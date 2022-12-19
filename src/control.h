@@ -35,6 +35,9 @@ enum save_opts {
 // convenience enum for indexing cell arrays
 enum cell_id {MF, GR, GO, BC, SC, PC, IO, NC};
 
+// convenience array for getting string representations of the cell ids
+const std::string CELL_IDS[NUM_CELL_TYPES] = {"MF", "GR", "GO", "BC", "SC", "PC", "IO", "NC"}; 
+
 struct cell_spike_sums
 {
 	uint32_t non_cs_spike_sum;
@@ -95,7 +98,7 @@ class Control
 
 		// sim params -> TODO: place in simcore
 		uint32_t gpuIndex = 0;
-		uint32_t gpuP2    = 1;
+		uint32_t gpuP2    = 2;
 
 		uint32_t trial;
 		uint32_t raster_counter;
@@ -190,7 +193,12 @@ class Control
 		void reset_sim(std::string in_sim_filename);
 
 		void save_sim_to_file();
+
+		void write_header_info(std::fstream &out_buf);
+		void write_cmdline_info(std::fstream &out_buf);
+		void write_sess_info(std::fstream &out_buf);
 		void save_info_to_file();
+
 		void save_pfpc_weights_to_file(int32_t trial = -1);
 		void load_pfpc_weights_from_file(std::string in_pfpc_file);
 		void save_mfdcn_weights_to_file(int32_t trial = -1);

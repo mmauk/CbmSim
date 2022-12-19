@@ -5,6 +5,9 @@
 #include "file_parse.h"
 #include "file_utility.h"
 
+const std::string SIM_VERSION = "0.0.1";
+
+const uint32_t INFO_FILE_COL_WIDTH = 79;
 const uint32_t TAB_WIDTH = 4;
 
 const uint32_t HEADER_COL_1_WIDTH = 36;
@@ -21,7 +24,7 @@ const std::string CMD_LBL        = "COMMAND";
 const std::string VIS_MODE_LBL   = "VISUAL MODE";
 const std::string IN_FILE_LBL    = "INPUT FILE";
 const std::string SESS_FILE_LBL  = "SESSION FILE";
-const std::string OUT_FILE_LBL   = "OUTPUT FILE";
+const std::string OUT_DIR_LBL   = "OUTPUT DIR";
 const std::string PFPC_PLAST_LBL = "PFPC PLASTICITY";
 const std::string MFNC_PLAST_LBL = "MFNC PLASTICITY";
 
@@ -29,9 +32,9 @@ const uint32_t CMDLINE_SECTION_COL_1_WIDTH = 18;
 const uint32_t CMDLINE_SECTION_COL_2_WIDTH = 57;
 
 const std::string FILE_SAVE_LBL    = "FILES SAVED";
-const std::string RAST_FILE_LBL    = "RASTER";
+const std::string RAST_FILE_LBL    = "RASTER (GR BASE)";
 const std::string PSTH_FILE_LBL    = "PSTH";
-const std::string WEIGHTS_FILE_LBL = "WEIGHTS";
+const std::string WEIGHTS_FILE_LBL = "WEIGHTS BASE";
 const std::string PFPC_FILE_LBL    = "PFPC";
 const std::string MFNC_FILE_LBL    = "MFNC";
 
@@ -54,6 +57,10 @@ typedef struct
 	parsed_sess_file s_file;
 } info_file_data;
 
+uint32_t get_max_key_len(std::map<std::string, variable> &map);
+uint32_t get_max_first_len(std::vector<std::pair<std::string, std::string>> &vec);
+
+// TODO: move
 void cp_to_info_file_data(parsed_commandline &p_cl, parsed_sess_file &s_file, info_file_data &if_data);
 void set_info_file_str_props(enum when, info_file_data &if_data);
 

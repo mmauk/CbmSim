@@ -167,7 +167,8 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 		std::string this_opt;
 		std::string this_param;
 		char opt_char_code;
-		std::vector<std::string>::iterator curr_token_iter;
+		std::vector<std::string>::iterator curr_token_iter = tokens.begin();
+		p_cl.cmd_name = *curr_token_iter; //TODO; double check this
 		switch (opt_sum)
 		{
 			case 2:
@@ -346,6 +347,7 @@ void parse_and_validate_parsed_commandline(int *argc, char ***argv, parsed_comma
 
 void cp_parsed_commandline(parsed_commandline &from_p_cl, parsed_commandline &to_p_cl)
 {
+	to_p_cl.cmd_name        = from_p_cl.cmd_name;
 	to_p_cl.print_help      = from_p_cl.print_help;
 	to_p_cl.vis_mode        = from_p_cl.vis_mode;
 	to_p_cl.build_file      = from_p_cl.build_file;

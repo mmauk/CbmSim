@@ -9,8 +9,6 @@
 #include "array_util.h"
 #include "gui.h" /* tenuous inclide at best :pogO: */
 
-const std::string CELL_IDS[NUM_CELL_TYPES] = {"MF", "GR", "GO", "BC", "SC", "PC", "IO", "NC"}; 
-
 Control::Control(parsed_commandline &p_cl)
 {
 	use_gui = (p_cl.vis_mode == "GUI") ? true : false;
@@ -166,7 +164,7 @@ void Control::save_sim_to_file()
 {
 	if (out_sim_filename_created)
 	{
-		LOG_DEBUG("Saving simulation to '%s'", out_sim_name.c_str());
+		LOG_DEBUG("Saving simulation to file...");
 		std::fstream outSimFileBuffer(out_sim_name.c_str(), std::ios::out | std::ios::binary);
 		write_con_params(outSimFileBuffer);
 		if (!simCore) simState->writeState(outSimFileBuffer);
@@ -175,9 +173,216 @@ void Control::save_sim_to_file()
 	}
 }
 
+void Control::write_header_info(std::fstream &out_buf)
+{
+	uint32_t col_1_remaining = HEADER_COL_1_WIDTH-RUN_START_DATE_LBL.length(); 
+	out_buf << "########################### BEGIN SESSION RECORD #############################\n"; 
+	out_buf << "#" << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
+	out_buf << "#" << std::setw(1) << "" << RUN_START_DATE_LBL << std::setw(col_1_remaining)
+			  << std::right << DEFAULT_DATE_FORMAT << " : " << std::setw(HEADER_COL_2_WIDTH)
+			  << std::left << if_data.start_date << "#\n";
+
+	col_1_remaining = HEADER_COL_1_WIDTH - RUN_START_TIME_LBL.length();
+	out_buf << "#" << std::setw(1) << "" << RUN_START_TIME_LBL << std::setw(col_1_remaining) << std::right
+			  << (if_data.locale + " " + DEFAULT_TIME_FORMAT) << " : " << std::setw(HEADER_COL_2_WIDTH)
+			  << std::left << if_data.start_time << "#\n";
+
+	col_1_remaining = HEADER_COL_1_WIDTH - RUN_END_DATE_LBL.length();
+	out_buf << "#" << std::setw(1) << "" << RUN_END_DATE_LBL << std::setw(col_1_remaining) << std::right 
+			  << DEFAULT_DATE_FORMAT << " : " << std::setw(HEADER_COL_2_WIDTH) << std::left
+			  << if_data.end_date << "#\n";
+
+	col_1_remaining = HEADER_COL_1_WIDTH - RUN_END_TIME_LBL.length();
+	out_buf << "#" << std::setw(1) << "" << RUN_END_TIME_LBL << std::setw(col_1_remaining) << std::right
+			  << (if_data.locale + " " + DEFAULT_TIME_FORMAT) << " : "
+			  << std::setw(HEADER_COL_2_WIDTH) << std::left << if_data.end_time << "#\n";
+
+	col_1_remaining = HEADER_COL_1_WIDTH - CBM_SIM_VER_LBL.length();
+	out_buf << "#" << std::setw(1) << "" << CBM_SIM_VER_LBL << std::setw(col_1_remaining) << "" 
+			  << " : " << std::setw(HEADER_COL_2_WIDTH) << std::left << if_data.sim_version << "#\n";
+
+	col_1_remaining = HEADER_COL_1_WIDTH - USERNAME_LBL.length();
+	out_buf << "#" << std::setw(1) << "" << USERNAME_LBL << std::setw(col_1_remaining) << ""
+			  << " : " << std::setw(HEADER_COL_2_WIDTH) << std::left << if_data.username << "#\n";
+
+	out_buf << "#" << std::right << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
+	out_buf << "#" << std::setfill('#') << std::setw(INFO_FILE_COL_WIDTH-1) << "\n";
+	out_buf << "#" << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
+}
+
+void Control::write_cmdline_info(std::fstream &out_buf)
+{
+	uint32_t col_1_remaining;
+	out_buf << "############################ COMMANDLINE INFO ################################\n";
+	out_buf << "#" << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
+
+	col_1_remaining = CMDLINE_SECTION_COL_1_WIDTH - CMD_LBL.length();
+	out_buf << "#" << std::setw(1) << "" << CMD_LBL << std::setw(col_1_remaining) << std::right << " : "
+			  << std::setw(CMDLINE_SECTION_COL_2_WIDTH) << std::left << if_data.p_cl.cmd_name << "#\n";
+
+	col_1_remaining = CMDLINE_SECTION_COL_1_WIDTH - VIS_MODE_LBL.length();
+	out_buf << "#" << std::setw(1) << "" << VIS_MODE_LBL << std::setw(col_1_remaining) << std::right
+			  << " : " << std::setw(CMDLINE_SECTION_COL_2_WIDTH) << std::left << if_data.p_cl.vis_mode << "#\n";
+
+	col_1_remaining = CMDLINE_SECTION_COL_1_WIDTH - IN_FILE_LBL.length();
+	out_buf << "#" << std::setw(1) << "" << IN_FILE_LBL << std::setw(col_1_remaining) << std::right
+			  << " : " << std::setw(CMDLINE_SECTION_COL_2_WIDTH) << std::left
+			  << strip_file_path(if_data.p_cl.input_sim_file) << "#\n";
+
+	col_1_remaining = CMDLINE_SECTION_COL_1_WIDTH - SESS_FILE_LBL.length();
+	out_buf << "#" << std::setw(1) << "" << SESS_FILE_LBL << std::setw(col_1_remaining) << std::right
+			  << " : " << std::setw(CMDLINE_SECTION_COL_2_WIDTH) << std::left
+			  << strip_file_path(if_data.p_cl.session_file) << "#\n";
+
+	col_1_remaining = CMDLINE_SECTION_COL_1_WIDTH - OUT_DIR_LBL.length();
+	out_buf << "#" << std::setw(1) << "" << OUT_DIR_LBL << std::setw(col_1_remaining) << std::right
+			  << " : " << std::setw(CMDLINE_SECTION_COL_2_WIDTH) << std::left
+			  << if_data.p_cl.output_sim_file << "#\n";
+
+	col_1_remaining = CMDLINE_SECTION_COL_1_WIDTH - PFPC_PLAST_LBL.length();
+	out_buf << "#" << std::setw(1) << "" << PFPC_PLAST_LBL << std::setw(col_1_remaining) << std::right
+			  << " : " << std::setw(CMDLINE_SECTION_COL_2_WIDTH) << std::left << if_data.p_cl.pfpc_plasticity << "#\n";
+
+	col_1_remaining = CMDLINE_SECTION_COL_1_WIDTH - MFNC_PLAST_LBL.length();
+	out_buf << "#" << std::setw(1) << "" << MFNC_PLAST_LBL << std::setw(col_1_remaining) << std::right
+			  << " : " << std::setw(CMDLINE_SECTION_COL_2_WIDTH) << std::left << if_data.p_cl.mfnc_plasticity << "#\n";
+
+	out_buf << "#" << std::right << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
+
+	uint32_t col_2_width = INFO_FILE_COL_WIDTH - FILE_SAVE_LBL.length() - 5;
+	out_buf << "#" << std::left << std::setw(1) << "" << FILE_SAVE_LBL << std::setw(1) << std::right
+			  << " : " << std::setw(col_2_width) << "#\n";
+
+	out_buf << "#" << std::right << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
+
+	col_2_width = INFO_FILE_COL_WIDTH - RAST_FILE_LBL.length() - TAB_WIDTH - 4;
+	out_buf << "#" << std::setw(TAB_WIDTH) << "" << RAST_FILE_LBL << std::setw(1) << std::right
+			  << " : " << std::setw(col_2_width) << "#\n";
+	out_buf << "#" << std::right << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
+
+	col_2_width = INFO_FILE_COL_WIDTH - 2 * TAB_WIDTH - 8;
+	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
+	{
+		if (!rf_names[i].empty())
+		{
+			out_buf << "#" << std::setw(2*TAB_WIDTH) << "" << std::left << CELL_IDS[i] << " : " << std::left
+					  << std::setw(col_2_width) << strip_file_path(rf_names[i]) << "#\n";
+		}
+	}
+
+	out_buf << "#" << std::right << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
+
+	col_2_width = INFO_FILE_COL_WIDTH - PSTH_FILE_LBL.length() - TAB_WIDTH - 4;
+	out_buf << "#" << std::setw(TAB_WIDTH) << "" << PSTH_FILE_LBL << std::setw(1) << std::right
+			  << " : " << std::setw(col_2_width) << "#\n";
+	out_buf << "#" << std::right << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
+
+	col_2_width = INFO_FILE_COL_WIDTH - PSTH_FILE_LBL.length() - TAB_WIDTH - 8;
+	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
+	{
+		if (!pf_names[i].empty())
+		{
+			out_buf << "#" << std::setw(2*TAB_WIDTH) << "" << std::left << CELL_IDS[i] << " : " << std::left
+					  << std::setw(col_2_width) << strip_file_path(rf_names[i]) << "#\n";
+		}
+	}
+	out_buf << "#" << std::right << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
+
+	col_2_width = INFO_FILE_COL_WIDTH - WEIGHTS_FILE_LBL.length() - TAB_WIDTH - 4;
+	out_buf << "#" << std::setw(TAB_WIDTH) << "" << WEIGHTS_FILE_LBL << std::setw(1) << std::right
+			  << " : " << std::setw(col_2_width) << "#\n";
+	out_buf << "#" << std::right << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
+
+	if (!pfpc_weights_file.empty())
+	{
+		col_2_width = INFO_FILE_COL_WIDTH - PFPC_FILE_LBL.length() - TAB_WIDTH - 10;
+		out_buf << "#" << std::setw(2*TAB_WIDTH) << "" << std::left << PFPC_FILE_LBL << " : " << std::left
+				  << std::setw(col_2_width) << strip_file_path(pfpc_weights_file) << "#\n";
+	}
+	if (!mfnc_weights_file.empty())
+	{
+		col_2_width = INFO_FILE_COL_WIDTH - MFNC_FILE_LBL.length() - TAB_WIDTH - 10;
+		out_buf << "#" << std::setw(2*TAB_WIDTH) << "" << std::left << MFNC_FILE_LBL << " : " << std::left
+				<< std::setw(col_2_width) << strip_file_path(mfnc_weights_file) << "#\n";
+	}
+
+	out_buf << "#" << std::right << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
+	out_buf << "#" << std::setfill('#') << std::setw(INFO_FILE_COL_WIDTH-1) << "\n";
+	out_buf << "#" << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
+}
+
+void Control::write_sess_info(std::fstream &out_buf)
+{
+	out_buf << "############################## SESSION INFO ##################################\n";
+	out_buf << "#" << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
+
+	uint32_t col_2_width = INFO_FILE_COL_WIDTH - TRIAL_DEFINE_LBL.length() - TAB_WIDTH - 1;
+	out_buf << "#" << std::left << std::setw(1) << "" << TRIAL_DEFINE_LBL << std::setw(1) << std::right
+			  << " : " << std::setw(col_2_width) << "#\n";
+	out_buf << "#" << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
+
+	for (auto trial : if_data.s_file.parsed_trial_info.trial_map)
+	{
+		col_2_width = INFO_FILE_COL_WIDTH - trial.first.length() - TAB_WIDTH - 4;
+		out_buf << "#" << std::setw(TAB_WIDTH) << "" << std::left << trial.first
+				  << std::right << " : " << std::setw(col_2_width) << "#\n";
+		out_buf << "#" << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
+
+		uint32_t max_trial_param_len = get_max_key_len(trial.second);
+
+		for (auto var : trial.second)
+		{
+			col_2_width = INFO_FILE_COL_WIDTH - max_trial_param_len - 2 * TAB_WIDTH - 6;
+			out_buf << "#" << std::setw(2*TAB_WIDTH) << "" << std::left << std::setw(max_trial_param_len)
+					  << var.first << std::right << " : " << std::left << std::setw(col_2_width) << var.second.value << "#\n";
+		}
+		out_buf << "#" << std::right << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
+	}
+
+	col_2_width = INFO_FILE_COL_WIDTH - BLOCK_DEFINE_LBL.length() - 5;
+	out_buf << "#" << std::setw(1) << "" << BLOCK_DEFINE_LBL << std::setw(1) << std::right
+			  << " : " << std::setw(col_2_width) << "#\n";
+	out_buf << "#" << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
+
+	for (auto block : if_data.s_file.parsed_trial_info.block_map)
+	{
+		col_2_width = INFO_FILE_COL_WIDTH - block.first.length() - TAB_WIDTH - 4;
+		out_buf << "#" << std::setw(TAB_WIDTH) << "" << std::left << block.first << " : "
+				  << std::right << std::setw(col_2_width) << "#\n";
+		out_buf << "#" << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
+
+		uint32_t max_block_param_len = get_max_first_len(block.second);
+
+		for (auto pair : block.second)
+		{
+			col_2_width = INFO_FILE_COL_WIDTH - max_block_param_len - 2 * TAB_WIDTH - 6;
+			out_buf << "#" << std::setw(2*TAB_WIDTH) << "" << std::left << std::setw(max_block_param_len)
+					  << pair.first << std::right << " : " << std::left << std::setw(col_2_width) << pair.second << "#\n";
+		}
+		out_buf << "#" << std::right << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
+	}
+
+	col_2_width = INFO_FILE_COL_WIDTH - SESSION_DEFINE_LBL.length() - 5;
+	out_buf << "#" << std::setw(1) << "" << SESSION_DEFINE_LBL << std::setw(1) << std::right
+			  << " : " << std::setw(col_2_width) << "#\n";
+	out_buf << "#" << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
+	for (auto pair : if_data.s_file.parsed_trial_info.session)
+	{
+		col_2_width = INFO_FILE_COL_WIDTH - pair.first.length() - pair.second.length() - TAB_WIDTH - 5;
+		out_buf << "#" << std::setw(TAB_WIDTH) << "" << std::left << std::setw(pair.first.length())
+				  << pair.first << std::right << " : " << std::left << std::setw(col_2_width) << pair.second << "#\n";
+	}
+	out_buf << "#" << std::right << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
+	out_buf << "############################ END SESSION RECORD ##############################\n";
+}
+
 void Control::save_info_to_file()
 {
-
+	std::fstream out_if_data_buf(out_info_name.c_str(), std::ios::out);
+	write_header_info(out_if_data_buf);
+	write_cmdline_info(out_if_data_buf);
+	write_sess_info(out_if_data_buf);
+	out_if_data_buf.close();
 }
 
 void Control::save_pfpc_weights_to_file(int32_t trial)
@@ -190,7 +395,7 @@ void Control::save_pfpc_weights_to_file(int32_t trial)
 			curr_pfpc_weights_filename = data_out_path + "/" + get_file_basename(pfpc_weights_file)
 									   + "_TRIAL_" + std::to_string(trial) + BIN_EXT;
 		}
-		LOG_DEBUG("Saving granule to purkinje weights to file '%s'", curr_pfpc_weights_filename.c_str());
+		LOG_DEBUG("Saving granule to purkinje weights to file...");
 		if (!simCore)
 		{
 			LOG_ERROR("Trying to write uninitialized weights to file.");
@@ -227,7 +432,7 @@ void Control::save_mfdcn_weights_to_file(int32_t trial)
 			curr_mfnc_weights_filename = data_out_path + "/" + get_file_basename(curr_mfnc_weights_filename)
 									   + "_TRIAL_" + std::to_string(trial) + BIN_EXT;
 		}
-		LOG_DEBUG("Saving mossy fiber to deep nucleus weigths to file '%s'", curr_mfnc_weights_filename.c_str());
+		LOG_DEBUG("Saving mossy fiber to deep nucleus weigths to file...");
 		if (!simCore)
 		{
 			LOG_ERROR("Trying to write uninitialized weights to file.");
@@ -401,7 +606,7 @@ void Control::initialize_psth_save_funcs()
 		{
 			if (!pf_names[i].empty())
 			{
-				LOG_DEBUG("Saving %s psth to '%s'", CELL_IDS[i].c_str(), pf_names[i].c_str());
+				LOG_DEBUG("Saving %s psth to file...", CELL_IDS[i].c_str());
 				write2DArray<uint8_t>(pf_names[i], this->psths[i], this->PSTHColSize, this->rast_cell_nums[i]);
 			}
 		};
@@ -417,7 +622,7 @@ void Control::initialize_raster_save_funcs()
 			if (!rf_names[i].empty() && CELL_IDS[i] != "GR")
 			{
 				uint32_t row_size = (CELL_IDS[i] == "GR") ? this->PSTHColSize : this->PSTHColSize * this->td.num_trials;
-				LOG_DEBUG("Saving %s raster to '%s'", CELL_IDS[i].c_str(), rf_names[i].c_str());
+				LOG_DEBUG("Saving %s raster to file...", CELL_IDS[i].c_str());
 				write2DArray<uint8_t>(rf_names[i], this->rasters[i], row_size, this->rast_cell_nums[i]);
 			}
 		};
@@ -560,7 +765,7 @@ void Control::runSession(struct gui *gui)
 		save_rasters();
 		save_psths();
 		save_sim_to_file();
-		//save_info_to_file();
+		save_info_to_file();
 	}
 }
 
@@ -619,8 +824,8 @@ void Control::save_gr_raster()
 {
 	if (!rf_names[GR].empty())
 	{
-		std::string trial_raster_name = OUTPUT_DATA_PATH + get_file_basename(rf_names[GR])
-									  + "_trial_" + std::to_string(trial) + "." + BIN_EXT;
+		std::string trial_raster_name = data_out_path + "/" + get_file_basename(rf_names[GR])
+									  + "_trial_" + std::to_string(trial) + BIN_EXT;
 		LOG_DEBUG("Saving granule raster to file...");
 		write2DArray<uint8_t>(trial_raster_name, rasters[GR], num_gr, PSTHColSize);
 	}

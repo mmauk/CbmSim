@@ -21,6 +21,7 @@ const std::string DEFAULT_SIM_OUT_FILE = OUTPUT_DATA_PATH + "default_out_sim_fil
 
 typedef struct
 {
+	std::string cmd_name;
 	std::string print_help;
 	std::string vis_mode;
 	std::string build_file;
