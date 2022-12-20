@@ -26,8 +26,11 @@
 int main(int argc, char **argv) 
 {
 	logger_initConsoleLogger(stderr);
+#ifdef DEBUG
 	logger_setLevel(LogLevel_DEBUG);
-
+#else
+	logger_setLevel(LogLevel_INFO);
+#endif
 	parsed_commandline p_cl = {};
 	parse_and_validate_parsed_commandline(&argc, &argv, p_cl);
 

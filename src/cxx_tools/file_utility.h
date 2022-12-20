@@ -30,6 +30,15 @@ const std::string TXT_EXT = ".txt";
 const std::string BIN_EXT = ".bin";
 const std::string SIM_EXT = ".sim";
 
+#ifdef DEBUG
+const std::string INPUT_DATA_PATH  = "../../data/inputs/";
+const std::string OUTPUT_DATA_PATH = "../../data/outputs/";
+#else
+const std::string INPUT_DATA_PATH  = "../data/inputs/";
+const std::string OUTPUT_DATA_PATH = "../data/outputs/";
+#endif
+const std::string DEFAULT_SIM_OUT_FILE = OUTPUT_DATA_PATH + "default_out_sim_file" + SIM_EXT;
+
 // trim from start (in place)
 inline void ltrim(std::string &s, unsigned char ch)
 {
@@ -51,6 +60,8 @@ std::string strip_file_path(std::string full_file_path);
 std::string get_file_basename(std::string full_file_path);
 
 std::string get_current_time_as_string();
+
+bool file_exists(std::string dir_to_search, std::string &filename);
 
 void rawBytesRW(char *arr, unsigned long byteLen, bool read, std::fstream &file);
 

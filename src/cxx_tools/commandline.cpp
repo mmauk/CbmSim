@@ -133,7 +133,6 @@ void print_usage_info()
 	std::cout << "\t./cbm_sim -s acquisition.sess -i bunny.sim -r PC,allPCRaster SC,allSCRaster BC,allBCRaster\n\n";
 }
 
-
 void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 {
 	std::vector<std::string> tokens;
@@ -262,12 +261,15 @@ void validate_commandline(parsed_commandline &p_cl)
 				LOG_FATAL("Cannot specify both session and build file. Exiting...");
 				exit(5);
 			}
-			if (p_cl.output_sim_file.empty())
+			if (p_cl.output_basename.empty())
 			{
-				LOG_DEBUG("Output simulation file not specified. Using default value...");
-				p_cl.output_sim_file = DEFAULT_SIM_OUT_FILE; 
+				LOG_FATAL("You must specify an output basename. Exiting...");
+				exit(9);
 			}
-			else p_cl.output_sim_file = INPUT_DATA_PATH + p_cl.output_sim_file;
+			else
+			{
+				p_cl.output_sim_file = p_cl.output_basename + SIM_EXT;
+			}
 			if (p_cl.vis_mode.empty())
 			{
 				LOG_DEBUG("Visual mode not specified. Setting to default value of 'TUI'...");
@@ -296,10 +298,17 @@ void validate_commandline(parsed_commandline &p_cl)
 				LOG_FATAL("You must specify an output basename. Exiting...");
 				exit(7);
 			}
-			// TODO: make a more general algorithm which searches data/ dir for file with this name 
 			if (!p_cl.input_sim_file.empty())
 			{
-				p_cl.input_sim_file = INPUT_DATA_PATH + p_cl.input_sim_file;
+				if (!file_exists(OUTPUT_DATA_PATH, p_cl.input_sim_file))
+				{
+					LOG_FATAL("Could not find input simulation file '%s'. Exiting...",
+							  p_cl.input_sim_file.c_str());
+					exit(11);
+				}
+				// TODO: either return the path, or reconstruct it here, then assign to p_cl.input_sim_file
+				// OR wait until passing to control, only then determine its path
+				//p_cl.input_sim_file = INPUT_DATA_PATH + p_cl.input_sim_file;
 			}
 			else
 			{

@@ -1,5 +1,9 @@
 #include <sstream>
+#include <unistd.h>
+#include <dirent.h>
+
 #include "file_utility.h"
+#include "logger.h"
 
 std::string strip_file_path(std::string full_file_path)
 {
@@ -36,5 +40,40 @@ void rawBytesRW(char *arr, size_t byteLen, bool read, std::fstream &file)
 {
 	if (read) file.read(arr, byteLen);
 	else file.write(arr, byteLen);
+}
+
+bool file_exists_recurse(std::string dir_to_search, std::string &filename)
+{
+	struct dirent *dp;
+	DIR *dir = opendir(dir_to_search.c_str());
+	if (!dir)
+		return (strip_file_path(dir_to_search) == filename) ? true : false;
+
+	bool accum = false;
+	while ((dp = readdir(dir)) != NULL)
+	{
+		if (strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0)
+		{
+			std::string new_path;
+			if (dir_to_search[dir_to_search.length()-1] == '/')
+				new_path = dir_to_search + std::string(dp->d_name);
+			else
+				new_path = dir_to_search + "/" + std::string(dp->d_name);
+			accum = accum || file_exists_recurse(new_path, filename);
+			if (accum) break;
+		}
+	}
+	return accum;
+}
+
+bool file_exists(std::string dir_to_search, std::string &filename)
+{
+	char cwd[PATH_MAX];
+	if (getcwd(cwd, sizeof(cwd)) == NULL)
+	{
+		LOG_FATAL("Couldn't determine current working directory. Exiting");
+		exit(1);
+	}
+	return file_exists_recurse(std::string(cwd)+"/"+dir_to_search, filename);
 }
 

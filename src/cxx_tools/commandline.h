@@ -14,10 +14,11 @@
 #include <string>
 
 #include "file_parse.h"
+#include "file_utility.h"
 
-const std::string INPUT_DATA_PATH      = "../data/inputs/";
-const std::string OUTPUT_DATA_PATH     = "../data/outputs/";
-const std::string DEFAULT_SIM_OUT_FILE = OUTPUT_DATA_PATH + "default_out_sim_file.sim";
+//const std::string INPUT_DATA_PATH      = "../data/inputs/";
+//const std::string OUTPUT_DATA_PATH     = "../data/outputs/";
+//const std::string DEFAULT_SIM_OUT_FILE = OUTPUT_DATA_PATH + "default_out_sim_file" + SIM_EXT;
 
 typedef struct
 {
