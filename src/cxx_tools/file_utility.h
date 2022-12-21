@@ -61,7 +61,7 @@ std::string get_file_basename(std::string full_file_path);
 
 std::string get_current_time_as_string();
 
-bool file_exists(std::string dir_to_search, std::string &filename);
+bool file_exists(std::string dir_to_search, std::string &filename, std::string &resolved_fullpath);
 
 void rawBytesRW(char *arr, unsigned long byteLen, bool read, std::fstream &file);
 

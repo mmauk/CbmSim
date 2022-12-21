@@ -1,6 +1,7 @@
 #include <sstream>
 #include <unistd.h>
 #include <dirent.h>
+#include <iostream>
 
 #include "file_utility.h"
 #include "logger.h"
@@ -42,12 +43,20 @@ void rawBytesRW(char *arr, size_t byteLen, bool read, std::fstream &file)
 	else file.write(arr, byteLen);
 }
 
-bool file_exists_recurse(std::string dir_to_search, std::string &filename)
+bool file_exists_recurse(std::string dir_to_search, std::string &filename, std::string &resolved_fullpath)
 {
 	struct dirent *dp;
 	DIR *dir = opendir(dir_to_search.c_str());
 	if (!dir)
-		return (strip_file_path(dir_to_search) == filename) ? true : false;
+	{
+		if (strip_file_path(dir_to_search) == filename)
+		{
+			resolved_fullpath = dir_to_search;
+			return true;
+		}
+		return false;
+	}
+	//return (strip_file_path(dir_to_search) == filename) ? true : false;
 
 	bool accum = false;
 	while ((dp = readdir(dir)) != NULL)
@@ -59,21 +68,24 @@ bool file_exists_recurse(std::string dir_to_search, std::string &filename)
 				new_path = dir_to_search + std::string(dp->d_name);
 			else
 				new_path = dir_to_search + "/" + std::string(dp->d_name);
-			accum = accum || file_exists_recurse(new_path, filename);
+			accum = accum || file_exists_recurse(new_path, filename, resolved_fullpath);
 			if (accum) break;
 		}
 	}
 	return accum;
 }
 
-bool file_exists(std::string dir_to_search, std::string &filename)
+bool file_exists(std::string dir_to_search, std::string &filename, std::string &resolved_fullpath)
 {
-	char cwd[PATH_MAX];
+	// PATH_MAX set to 4096
+	char cwd[PATH_MAX]; 
+	char search_path_real[PATH_MAX];
 	if (getcwd(cwd, sizeof(cwd)) == NULL)
 	{
 		LOG_FATAL("Couldn't determine current working directory. Exiting");
 		exit(1);
 	}
-	return file_exists_recurse(std::string(cwd)+"/"+dir_to_search, filename);
+	realpath(dir_to_search.c_str(), search_path_real);
+	return file_exists_recurse(std::string(search_path_real), filename, resolved_fullpath);
 }
 

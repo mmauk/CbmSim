@@ -283,7 +283,7 @@ void Control::write_cmdline_info(std::fstream &out_buf)
 		if (!pf_names[i].empty())
 		{
 			out_buf << "#" << std::setw(2*TAB_WIDTH) << "" << std::left << CELL_IDS[i] << " : " << std::left
-					  << std::setw(col_2_width) << strip_file_path(rf_names[i]) << "#\n";
+					  << std::setw(col_2_width) << strip_file_path(pf_names[i]) << "#\n";
 		}
 	}
 	out_buf << "#" << std::right << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
@@ -368,7 +368,7 @@ void Control::write_sess_info(std::fstream &out_buf)
 	out_buf << "#" << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
 	for (auto pair : if_data.s_file.parsed_trial_info.session)
 	{
-		col_2_width = INFO_FILE_COL_WIDTH - pair.first.length() - pair.second.length() - TAB_WIDTH - 5;
+		col_2_width = INFO_FILE_COL_WIDTH - pair.first.length() - TAB_WIDTH - 6;
 		out_buf << "#" << std::setw(TAB_WIDTH) << "" << std::left << std::setw(pair.first.length())
 				  << pair.first << std::right << " : " << std::left << std::setw(col_2_width) << pair.second << "#\n";
 	}

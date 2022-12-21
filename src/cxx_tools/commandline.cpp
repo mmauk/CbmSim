@@ -268,6 +268,7 @@ void validate_commandline(parsed_commandline &p_cl)
 			}
 			else
 			{
+				// temporary: will add full path in control
 				p_cl.output_sim_file = p_cl.output_basename + SIM_EXT;
 			}
 			if (p_cl.vis_mode.empty())
@@ -300,15 +301,14 @@ void validate_commandline(parsed_commandline &p_cl)
 			}
 			if (!p_cl.input_sim_file.empty())
 			{
-				if (!file_exists(OUTPUT_DATA_PATH, p_cl.input_sim_file))
+				std::string input_sim_file_fullpath;
+				if (!file_exists(OUTPUT_DATA_PATH, p_cl.input_sim_file, input_sim_file_fullpath))
 				{
 					LOG_FATAL("Could not find input simulation file '%s'. Exiting...",
 							  p_cl.input_sim_file.c_str());
 					exit(11);
 				}
-				// TODO: either return the path, or reconstruct it here, then assign to p_cl.input_sim_file
-				// OR wait until passing to control, only then determine its path
-				//p_cl.input_sim_file = INPUT_DATA_PATH + p_cl.input_sim_file;
+				p_cl.input_sim_file = input_sim_file_fullpath;
 			}
 			else
 			{
