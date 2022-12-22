@@ -1,3 +1,12 @@
+/*
+ * File: info_file.cpp
+ * Author: Sean Gallogly
+ * Created on: 12/16/2022
+ * 
+ * Description:
+ *     This file implements the prototypes given in info_file.h. In doing so it also defines
+ *     utility functions that are private only to this file.
+ */
 #include <unistd.h> // geteuid
 #include <pwd.h> // for getpwuid 
 #include <ctime> 
@@ -13,7 +22,13 @@ void cp_to_info_file_data(parsed_commandline &p_cl, parsed_sess_file &s_file, in
 	cp_parsed_sess_file(s_file, if_data.s_file);
 }
 
-const char *get_user_name()
+/*
+ * Description:
+ *     Obtains the username of the user who is running the generated executable
+ *     
+ *     Uses the unix function 'geteuid' to query the effective user ID of the calling process.    
+ */
+static const char *get_user_name()
 {
 	uid_t uid = geteuid();
 	struct passwd *pw = getpwuid(uid);
@@ -25,6 +40,17 @@ const char *get_user_name()
 	return "";
 }
 
+/*
+ * Implementation Notes:
+ *     uses a string stream and std::put_time to format the current time according to the default
+ *     formats. The default formats include extra wrapping-parentheses due to the ease with which
+ *     this form can be handled when actually writing to the info file. This choice may be subject
+ *     to change.
+ *
+ *     The only failure state for this function is if the username could not be obtained from
+ *     get_user_name, for whatever reason.
+ *
+ */
 void set_info_file_str_props(enum when when, info_file_data &if_data)
 {
 	std::time_t t = std::time(0);
@@ -70,6 +96,12 @@ void set_info_file_str_props(enum when when, info_file_data &if_data)
 	}
 }
 
+/*
+ * Implementation Notes:
+ *     essentially implements the most brute-force search for the largest element in a linear data
+ *     structure. Unfortunately, this function has O(N) time complexity, but the input map is not 
+ *     expected to exceed 10 elements, so the penalties at higher N will most likely never be seen.
+ */
 uint32_t get_max_key_len(std::map<std::string, variable> &map)
 {
 	uint32_t max_len = 0;
@@ -82,6 +114,12 @@ uint32_t get_max_key_len(std::map<std::string, variable> &map)
 	return max_len;
 }
 
+/*
+ * Implementation Notes:
+ *     also implements the most brute-force search for the largest element in a linear data
+ *     structure. Unfortunately, this function has O(N) time complexity, but the input map is not 
+ *     expected to exceed 10 elements, so the penalties at higher N will most likely never be seen.
+ */
 uint32_t get_max_first_len(std::vector<std::pair<std::string, std::string>> &vec)
 {
 	uint32_t max_len = 0;

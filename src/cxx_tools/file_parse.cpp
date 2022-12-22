@@ -1,5 +1,5 @@
 /*
- * File: file_prase.cpp
+ * File: file_parse.cpp
  * Author: Sean Gallogly
  * Created on: 10/02/2022
  *
@@ -16,11 +16,11 @@
 #include "file_parse.h"
 
 // regex strings for matching variable identifiers and variable values
-const std::string var_id_regex_str = "[a-zA-Z_]{1}[a-zA-Z0-9_]*";
-const std::string var_val_regex_str = "[+-]?([0-9]*[.])?[0-9]*([e][+-]?[0-9]+)?";
+static const std::string var_id_regex_str = "[a-zA-Z_]{1}[a-zA-Z0-9_]*";
+static const std::string var_val_regex_str = "[+-]?([0-9]*[.])?[0-9]*([e][+-]?[0-9]+)?";
 
 // look-up table for lexemes, is used for printing lexemes to whatever stream you want
-std::map<lexeme, std::string> lex_string_look_up =
+static std::map<lexeme, std::string> lex_string_look_up =
 {
 		{ NONE, "NONE" },
 		{ BEGIN_MARKER, "BEGIN_MARKER" },
@@ -38,7 +38,7 @@ std::map<lexeme, std::string> lex_string_look_up =
 };
 
 // definitions of tokens via their lexemes
-std::map<std::string, lexeme> token_defs =
+static std::map<std::string, lexeme> token_defs =
 {
 		{ "begin", BEGIN_MARKER },
 		{ "end", END_MARKER },
@@ -111,9 +111,7 @@ void tokenize_file(std::string in_file, tokenized_file &t_file)
  *     pattern string associated with variable identifiers and variable values. Finally,
  *     I add the relevant data into each lexed_token, add that lexed_token to l_file's tokens vector.
  *     Note that I add an "artificial" EOL token after each line has been lexed. Used in parsing.
- *
  */
-
 void lex_tokenized_file(tokenized_file &t_file, lexed_file &l_file)
 {
 	std::regex var_id_regex(var_id_regex_str);
@@ -158,10 +156,12 @@ void lex_tokenized_file(tokenized_file &t_file, lexed_file &l_file)
  *     "statements" within the definition consisting of either single trial or block identifiers, we
  *     add a "shadow token" within the l_file, which conceptually adds in the value of "1" for that trial
  *     or block identifier.
- *
  */
-void parse_def(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, parsed_sess_file &s_file,
-		std::string def_type, std::string def_label)
+static void parse_def(std::vector<lexed_token>::iterator &ltp,
+                      lexed_file &l_file,
+                      parsed_sess_file &s_file,
+                      std::string def_type,
+                      std::string def_label)
 {
 	std::pair<std::string, std::string> curr_pair = {};
 	std::map<std::string, variable> curr_trial = {};
@@ -261,10 +261,11 @@ void parse_def(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, pars
  *     meant for parsing var sections in parsed_session files. loops until the end lex {END_MARKER, "end"} is
  *     found. Within the loop current variable attributes are collected and added to the (temporary) current section.
  *     Once the end marker is reached, the current section is added to the session file's parsed_var_sections map.
- *
  */
-void parse_var_section(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, parsed_sess_file &s_file,
-		std::string region_type)
+static void parse_var_section(std::vector<lexed_token>::iterator &ltp,
+                              lexed_file &l_file,
+                              parsed_sess_file &s_file,
+                              std::string region_type)
 {
 	parsed_var_section curr_section = {};
 	variable curr_var = {};
@@ -300,9 +301,8 @@ void parse_var_section(std::vector<lexed_token>::iterator &ltp, lexed_file &l_fi
  * Implementation Notes:
  *     loops over lexes until END_MARKER is found. checks whether a 3-lex sequence definition header is found,
  *     and if so, calls parse_def. Ignores single comments by passing over the lexes until the new line lex is found.
- *
  */
-void parse_trial_section(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, parsed_sess_file &s_file)
+static void parse_trial_section(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, parsed_sess_file &s_file)
 {
 	while (ltp->lex != END_MARKER) // parse this section
 	{
@@ -334,8 +334,10 @@ void parse_trial_section(std::vector<lexed_token>::iterator &ltp, lexed_file &l_
  *     over lexes until it encounters a valid sequence of begin marker, region, and region type.
  *
  */
-void parse_region(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, parsed_sess_file &s_file,
-		std::string region_type)
+static void parse_region(std::vector<lexed_token>::iterator &ltp,
+                         lexed_file &l_file,
+                         parsed_sess_file &s_file,
+                         std::string region_type)
 {
 	if (region_type == "mf_input"
 		|| region_type == "activity"
@@ -436,10 +438,11 @@ void cp_parsed_sess_file(parsed_sess_file &from_s_file, parsed_sess_file &to_s_f
  *     meant for parsing var sections in parsed_build files. loops until the end lex {END_MARKER, "end"} is
  *     found. Within the loop current variable attributes are collected and added to the (temporary) current section.
  *     Once the end marker is reached, the current section is added to the build file's parsed_var_sections map.
- *
  */
-void parse_var_section(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, parsed_build_file &b_file,
-		std::string region_type)
+static void parse_var_section(std::vector<lexed_token>::iterator &ltp,
+                              lexed_file &l_file,
+                              parsed_build_file &b_file,
+                              std::string region_type)
 {
 	parsed_var_section curr_section = {};
 	variable curr_var = {};
@@ -476,10 +479,11 @@ void parse_var_section(std::vector<lexed_token>::iterator &ltp, lexed_file &l_fi
  *     This recursive function is run on regions in a parsed build file: it checks the region type (there
  *     are two recognized region types) and calls parse_var_section, otherwise loops over lexes until it
  *     encounters a valid sequence of begin marker, region, and region type.
- *
  */
-void parse_region(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, parsed_build_file &b_file,
-		std::string region_type)
+static void parse_region(std::vector<lexed_token>::iterator &ltp,
+                         lexed_file &l_file,
+                         parsed_build_file &b_file,
+                         std::string region_type)
 {
 	if (region_type == "connectivity")
 	{
@@ -523,7 +527,6 @@ void parse_region(std::vector<lexed_token>::iterator &ltp, lexed_file &l_file, p
  *     iterator by two at the end of this operatation, either reaching a comment or EOL.
  *     One final note is that I needed to keep the END_MARKERs in as they helped solve the problem
  *     of finding when we are finished with a section.
- *
  */
 void parse_lexed_build_file(lexed_file &l_file, parsed_build_file &b_file)
 {
@@ -596,7 +599,7 @@ void allocate_trials_data(trials_data &td, uint32_t num_trials)
  *     for a previous trial definition.
  *
  */
-void initialize_trial_names_helper(trials_data &td, parsed_trial_section &pt_section,
+static void initialize_trial_names_helper(trials_data &td, parsed_trial_section &pt_section,
 	  std::vector<std::pair<std::string, std::string>> &in_vec)
 {
 	for (auto vec_pair : in_vec)

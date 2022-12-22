@@ -7,14 +7,11 @@
  *     this is the main entry point to the program. It calls functions from commandline.h
  *     in order to parse arguments and from control.h in order to run the simulation
  *     in one of several user-specified modes.
- *
  */
-
 #include <time.h>
 #include <iostream>
 #include <fstream>
 #include <omp.h>
-
 #include <iomanip>
 
 #include "control.h"
@@ -26,6 +23,8 @@
 int main(int argc, char **argv) 
 {
 	logger_initConsoleLogger(stderr);
+// for now, set the log level dependent on whether
+// we are compiling for debug target or release target
 #ifdef DEBUG
 	logger_setLevel(LogLevel_DEBUG);
 #else
@@ -48,7 +47,9 @@ int main(int argc, char **argv)
 		}
 		else if (!p_cl.session_file.empty())
 		{
-			control->runSession(NULL);
+			control->runSession(NULL); // saving is conducted at the end of runSession.
+									   // might consider moving to own function and calling
+									   // from here
 		}
 	}
 	else if (p_cl.vis_mode == "GUI")

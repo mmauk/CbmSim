@@ -1,3 +1,18 @@
+/*
+ * File: info_file.h
+ * Author: Sean Gallogly
+ * Created on: 12/16/2022
+ * 
+ * Description:
+ *     This is the interface file for generating an information file from a simulation
+ *     run. It includes the constants, structures, and auxilary functions necessary for
+ *     generating an information file. The main functions which write text to the appropriate
+ *     file buffer are located within the Control class, due to these functions needing
+ *     access to the filenames. 
+ *
+ *     TODO: find a better scheme for the main file-writing functions. Should they be
+ *           declared as friends of the Control class? 
+ */
 #ifndef _INFO_FILE_H
 #define _INFO_FILE_H
 
@@ -7,6 +22,7 @@
 
 const std::string SIM_VERSION = "0.0.1";
 
+// various constants related to formatting
 const uint32_t INFO_FILE_COL_WIDTH = 79;
 const uint32_t TAB_WIDTH = 4;
 
@@ -42,8 +58,17 @@ const std::string TRIAL_DEFINE_LBL   = "DEFINED TRIALS";
 const std::string BLOCK_DEFINE_LBL   = "DEFINED BLOCKS";
 const std::string SESSION_DEFINE_LBL = "DEFINED SESSION";
 
+/* 
+ * used by set_info_file_str_props to determine whether to set the start_date/time strings
+ * or the end_date/time strings in an instance of the info_file_data struct
+ */
 enum when {BEFORE_RUN, AFTER_RUN};
 
+/*
+ * the main data structure containing relevant information which will be saved as text to the info file.
+ * 
+ * TODO: may want to add raster, psth, and weight filenames to this guy
+ */
 typedef struct 
 {
 	std::string start_date;
@@ -57,11 +82,32 @@ typedef struct
 	parsed_sess_file s_file;
 } info_file_data;
 
+/*
+ * Description:
+ *     obtains the length of the longest key in the input map.
+ */
 uint32_t get_max_key_len(std::map<std::string, variable> &map);
+
+/*
+ * Description;
+ *     obtains the length of the longest first element of all pairs in the input vector.
+ */
 uint32_t get_max_first_len(std::vector<std::pair<std::string, std::string>> &vec);
 
-// TODO: move
+/*
+ * Description:
+ *     copies relevant parsed_commandline and parsed_session_file data to the input_file_data reference 'if_data'
+ */
 void cp_to_info_file_data(parsed_commandline &p_cl, parsed_sess_file &s_file, info_file_data &if_data);
+
+/*
+ * Description:
+ *     sets the values of the given info_file_data instance, save for the parsed_commandline and parsed_sess_file
+ *     attributes.
+ *
+ *     Note that the start times and dates are filled when 'when' has the value 'BEFORE_RUN' and the end times
+ *     and dates are filled when 'when' has the value 'AFTER_RUN'   
+ */
 void set_info_file_str_props(enum when, info_file_data &if_data);
 
 #endif /* _INFO_FILE_H */

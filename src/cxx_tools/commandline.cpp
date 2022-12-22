@@ -23,6 +23,9 @@
 const int NUM_CELL_TYPES = 8;
 const std::string CELL_IDS[NUM_CELL_TYPES] = {"MF", "GR", "GO", "BC", "SC", "PC", "IO", "NC"}; 
 
+/*
+ * available commandline flags which take no argument
+ */
 const std::vector<std::string> command_line_single_opts
 {
 	"--pfpc-off",
@@ -31,20 +34,34 @@ const std::vector<std::string> command_line_single_opts
 	"--cascade",
 };
 
+/*
+ * available commandline flags which take an argument. Each pair consists of the
+ * short and long versions of the flag. Only one of either the short or long
+ * versions of a flag may be specified in a single invocation of the cbm_sim
+ * executable.
+ */
 const std::vector<std::pair<std::string, std::string>> command_line_pair_opts 
 {
-	{ "-h", "--help"    },
-	{ "-v", "--visual"  },
-	{ "-b", "--build"   },
-	{ "-s", "--session" },
-	{ "-i", "--input"   },
-	{ "-o", "--output"  },
-	{ "-r", "--raster"  },
-	{ "-p", "--psth"    },
-	{ "-w", "--weights" }
+	{ "-h", "--help"    }, // used when user wants usage information
+	{ "-v", "--visual"  }, // used to specify whether to run in the terminal or a GUI interface
+	{ "-b", "--build"   }, // used to specify the build file in synaptogenesis
+	{ "-s", "--session" }, // used to specify the session file for running trials
+	{ "-i", "--input"   }, // used to specify the file representing the initial state of a simulation for a run
+	{ "-o", "--output"  }, // used to specify the file to output the final state of a simulation after a run
+	{ "-r", "--raster"  }, // used to specify what cell types to collect raster information for during a run
+	{ "-p", "--psth"    }, // used to specify what cell types to collect psth information for during a run
+	{ "-w", "--weights" } // used to specify what synaptic weights to collect during a run
 };
 
-bool is_cmd_opt(std::string in_str)
+/*
+ * Description:
+ *     used to test whether the input string 'in_str' is a commandline flag or not.
+ *     currently supports only the paired flags above
+ *     
+ *     TODO: integrate support for single flags above
+ *
+ */
+static bool is_cmd_opt(std::string in_str)
 {
 	for (auto opt : command_line_pair_opts)
 	{
@@ -53,12 +70,21 @@ bool is_cmd_opt(std::string in_str)
 	return false;
 }
 
-int cmd_opt_exists(std::vector<std::string> &token_buf, std::string opt)
+/*
+ * Description:
+ *     searches for the string 'opt' in the buffer 'token_buf'
+ */
+static int cmd_opt_exists(std::vector<std::string> &token_buf, std::string opt)
 {
 	return (std::find(token_buf.begin(), token_buf.end(), opt) != token_buf.end()) ? 1 : 0;
 }
 
-std::string get_opt_param(std::vector<std::string> &token_buf, std::string opt)
+/*
+ * Description:
+ *     searches for and returns the parameter associated with the flag/option 'opt'. Returns the
+ *     empty string if the flag des not exist in the input buffer.
+ */
+static std::string get_opt_param(std::vector<std::string> &token_buf, std::string opt)
 {
 	auto tp = std::find(token_buf.begin(), token_buf.end(), opt);
 	if (tp != token_buf.end() && tp++ != token_buf.end())
@@ -68,7 +94,22 @@ std::string get_opt_param(std::vector<std::string> &token_buf, std::string opt)
 	return "";
 }
 
-void fill_opt_map(std::map<std::string, bool> &opt_map, std::string opt, std::string param)
+/*
+ * Description:
+ *     populates the input map, parsing out the parameter if needed.
+ *
+ * Implementation Notes:
+ *     Three opts are expected: the raster cell ids, the psth cell ids, and the synaptic weights ids.
+ *     See the usage information from the output of 'cbm_sim -h' for a list of the accepted cell-ids and
+ *     synaptic weights ids. For any of the three cases, 'param' is either a single id or a comma-separated
+ *     list of ids. Both cases are taken into account, with the latter case involving parsing out the individual
+ *     ids from the list.
+ *
+ *     At this time no validation of the ids themselves is conducted (current as of 12/21/2022)
+ *
+ *     TODO: validate here or elsewhere that the ids given are valid
+ */
+static void fill_opt_map(std::map<std::string, bool> &opt_map, std::string opt, std::string param)
 {
 	// if the parameter is a single cell id or weight id, take case into account separately
 	if (param.length() == 2 || param.length() == 4)
@@ -133,6 +174,18 @@ void print_usage_info()
 	std::cout << "\t./cbm_sim -s acquisition.sess -i bunny.sim -r PC,allPCRaster SC,allSCRaster BC,allBCRaster\n\n";
 }
 
+/*
+ * Implementation Notes:
+ *     There are three main computational components to this function:
+ *
+ *     1) collecting the commandline tokens, as-is, into a vector of strings (for easier manipulation)
+ *     2) looping over the single options and checking for the presence of each in-turn
+ *     3) looping over the pair options and checking for the presence of each in-turn
+ *
+ *     the second and third components assign the relevant attributes of the parsed_commandline reference.
+ *     the third component checks whether the user entered both the short and long version of a given option pair,
+ *     and exits with a fatal log if so.
+ */
 void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 {
 	std::vector<std::string> tokens;
@@ -167,7 +220,7 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 		std::string this_param;
 		char opt_char_code;
 		std::vector<std::string>::iterator curr_token_iter = tokens.begin();
-		p_cl.cmd_name = *curr_token_iter; //TODO; double check this
+		p_cl.cmd_name = *curr_token_iter; 
 		switch (opt_sum)
 		{
 			case 2:
@@ -234,9 +287,18 @@ bool p_cmdline_is_empty(parsed_commandline &p_cl)
 	   p_cl.psth_files.empty() && p_cl.weights_files.empty();
 }
 
+/*
+ * Implementation Notes:
+ *
+ * This function validates the parsed_commandline, first for build mode and second for run mode.
+ * Admittedly, this function is a bit of a mess, as not every accidental case has been tested for,
+ * but the correct input for each mode is verified, and *most* error states are caught. Further testing
+ * is most definitely required.
+ *
+ */
 void validate_commandline(parsed_commandline &p_cl)
 {
-	if (p_cmdline_is_empty(p_cl))
+	if (p_cmdline_is_empty(p_cl)) // only executable given, open the gui
 	{
 		p_cl.vis_mode = "GUI";
 		// FIXME: for now, will not assign to either -o options. no args, assume want run mode in gui
@@ -249,12 +311,12 @@ void validate_commandline(parsed_commandline &p_cl)
 		/* for now, print usage info regardless of other arguments.
 		 * in future, if there is a commandline error, print usage info then exit
 		 */
-		if (!p_cl.print_help.empty())
+		if (!p_cl.print_help.empty()) 
 		{
 			print_usage_info();
 			exit(0);
 		}
-		if (!p_cl.build_file.empty())
+		if (!p_cl.build_file.empty()) // checking validity of input for build mode
 		{
 			if (!p_cl.session_file.empty())
 			{
@@ -287,7 +349,7 @@ void validate_commandline(parsed_commandline &p_cl)
 			}
 			p_cl.build_file = INPUT_DATA_PATH + p_cl.build_file;
 		}
-		else if (!p_cl.session_file.empty())
+		else if (!p_cl.session_file.empty()) // checking validity of input for run mode
 		{
 			if (!p_cl.build_file.empty())
 			{
@@ -302,6 +364,7 @@ void validate_commandline(parsed_commandline &p_cl)
 			if (!p_cl.input_sim_file.empty())
 			{
 				std::string input_sim_file_fullpath;
+				// verify whether the input simulation file can be found recursively from {PROJECT_ROOT}data/outputs/
 				if (!file_exists(OUTPUT_DATA_PATH, p_cl.input_sim_file, input_sim_file_fullpath))
 				{
 					LOG_FATAL("Could not find input simulation file '%s'. Exiting...",
@@ -348,12 +411,15 @@ void validate_commandline(parsed_commandline &p_cl)
 	}
 }
 
+// NOTE: if you want to make this guy available outside this translation unit, remove the static keyword
 void parse_and_validate_parsed_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 {
 	parse_commandline(argc, argv, p_cl);
 	validate_commandline(p_cl);
 }
 
+// std::string overloads the assignment operator such that all string data is copied,
+// ensuring a deep copy.
 void cp_parsed_commandline(parsed_commandline &from_p_cl, parsed_commandline &to_p_cl)
 {
 	to_p_cl.cmd_name        = from_p_cl.cmd_name;
