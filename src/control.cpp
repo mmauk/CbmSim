@@ -755,6 +755,7 @@ void Control::runSession(struct gui *gui)
 		save_mfdcn_weights_to_file(trial);
 		trial++;
 	}
+	trial--; // setting so that is valid for drawing go rasters after a sim
 	if (run_state == NOT_IN_RUN) LOG_INFO("Simulation terminated.");
 	else if (run_state == IN_RUN_NO_PAUSE) LOG_INFO("Simulation Completed.");
 	run_state = NOT_IN_RUN;

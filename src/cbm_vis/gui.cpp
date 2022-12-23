@@ -1,5 +1,6 @@
 #include <sys/stat.h>
 
+#include "logger.h"
 #include "array_util.h"
 #include "connectivityparams.h"
 #include "commandline.h" // for OUTPUT_DATA_PATH def
@@ -28,7 +29,7 @@ static bool assert(bool expr, const char *error_string, const char *func = "asse
 {
 	if (!expr)
 	{
-		fprintf(stderr, "%s(): %s\n", func, error_string);
+		LOG_FATAL("%s(): %s", func, error_string);
 		return false;
 	}
 	return true;
@@ -59,7 +60,7 @@ static void load_file(GtkWidget *widget, Control *control, void (Control::*on_fi
 	}
 	else
 	{
-		fprintf(stderr, "%s\n", err_msg.c_str());
+		LOG_ERROR("%s", err_msg.c_str());
 		gtk_widget_destroy(dialog);
 		return;
 	}
@@ -96,7 +97,7 @@ static void save_file(GtkWidget *widget, Control *control, void (Control::*on_fi
 	}
 	else
 	{
-		fprintf(stderr, "%s\n", err_msg.c_str());
+		LOG_ERROR("%s", err_msg.c_str());
 		gtk_widget_destroy(dialog);
 		return;
 	}
@@ -134,7 +135,7 @@ static void save_file(GtkWidget *widget, Control *control, std::function<void(st
 	}
 	else
 	{
-		fprintf(stderr, "%s\n", err_msg.c_str());
+		LOG_ERROR("%s", err_msg.c_str());
 		gtk_widget_destroy(dialog);
 		return;
 	}
@@ -264,7 +265,7 @@ static int create_dir_from(const char *base_path, const char *base_name, bool ov
 	int status = 0;
 	if (overwrite)
 	{
-		printf("[INFO]: Deleting existing directory '%s'...\n", full_path);
+		LOG_INFO("Deleting existing directory '%s'...", full_path);
 		int full_path_len = snprintf(NULL, 0, "%s", full_path);
 		char *command = (char *)malloc(7 + full_path_len + 1);
 		sprintf(command, "rm -rf %s", full_path);
@@ -278,7 +279,7 @@ static int create_dir_from(const char *base_path, const char *base_name, bool ov
 
 static void create_dir_seq_on_valid_name(GtkWidget *parent_win, const char *dir_base_name, bool overwrite = false)
 {
-	printf("[INFO]: Making directory...\n");
+	LOG_INFO("Making directory...");
 	GtkDialogFlags flags = GtkDialogFlags(GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT);
 	char *status_str;
 	int status_str_len;
@@ -287,14 +288,14 @@ static void create_dir_seq_on_valid_name(GtkWidget *parent_win, const char *dir_
 		status_str_len = snprintf(NULL, 0, "Could not create directory, '%s'", dir_base_name);
 		status_str = (char *)malloc(status_str_len + 1);
 		sprintf(status_str, "Could not create directory '%s'", dir_base_name);
-		printf("[ERROR]: Could not create directory, '%s'\n", dir_base_name);
+		LOG_ERROR("Could not create directory, '%s'", dir_base_name);
 	}
 	else
 	{
 		status_str_len = snprintf(NULL, 0, "Directory successfully created!");
 		status_str = (char *)malloc(status_str_len + 1);
 		sprintf(status_str, "Directory successfully created!");
-		printf("[INFO]: Directory successfully created!\n");
+		LOG_INFO("Directory successfully created!");
 	}
 	GtkWidget *msg_dialog = gtk_message_dialog_new(GTK_WINDOW(parent_win),
 															  flags,
@@ -334,7 +335,7 @@ static void on_create_dir(GtkWidget *widget, struct gui *gui)
 			case GTK_RESPONSE_OK:
 				if (!is_valid_dir_name(gtk_entry_get_text(GTK_ENTRY(entry))))
 				{
-					printf("[ERROR]: Directory name entered was invalid!\n");
+					LOG_WARN("Directory name entered was invalid!");
 					GtkWidget *msg_dialog = gtk_message_dialog_new(GTK_WINDOW(dialog),
 																   flags,
 																   GTK_MESSAGE_INFO,
@@ -348,7 +349,7 @@ static void on_create_dir(GtkWidget *widget, struct gui *gui)
 				}
 				else if (output_dir_exists(gtk_entry_get_text(GTK_ENTRY(entry))))
 				{
-					printf("[WARNING]: file already exists.\n");
+					LOG_WARN("file already exists.");
 					GtkWidget *msg_dialog = gtk_message_dialog_new(GTK_WINDOW(dialog),
 																   flags,
 																   GTK_MESSAGE_INFO,
@@ -481,7 +482,6 @@ static void on_firing_rates_window(GtkWidget *widget, struct gui *gui)
 							rp->row, 1, 1);
 		}
 	}
-
 	gtk_container_add(GTK_CONTAINER(gui->frw.window), gui->frw.grid);
 	gtk_widget_show_all(gui->frw.window);
 }
@@ -490,7 +490,6 @@ static void on_update_weight(GtkWidget *spin_button, float *weight)
 {
 	*weight = gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button));
 }
-
 
 static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 {
@@ -747,8 +746,8 @@ static void on_toggle_run(GtkWidget *widget, struct gui *gui)
 	}
 	else
 	{
-		fprintf(stderr, "[ERROR]: trying to run an uninitialized simulation.\n");
-		fprintf(stderr, "[ERROR]: (Hint: initialize the simulation before running it.)\n");
+		LOG_WARN("trying to run an uninitialized simulation.");
+		LOG_WARN("(Hint: initialize the simulation before running it.)");
 	}
 }
 
@@ -828,6 +827,7 @@ static void draw_gr_raster(GtkWidget *drawing_area, cairo_t *cr, Control *contro
 
 static void draw_go_raster(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 {
+	LOG_INFO("%d", control->trial);
 	draw_raster(drawing_area, cr, control->trial, num_go, control->PSTHColSize, control->rasters[GO]);
 }
 
@@ -1035,12 +1035,12 @@ static void on_dcn_plast(GtkWidget *widget, Control *control)
 {
 	if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget)))
 	{
-		printf("[INFO]: mf-nc plasticity set to mode: Graded\n");
+		LOG_INFO("mf-nc plasticity set to mode: Graded");
 		control->mf_nc_plast = GRADED; 
 	}
 	else
 	{
-		printf("[INFO]: mf-nc plasticity set to mode: Off\n");
+		LOG_INFO("mf-nc plasticity set to mode: Off");
 		control->mf_nc_plast = OFF; 
 	}
 }
@@ -1050,7 +1050,7 @@ static void on_radio(GtkWidget *widget, Control *control)
 	if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget)))
 	{
 		const gchar *this_rad_label = gtk_button_get_label(GTK_BUTTON(widget));
-		printf("[INFO]: pf-pc plasticity set to mode: %s\n", this_rad_label);
+		LOG_INFO("pf-pc plasticity set to mode: %s", this_rad_label);
 		if (this_rad_label == "Graded")
 			control->pf_pc_plast = GRADED;
 		else if (this_rad_label == "Binary")
@@ -1186,7 +1186,7 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 {
 	if (!gtk_init_check(argc, argv))
 	{
-		fprintf(stderr, "Could not initialize GTK\n");
+		LOG_FATAL("Could not initialize GTK");
 		return 1;
 	}
 
