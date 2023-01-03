@@ -47,7 +47,7 @@ int main(int argc, char **argv)
 		}
 		else if (!p_cl.session_file.empty())
 		{
-			control->runSession(NULL); // saving is conducted at the end of runSession.
+			control->runSession(NULL); // saving is done at the end of runSession.
 									   // might consider moving to own function and calling
 									   // from here
 		}
