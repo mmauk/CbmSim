@@ -796,7 +796,7 @@ static void draw_raster(GtkWidget *drawing_area, cairo_t *cr, uint32_t trial, ui
 		{
 			if (raster_data[j][i])
 			{
-				cairo_rectangle(cr, j, i, 2, 2);
+				cairo_rectangle(cr, j - trial_start, i, 2, 2);
 				cairo_fill(cr);
 			}
 		}
@@ -827,7 +827,6 @@ static void draw_gr_raster(GtkWidget *drawing_area, cairo_t *cr, Control *contro
 
 static void draw_go_raster(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 {
-	LOG_INFO("%d", control->trial);
 	draw_raster(drawing_area, cr, control->trial, num_go, control->PSTHColSize, control->rasters[GO]);
 }
 
