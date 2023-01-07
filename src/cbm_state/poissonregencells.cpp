@@ -121,7 +121,8 @@ bool* PoissonRegenCells::calcTrueMFs(const float *frequencies)
 {
 	for (uint32_t i = 0; i < num_mf; i++)
 	{
-		if (frequencies[i] == -1)
+		if (frequencies[i] == -1) // indicates that this mf was not assigned a frequency,
+								  // so is a dcn collateral
 		{
 			isTrueMF[i] = false;
 		}

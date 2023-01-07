@@ -21,7 +21,9 @@
 // TODO: place in some global place, or convenience file, as there are duplicates across
 // translation units now
 const int NUM_CELL_TYPES = 8;
+const int NUM_WEIGHTS_TYPES = 2;
 const std::string CELL_IDS[NUM_CELL_TYPES] = {"MF", "GR", "GO", "BC", "SC", "PC", "IO", "NC"}; 
+const std::string WEIGHTS_IDS[NUM_WEIGHTS_TYPES] = {"PFPC", "MFNC"};
 
 /*
  * available commandline flags which take no argument
@@ -96,6 +98,35 @@ static std::string get_opt_param(std::vector<std::string> &token_buf, std::strin
 
 /*
  * Description:
+ *     tests for whether the id 'id' is contained within the corresponding map.
+ *
+ * Implementation Notes:
+ *     argument 'opt' is used to determine which array 'id' should be tested for
+ *     presence within. Else the algorithm is rather straightforward
+ *
+ */
+void test_for_valid_id(std::string &opt, std::string &id)
+{
+	if (opt[1] == 'r' || opt[1] == 'p' || opt[2] == 'r' || opt[2] == 'p')
+	{
+		if (std::find(CELL_IDS, CELL_IDS + NUM_CELL_TYPES, id) == CELL_IDS + NUM_CELL_TYPES)
+		{
+			LOG_FATAL("Invalid cell id '%s' found for option '%s'. Exiting...", id.c_str(), opt.c_str());
+			exit(9);
+		}
+	}
+	else if (opt[1] == 'w' || opt[2] == 'w')
+	{
+		if (std::find(WEIGHTS_IDS, WEIGHTS_IDS + NUM_WEIGHTS_TYPES, id) == WEIGHTS_IDS + NUM_WEIGHTS_TYPES)
+		{
+			LOG_FATAL("Invalid weights id '%s' found for option '%s'. Exiting...", id.c_str(), opt.c_str());
+			exit(10);
+		}
+	}
+}
+
+/*
+ * Description:
  *     populates the input map, parsing out the parameter if needed.
  *
  * Implementation Notes:
@@ -105,34 +136,36 @@ static std::string get_opt_param(std::vector<std::string> &token_buf, std::strin
  *     list of ids. Both cases are taken into account, with the latter case involving parsing out the individual
  *     ids from the list.
  *
- *     At this time no validation of the ids themselves is conducted (current as of 12/21/2022)
+ *     Added argument validation 01/06/2023
  *
- *     TODO: validate here or elsewhere that the ids given are valid
  */
 static void fill_opt_map(std::map<std::string, bool> &opt_map, std::string opt, std::string param)
 {
-	// if the parameter is a single cell id or weight id, take case into account separately
-	if (param.length() == 2 || param.length() == 4)
-	{
-		opt_map[param] = true;
-	}
-	else 
-	{
-		size_t prev_div = 0;
-		size_t curr_div = param.find_first_of(',');
-		while (curr_div != std::string::npos)
+	size_t prev_div = 0;
+	size_t curr_div = param.find_first_of(',');
+	std::string id;
+	do {
+		if (curr_div == param.length() - 1) // test for placement of comma at end of string
 		{
-			opt_map[param.substr(prev_div, curr_div-prev_div)] = true; // creates this new entry
-			prev_div = curr_div + 1;
-			curr_div = param.find(',', curr_div+1);
+			LOG_FATAL("Invalid placement of comma for option '%s'. Exiting...", opt.c_str());
+			exit(11);
 		}
-		if (opt_map.empty()) // if we didn't fill the map at all, then we weren't able to find valid tokens
+		if (curr_div - prev_div == std::string::npos) // couldn't find ',', so test for single id
+			id = param;
+		else
+			id = param.substr(prev_div, curr_div-prev_div);
+		test_for_valid_id(opt, id);
+		opt_map[id] = true; // creates this new entry
+		prev_div = curr_div + 1;
+		curr_div = param.find(',', curr_div+1);
+		if (curr_div == std::string::npos &&
+			opt_map.find(param.substr(prev_div, curr_div-prev_div)) == opt_map.end())
 		{
-			std::cerr << "[IO_ERROR]: Invalid parameter for option '" << opt << "'. Exiting...\n";
-			exit(8);
+			id = param.substr(prev_div, curr_div-prev_div);
+			test_for_valid_id(opt, id);
+			opt_map[id] = true;
 		}
-		opt_map[param.substr(prev_div, curr_div)] = true; // take into account last item missed
-	}
+	} while (curr_div != std::string::npos);
 }
 
 void print_usage_info()
@@ -195,18 +228,29 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 		tokens.push_back(std::string(*iter));
 	}
 
-	for (auto opt : command_line_single_opts)
+	// fill plasticity values, testing for mutually exclusive options
+	for (auto token: tokens)
 	{
-		if (cmd_opt_exists(tokens, opt) == 1)
+		if (token == "--pfpc-off" || token == "--binary" || token == "--cascade")
 		{
-			if (opt == "--pfpc-off")
-				p_cl.pfpc_plasticity = "off";
-			else if (opt == "--mfnc-off")
-				p_cl.mfnc_plasticity = "off";
-			else if (opt == "--binary")
-				p_cl.pfpc_plasticity = "binary";
-			else if (opt == "--cascade")
-				p_cl.pfpc_plasticity = "cascade";
+			if (!p_cl.pfpc_plasticity.empty())
+			{
+				LOG_FATAL("Mutually exclusive or duplicate pfpc plasticity arguments found. Exiting...");
+				exit(12);
+			}
+			if (token == "--pfpc-off")
+				p_cl.pfpc_plasticity =  token.substr(7, std::string::npos);
+			else
+				p_cl.pfpc_plasticity =  token.substr(2, std::string::npos);
+		}
+		else if (token == "--mfnc-off")
+		{
+			if (!p_cl.mfnc_plasticity.empty())
+			{
+				LOG_FATAL("Duplicate mfnc plasticity arguments found. Exiting...");
+				exit(13);
+			}
+			p_cl.mfnc_plasticity =  token.substr(7, std::string::npos);
 		}
 	}
 
@@ -224,8 +268,7 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 		switch (opt_sum)
 		{
 			case 2:
-				LOG_FATAL("Specified both short and long command line option.");
-				LOG_FATAL("You can specify only one argument for each command line argument type. Exiting...");
+				LOG_FATAL("Found both short and long form of option '%s'. Exiting...", opt.first.c_str());
 				exit(9);
 				break;
 			case 1:
@@ -303,7 +346,7 @@ void validate_commandline(parsed_commandline &p_cl)
 		p_cl.vis_mode = "GUI";
 		// FIXME: for now, will not assign to either -o options. no args, assume want run mode in gui
 		// later, will defer run mode to only tui, as gui callbacks do not require such checks
-		p_cl.mfnc_plasticity = "graded"; 
+		p_cl.pfpc_plasticity = "graded"; 
 		p_cl.mfnc_plasticity = "graded";
 	}
 	else
@@ -356,11 +399,6 @@ void validate_commandline(parsed_commandline &p_cl)
 				LOG_FATAL("Cannot specify both build and session file. Exiting.");
 				exit(6);
 			}
-			if (p_cl.output_basename.empty())
-			{
-				LOG_FATAL("You must specify an output basename. Exiting...");
-				exit(7);
-			}
 			if (!p_cl.input_sim_file.empty())
 			{
 				std::string input_sim_file_fullpath;
@@ -375,8 +413,13 @@ void validate_commandline(parsed_commandline &p_cl)
 			}
 			else
 			{
-				LOG_FATAL("No input simulation specified in run mode. Exiting...");
+				LOG_FATAL("no input simulation specified in run mode. exiting...");
 				exit(8);
+			}
+			if (p_cl.output_basename.empty())
+			{
+				LOG_FATAL("You must specify an output basename. Exiting...");
+				exit(7);
 			}
 			if (p_cl.pfpc_plasticity.empty())
 			{
