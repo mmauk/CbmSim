@@ -89,7 +89,7 @@ static int cmd_opt_exists(std::vector<std::string> &token_buf, std::string opt)
 static std::string get_opt_param(std::vector<std::string> &token_buf, std::string opt)
 {
 	auto tp = std::find(token_buf.begin(), token_buf.end(), opt);
-	if (tp != token_buf.end() && tp++ != token_buf.end())
+	if (tp != token_buf.end() && ++tp != token_buf.end())
 	{
 		return std::string(*tp);
 	}
@@ -141,6 +141,11 @@ void test_for_valid_id(std::string &opt, std::string &id)
  */
 static void fill_opt_map(std::map<std::string, bool> &opt_map, std::string opt, std::string param)
 {
+	if (param.empty())
+	{
+		LOG_FATAL("No parameter given for option '%s'. Exiting...", opt.c_str());
+		exit(12);
+	}
 	size_t prev_div = 0;
 	size_t curr_div = param.find_first_of(',');
 	std::string id;
