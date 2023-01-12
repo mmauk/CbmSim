@@ -1,0 +1,40 @@
+#!/usr/bin/bash
+
+declare -a base_name="bunny"
+declare -a sim_ext="sim"
+
+declare -a build_file="build_file.bld"
+declare -a expt_file="practice_expt_file_3.expt"
+
+declare -a in_bunny
+declare -a out_bunny
+
+# set -x # sets all commands to be echoed during script execution
+
+printf "[INFO]: Descending into the build directory...\n"
+cd ../build/
+
+# printf "[INFO]: Constructing 5 bunnies...\n\n"
+# for i in {1..5}; do
+# 	# printf "${build_file} ${base_name}_${i}.${sim_exit}\n"
+# 	./big_sim "$build_file" "${base_name}_${i}.${sim_ext}"
+# done
+# printf "\n[INFO]: Finished constructing 5 bunnies.\n"
+
+
+printf "\n[INFO]: daisy chaining bunny 1 on experiment file ${expt_file} 5 times.\n"
+in_bunny="${base_name}_1.${sim_ext}"
+for i in {1..5}; do
+	printf "\n[INFO]: Experiment Run Counter: ${i}\n\n"
+	out_bunny="${base_name}_1_${i}.${sim_ext}"
+	# printf "[INFO]: Input file:  ${in_bunny}\n"
+	# printf "[INFO]: Output file: ${out_bunny}\n"
+	./big_sim "$expt_file" "$in_bunny" "$out_bunny"
+	in_bunny=$out_bunny
+done
+printf "[INFO]: Finished daisy chaining bunny 1 on experiment file 5 times.\n"
+
+printf "[INFO]: moving back into directory from which $0 was called...\n"
+cd ../scripts
+printf "[INFO]: Back in scripts/ directory. Exiting...\n"
+
