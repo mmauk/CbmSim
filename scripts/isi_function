@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 
 # globals
-root_dir="../toremove"
+root_dir="../"
 build_dir="${root_dir}build/"
 scripts_dir="${root_dir}scripts/"
 this_isi=2000
