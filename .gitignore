@@ -1,5 +1,4 @@
 .git
-scripts/**
 build/**
 data/outputs/**
 data/inputs/**

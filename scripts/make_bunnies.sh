@@ -1,10 +1,10 @@
 #!/usr/bin/bash
 
-declare -a base_name="untrained_bunny_tune_09262022"
+declare -a base_name="bunny"
 declare -a sim_ext="sim"
 
 declare -a build_file="build_file_tune_09262022.bld"
-declare -a expt_file="practice_expt_file_3.expt"
+declare -a sess_file="practice_sess_file_3.sess"
 
 declare -a command="cbm_sim"
 
@@ -26,24 +26,12 @@ cd ../build/
 printf "[INFO]: Constructing $1 bunnies...\n\n"
 for (( i=1; i<=$1; i++)); do
 	printf "[INFO]: Generating bunny number $i...\n"
-	./"$command" "$build_file" "${base_name}_${i}.${sim_ext}"
+	./"$command" "$build_file" "${base_name}_${i}"
 	printf "[INFO]: Finished generating bunny number $i.\n"
 done
 printf "\n[INFO]: Finished constructing $1 bunnies.\n"
 
-# printf "\n[INFO]: daisy chaining bunny 1 on experiment file ${expt_file} 5 times.\n"
-# in_bunny="${base_name}_1.${sim_ext}"
-# for i in {1..5}; do
-# 	printf "\n[INFO]: Experiment Run Counter: ${i}\n\n"
-# 	out_bunny="${base_name}_1_${i}.${sim_ext}"
-# 	# printf "[INFO]: Input file:  ${in_bunny}\n"
-# 	# printf "[INFO]: Output file: ${out_bunny}\n"
-# 	./big_sim "$expt_file" "$in_bunny" "$out_bunny"
-# 	in_bunny=$out_bunny
-# done
-# printf "[INFO]: Finished daisy chaining bunny 1 on experiment file 5 times.\n"
- 
 printf "[INFO]: Exiting build directory...\n"
 cd ../scripts
-printf "[INFO]: Back in scripts/ directory. Exiting successfully...\n"
+printf "[INFO]: Back in scripts directory. Exiting successfully...\n"
 
