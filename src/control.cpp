@@ -113,7 +113,7 @@ void Control::initialize_session(std::string sess_file)
 	trialTime   = std::stoi(s_file.parsed_var_sections["trial_spec"].param_map["trialTime"].value);
 	msPreCS     = std::stoi(s_file.parsed_var_sections["trial_spec"].param_map["msPreCS"].value);
 	msPostCS    = std::stoi(s_file.parsed_var_sections["trial_spec"].param_map["msPostCS"].value);
-	PSTHColSize = msPreCS + td.cs_lens[0] + msPostCS;
+	msMeasure = msPreCS + td.cs_lens[0] + msPostCS;
 
 	trials_data_initialized = true;
 	LOG_DEBUG("Session initialized.");
@@ -587,8 +587,8 @@ void Control::initialize_rasters()
 	{
 		if (!rf_names[i].empty() || use_gui)
 		{
-			/* granules are saved every trial, so their raster size is PSTHColSize  x num_gr */
-			uint32_t row_size = (CELL_IDS[i] == "GR") ? PSTHColSize : PSTHColSize * td.num_trials;
+			/* granules are saved every trial, so their raster size is msMeasure  x num_gr */
+			uint32_t row_size = (CELL_IDS[i] == "GR") ? msMeasure : msMeasure * td.num_trials;
 			rasters[i] = allocate2DArray<uint8_t>(row_size, rast_cell_nums[i]);
 		}
 	}
@@ -596,9 +596,9 @@ void Control::initialize_rasters()
 	if (use_gui)
 	{
 		// TODO: find a way to initialize only within gui mode
-		pc_vm_raster = allocate2DArray<float>(PSTHColSize, num_pc);
-		nc_vm_raster = allocate2DArray<float>(PSTHColSize, num_nc);
-		io_vm_raster = allocate2DArray<float>(PSTHColSize, num_io);
+		pc_vm_raster = allocate2DArray<float>(msMeasure, num_pc);
+		nc_vm_raster = allocate2DArray<float>(msMeasure, num_nc);
+		io_vm_raster = allocate2DArray<float>(msMeasure, num_io);
 	}
 
 	raster_arrays_initialized = true;
@@ -613,7 +613,7 @@ void Control::initialize_psth_save_funcs()
 			if (!pf_names[i].empty())
 			{
 				LOG_DEBUG("Saving %s psth to file...", CELL_IDS[i].c_str());
-				write2DArray<uint8_t>(pf_names[i], this->psths[i], this->PSTHColSize, this->rast_cell_nums[i]);
+				write2DArray<uint8_t>(pf_names[i], this->psths[i], this->msMeasure, this->rast_cell_nums[i]);
 			}
 		};
 	}
@@ -627,7 +627,7 @@ void Control::initialize_raster_save_funcs()
 		{
 			if (!rf_names[i].empty() && CELL_IDS[i] != "GR")
 			{
-				uint32_t row_size = (CELL_IDS[i] == "GR") ? this->PSTHColSize : this->PSTHColSize * this->td.num_trials;
+				uint32_t row_size = (CELL_IDS[i] == "GR") ? this->msMeasure : this->msMeasure * this->td.num_trials;
 				LOG_DEBUG("Saving %s raster to file...", CELL_IDS[i].c_str());
 				write2DArray<uint8_t>(rf_names[i], this->rasters[i], row_size, this->rast_cell_nums[i]);
 			}
@@ -641,7 +641,7 @@ void Control::initialize_psths()
 	{
 		if (!pf_names[i].empty() || use_gui)
 			// TODO: make data type bigger for psth
-			psths[i] = allocate2DArray<uint8_t>(PSTHColSize, rast_cell_nums[i]);
+			psths[i] = allocate2DArray<uint8_t>(msMeasure, rast_cell_nums[i]);
 	}
 	psth_arrays_initialized = true;
 }
@@ -793,7 +793,7 @@ void Control::reset_rasters()
 	{
 		if (!rf_names[i].empty() || use_gui)
 		{
-			uint32_t row_size = (CELL_IDS[i] == "GR") ? PSTHColSize : PSTHColSize * td.num_trials;
+			uint32_t row_size = (CELL_IDS[i] == "GR") ? msMeasure : msMeasure * td.num_trials;
 			memset(rasters[i][0], '\000', row_size * rast_cell_nums[i] * sizeof(uint8_t));
 		}
 	}
@@ -805,7 +805,7 @@ void Control::reset_psths()
 	{
 		if (!pf_names[i].empty())
 		{
-			memset(psths[i][0], '\000', rast_cell_nums[i] * PSTHColSize * sizeof(uint8_t));
+			memset(psths[i][0], '\000', rast_cell_nums[i] * msMeasure * sizeof(uint8_t));
 		}
 	}
 }
@@ -834,7 +834,7 @@ void Control::save_gr_raster()
 		std::string trial_raster_name = data_out_path + "/" + get_file_basename(rf_names[GR])
 									  + "_trial_" + std::to_string(trial) + BIN_EXT;
 		LOG_DEBUG("Saving granule raster to file...");
-		write2DArray<uint8_t>(trial_raster_name, rasters[GR], num_gr, PSTHColSize);
+		write2DArray<uint8_t>(trial_raster_name, rasters[GR], num_gr, msMeasure);
 	}
 }
 

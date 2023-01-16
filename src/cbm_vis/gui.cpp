@@ -822,12 +822,12 @@ static void draw_spatial_activity(GtkWidget *drawing_area, cairo_t *cr, Control 
 static void draw_gr_raster(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 {
 	/* 4096 gr raster sample size */
-	draw_raster(drawing_area, cr, 0, 4096, control->PSTHColSize, control->rasters[GR]);
+	draw_raster(drawing_area, cr, 0, 4096, control->msMeasure, control->rasters[GR]);
 }
 
 static void draw_go_raster(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 {
-	draw_raster(drawing_area, cr, control->trial, num_go, control->PSTHColSize, control->rasters[GO]);
+	draw_raster(drawing_area, cr, control->trial, num_go, control->msMeasure, control->rasters[GO]);
 }
 
 /* weights plot */
@@ -890,7 +890,7 @@ static void draw_pc_plot(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 
 	float len_scale_y = threshRestPC - threshMaxPC;
 	float pc_w_to_pixel_scale_y = -da.height / (9.5 * len_scale_y);
-	float pc_w_to_pixel_scale_x = da.width / (float)control->PSTHColSize;
+	float pc_w_to_pixel_scale_x = da.width / (float)control->msMeasure;
 
 	cairo_scale(cr, pc_w_to_pixel_scale_x, -pc_w_to_pixel_scale_y);
 	cairo_translate(cr, 0, 17.0);
@@ -904,11 +904,11 @@ static void draw_pc_plot(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 
 	// pc point color
 	cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
-	unsigned int trial_start = control->trial * control->PSTHColSize;
+	unsigned int trial_start = control->trial * control->msMeasure;
 	uint32_t k = trial_start;
 
 	// FIXME: not drawing on second trial
-	for (uint32_t i = 0; i < control->PSTHColSize; i++)
+	for (uint32_t i = 0; i < control->msMeasure; i++)
 	{
 		int alternator = 1;
 		for (int j = 0; j < num_pc; j++)
@@ -932,7 +932,7 @@ static void draw_pc_plot(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 	float nc_scale  = 0.55;
 
 	k = trial_start;
-	for (int i = 0; i < control->PSTHColSize; i++)
+	for (int i = 0; i < control->msMeasure; i++)
 	{
 		int alternator = 1;
 		for (int j = 0; j < num_nc; j++)
@@ -956,7 +956,7 @@ static void draw_pc_plot(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 	float io_scale  = 0.1;
 
 	k = trial_start;
-	for (int i = 0; i < control->PSTHColSize; i++)
+	for (int i = 0; i < control->msMeasure; i++)
 	{
 		int alternator = 1;
 		for (int j = 0; j < num_io; j++)

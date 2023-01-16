@@ -145,7 +145,7 @@ class Control
 		// raster measurement params. 
 		uint32_t msPreCS = 0;
 		uint32_t msPostCS = 0;
-		uint32_t PSTHColSize = 0; // derived param, from msPreCS, msPostCS and csLength 
+		uint32_t msMeasure = 0; // derived param, from msPreCS, msPostCS and csLength 
 
 		enum plasticity pf_pc_plast = GRADED;
 		enum plasticity mf_nc_plast = GRADED;
