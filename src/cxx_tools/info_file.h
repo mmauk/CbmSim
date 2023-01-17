@@ -20,7 +20,7 @@
 #include "file_parse.h"
 #include "file_utility.h"
 
-const std::string SIM_VERSION = "0.0.1";
+const std::string SIM_VERSION = "0.1.0";
 
 // various constants related to formatting
 const uint32_t INFO_FILE_COL_WIDTH = 79;
