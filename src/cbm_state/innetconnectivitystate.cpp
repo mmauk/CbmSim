@@ -4,6 +4,7 @@
  *  Created on: Nov 6, 2012
  *      Author: consciousness
  */
+#include "logger.h"
 #include "connectivityparams.h"
 #include "innetconnectivitystate.h"
 
@@ -12,40 +13,40 @@ InNetConnectivityState::InNetConnectivityState(int randSeed)
 {
 	CRandomSFMT0 randGen(randSeed);
 
-	std::cout << "[INFO]: allocating and initializing connectivity arrays..." << std::endl;
+	LOG_DEBUG("allocating and initializing connectivity arrays...");
 	allocateMemory();
 	initializeVals();
 
-	std::cout << "[INFO]: Initializing innet connections..." << std::endl;
+	LOG_DEBUG("Initializing innet connections...");
 
-	std::cout << "[INFO]: Connecting MF and GL" << std::endl;
+	LOG_DEBUG("Connecting MF and GL");
 	connectMFGL_noUBC();
 
-	std::cout << "[INFO]: Connecting GR and GL" << std::endl;
+	LOG_DEBUG("Connecting GR and GL");
 	connectGLGR(randGen);
 
-	std::cout << "[INFO]: Connecting GR to GO" << std::endl;
+	LOG_DEBUG("Connecting GR to GO");
 	connectGRGO();
 
-	std::cout << "[INFO]: Connecting GO and GL" << std::endl;
+	LOG_DEBUG("Connecting GO and GL");
 	connectGOGL(randGen);
 
-	std::cout << "[INFO]: Connecting GO to GO" << std::endl;
+	LOG_DEBUG("Connecting GO to GO");
 	connectGOGODecayP(randGen);
 
-	std::cout << "[INFO]: Connecting GO to GO gap junctions" << std::endl;
+	LOG_DEBUG("Connecting GO to GO gap junctions");
 	connectGOGO_GJ(randGen);
 
-	std::cout << "[INFO]: Translating MF GL" << std::endl;
+	LOG_DEBUG("Translating MF GL");
 	translateMFGL();
 
-	std::cout << "[INFO]: Translating GO and GL" << std::endl;
+	LOG_DEBUG("Translating GO and GL");
 	translateGOGL();
 
-	std::cout << "[INFO]: Assigning GR delays" << std::endl;
+	LOG_DEBUG("Assigning GR delays");
 	assignGRDelays();
 
-	std::cout << "[INFO]: Finished making innet connections." << std::endl;
+	LOG_DEBUG("Finished making innet connections.");
 }
 
 InNetConnectivityState::InNetConnectivityState(std::fstream &infile)
@@ -468,8 +469,8 @@ void InNetConnectivityState::connectMFGL_noUBC()
 	int count = 0;
 	for (int i = 0; i < num_mf; i++) count += numpMFfromMFtoGL[i];
 	
-	std::cout << "[INFO]: Total number of Mossy Fiber to Glomeruli connections: " << count << std::endl;
-	std::cout << "[INFO]: Correct number: " << num_gl << std::endl;
+	LOG_DEBUG("Total number of Mossy Fiber to Glomeruli connections: %d", count);
+	LOG_DEBUG("Correct number: %d", num_gl);
 }
 
 void InNetConnectivityState::connectGLGR(CRandomSFMT &randGen)
@@ -542,8 +543,8 @@ void InNetConnectivityState::connectGLGR(CRandomSFMT &randGen)
 		count += numpGLfromGLtoGR[i];
 	}
 
-	std::cout << "[INFO]: Total number of Glomeruli to Granule connections: " << count << std::endl; 
-	std::cout << "[INFO]: Correct number: " << num_gr * max_num_p_gr_from_gl_to_gr << std::endl;
+	LOG_DEBUG("Total number of Glomeruli to Granule connections: %d", count); 
+	LOG_DEBUG("Correct number: %d", num_gr * max_num_p_gr_from_gl_to_gr);
 }
 
 void InNetConnectivityState::connectGRGO()
@@ -683,7 +684,7 @@ void InNetConnectivityState::connectGRGO()
 		gr_go_input_sum += numpGOfromGRtoGO[i];
 	}
 
-	std::cout << "[INFO]: GR-GO average convergence: " << gr_go_input_sum / (float)num_go << std::endl;
+	LOG_DEBUG("GR-GO average convergence: %0.2f", gr_go_input_sum / (float)num_go);
 
 	int gr_go_output_sum = 0;
 
@@ -692,7 +693,7 @@ void InNetConnectivityState::connectGRGO()
 		gr_go_output_sum += numpGRfromGRtoGO[i];
 	}
 
-	std::cout << "[INFO]: GR-GO average divergence: " << gr_go_output_sum / (float)num_gr << std::endl;
+	LOG_DEBUG("GR-GO average divergence: %0.2f", gr_go_output_sum / (float)num_gr);
 }
 
 void InNetConnectivityState::connectGOGL(CRandomSFMT &randGen)
@@ -757,8 +758,8 @@ void InNetConnectivityState::connectGOGL(CRandomSFMT &randGen)
 		memset(srcConnected, false, num_go * sizeof(bool));
 	}
 
-	std::cout << "[INFO]: Finished making gl go connections." << std::endl;
-	std::cout << "[INFO]: Starting on go gl connections..." << std::endl;
+	LOG_DEBUG("Finished making gl go connections.");
+	LOG_DEBUG("Starting on go gl connections...");
 
 	// go --> gl
 	int spanArrayGOtoGLX[span_go_to_gl_x + 1] = {0};
@@ -856,20 +857,20 @@ void InNetConnectivityState::connectGOGL(CRandomSFMT &randGen)
 		}
 	}
 
-	std::cout << "[INFO]: Finished making go gl connections." << std::endl;
+	LOG_DEBUG("Finished making go gl connections.");
 
-	int shitCounter = 0;
+	int counter = 0;
 	int totalGOGL = 0;
 
 	for (int i = 0; i < num_gl; i++)
 	{
-		if (numpGLfromGOtoGL[i] < max_num_p_gl_from_go_to_gl) shitCounter++;
+		if (numpGLfromGOtoGL[i] < max_num_p_gl_from_go_to_gl) counter++;
 		totalGOGL += numpGLfromGOtoGL[i];
 	}
 
-	std::cout << "[INFO]: Empty Glomeruli Counter: " << shitCounter << std::endl;
-	std::cout << "[INFO]: Total number of golgi to glomerulus connections: " << totalGOGL << std::endl;
-	std::cout << "[INFO]: Average number of golgi to glomerulus connections per glomerulus: " << (float)totalGOGL / (float)num_gl << std::endl;
+	LOG_DEBUG("Empty Glomeruli Counter: %d", counter);
+	LOG_DEBUG("Total number of golgi to glomerulus connections: %d", totalGOGL);
+	LOG_DEBUG("Average number of golgi to glomerulus connections per glomerulus: %0.2f", (float)totalGOGL / (float)num_gl);
 }
 
 void InNetConnectivityState::connectGOGODecayP(CRandomSFMT &randGen)
@@ -1007,8 +1008,8 @@ void InNetConnectivityState::connectGOGODecayP(CRandomSFMT &randGen)
 		totalGOGOcons += numpGOGABAInGOGO[i];
 	}
 
-	std::cout << "[INFO]: Total number of golgi to golgi connections: " << totalGOGOcons << std::endl;
-	std::cout << "[INFO]: Average number of golgi to golgi connections per golgi: " << (float)totalGOGOcons / (float)num_go << std::endl;
+	LOG_DEBUG("Total number of golgi to golgi connections: %d", totalGOGOcons);
+	LOG_DEBUG("Average number of golgi to golgi connections per golgi: %0.2f", (float)totalGOGOcons / (float)num_go);
 
 	int recipCounter = 0;
 
@@ -1028,8 +1029,7 @@ void InNetConnectivityState::connectGOGODecayP(CRandomSFMT &randGen)
 		}
 	}
 
-	float fracRecip = (float)recipCounter / (float)totalGOGOcons;
-	std::cout << "[INFO]: Fraction of reciprocal connections: " << fracRecip << std::endl;
+	LOG_DEBUG("Fraction of reciprocal connections: %0.2f", (float)recipCounter / (float)totalGOGOcons);
 	delete2DArray<bool>(conGOGOBoolOut);
 }
 
@@ -1149,14 +1149,14 @@ void InNetConnectivityState::translateMFGL()
 	{
 		grMFInputCounter += numpGRfromMFtoGR[i];
 	}
-	std::cout << "[INFO]: MF-GR average convergence: " << grMFInputCounter  / (float)num_gr << std::endl;
+	LOG_DEBUG("MF-GR average convergence: %0.2f", grMFInputCounter  / (float)num_gr);
 
 	int grMFOutputCounter = 0;
 	for (int i = 0; i < num_mf; i++)
 	{
 		grMFOutputCounter += numpMFfromMFtoGR[i];
 	}
-	std::cout << "[INFO]: MF-GR average divergence: " << grMFOutputCounter / (float)num_mf << std::endl;
+	LOG_DEBUG("MF-GR average divergence: %0.2f", grMFOutputCounter / (float)num_mf);
 
 	// Mossy fiber to Golgi
 	for (int i = 0; i < num_go; i++)
@@ -1180,11 +1180,11 @@ void InNetConnectivityState::translateMFGL()
 
 	int goMFInputCounter = 0;
 	for (int i = 0; i < num_go; i++) goMFInputCounter += numpGOfromMFtoGO[i];
-	std::cout << "[INFO]: MF-GO average convergence: " << goMFInputCounter  / (float)num_go << std::endl;
+	LOG_DEBUG("MF-GO average convergence: %0.2f", goMFInputCounter  / (float)num_go);
 
 	int goMFOutputCounter = 0;
 	for (int i = 0; i < num_mf; i++) goMFOutputCounter += numpMFfromMFtoGO[i];
-	std::cout << "[INFO]: MF-GO average divergence: " << goMFOutputCounter / (float)num_mf << std::endl;
+	LOG_DEBUG("MF-GO average divergence: %0.2f", goMFOutputCounter  / (float)num_mf);
 
 }
 
@@ -1212,11 +1212,11 @@ void InNetConnectivityState::translateGOGL()
 	}
 	int goGRInputCounter = 0;
 	for (int i = 0; i < num_gr; i++) goGRInputCounter += numpGRfromGOtoGR[i];
-	std::cout << "[INFO]: GO-GR average convergence: " << goGRInputCounter / (float)num_gr << std::endl;
+	LOG_DEBUG("GO-GR average convergence: %0.2f", goGRInputCounter / (float)num_gr);
 
 	int goGROutputCounter = 0;
 	for (int i = 0; i < num_go; i++) goGROutputCounter += numpGOfromGOtoGR[i];
-	std::cout << "[INFO]: GO-GR average divergence: " << goGROutputCounter / (float)num_go << std::endl;
+	LOG_DEBUG("GO-GR average divergence: %0.2f", goGROutputCounter / (float)num_go);
 }
 
 void InNetConnectivityState::assignGRDelays()

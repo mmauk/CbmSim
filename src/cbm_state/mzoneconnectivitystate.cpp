@@ -9,6 +9,7 @@
 #include <iostream>
 #include <limits.h>
 
+#include "logger.h"
 #include "file_utility.h"
 #include "dynamic2darray.h"
 #include "sfmt.h"
@@ -17,29 +18,29 @@
 
 MZoneConnectivityState::MZoneConnectivityState(int randSeed)
 {
-	std::cout << "[INFO]: Allocating and initializing mzone connectivity arrays..." << std::endl;
+	LOG_DEBUG("Allocating and initializing mzone connectivity arrays...");
 	allocateMemory();
 	initializeVals();
-	std::cout << "[INFO]: Initializing mzone connections..." << std::endl;
-	std::cout << "[INFO]: Assigning GR delays" << std::endl;
+	LOG_DEBUG("Initializing mzone connections...");
+	LOG_DEBUG("Assigning GR delays");
 	assignGRDelays();
-	std::cout << "[INFO]: Connecting BC to PC" << std::endl;
+	LOG_DEBUG("Connecting BC to PC");
 	connectBCtoPC();
-	std::cout << "[INFO]: Connecting PC to BC" << std::endl;
+	LOG_DEBUG("Connecting PC to BC");
 	connectPCtoBC();
-	std::cout << "[INFO]: Connecting SC and PC" << std::endl;
+	LOG_DEBUG("Connecting SC and PC");
 	connectSCtoPC();
-	std::cout << "[INFO]: Connecting PC and NC" << std::endl;
+	LOG_DEBUG("Connecting PC and NC");
 	connectPCtoNC(randSeed);
-	std::cout << "[INFO]: Connecting NC and IO" << std::endl;
+	LOG_DEBUG("Connecting NC and IO");
 	connectNCtoIO();
-	std::cout << "[INFO]: Connecting MF and NC" << std::endl;
+	LOG_DEBUG("Connecting MF and NC");
 	connectMFtoNC();
-	std::cout << "[INFO]: Connecting IO and PC" << std::endl;
+	LOG_DEBUG("Connecting IO and PC");
 	connectIOtoPC();
-	std::cout << "[INFO]: Connecting IO and IO" << std::endl;
+	LOG_DEBUG("Connecting IO and IO");
 	connectIOtoIO();
-	std::cout << "[INFO]: Finished making mzone connections." << std::endl;
+	LOG_DEBUG("Finished making mzone connections.");
 }
 
 MZoneConnectivityState::MZoneConnectivityState(std::fstream &infile)

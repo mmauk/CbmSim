@@ -5,12 +5,14 @@
  *      Author: consciousness
  */
 
+#include "logger.h"
 #include "cbmstate.h"
 
 CBMState::CBMState() {}
 
 CBMState::CBMState(unsigned int nZones) : numZones(nZones)
 {
+	LOG_DEBUG("Generating cbm state...");
 	CRandomSFMT randGen(time(0));
 
 	int innetCRSeed = randGen.IRandom(0, INT_MAX);
@@ -31,10 +33,12 @@ CBMState::CBMState(unsigned int nZones) : numZones(nZones)
 	}
 	delete[] mzoneCRSeed;
 	delete[] mzoneARSeed;
+	LOG_DEBUG("Finished generating cbm state.");
 }
 
 CBMState::CBMState(unsigned int nZones, std::fstream &sim_file_buf) : numZones(nZones)
 {
+	LOG_DEBUG("Initializing cbm state from file...");
 	innetConState  = new InNetConnectivityState(sim_file_buf);
 	innetActState  = new InNetActivityState(sim_file_buf);
 
@@ -46,6 +50,7 @@ CBMState::CBMState(unsigned int nZones, std::fstream &sim_file_buf) : numZones(n
 		mzoneConStates[i] = new MZoneConnectivityState(sim_file_buf);
 		mzoneActStates[i] = new MZoneActivityState(sim_file_buf);
 	}
+	LOG_DEBUG("Finished initializing cbm state.");
 }
 
 //CBMState::CBMState(unsigned int nZones,

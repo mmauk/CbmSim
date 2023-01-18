@@ -6,6 +6,8 @@
  */
 
 #include <random>
+
+#include "logger.h"
 #include "ecmfpopulation.h"
 
 ECMFPopulation::ECMFPopulation(int numMF, int randSeed, float fracCSTMF, float fracCSPMF,
@@ -207,7 +209,7 @@ void ECMFPopulation::setMFsOverlap(int numTypeMF, int numMF, CRandomSFMT0 &randG
 	//Get population sizes
 	int numOverlapMF 	 = numTypeMF*fracOverlap;
 	int numIndependentMF = numTypeMF - numOverlapMF;
-	std::cout << "NumOverLap: " << numOverlapMF << std::endl;
+	LOG_DEBUG("NumOverlap: %d", numOverlapMF);
 
 	//Select overlaping population
 	int counter = 0;
@@ -240,7 +242,7 @@ void ECMFPopulation::setMFsOverlap(int numTypeMF, int numMF, CRandomSFMT0 &randG
 
 void ECMFPopulation::writeMFLabels(std::string labelFileName)
 {
-	std::cout << "Writing Mf Labels..." << std::endl;
+	LOG_DEBUG("Writing MF labels...");
 	std::fstream mflabels(labelFileName.c_str(), std::fstream::out);
 
 	for (int i = 0; i < numMF; i++)
@@ -271,6 +273,7 @@ void ECMFPopulation::writeMFLabels(std::string labelFileName)
 		}
 	}
 	mflabels.close();
+	LOG_DEBUG("MF labels written.");
 }
 
 void ECMFPopulation::writeToFile(std::fstream &outfile)

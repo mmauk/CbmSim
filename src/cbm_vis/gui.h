@@ -12,9 +12,9 @@
 #define NUM_NORMAL_BUTTONS 6
 #define NUM_PLASTICITY_RADIOS 4
 
-#define NUM_SUB_MENU_ITEMS 5
+#define NUM_SUB_MENU_ITEMS 6
 
-#define NUM_FILE_MENU_ITEMS 4
+#define NUM_FILE_MENU_ITEMS 5
 #define NUM_WEIGHTS_MENU_ITEMS 4
 #define NUM_RASTER_MENU_ITEMS 8
 #define NUM_ANALYSIS_MENU_ITEMS 1
@@ -46,18 +46,33 @@
 #define DEFAULT_PC_WINDOW_HEIGHT 1000 
 
 /* file dialog constants */
-#define DEFAULT_STATE_FILE_NAME "cbm_state.bin"
-#define DEFAULT_SIM_FILE_NAME "cbm_sim.sim"
-#define DEFAULT_PFPC_WEIGHT_NAME "pfpc_weights.bin"
-#define DEFAULT_MFDCN_WEIGHT_NAME "mfdcn_weights.bin"
-#define DEFAULT_GR_RASTER_FILE_NAME "gr_psth.bin"
-#define DEFAULT_GO_RASTER_FILE_NAME "go_psth.bin"
-#define DEFAULT_PC_RASTER_FILE_NAME "pc_psth.bin"
-#define DEFAULT_NC_RASTER_FILE_NAME "dcn_psth.bin"
-#define DEFAULT_IO_RASTER_FILE_NAME "cf_psth.bin"
-#define DEFAULT_BC_RASTER_FILE_NAME "bc_psth.bin"
-#define DEFAULT_SC_RASTER_FILE_NAME "sc_psth.bin"
-#define DEFAULT_MF_RASTER_FILE_NAME "mf_psth.bin"
+#define DEFAULT_STATE_FILE_NAME     "cbm_state.bin"
+#define DEFAULT_SIM_FILE_NAME       "cbm_sim.sim"
+#define DEFAULT_PFPC_WEIGHT_NAME    "pfpc_weights.bin"
+#define DEFAULT_MFDCN_WEIGHT_NAME   "mfdcn_weights.bin"
+#define DEFAULT_GR_RASTER_FILE_NAME "gr_raster.bin"
+#define DEFAULT_GO_RASTER_FILE_NAME "go_raster.bin"
+#define DEFAULT_PC_RASTER_FILE_NAME "pc_raster.bin"
+#define DEFAULT_NC_RASTER_FILE_NAME "dcn_raster.bin"
+#define DEFAULT_IO_RASTER_FILE_NAME "cf_raster.bin"
+#define DEFAULT_BC_RASTER_FILE_NAME "bc_raster.bin"
+#define DEFAULT_SC_RASTER_FILE_NAME "sc_raster.bin"
+#define DEFAULT_MF_RASTER_FILE_NAME "mf_raster.bin"
+
+#define DEFAULT_GR_PSTH_FILE_NAME "gr_psth.bin"
+#define DEFAULT_GO_PSTH_FILE_NAME "go_psth.bin"
+#define DEFAULT_PC_PSTH_FILE_NAME "pc_psth.bin"
+#define DEFAULT_NC_PSTH_FILE_NAME "dcn_psth.bin"
+#define DEFAULT_IO_PSTH_FILE_NAME "cf_psth.bin"
+#define DEFAULT_BC_PSTH_FILE_NAME "bc_psth.bin"
+#define DEFAULT_SC_PSTH_FILE_NAME "sc_psth.bin"
+#define DEFAULT_MF_PSTH_FILE_NAME "mf_psth.bin"
+
+typedef struct
+{
+	Control *ctrl_ptr;
+	enum save_opts opt;
+} save_data;
 
 struct signal
 {

@@ -16,14 +16,14 @@
 #include <string>
 #include <limits.h>
 #include <time.h>
-
 #include <cstdint>
+
 #include "cbmstate.h"
 #include "sfmt.h"
 #include "mzone.h"
 #include "innet.h"
 
-enum plasticity {OFF, GRADED, DUAL, CASCADE};
+enum plasticity {OFF, GRADED, BINARY, CASCADE};
 
 /* TODO: consider altering this code so that CBMSimCore does not keep local copies
  *       of the state classes. Consider whether transferring data between classes
@@ -72,7 +72,7 @@ private:
 	int numGRStim    =  0;
 	int startGRStim  =  0;
 
-	unsigned long curTime;
+	uint32_t curTime;
 
 	void construct(CBMState *state, int *mzoneRSeed,
 		int gpuIndStart, int numGPUP2);

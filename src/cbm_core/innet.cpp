@@ -9,6 +9,7 @@
 #include <math.h>
 #include <iostream>
 
+#include "logger.h"
 #include "connectivityparams.h" 
 #include "activityparams.h"
 #include "dynamic2darray.h"
@@ -49,7 +50,7 @@ InNet::InNet(InNetConnectivityState *cs,
 
 InNet::~InNet()
 {
-	std::cout << "[INFO]: Deleting innet gpu arrays." << std::endl;
+	LOG_DEBUG("Deleting innet gpu arrays.");
 
 	//gr external to initCUDA
 	delete2DArray<float>(gGOGRT);
@@ -203,7 +204,7 @@ InNet::~InNet()
 
 	delete[] counter;
 
-	std::cout << "[INFO]: Finished deleting innet gpu arrays." << std::endl;
+	LOG_DEBUG("Finished deleting innet gpu arrays.");
 }
 
 void InNet::writeToState()
@@ -301,6 +302,11 @@ const uint8_t* InNet::exportAPGO()
 const uint8_t* InNet::exportAPMF()
 {
 	return (const uint8_t *)apMFOut;
+}
+
+const uint8_t* InNet::exportHistMF()
+{
+	return (const uint8_t *)as->histMF.get();
 }
 
 const uint8_t* InNet::exportAPGR()
@@ -535,10 +541,9 @@ void InNet::updateGOtoGOOut()
 	}
 }
 
-void InNet::resetMFHist(unsigned long t)
+void InNet::resetMFHist(uint32_t t)
 {
-	// why unsigned long?
-	if (t % (unsigned long)numTSinMFHist == 0)
+	if (t % (uint32_t)numTSinMFHist == 0)
 	{
 		for(int i = 0; i < num_mf; i++)
 		{
@@ -776,13 +781,13 @@ void InNet::cpyGRGOSumGPUtoHostCUDA(cudaStream_t **sts, int streamN, uint32_t **
 	}
 }
 
-void InNet::runUpdateGRHistoryCUDA(cudaStream_t **sts, int streamN, unsigned long t)
+void InNet::runUpdateGRHistoryCUDA(cudaStream_t **sts, int streamN, uint32_t t)
 {
 	cudaError_t error;
 	for (int i = 0; i < numGPUs; i++)
 	{
 		error=cudaSetDevice(i + gpuIndStart);
-		if (t % (unsigned long)tsPerHistBinGR == 0)
+		if (t % (uint32_t)tsPerHistBinGR == 0)
 		{
 			callUpdateGRHistKernel(sts[i][streamN], updateGRHistNumBlocks, updateGRHistNumGRPerB,
 					apBufGRGPU[i], historyGRGPU[i], apBufGRHistMask);
@@ -798,8 +803,10 @@ void InNet::initCUDA()
 	int maxNumGPUs;
 
 	error = cudaGetDeviceCount(&maxNumGPUs);
-	std::cerr << "CUDA number of devices: " << maxNumGPUs << ", "<< cudaGetErrorString(error) << std::endl;
-	std::cerr << "number of devices used: " << numGPUs << " starting at GPU# " << gpuIndStart << std::endl;
+	LOG_DEBUG("Maximum number of CUDA devices: %d", maxNumGPUs);
+	LOG_DEBUG("%s", cudaGetErrorString(error));
+	LOG_DEBUG("Number of CUDA devices actually used: %d", numGPUs);
+	LOG_DEBUG("Lowest CUDA device index: %d", gpuIndStart);
 
 	numGRPerGPU = num_gr / numGPUs;
 	calcGRActNumGRPerB = 512;
@@ -823,18 +830,18 @@ void InNet::initCUDA()
 	updateGRHistNumGRPerB = 1024;
 	updateGRHistNumBlocks = numGRPerGPU / updateGRHistNumGRPerB;
 
-	std::cout << "[INFO]: Initializing per-cell cuda vars..." << std::endl;
+	LOG_DEBUG("Initializing per-cell cuda vars...");
 	
 	initMFCUDA();
-	std::cerr << "[INFO]: Initialized MF CUDA - Last error: "
-	    	  << cudaGetErrorString(cudaGetLastError()) << std::endl;
+	LOG_DEBUG("Initialized MF CUDA");
+	LOG_DEBUG("Last error: %s", cudaGetErrorString(cudaGetLastError()));
 	initGRCUDA();
-	std::cerr << "[INFO]: Initialized GR CUDA - Last error: "
-	    	  << cudaGetErrorString(cudaGetLastError()) << std::endl;
+	LOG_DEBUG("Initialized GR CUDA");
+	LOG_DEBUG("Last error: %s", cudaGetErrorString(cudaGetLastError()));
 	initGOCUDA();
-	std::cerr << "[INFO]: Initialized GO CUDA - Last error: "
-	    	  << cudaGetErrorString(cudaGetLastError()) << std::endl;
-	std::cout << "[INFO]: Finished initializing per-cell cuda vars." << std::endl;
+	LOG_DEBUG("Initialized GO CUDA");
+	LOG_DEBUG("Last error: %s", cudaGetErrorString(cudaGetLastError()));
+	LOG_DEBUG("Finished initializing per-cell cuda variables.");
 }
 
 void InNet::initMFCUDA()
@@ -844,7 +851,7 @@ void InNet::initMFCUDA()
 	apMFGPU		= new uint32_t*[numGPUs];
 	depAmpMFGPU = new float*[numGPUs];
 
-	std::cout << "[INFO]: Allocating MF cuda variables..." << std::endl;
+	LOG_DEBUG("Allocating MF cuda variables...");
 	for(int i=0; i<numGPUs; i++)
 	{
 		cudaSetDevice(i + gpuIndStart);
@@ -854,11 +861,11 @@ void InNet::initMFCUDA()
 		cudaMallocHost((void **)&depAmpMFH[i], num_mf * sizeof(float));
 		cudaDeviceSynchronize();
 	}
-	std::cerr << "[INFO]: Finished MF variable cuda allocation - Last Error: "
-	     	  << cudaGetErrorString(cudaGetLastError()) << std::endl;
+	LOG_DEBUG("Finished MF variable cuda allocation");
+	LOG_DEBUG("Last error: %s", cudaGetErrorString(cudaGetLastError()));
 
 	//initialize MF GPU variables
-	std::cout << "[INFO]: Initializing MF cuda variables..." << std::endl;
+	LOG_DEBUG("Initializing MF cuda variables...");
 	for(int i=0; i<numGPUs; i++)
 	{
 		cudaSetDevice(i + gpuIndStart);
@@ -869,7 +876,7 @@ void InNet::initMFCUDA()
 		cudaDeviceSynchronize();
 	}
 	//end copying to GPU
-	std::cout << "[INFO]: Finished initializing MF cuda variables..." << std::endl;
+	LOG_DEBUG("Finished initializing MF cuda variables.");
 }
 
 void InNet::initGRCUDA()
@@ -920,11 +927,9 @@ void InNet::initGRCUDA()
 
 	// NOTE: debating whether to make this page-locked mem or not (06/25/2022)
 	outputGRH = new uint8_t[num_gr];
-	std::fill(outputGRH, outputGRH + num_gr, 0);
+	memset(outputGRH, 0, num_gr * sizeof(uint8_t));
 
-	std::cout << "[INFO]: Allocating GR cuda variables..." << std::endl;
-	//cudaMallocHost((void **)&outputGRH, NUM_GR * sizeof(uint8_t));
-	//cudaMemset(outputGRH, 0, NUM_GR * sizeof(uint8_t));
+	LOG_DEBUG("Allocating GR cuda variables...");
 
 	//allocate memory for GPU
 	for( int i = 0; i < numGPUs; i++)
@@ -980,10 +985,10 @@ void InNet::initGRCUDA()
 
 		cudaDeviceSynchronize();
 	}
-	std::cerr << "[INFO]: Finished GR variable cuda allocation - Last Error: "
-	     	  << cudaGetErrorString(cudaGetLastError()) << std::endl;
+	LOG_DEBUG("Finished GR variable cuda allocation");
+	LOG_DEBUG("Last error: %s", cudaGetErrorString(cudaGetLastError()));
 
-	std::cout << "[INFO]: Initializing transposed copies of act state and con state vars..." << std::endl;
+	LOG_DEBUG("Initializing transposed copies of act state and con state vars...");
 
 	// create a transposed copy of the matrices from activity state and connectivity
 	for (int i = 0; i < max_num_p_gr_from_go_to_gr; i++)
@@ -1013,15 +1018,15 @@ void InNet::initGRCUDA()
 		}
 	}
 
-	std::cout << "[INFO]: Finished transposition of act state and con state vars." << std::endl;
+	LOG_DEBUG("Finished transposition of act state and con state vars.");
 
 	//initialize GR GPU variables
-	std::cout << "[INFO]: Initializing GR cuda variables..." << std::endl;
+	LOG_DEBUG("Initializing GR cuda variables...");
 	
 	for (int i = 0; i < numGPUs; i++)
 	{
 		int cpyStartInd = numGRPerGPU * i;
-		int cpySize		= numGRPerGPU;
+		int cpySize     = numGRPerGPU;
 		cudaSetDevice(i + gpuIndStart);
 
 		cudaMemcpy(gKCaGRGPU[i], &(as->gKCaGR[cpyStartInd]), cpySize * sizeof(float),
@@ -1097,7 +1102,7 @@ void InNet::initGRCUDA()
 		cudaDeviceSynchronize();
 	}
 	//end copying to GPU
-	std::cout << "[INFO]: Finished initializing GR cuda variables..." << std::endl;
+	LOG_DEBUG("Finished initializing GR cuda variables.");
 }
 
 void InNet::initGOCUDA()
@@ -1114,9 +1119,9 @@ void InNet::initGOCUDA()
 	dynamicAmpGOH	= new float*[numGPUs];
 	dynamicAmpGOGPU = new float*[numGPUs];
 
-	std::cout << "[INFO]: Allocating GO cuda variables..." << std::endl;
+	LOG_DEBUG("Allocating GO cuda variables...");
 	counter = new int[num_go];
-	std::fill(counter, counter + num_go, 0);
+	memset(counter, 0, num_go * sizeof(int));
 
 	// allocate host and device memory	
 	for (int i = 0; i < numGPUs; i++)
@@ -1138,11 +1143,11 @@ void InNet::initGOCUDA()
 
 		cudaDeviceSynchronize();
 	}
-	std::cerr << "[INFO]: Finished GO variable cuda allocation - Last Error: "
-	     	  << cudaGetErrorString(cudaGetLastError()) << std::endl;
+	LOG_DEBUG("Finished GO variable cuda allocation");
+	LOG_DEBUG("Last error: %s", cudaGetErrorString(cudaGetLastError()));
 
 	// initialize GO vars
-	std::cout << "[INFO]: Initializing GO cuda variables..." << std::endl;
+	LOG_DEBUG("Initializing GO cuda variables...");
 	for (int i = 0; i < numGPUs; i++)
 	{
 		cudaSetDevice(i + gpuIndStart);
@@ -1164,7 +1169,7 @@ void InNet::initGOCUDA()
 
 		cudaDeviceSynchronize();
 	}
-	std::cout << "[INFO]: Finished initializing GO cuda variables..." << std::endl;
+	LOG_DEBUG("Finished initializing GO cuda variables.");
 }
 
 /* =========================== PRIVATE FUNCTIONS ============================= */

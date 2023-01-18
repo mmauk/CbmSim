@@ -9,6 +9,7 @@
 #include <iostream>
 #include <fstream>
 
+#include "logger.h"
 #include "connectivityparams.h"
 #include "activityparams.h"
 #include "dynamic2darray.h"
@@ -46,13 +47,13 @@ MZone::MZone(MZoneConnectivityState *cs, MZoneActivityState *as, int randSeed, u
 	this->numGPUs     = numGPUs;
 	this->gpuIndStart = gpuIndStart;
 
-	std::cout << "Initializing CUDA..." << std::endl;
+	LOG_DEBUG("Initializing CUDA...");
 	initCUDA();
 }
 
 MZone::~MZone()
 {
-	std::cout << "[INFO]: Deleting mzone gpu arrays..." << std::endl;
+	LOG_DEBUG("Deleting mzone gpu arrays...");
 
 	delete randGen;
 
@@ -120,7 +121,7 @@ MZone::~MZone()
 	delete[] inputPFBCGPUP;
 	delete[] inputSumPFBCGPU;
 
-	std::cout << "[INFO]: Finished deleting mzone gpu arrays." << std::endl;
+	LOG_DEBUG("Finished deleting mzone gpu arrays.");
 }
 
 void MZone::initCUDA()
@@ -158,9 +159,7 @@ void MZone::initCUDA()
 	{
 		inputSumPFPCMZH[i] = 0;
 	}
-
 	
-
 	for (int i = 0; i < num_pc; i++)
 	{
 		for (int j = 0; j < num_p_pc_from_gr_to_pc; j++)
@@ -208,14 +207,15 @@ void MZone::initCUDA()
 		cudaDeviceSynchronize();
 	}
 	initBCCUDA();
-	std::cerr << "[INFO]: Initialized BC CUDA - Last error: "
-	    	  << cudaGetErrorString(cudaGetLastError()) << std::endl;
+	LOG_DEBUG("Initialized BC CUDA");
+	LOG_DEBUG("Last error: %s", cudaGetErrorString(cudaGetLastError()));
+
 	initSCCUDA();
-	std::cerr << "[INFO]: Initialized SC CUDA - Last error: "
-	    	  << cudaGetErrorString(cudaGetLastError()) << std::endl;
+	LOG_DEBUG("Initialized SC CUDA");
+	LOG_DEBUG("Last error: %s", cudaGetErrorString(cudaGetLastError()));
 	
 	testReduction();
-	std::cout << "Finished Test." << std::endl;
+	LOG_DEBUG("Finished Test.");
 }
 
 void MZone::initBCCUDA()
@@ -226,7 +226,7 @@ void MZone::initBCCUDA()
 	inputSumPFBCGPU = new uint32_t*[numGPUs];
 
 	//allocate host memory
-	std::cout << "[INFO]: Allocating BC cuda variables..." << std::endl;
+	LOG_DEBUG("Allocating BC cuda variables...");
 	cudaSetDevice(gpuIndStart);
 	cudaHostAlloc((void **)&inputSumPFBCH, num_bc*sizeof(uint32_t), cudaHostAllocPortable);
 	cudaMemset(inputSumPFBCH, 0, num_bc * sizeof(uint32_t));
@@ -242,11 +242,11 @@ void MZone::initBCCUDA()
 		cudaMalloc((void **)&inputSumPFBCGPU[i], num_bc / numGPUs * sizeof(uint32_t));
 		cudaDeviceSynchronize();
 	}		
-	std::cerr << "[INFO]: Finished BC variable cuda allocation - Last Error: "
-	     	  << cudaGetErrorString(cudaGetLastError()) << std::endl;
+	LOG_DEBUG("Finished BC variable cuda allocation");
+	LOG_DEBUG("Last error: %s", cudaGetErrorString(cudaGetLastError()));
 
 	// initialize BC vars
-	std::cout << "[INFO]: Initializing BC cuda variables..." << std::endl;
+	LOG_DEBUG("Initializing BC cuda variables...");
 	for (int i = 0; i < numGPUs; i++)
 	{
 		cudaSetDevice(i + gpuIndStart);
@@ -259,7 +259,7 @@ void MZone::initBCCUDA()
 		cudaMemset(inputSumPFBCGPU[i], 0, num_bc / numGPUs*sizeof(uint32_t));
 		cudaDeviceSynchronize();
 	}
-	std::cout << "[INFO]: Finished initializing BC cuda variables..." << std::endl;
+	LOG_DEBUG("Finished initializing BC cuda variables...");
 }
 
 void MZone::initSCCUDA()
@@ -269,7 +269,7 @@ void MZone::initSCCUDA()
 	inputSumPFSCGPU = new uint32_t*[numGPUs];
 
 	//allocate host memory
-	std::cout << "[INFO]: Allocating SC cuda variables..." << std::endl;
+	LOG_DEBUG("Allocating SC cuda variables...");
 	cudaSetDevice(gpuIndStart);
 	cudaHostAlloc((void **)&inputSumPFSCH, num_sc * sizeof(uint32_t), cudaHostAllocPortable);
 	cudaMemset(inputSumPFSCH, 0, num_sc * sizeof(uint32_t));
@@ -285,11 +285,11 @@ void MZone::initSCCUDA()
 
 		cudaDeviceSynchronize();
 	}
-	std::cerr << "[INFO]: Finished SC variable cuda allocation - Last Error: "
-	     	  << cudaGetErrorString(cudaGetLastError()) << std::endl;
+	LOG_DEBUG("Finished SC variable cuda allocation");
+	LOG_DEBUG("Last error: %s", cudaGetErrorString(cudaGetLastError()));
 
 	// initialize SC vars
-	std::cout << "[INFO]: Initializing SC cuda variables..." << std::endl;
+	LOG_DEBUG("Initializing SC cuda variables...");
 	for (int i = 0; i < numGPUs; i++)
 	{
 		cudaSetDevice(i + gpuIndStart);
@@ -302,7 +302,7 @@ void MZone::initSCCUDA()
 
 		cudaDeviceSynchronize();
 	}
-	std::cout << "[INFO]: Finished initializing SC cuda variables..." << std::endl;
+	LOG_DEBUG("Finished initializing SC cuda variables...");
 }
 
 void MZone::writeToState()
@@ -462,8 +462,6 @@ void MZone::calcNCActivities()
 //TODO: make function calcActivities which takes in the parameters which vary dep
 //		on the type of activity that is being calculated. Else this is redundant  
 float gDecay = exp(-1.0 / 20.0); 
-// 1) my value of gAMPAIncMFtoNC is 0.283, Joe's is 2.35.
-// std::cout << "[DEBUG]: gAMPAIncMFtoNC: " << gAMPAIncMFtoNC << "\n"; 
 
 	for (int i = 0; i < num_nc; i++)
 	{
@@ -519,43 +517,26 @@ float gDecay = exp(-1.0 / 20.0);
 
 void MZone::updatePCOut()
 {
-#ifdef DEBUGOUT
-	std::cout << "resetting inputPCBC " << num_bc << std::endl;
-#endif
 	for (int i = 0; i < num_bc; i++)
 	{
 		as->inputPCBC[i] = 0;
 	}
-#ifdef DEBUGOUT
-	std::cout << "updating pc to bc " << std::endl;
-#endif
+
 	for (int i = 0; i < num_pc; i++)
 	{
 		for (int j = 0; j < num_p_pc_from_pc_to_bc; j++)
 		{
-#ifdef DEBUGOUT
-			std::cout << "i: " << i << " j: " << j << std::endl;
-#endif
 			as->inputPCBC[cs->pPCfromPCtoBC[i][j]] += as->apPC[i];
 		}
 	}
-#ifdef DEBUGOUT
-	std::cout << "updating pc to nc " << std::endl;
-#endif
+
 	for (int i = 0; i < num_nc; i++)
 	{
 		for (int j = 0; j < num_p_nc_from_pc_to_nc; j++)
 		{
-#ifdef DEBUGOUT
-			std::cout << "i: " << i << " j: " << j <<
-				"cs->pNCfromPCtoNC[i][j]: " << cs->pNCfromPCtoNC[i][j] << std::endl;
-#endif
 			as->inputPCNC[i * num_p_nc_from_pc_to_nc + j] = as->apPC[cs->pNCfromPCtoNC[i][j]];
 		}
 	}
-#ifdef DEBUGOUT
-	std::cout << "finished " << std::endl;
-#endif
 }
 
 void MZone::updateBCPCOut()
@@ -636,84 +617,71 @@ void MZone::updateMFNCOut()
 		}
 	}
 }
-/*
- * NOTE: it is okay that we are passing the unique ptr by value, since we only read from it, not write
- */
-//void MZone::updateMFNCSyn(const std::unique_ptr<uint8_t[]> histMF, unsigned long t)
-//{
-//	
-//	bool reset;
-//	float avgAllAPPC;
-//	bool doLTD;
-//	bool doLTP;
-//
-//#ifdef DEBUGOUT
-//	float sumSynW;
-//#endif
-//	if(t % ap->tsPerPopHistBinPC == 0) return;
-//
-//	//histMFInput = histMF;
-//
-//	as->histPCPopActSum = (as->histPCPopActSum) - (as->histPCPopAct[as->histPCPopActCurBinN]) + (as->pcPopAct);
-//	as->histPCPopAct[as->histPCPopActCurBinN] = as->pcPopAct;
-//	as->pcPopAct = 0;
-//	as->histPCPopActCurBinN++;
-//	as->histPCPopActCurBinN %= ap->numPopHistBinsPC;
-//
-//	avgAllAPPC = ((float)as->histPCPopActSum) / ap->numPopHistBinsPC;
-//
-//#ifdef DEBUGOUT
-//	std::cout << "avgAllAPPC: " << avgAllAPPC << std::endl;
-//#endif
-//
-//	doLTD = false;
-//	doLTP = false;
-//	if (avgAllAPPC >= ap->synLTDPCPopActThreshMFtoNC && !as->noLTDMFNC)
-//	{
-//		doLTD = true;
-//		as->noLTDMFNC = true;
-//	}
-//	else if (avgAllAPPC < ap->synLTDPCPopActThreshMFtoNC)
-//	{
-//		as->noLTDMFNC = false;
-//	}
-//
-//	if (avgAllAPPC <= ap->synLTPPCPopActThreshMFtoNC && !as->noLTPMFNC)
-//	{
-//		doLTP = true;
-//		as->noLTPMFNC = true;
-//	}
-//	else if (avgAllAPPC > ap->synLTPPCPopActThreshMFtoNC)
-//	{
-//		as->noLTPMFNC = false;
-//	}
-//
-//#ifdef DEBUGOUT
-//	sumSynW = 0;
-//#endif
-//	for (int i = 0; i < NUM_NC; i++)
-//	{
-//		for(int j = 0; j < num_p_nc_from_mf_to_nc; j++)
-//		{
-//			float synWDelta;
-//			synWDelta = histMF[cs->pNCfromMFtoNC[i][j]] * (doLTD * ap->synLTDStepSizeMFtoNC +
-//					doLTP * ap->synLTPStepSizeMFtoNC);
-//			as->mfSynWeightNC[i][j] += synWDelta;
-//			as->mfSynWeightNC[i][j] *= as->mfSynWeightNC[i][j] > 0;
-//			as->mfSynWeightNC[i][j] *= as->mfSynWeightNC[i][j] <= 1; 
-//			as->mfSynWeightNC[i][j] += as->mfSynWeightNC[i][j] > 1;
-//			
-//			//Now uses isTrueMF to take collaterals into account
-//			as->mfSynWeightNC[i][j] *= isTrueMF[cs->pNCfromMFtoNC[i][j]];
-//#ifdef DEBUGOUT
-//			sumSynW += as->mfSynWeightNC[i][j];
-//#endif
-//		}
-//	}
-//#ifdef DEBUGOUT
-//	std::cout << sumSynW / NUM_MF << std::endl;
-//#endif
-//}
+
+void MZone::updateMFNCSyn(const uint8_t *histMF, uint32_t t)
+{
+
+#ifdef DEBUGOUT
+	float sumSynW = 0;
+#endif
+	if (t % (uint32_t)tsPerPopHistBinPC == 0) return;
+
+	as->histPCPopActSum = (as->histPCPopActSum) - (as->histPCPopAct[as->histPCPopActCurBinN]) + (as->pcPopAct);
+	as->histPCPopAct[as->histPCPopActCurBinN] = as->pcPopAct;
+	as->pcPopAct = 0;
+	as->histPCPopActCurBinN++;
+	as->histPCPopActCurBinN %= (uint32_t)numPopHistBinsPC;
+
+	float avgAllAPPC = ((float)as->histPCPopActSum) / numPopHistBinsPC;
+
+#ifdef DEBUGOUT
+	std::cout << "avgAllAPPC: " << avgAllAPPC << std::endl;
+#endif
+
+	bool doLTD = false;
+	bool doLTP = false;
+	if (avgAllAPPC >= synLTDPCPopActThreshMFtoNC && !as->noLTDMFNC)
+	{
+		doLTD = true;
+		as->noLTDMFNC = true;
+	}
+	else if (avgAllAPPC < synLTDPCPopActThreshMFtoNC)
+	{
+		as->noLTDMFNC = false;
+	}
+
+	if (avgAllAPPC <= synLTPPCPopActThreshMFtoNC && !as->noLTPMFNC)
+	{
+		doLTP = true;
+		as->noLTPMFNC = true;
+	}
+	else if (avgAllAPPC > synLTPPCPopActThreshMFtoNC)
+	{
+		as->noLTPMFNC = false;
+	}
+
+	for (int i = 0; i < num_nc; i++)
+	{
+		for(int j = 0; j < num_p_nc_from_mf_to_nc; j++)
+		{
+			float synWDelta = histMF[cs->pNCfromMFtoNC[i][j]] * (doLTD * synLTDStepSizeMFtoNC +
+					doLTP * synLTPStepSizeMFtoNC);
+			as->mfSynWeightNC[i * num_p_nc_from_mf_to_nc + j] += synWDelta;
+			as->mfSynWeightNC[i * num_p_nc_from_mf_to_nc + j] *= as->mfSynWeightNC[i * num_p_nc_from_mf_to_nc + j] > 0;
+			as->mfSynWeightNC[i * num_p_nc_from_mf_to_nc + j] *= as->mfSynWeightNC[i * num_p_nc_from_mf_to_nc + j] <= 1; 
+			as->mfSynWeightNC[i * num_p_nc_from_mf_to_nc + j] += as->mfSynWeightNC[i * num_p_nc_from_mf_to_nc + j] > 1;
+			
+			//Now uses isTrueMF to take collaterals into account
+			as->mfSynWeightNC[i * num_p_nc_from_mf_to_nc + j] *= isTrueMF[cs->pNCfromMFtoNC[i][j]];
+#ifdef DEBUGOUT
+			sumSynW += as->mfSynWeightNC[i * num_p_nc_from_mf_to_nc + j];
+#endif
+		}
+	}
+#ifdef DEBUGOUT
+	std::cout << sumSynW / NUM_MF << std::endl;
+#endif
+}
 
 void MZone::runPFPCOutCUDA(cudaStream_t **sts, int streamN)
 {
@@ -746,10 +714,10 @@ void MZone::cpyPFPCSumCUDA(cudaStream_t **sts, int streamN)
 	}
 }
 
-void MZone::runPFPCPlastCUDA(cudaStream_t **sts, int streamN, unsigned long t)
+void MZone::runPFPCPlastCUDA(cudaStream_t **sts, int streamN, uint32_t t)
 {
 	cudaError_t error;
-	if (t % (unsigned long)tsPerHistBinGR == 0)
+	if (t % (uint32_t)tsPerHistBinGR == 0)
 	{
 		int curGROffset;
 		int curGPUInd;
@@ -781,10 +749,6 @@ void MZone::runPFPCPlastCUDA(cudaStream_t **sts, int streamN, unsigned long t)
 			}
 		}
 
-#ifdef DEBUGOUT
-		std::cout << "pfPCPlastStepiO[0]: " << pfPCPlastStepIO[0] << " as->pfPCPlastTimerIO[0: ]" <<
-			as->pfPCPlastTimerIO[0] << std::endl;
-#endif
 		error = cudaSetDevice(curGPUInd + gpuIndStart);
 		for (int i = 0; i < num_gr; i += num_p_pc_from_gr_to_pc)
 		{
@@ -816,11 +780,6 @@ void MZone::runSumPFSCCUDA(cudaStream_t **sts, int streamN)
 		callSumKernel<uint32_t, true, false>
 		(sts[i][streamN], inputPFSCGPU[i], inputPFSCGPUP[i],
 				inputSumPFSCGPU[i], 1, num_sc/numGPUs, 1, num_p_sc_from_gr_to_sc);
-#ifdef DEBUGOUT
-		error=cudaGetLastError();
-		cerr<<"runSumPFSCCUDA: kernel launch for gpu #"<<i<<
-				": "<<cudaGetErrorString(error)<<endl;
-#endif
 	}
 }
 
@@ -833,10 +792,6 @@ void MZone::cpyPFSCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN)
 		error=cudaMemcpyAsync(&inputSumPFSCH[num_sc * i / numGPUs], inputSumPFSCGPU[i],
 				num_sc / numGPUs * sizeof(uint32_t),
 				cudaMemcpyDeviceToHost, sts[i][streamN]);
-#ifdef DEBUGOUT
-		cerr<<"cpyPFSCSumGPUtoHostCUDA: async copy for gpu #"<<i<<
-				": "<<cudaGetErrorString(error)<<endl;
-#endif
 	}
 }
 
@@ -850,11 +805,6 @@ void MZone::runUpdatePFBCSCOutCUDA(cudaStream_t **sts, int streamN)
 				apBufGRGPU[i], delayMaskGRGPU[i],
 				inputPFBCGPU[i], inputPFBCGPUP[i], num_p_bc_from_gr_to_bc_p2, 
 				inputPFSCGPU[i], inputPFSCGPUP[i], num_p_sc_from_gr_to_sc_p2); 
-#ifdef DEBUGOUT
-		error=cudaGetLastError();
-		cerr<<"runUpdatePFBCSCOutCUDA: kernel launch for gpu #"<<i<<
-				": "<<cudaGetErrorString(error)<<endl;
-#endif
 	}
 }
 
@@ -867,11 +817,6 @@ void MZone::runSumPFBCCUDA(cudaStream_t **sts, int streamN)
 		callSumKernel<uint32_t, true, false>
 		(sts[i][streamN], inputPFBCGPU[i], inputPFBCGPUP[i],
 				inputSumPFBCGPU[i], 1, num_bc/numGPUs, 1, num_p_bc_from_gr_to_bc);
-#ifdef DEBUGOUT
-		error=cudaGetLastError();
-		cerr<<"runSumPFBCCUDA: kernel launch for gpu #"<<i<<
-				": "<<cudaGetErrorString(error)<<endl;
-#endif
 	}
 }
 
@@ -884,10 +829,6 @@ void MZone::cpyPFBCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN)
 		error=cudaMemcpyAsync(&inputSumPFBCH[num_bc * i / numGPUs], inputSumPFBCGPU[i],
 				num_bc / numGPUs * sizeof(uint32_t),
 				cudaMemcpyDeviceToHost, sts[i][streamN]);
-#ifdef DEBUGOUT
-		cerr<<"cpyPFBCSumGPUtoHostCUDA: async copy for gpu #"<<i<<
-				": "<<cudaGetErrorString(error)<<endl;
-#endif
 	}
 }
 
@@ -916,18 +857,20 @@ const float* MZone::exportMFDCNWeights()
 
 void MZone::load_pfpc_weights_from_file(std::fstream &in_file_buf)
 {
-	rawBytesRW((char *)pfSynWeightPCLinear,
-				num_gr * sizeof(float),
-				true,
-				in_file_buf);
+	rawBytesRW((char *)pfSynWeightPCLinear, num_gr * sizeof(float), true, in_file_buf);
+	
+	for (int i = 0; i < numGPUs; i++)
+	{
+		cudaSetDevice(i + gpuIndStart);
+		int cpyStartInd = i * numGRPerGPU;
+		cudaMemcpy(pfSynWeightPCGPU[i], &pfSynWeightPCLinear[cpyStartInd],
+				numGRPerGPU * sizeof(float), cudaMemcpyHostToDevice);
+	}
 }
 
 void MZone::load_mfdcn_weights_from_file(std::fstream &in_file_buf)
 {
-	rawBytesRW((char *)as->mfSynWeightNC.get(),
-				num_nc * num_p_nc_from_mf_to_nc * sizeof(float),
-				true,
-				in_file_buf);
+	rawBytesRW((char *)as->mfSynWeightNC.get(), num_nc * num_p_nc_from_mf_to_nc * sizeof(float), true, in_file_buf);
 }
 
 // Why not write one export function which takes in the thing you want to export?
@@ -1055,8 +998,8 @@ void MZone::testReduction()
 		cudaMalloc(&gpuBCSum[i], num_bc / numGPUs * sizeof(float));
 		cudaMalloc(&gpuSCSum[i], num_sc / numGPUs * sizeof(float));
 
-		error = cudaGetLastError();
-		std::cout << "allocating memory for gpu " << i << " " << cudaGetErrorString(error) << std::endl;
+		LOG_DEBUG("Allocating memory for gpu %d", i);
+		LOG_DEBUG("Last error: %s", cudaGetErrorString(cudaGetLastError()));
 
 		cudaDeviceSynchronize();
 	}
@@ -1086,8 +1029,8 @@ void MZone::testReduction()
 				 num_p_sc_from_gr_to_sc * sizeof(float), cudaMemcpyHostToDevice);
 		}
 
-		error = cudaGetLastError();
-		std::cout << "copying memory for gpu " << i << " " << cudaGetErrorString(error) << std::endl;
+		LOG_DEBUG("Copying memory for gpu %d", i);
+		LOG_DEBUG("Last error: %s", cudaGetErrorString(cudaGetLastError()));
 
 		cudaDeviceSynchronize();
 	}
@@ -1136,8 +1079,8 @@ void MZone::testReduction()
 
 		cudaDeviceSynchronize();
 
-		error = cudaGetLastError();
-		std::cout << "calling sum kernels for gpu " << i << " " << cudaGetErrorString(error) << std::endl;
+		LOG_DEBUG("Calling sum kernels for gpu %d", i);
+		LOG_DEBUG("Last error: %s", cudaGetErrorString(cudaGetLastError()));
 	}
 
 	for (int i = 0; i<numGPUs; i++)
@@ -1154,9 +1097,9 @@ void MZone::testReduction()
 		cudaDeviceSynchronize();
 	}
 
-	std::cout << "NumPC per GPU: " << num_pc / numGPUs << std::endl <<
-		"NumBC per GPU: " << num_bc / numGPUs << 
-		"NUMSC per GPU: " << num_sc / numGPUs << std::endl;
+	LOG_DEBUG("NumPC per GPU: %d", num_pc / numGPUs);
+	LOG_DEBUG("NumBC per GPU: %d", num_bc / numGPUs);
+	LOG_DEBUG("NumSC per GPU: %d", num_sc / numGPUs);
 
 	for (int i = 0; i < numGPUs; i++)
 	{
