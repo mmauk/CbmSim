@@ -182,14 +182,14 @@ void print_usage_info()
 	std::cout << std::right << std::setw(20) << "\t-b, --build [FILE]" << "\tsets the simulation to build a bunny using FILE as the build file\n";
 	std::cout << std::right << std::setw(20) << "\t-s, --session [FILE]" << "\tsets the simulation to run a session using FILE as the session file\n";
 	std::cout << std::right << std::setw(20) << "\t-i, --input [FILE]" << "\tspecify the input simulation file\n";
-	std::cout << std::right << std::setw(20) << "\t-o, --output [FILE]" << "\tspecify the output simulation file\n";
+	std::cout << std::right << std::setw(20) << "\t-o, --output [DIR]" << "\tspecify the output directory basename - all output is saved in 'ROOT/data/outputs'\n";
 	std::cout << std::right << std::setw(10) << "\t--pfpc-off|--binary|--cascade" << "\tturns off or sets PFPC plasticity mode; options are mutually exclusive and work as follows:\n\n";
 	std::cout << "\t\t\t\t \t--pfpc-off - turns PFPC plasticity off\n";
 	std::cout << "\t\t\t\t \t--binary - turns PFPC plasticity on and sets the type of plasticity to 'dual' ie 'binary'\n";
 	std::cout << "\t\t\t\t \t--cascade - turns PFPC plasticity on and sets the type of plasticity to 'cascade'\n\n";
 	std::cout << std::right << std::setw(10) << "\t" << "\t\t\tif none of these options is given, PFPC plasticity is turned on and set to 'graded' by default\n\n";
 	std::cout << std::right << std::setw(10) << "\t--mfnc-off" << "\t\tturns off MFNC plasticity; if not included, MFNC plasticity is turned on and set to 'graded' by default\n";
-	std::cout << "\t-r, --raster {[CODE],[FILE]} space-separated list of cell types and raster files to be saved for that cell type. Possible CODEs are:\n\n";
+	std::cout << "\t-r, --raster {[CODE]} comma-separated list of cell ids to be saved for that cell type. Possible CODEs are:\n\n";
 	std::cout << "\t\t\t\t \tMF - Mossy Fiber\n";
 	std::cout << "\t\t\t\t \tGR - Granule Cell\n";
 	std::cout << "\t\t\t\t \tGO - Golgi Cell\n";
@@ -198,18 +198,22 @@ void print_usage_info()
 	std::cout << "\t\t\t\t \tPC - Purkinje Cell\n";
 	std::cout << "\t\t\t\t \tNC - Deep Nucleus Cell\n";
 	std::cout << "\t\t\t\t \tIO - Inferior Olive Cell\n\n";
-	std::cout << "\t-p, --psth {[CODE],[FILE]} space-separated list of cell types and psth files to be saved for that cell type. Possible CODEs are identical with those for rasters.\n\n";
-	std::cout << "\t-w, --weights {[CODE],[FILE]} space-separated list of weights and weights files to be saved. Possible CODEs are:\n\n";
+	std::cout << "\t-p, --psth {[CODE]} comma-separated list of cell ids to be saved for that cell type. Possible CODEs are identical with those for rasters.\n\n";
+	std::cout << "\t-w, --weights {[CODE]} comma-separated list of weights ids to be saved. Possible CODEs are:\n\n";
 	std::cout << "\t\t\t\t  \tPFPC - parallel-fiber to purkinje synapse\n";
 	std::cout << "\t\t\t\t  \tMFNC - mossy-fiber to deep nucleus synapse\n\n";
+	std::cout << "Output filenames are automatically generated: given an -o option of 'BASENAME', the relative filepaths from project ROOT are as follows:\n\n";
+	std::cout << "\t'ROOT/data/outputs/BASENAME/BASENAME_{CELL_ID|WEIGHTS_ID}_{RASTER|PSTH|WEIGHTS}_{DATE}{_TRIAL_{NUM}}.bin\n\n";
+	std::cout << "Here DATE is the current date, with format %d%m%Y, and the final trial format only applies for granule cell rasters and weights,\n";
+	std::cout << "as these outputs are saved on a trial-by-trial basis.\n\n";
 	std::cout << "Example usage:\n\n";
-	std::cout << "1) uses file 'build_file.bld' to construct a bunny, which is saved to file 'bunny.sim':\n\n";
-	std::cout << "\t./cbm_sim -b build_file.bld -o bunny.sim\n\n";
-	std::cout << "2) uses file 'acquisition.sess' to train the input simulation 'bunny.sim' with PFPC plasticity on and set to graded and MFNC plasticity off:\n\n";
-	std::cout << "\t./cbm_sim -s acquisition.sess -i bunny.sim --mfnc-off\n\n";
-	std::cout << "3) uses file 'acquisition.sess' to train the input simulation 'bunny.sim' with PFPC and MFNC plasticity on and set to graded;\n";
-	std::cout << "   PC, SC, and BC rasters are saved to files 'allPCRaster.bin' 'allSCRaster.bin' and 'allBCRaster.bin' respectively:\n\n";
-	std::cout << "\t./cbm_sim -s acquisition.sess -i bunny.sim -r PC,allPCRaster SC,allSCRaster BC,allBCRaster\n\n";
+	std::cout << "1) uses file 'build_file.bld' to construct a bunny, which is saved to file 'ROOT/data/outputs/bunny/bunny_{DATE}.sim':\n\n";
+	std::cout << "\t./cbm_sim -b build_file.bld -o bunny\n\n";
+	std::cout << "2) uses file 'acquisition.sess' to train the input simulation 'bunny_12122022.sim' with PFPC plasticity on and set to graded and MFNC plasticity off:\n\n";
+	std::cout << "\t./cbm_sim -s acquisition.sess -i bunny_12122022.sim -o acquisition --mfnc-off\n\n";
+	std::cout << "3) uses file 'acquisition.sess' to train the input simulation 'bunny_12122022.sim' with PFPC and MFNC plasticity on and set to graded;\n";
+	std::cout << "   saves purkinje cell, stellate cell, and basket cell rasters to files located in 'ROOT/data/outputs/acqusition'\n\n";
+	std::cout << "\t./cbm_sim -s acquisition.sess -i bunny_12122022.sim -o acquisition -r PC,SC,BC\n\n";
 }
 
 /*
