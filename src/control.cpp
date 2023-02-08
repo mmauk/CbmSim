@@ -973,6 +973,12 @@ void Control::fill_psths(uint32_t psth_counter)
 	{
 		if (!pf_names[i].empty() || use_gui)
 		{
+			/* GR spikes are only spikes not saved on host every time step:
+			 * InNet::exportAPGR makes cudaMemcpy call before returning pointer to mem address */
+			if (CELL_IDS[i] == "GR")
+			{
+				cell_spikes[i] = simCore->getInputNet()->exportAPGR();
+			}
 			for (uint32_t j = 0; j < rast_cell_nums[i]; j++)
 			{
 				psths[i][psth_counter][j] += cell_spikes[i][j];

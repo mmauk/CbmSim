@@ -360,18 +360,17 @@ void MZone::calcPCActivities()
 		as->gSCPC[i] += as->inputSCPC[i] * gIncSCtoPC;
 		as->gSCPC[i] *= gDecSCtoPC;
 
-		as->vPC[i] += (gLeakPC * (eLeakPC - as->vPC[i]))
-					- (as->gPFPC[i] * as->vPC[i])
-					+ (as->gBCPC[i] * (eBCtoPC - as->vPC[i]))
-					+ (as->gSCPC[i] * (eSCtoPC - as->vPC[i]));
-
+		as->vPC[i] += gLeakPC * (eLeakPC - as->vPC[i])
+					- as->gPFPC[i] * as->vPC[i]
+					+ as->gBCPC[i] * (eBCtoPC - as->vPC[i])
+					+ as->gSCPC[i] * (eSCtoPC - as->vPC[i]);
 		as->threshPC[i] += threshDecPC * (threshRestPC - as->threshPC[i]);
 
 		as->apPC[i]    = as->vPC[i] > as->threshPC[i];
 		as->apBufPC[i] = (as->apBufPC[i] << 1) | (as->apPC[i] * 0x00000001);
 
-		as->threshPC[i] = as->apPC[i] * threshMaxPC + (!as->apPC[i]) * as->threshPC[i];
-		as->pcPopAct   += as->apPC[i];
+		as->threshPC[i] = as->apPC[i] * threshMaxPC + (1-as->apPC[i]) * as->threshPC[i];
+		as->pcPopAct   += as->apPC[i]; 
 	}
 }
 
@@ -379,16 +378,16 @@ void MZone::calcSCActivities()
 {
 	for (int i = 0; i < num_sc; i++)
 	{
-		as->gPFSC[i] = as->gPFSC[i] + inputSumPFSCH[i] * gIncGRtoSC;
-		as->gPFSC[i] = as->gPFSC[i] * gDecGRtoSC;
+		as->gPFSC[i] += inputSumPFSCH[i] * gIncGRtoSC;
+		as->gPFSC[i] *= gDecGRtoSC;
 
-		as->vSC[i] = as->vSC[i] + gLeakSC * (eLeakSC - as->vSC[i]) - as->gPFSC[i] * as->vSC[i];
+		as->vSC[i] += gLeakSC * (eLeakSC - as->vSC[i]) - as->gPFSC[i] * as->vSC[i];
+		as->threshSC[i] += threshDecSC * (threshRestSC - as->threshSC[i]);
 
-		as->apSC[i] = (as->vSC[i] > as->threshSC[i]);
+		as->apSC[i] = as->vSC[i] > as->threshSC[i];
 		as->apBufSC[i] = (as->apBufSC[i] << 1) | (as->apSC[i] * 0x00000001);
 
-		as->threshSC[i] = as->threshSC[i] + threshDecSC * (threshRestSC - as->threshSC[i]);
-		as->threshSC[i] = as->apSC[i] * threshMaxSC + (!as->apSC[i]) * as->threshSC[i];
+		as->threshSC[i] = as->apSC[i] * threshMaxSC + (1-as->apSC[i]) * as->threshSC[i];
 	}
 }
 
@@ -396,29 +395,27 @@ void MZone::calcBCActivities()
 {
 	for (int i = 0; i < num_bc; i++)
 	{
-		as->gPFBC[i] = as->gPFBC[i] + inputSumPFBCH[i] * gIncGRtoBC;
-		as->gPFBC[i] = as->gPFBC[i] * gDecGRtoBC;
-		as->gPCBC[i] = as->gPCBC[i] + as->inputPCBC[i] * gIncPCtoBC;
-		as->gPCBC[i] = as->gPCBC[i] * gDecPCtoBC;
+		as->gPFBC[i] += inputSumPFBCH[i] * gIncGRtoBC;
+		as->gPFBC[i] *= gDecGRtoBC;
+		as->gPCBC[i] += as->inputPCBC[i] * gIncPCtoBC;
+		as->gPCBC[i] *= gDecPCtoBC;
 
 		as->vBC[i] = as->vBC[i] +
 				(gLeakBC * (eLeakBC - as->vBC[i])) -
 				(as->gPFBC[i] * as->vBC[i]) +
 				(as->gPCBC[i] * (ePCtoBC - as->vBC[i]));
+		as->threshBC[i] += threshDecBC * (threshRestBC - as->threshBC[i]);
 
-		as->threshBC[i] = as->threshBC[i] + threshDecBC * (threshRestBC - as->threshBC[i]);
 		as->apBC[i] = as->vBC[i] > as->threshBC[i];
 		as->apBufBC[i] = (as->apBufBC[i] << 1) | (as->apBC[i] * 0x00000001);
 
-		as->threshBC[i] = as->apBC[i] * threshMaxBC + (!as->apBC[i]) * (as->threshBC[i]);
+		as->threshBC[i] = as->apBC[i] * threshMaxBC + (1-as->apBC[i]) * as->threshBC[i];
 	}
 }
 
 void MZone::calcIOActivities()
 {
-	clock_t t;
-	t = clock();
-	srand(t);
+	srand(clock());
 	
 	float r = static_cast<float> (rand()) / static_cast<float> (RAND_MAX);
 	float gNoise = (r - 0.5) * 2.0;
@@ -441,40 +438,34 @@ void MZone::calcIOActivities()
 
 			as->inputNCIO[i * num_p_io_from_nc_to_io + j] = 0;
 		}
-
 		gNCSum = 1.5 * gNCSum / 3.1;
 
-		as->vIO[i] = as->vIO[i] + gLeakIO * (eLeakIO - as->vIO[i]) +
+		as->vIO[i] += gLeakIO * (eLeakIO - as->vIO[i]) +
 				gNCSum * (eNCtoIO - as->vIO[i]) + as->vCoupleIO[i] +
 				as->errDrive + gNoise;
+		as->threshIO[i] += threshDecIO * (threshRestIO - as->threshIO[i]);
 
 		as->apIO[i] = as->vIO[i] > as->threshIO[i];
 		as->apBufIO[i] = (as->apBufIO[i] << 1) | (as->apIO[i] * 0x00000001);
 
-		as->threshIO[i] = threshMaxIO * as->apIO[i] +
-				(!as->apIO[i]) * (as->threshIO[i] + threshDecIO * (threshRestIO - as->threshIO[i]));
+		as->threshIO[i] = as->apIO[i] * threshMaxIO + (1-as->apIO[i]) * as->threshIO[i];
 	}
 	as->errDrive = 0;
 }
 
 void MZone::calcNCActivities()
 {
-//TODO: make function calcActivities which takes in the parameters which vary dep
-//		on the type of activity that is being calculated. Else this is redundant  
-float gDecay = exp(-1.0 / 20.0); 
+	float gDecay = exp(-1.0 / 20.0); 
 
 	for (int i = 0; i < num_nc; i++)
 	{
-		float gMFNMDASum;
-		float gMFAMPASum;
-		float gPCNCSum;
+		float gMFNMDASum = 0;
+		float gMFAMPASum = 0;
+		float gPCNCSum   = 0;
 
-		int inputPCNCSum;
-		int inputMFNCSum;
+		int inputPCNCSum = 0;
+		int inputMFNCSum = 0;
 
-		gMFNMDASum   = 0; /* dont use: ask Joe about */
-		gMFAMPASum   = 0;
-		inputMFNCSum = 0;
 
 		for (int j = 0; j < num_p_nc_from_mf_to_nc; j++)
 		{
@@ -486,11 +477,10 @@ float gDecay = exp(-1.0 / 20.0);
 			gMFAMPASum += as->gMFAMPANC[i * num_p_nc_from_mf_to_nc + j];
 		}
 
-		gMFNMDASum = gMFNMDASum * msPerTimeStep / ((float)num_p_nc_from_mf_to_nc);
-		gMFAMPASum = gMFAMPASum * msPerTimeStep / ((float)num_p_nc_from_mf_to_nc);
-		gMFNMDASum = gMFNMDASum * -as->vNC[i] / 80.0f; 
-		gPCNCSum = 0;
-		inputPCNCSum = 0;
+		gMFNMDASum *= msPerTimeStep / ((float)num_p_nc_from_mf_to_nc);
+		gMFNMDASum *= -as->vNC[i] / 80.0; 
+
+		gMFAMPASum *= msPerTimeStep / ((float)num_p_nc_from_mf_to_nc);
 
 		for (int j = 0; j < num_p_nc_from_pc_to_nc; j++)
 		{
@@ -503,24 +493,23 @@ float gDecay = exp(-1.0 / 20.0);
 
 		}
 
-		gPCNCSum = gPCNCSum * msPerTimeStep / ((float)num_p_nc_from_pc_to_nc);
-		as->vNC[i] = as->vNC[i] + gLeakNC * (eLeakNC - as->vNC[i])
-				   - (gMFNMDASum + gMFAMPASum) * as->vNC[i] + gPCNCSum * (ePCtoNC - as->vNC[i]);
-		
-		as->threshNC[i] = as->threshNC[i] + threshDecNC * (threshRestNC - as->threshNC[i]);
+		gPCNCSum *= msPerTimeStep / ((float)num_p_nc_from_pc_to_nc);
+
+		as->vNC[i] += gLeakNC * (eLeakNC - as->vNC[i])
+				   - (gMFNMDASum + gMFAMPASum) * as->vNC[i]
+				   + gPCNCSum * (ePCtoNC - as->vNC[i]);
+		as->threshNC[i] += threshDecNC * (threshRestNC - as->threshNC[i]);
+
 		as->apNC[i] = as->vNC[i] > as->threshNC[i];
 		as->apBufNC[i] = (as->apBufNC[i] << 1) | (as->apNC[i] * 0x00000001);
 
-		as->threshNC[i] = as->apNC[i] * threshMaxNC + (!as->apNC[i]) * as->threshNC[i];
+		as->threshNC[i] = as->apNC[i] * threshMaxNC + (1-as->apNC[i]) * as->threshNC[i];
 	}
 }
 
 void MZone::updatePCOut()
 {
-	for (int i = 0; i < num_bc; i++)
-	{
-		as->inputPCBC[i] = 0;
-	}
+	for (int i = 0; i < num_bc; i++) as->inputPCBC[i] = 0;
 
 	for (int i = 0; i < num_pc; i++)
 	{
@@ -620,23 +609,15 @@ void MZone::updateMFNCOut()
 
 void MZone::updateMFNCSyn(const uint8_t *histMF, uint32_t t)
 {
-
-#ifdef DEBUGOUT
-	float sumSynW = 0;
-#endif
 	if (t % (uint32_t)tsPerPopHistBinPC == 0) return;
 
-	as->histPCPopActSum = (as->histPCPopActSum) - (as->histPCPopAct[as->histPCPopActCurBinN]) + (as->pcPopAct);
+	as->histPCPopActSum -= (as->histPCPopAct[as->histPCPopActCurBinN]) + (as->pcPopAct);
 	as->histPCPopAct[as->histPCPopActCurBinN] = as->pcPopAct;
 	as->pcPopAct = 0;
 	as->histPCPopActCurBinN++;
 	as->histPCPopActCurBinN %= (uint32_t)numPopHistBinsPC;
 
 	float avgAllAPPC = ((float)as->histPCPopActSum) / numPopHistBinsPC;
-
-#ifdef DEBUGOUT
-	std::cout << "avgAllAPPC: " << avgAllAPPC << std::endl;
-#endif
 
 	bool doLTD = false;
 	bool doLTP = false;
@@ -673,14 +654,8 @@ void MZone::updateMFNCSyn(const uint8_t *histMF, uint32_t t)
 			
 			//Now uses isTrueMF to take collaterals into account
 			as->mfSynWeightNC[i * num_p_nc_from_mf_to_nc + j] *= isTrueMF[cs->pNCfromMFtoNC[i][j]];
-#ifdef DEBUGOUT
-			sumSynW += as->mfSynWeightNC[i * num_p_nc_from_mf_to_nc + j];
-#endif
 		}
 	}
-#ifdef DEBUGOUT
-	std::cout << sumSynW / NUM_MF << std::endl;
-#endif
 }
 
 void MZone::runPFPCOutCUDA(cudaStream_t **sts, int streamN)
