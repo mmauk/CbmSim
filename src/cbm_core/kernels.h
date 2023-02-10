@@ -10,6 +10,7 @@
 
 #include <cuda.h>
 #include <cuda_runtime.h>
+#include <curand_kernel.h>
 #include <iostream>
 
 #include <cstdint>
@@ -29,6 +30,10 @@ void callSumKernel(cudaStream_t &st, Type *inGPU, size_t inGPUP, Type *outSumGPU
 template<typename Type>
 void callBroadcastKernel(cudaStream_t &st, Type *broadCastVal, Type *outArray,
 		unsigned int nBlocks, unsigned int rowLength);
+
+template <typename randState, typename blockDims, typename threadDims>
+void callCurandSetupKernel(cudaStream_t &st, randState *state, uint32_t seed,
+						   blockDims &block_dim, threadDims &thread_dim);
 
 void callUpdateGROutGOKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock, unsigned int numGO,
 		uint32_t *apBufGPU, uint32_t *grInGOGPU, uint32_t grInGOGPUPitch,
@@ -89,7 +94,12 @@ void callUpdatePFPCOutKernel(cudaStream_t &st, unsigned int numBlocks, unsigned 
 void callUpdateGRHistKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
 		uint32_t *apBufGPU, uint64_t *historyGPU, uint32_t apBufGRHistMask);
 
-void callUpdatePFPCPlasticityIOKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
+template <typename randState>
+void callPFPCBinaryPlastKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
+		float *synWeightGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck,
+		int offSet, float pfPCPlastStep, float trans_prob, randState *state);
+
+void callPFPCGradedPlastKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
 		float *synWeightGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck,
 		int offSet, float pfPCPlastStep);
 

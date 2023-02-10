@@ -130,6 +130,14 @@ begin filetype run
 		float gluScaleGO 0.0
 		float goGABAGOGOSynDepF 1.0
 		float goGABAGOGOSynRecTau 100.0
+
+		// experimental params!
+		float binPlastProbMin 0.9
+		float binPlastProbMax 0.1
+		float binPlastWeightLow 0.3
+		float binPlastWeightHigh 0.7
+		// experimental params!
+
 		float synLTDStepSizeGRtoPC -0.00275
 		float synLTPStepSizeGRtoPC 0.00030556
 		float mGluRDecayGO 0.98

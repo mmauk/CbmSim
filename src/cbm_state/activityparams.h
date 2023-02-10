@@ -16,8 +16,6 @@
 #include "file_parse.h"
 #include "stdint.h"
 
-#define NUM_ACT_PARAMS 174
-
 extern bool act_params_populated;
 
 /* raw params */
@@ -86,6 +84,10 @@ extern float gluDecayGO;
 extern float gluScaleGO;
 extern float goGABAGOGOSynDepF;
 extern float goGABAGOGOSynRecTau;
+extern float binPlastProbMin;
+extern float binPlastProbMax;
+extern float binPlastWeightLow;
+extern float binPlastWeightHigh;
 extern float synLTDStepSizeGRtoPC;
 extern float synLTPStepSizeGRtoPC;
 extern float mGluRDecayGO;

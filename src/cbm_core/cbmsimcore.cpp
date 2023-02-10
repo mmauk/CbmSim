@@ -91,6 +91,7 @@ void CBMSimCore::initCUDAStreams()
 		error = cudaSetDevice(i + gpuIndStart);
 		LOG_DEBUG("Selecting device %d", i);
 		LOG_DEBUG("%s", cudaGetErrorString(error));
+		// introducing one extra stream dedicated for rng processing
 		streams[i] = new cudaStream_t[8];
 		LOG_DEBUG("Resetting device %d", i);
 		LOG_DEBUG("%s", cudaGetErrorString(error));
@@ -179,9 +180,17 @@ void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum
 	{
 		for (int i = 0; i < numZones; i++)
 		{
-			zones[i]->runPFPCPlastCUDA(streams, 1, curTime);
+			zones[i]->runPFPCGradedPlastCUDA(streams, 1, curTime);
 		}
 	}
+	else if (pf_pc_plast == BINARY)
+	{
+		for (int i = 0; i < numZones; i++)
+		{
+			zones[i]->runPFPCBinaryPlastCUDA(streams, 1, curTime);
+		}
+	}
+
 #ifdef NO_ASYNC
 	syncCUDA("1f");
 #endif
@@ -514,7 +523,7 @@ void CBMSimCore::construct(CBMState *state,
 	for (int i = 0; i < numZones; i++)
 	{
 		// same thing for zones as with innet
-		zones[i] = new MZone(state->getMZoneConStateInternal(i),
+		zones[i] = new MZone(streams, state->getMZoneConStateInternal(i),
 			state->getMZoneActStateInternal(i), mzoneRSeed[i], inputNet->getApBufGRGPUPointer(),
 			inputNet->getHistGRGPUPointer(), this->gpuIndStart, numGPUs);
 	}

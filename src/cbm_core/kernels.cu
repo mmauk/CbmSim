@@ -5,23 +5,23 @@
  *      Author: consciousness
  */
 
+#include <curand_kernel.h>
 #include "kernels.h"
 
- extern __shared__ uint32_t sharedIOBufGR[];
- extern __shared__ float  sharedIOBufGRfloat[];
+extern __shared__ uint32_t sharedIOBufGR[];
+extern __shared__ float  sharedIOBufGRfloat[];
 
 __global__ void testKernel(float *a, float *b, float *c)
- {
- 	int i = blockIdx.x * blockDim.x + threadIdx.x;
- 	c[i] = a[i] + b[i];
- }
-
+{
+	int i = blockIdx.x * blockDim.x + threadIdx.x;
+	c[i] = a[i] + b[i];
+}
 
 //**-----------------GR Kernels------------------**
 
-__global__ void calcActivityGRGPU(float *vm, float *gKCa, float *gLeak, float *gNMDA, float *gNMDAInc,
-	float *thresh, uint32_t *apBuf, uint8_t *apOutGR, uint32_t *apGR, int *apMFtoGR,
-	float *gESum, float *gISum, float eLeak, float eGOIn, float gAMPAInc, 
+__global__ void calcActivityGRGPU(float *vm, float *gKCa, float *gLeak, float *gNMDA,
+	float *gNMDAInc, float *thresh, uint32_t *apBuf, uint8_t *apOutGR, uint32_t *apGR,
+	int *apMFtoGR, float *gESum, float *gISum, float eLeak, float eGOIn, float gAMPAInc, 
 	float threshBase, float threshMax, float threshDecay)
 {
 	float tempThresh;
@@ -47,8 +47,10 @@ __global__ void calcActivityGRGPU(float *vm, float *gKCa, float *gLeak, float *g
 	gNMDA[i] = gNMDAInc[i] * gAMPAInc * apMFtoGR[i] + gNMDA[i] * 0.9672;
 
 
-	tempV = tempV + gLeak[i] * (eLeak - tempV) - gESum[i] * tempV 
-	   	  - gNMDA[i] * tempV + gISum[i] * (eGOIn - tempV); 
+	tempV += gLeak[i] * (eLeak - tempV)
+		   - gESum[i] * tempV 
+		   - gNMDA[i] * tempV
+		   + gISum[i] * (eGOIn - tempV); 
 
 	if (tempV > threshMax) tempV = threshMax;
 
@@ -292,8 +294,6 @@ __global__ void updateGOGRDynamicSpillInOPGPU(unsigned int inNLoads, float *dyna
 	dynamicAmpGOGRGPU[index] = tempDynamicAmpSum/3;
 }
 
-
-
 __global__ void updateUBCGRInOPGPU(unsigned int inNLoads, uint32_t *apIn, float *depAmp,
 		float *g, size_t gPitch,
 		uint32_t *conFromIn, size_t conFromInPitch,
@@ -338,9 +338,7 @@ __global__ void updateUBCGRInOPGPU(unsigned int inNLoads, uint32_t *apIn, float 
 		apUBCtoGRp[index] = tempApInSum;
 	}
 	gSum[index] = gDirect[index] + gSpillover[index];
-
 }
-
 
 __global__ void updateMFGRInOPGPU(unsigned int inNLoads, uint32_t *apIn, float*depAmp,
 		float *g, size_t gPitch, uint32_t *conFromIn, size_t conFromInPitch,
@@ -360,7 +358,6 @@ __global__ void updateMFGRInOPGPU(unsigned int inNLoads, uint32_t *apIn, float*d
 		sharedIOBufGR[tid + i * blockDim.x] = apIn[tid + i * blockDim.x];
 	}
 	__syncthreads();
-	
 
 	for (int i = 0; i < tempNSyn; i++)
 	{
@@ -414,7 +411,23 @@ __global__ void updatePFPCOutGPU(uint32_t *apBuf, uint32_t *delay,
 
 //**---------------IO kernels-----------------**
 
-__global__ void updatePFPCSynIO(float *synWPFPC, uint64_t *historyGR, uint64_t plastCheckMask,
+template <typename randState>
+__global__ void updatePFPCBinarySynWeightKernel(float *synWPFPC, uint64_t *historyGR, uint64_t plastCheckMask,
+		unsigned int offset, float plastStep, float trans_prob, randState *state)
+{
+	int i=blockIdx.x*blockDim.x+threadIdx.x+offset;
+	curandStateMRG32k3a localState = state[i];
+	float x = curand_uniform(&localState);
+	if (x < trans_prob)
+	{
+		synWPFPC[i] += ((historyGR[i] & plastCheckMask)>0) * plastStep;
+
+		synWPFPC[i] = (synWPFPC[i]>0) * synWPFPC[i];
+		synWPFPC[i] = (synWPFPC[i]>1) + (synWPFPC[i]<=1) * synWPFPC[i];
+	}
+}
+
+__global__ void updatePFPCSynWeightKernel(float *synWPFPC, uint64_t *historyGR, uint64_t plastCheckMask,
 		unsigned int offset, float plastStep)
 {
 	int i=blockIdx.x*blockDim.x+threadIdx.x+offset;
@@ -511,8 +524,6 @@ __global__ void sumInputsNew(Type *input, unsigned int inputPitch,
 	}
 }
 
-
-
 template<typename Type>
 __global__ void broadcastValue(Type *val, Type *outArr)
 {
@@ -522,6 +533,20 @@ __global__ void broadcastValue(Type *val, Type *outArr)
 }
 
 //**---------------end common kernels---------**
+
+
+//**---------------random kernels---------**
+
+template <typename randState>
+__global__ void curandSetupKernel(randState *state, uint32_t seed)
+{
+	int id = threadIdx.x + blockIdx.x * blockDim.x;
+	/* every thread gets same seed, different sequence number,
+	   no offset */
+	curand_init(seed, id, 0, &state[id]);
+}
+
+//**---------------end random kernels---------**
 
 
 //**---------------kernel calls---------------**
@@ -583,6 +608,13 @@ void callBroadcastKernel(cudaStream_t &st, Type *broadcastVal, Type *outArray,
 		unsigned int nBlocks, unsigned int rowLength)
 {
 	broadcastValue<Type><<<nBlocks, rowLength/nBlocks, 0, st>>>(broadcastVal, outArray);
+}
+
+template <typename randState, typename blockDims, typename threadDims>
+void callCurandSetupKernel(cudaStream_t &st, randState *state, uint32_t seed,
+						   blockDims &block_dim, threadDims &thread_dim)
+{
+	curandSetupKernel<randState><<<block_dim, thread_dim, 0, st>>>(state, seed);
 }
 
 void callSumGRGOOutKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGOPerBlock,
@@ -703,12 +735,22 @@ void callUpdateGRHistKernel(cudaStream_t &st, unsigned int numBlocks, unsigned i
 		updateGRHistory<<<numBlocks, numGRPerBlock, 0, st>>>(apBufGPU, historyGPU, apBufGRHistMask);
 }
 
-void callUpdatePFPCPlasticityIOKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
+template <typename randState>
+void callPFPCBinaryPlastKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
+		float *synWeightGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck,
+		int offSet, float pfPCPlastStep, float trans_prob, randState *state)
+{
+	uint64_t mask = ((uint64_t)1)<<(pastBinNToCheck-1);
+		updatePFPCBinarySynWeightKernel<randState><<<numBlocks, numGRPerBlock, 0, st>>>(synWeightGPU, historyGPU,
+				mask, offSet, pfPCPlastStep, trans_prob, state);
+}
+
+void callPFPCGradedPlastKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
 		float *synWeightGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck,
 		int offSet, float pfPCPlastStep)
 {
 	uint64_t mask = ((uint64_t)1)<<(pastBinNToCheck-1);
-		updatePFPCSynIO<<<numBlocks, numGRPerBlock, 0, st>>>(synWeightGPU, historyGPU,
+		updatePFPCSynWeightKernel<<<numBlocks, numGRPerBlock, 0, st>>>(synWeightGPU, historyGPU,
 				mask, offSet, pfPCPlastStep);
 }
 
@@ -728,6 +770,13 @@ template void callSumKernel<uint32_t, false, false>
 		(cudaStream_t &st, uint32_t *inPFGPU, size_t inPFGPUP, uint32_t *outPFSumGPU, size_t outPFSumGPUP,
 		unsigned int nOutCells, unsigned int nOutCols, unsigned int rowLength);
 
-
 template void callBroadcastKernel<uint32_t>
 (cudaStream_t &st, uint32_t *broadCastVal, uint32_t *outArray, unsigned int nBlocks, unsigned int rowLength);
+
+template void callCurandSetupKernel<curandStateMRG32k3a, uint32_t, uint32_t>
+(cudaStream_t &st, curandStateMRG32k3a *state, uint32_t seed, uint32_t &block_dim, uint32_t &thread_dim);
+
+template void callPFPCBinaryPlastKernel<curandStateMRG32k3a>(cudaStream_t &st, unsigned int numBlocks,
+		unsigned int numGRPerBlock, float *synWeightGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck,
+		int offSet, float pfPCPlastStep, float trans_prob, curandStateMRG32k3a *state);
+
