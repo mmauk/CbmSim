@@ -107,6 +107,8 @@ private:
 	unsigned int sumGRBCOutNumBlocks;
 	/* ======== not used ====== */
 
+	float **pfpcSynWRandNums;
+
 	//mossy fiber variables
 	const uint8_t *apMFInput;
 	//const uint8_t *histMFInput;

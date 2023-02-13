@@ -35,6 +35,10 @@ template <typename randState, typename blockDims, typename threadDims>
 void callCurandSetupKernel(cudaStream_t &st, randState *state, uint32_t seed,
 						   blockDims &block_dim, threadDims &thread_dim);
 
+template <typename randState>
+void callCurandGenerateUniformKernel(cudaStream_t &st, randState *state, uint32_t block_dim,
+	  uint32_t thread_dim, float *randoms, uint32_t rand_offset);
+
 void callUpdateGROutGOKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock, unsigned int numGO,
 		uint32_t *apBufGPU, uint32_t *grInGOGPU, uint32_t grInGOGPUPitch,
 		uint32_t *delayMasksGPU, uint32_t delayMasksGPUPitch,
@@ -97,7 +101,7 @@ void callUpdateGRHistKernel(cudaStream_t &st, unsigned int numBlocks, unsigned i
 template <typename randState>
 void callPFPCBinaryPlastKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
 		float *synWeightGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck,
-		int offSet, float pfPCPlastStep, float trans_prob, randState *state);
+		int offSet, float pfPCPlastStep, float synWLow, float synWHigh, float trans_prob, float *randoms);
 
 void callPFPCGradedPlastKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
 		float *synWeightGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck,

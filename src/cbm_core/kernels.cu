@@ -413,17 +413,15 @@ __global__ void updatePFPCOutGPU(uint32_t *apBuf, uint32_t *delay,
 
 template <typename randState>
 __global__ void updatePFPCBinarySynWeightKernel(float *synWPFPC, uint64_t *historyGR, uint64_t plastCheckMask,
-		unsigned int offset, float plastStep, float trans_prob, randState *state)
+		unsigned int offset, float plastStep, float synWLow, float synWHigh, float trans_prob, float *randoms)
 {
-	int i=blockIdx.x*blockDim.x+threadIdx.x+offset;
-	curandStateMRG32k3a localState = state[i];
-	float x = curand_uniform(&localState);
-	if (x < trans_prob)
+	int i = blockIdx.x * blockDim.x + threadIdx.x + offset;
+	if (randoms[i] < trans_prob)
 	{
-		synWPFPC[i] += ((historyGR[i] & plastCheckMask)>0) * plastStep;
+		synWPFPC[i] += ((historyGR[i] & plastCheckMask) > 0) * plastStep;
 
-		synWPFPC[i] = (synWPFPC[i]>0) * synWPFPC[i];
-		synWPFPC[i] = (synWPFPC[i]>1) + (synWPFPC[i]<=1) * synWPFPC[i];
+		synWPFPC[i] = (synWPFPC[i] > synWLow) * synWPFPC[i] + (synWPFPC[i] <=synWLow) * synWLow;
+		synWPFPC[i] = (synWPFPC[i] > synWHigh) * synWHigh + (synWPFPC[i] <= synWHigh) * synWPFPC[i];
 	}
 }
 
@@ -546,6 +544,14 @@ __global__ void curandSetupKernel(randState *state, uint32_t seed)
 	curand_init(seed, id, 0, &state[id]);
 }
 
+template <typename randState>
+__global__ void curandGenerateUniformsKernel(randState *state, float *randoms, uint32_t rand_offset)
+{
+	int i = blockIdx.x * blockDim.x + threadIdx.x;
+	curandStateMRG32k3a localState = state[i];
+	randoms[i + rand_offset] = curand_uniform(&localState);
+}
+
 //**---------------end random kernels---------**
 
 
@@ -615,6 +621,13 @@ void callCurandSetupKernel(cudaStream_t &st, randState *state, uint32_t seed,
 						   blockDims &block_dim, threadDims &thread_dim)
 {
 	curandSetupKernel<randState><<<block_dim, thread_dim, 0, st>>>(state, seed);
+}
+
+template <typename randState>
+void callCurandGenerateUniformKernel(cudaStream_t &st, randState *state, uint32_t block_dim,
+	  uint32_t thread_dim, float *randoms, uint32_t rand_offset)
+{
+	curandGenerateUniformsKernel<randState><<<block_dim, thread_dim, 0, st>>>(state, randoms, rand_offset);
 }
 
 void callSumGRGOOutKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGOPerBlock,
@@ -738,11 +751,11 @@ void callUpdateGRHistKernel(cudaStream_t &st, unsigned int numBlocks, unsigned i
 template <typename randState>
 void callPFPCBinaryPlastKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
 		float *synWeightGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck,
-		int offSet, float pfPCPlastStep, float trans_prob, randState *state)
+		int offSet, float pfPCPlastStep, float synWLow, float synWHigh, float trans_prob, float *randoms)
 {
 	uint64_t mask = ((uint64_t)1)<<(pastBinNToCheck-1);
 		updatePFPCBinarySynWeightKernel<randState><<<numBlocks, numGRPerBlock, 0, st>>>(synWeightGPU, historyGPU,
-				mask, offSet, pfPCPlastStep, trans_prob, state);
+				mask, offSet, pfPCPlastStep, synWLow, synWHigh, trans_prob, randoms);
 }
 
 void callPFPCGradedPlastKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
@@ -773,10 +786,13 @@ template void callSumKernel<uint32_t, false, false>
 template void callBroadcastKernel<uint32_t>
 (cudaStream_t &st, uint32_t *broadCastVal, uint32_t *outArray, unsigned int nBlocks, unsigned int rowLength);
 
-template void callCurandSetupKernel<curandStateMRG32k3a, uint32_t, uint32_t>
-(cudaStream_t &st, curandStateMRG32k3a *state, uint32_t seed, uint32_t &block_dim, uint32_t &thread_dim);
+template void callCurandSetupKernel<curandStateMRG32k3a, dim3, dim3>
+(cudaStream_t &st, curandStateMRG32k3a *state, uint32_t seed, dim3 &block_dim, dim3 &thread_dim);
+
+template void callCurandGenerateUniformKernel<curandStateMRG32k3a>(cudaStream_t &st, curandStateMRG32k3a *state,
+	  uint32_t block_dim, uint32_t thread_dim, float *randoms, uint32_t rand_offset);
 
 template void callPFPCBinaryPlastKernel<curandStateMRG32k3a>(cudaStream_t &st, unsigned int numBlocks,
 		unsigned int numGRPerBlock, float *synWeightGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck,
-		int offSet, float pfPCPlastStep, float trans_prob, curandStateMRG32k3a *state);
+		int offSet, float pfPCPlastStep, float synWLow, float synWHigh, float trans_prob, float *randoms);
 
