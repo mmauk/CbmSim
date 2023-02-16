@@ -145,90 +145,90 @@ void InNetConnectivityState::initializeVals()
 
 	std::fill(numpGLfromGLtoGO, numpGLfromGLtoGO + num_gl, 0);
 	std::fill(pGLfromGLtoGO[0], pGLfromGLtoGO[0]
-		+ num_gl * max_num_p_gl_from_gl_to_go, 0);
+		+ num_gl * max_num_p_gl_from_gl_to_go, UINT_MAX);
 
 	std::fill(numpGLfromGOtoGL, numpGLfromGOtoGL + num_gl, 0);
 	std::fill(pGLfromGOtoGL[0], pGLfromGOtoGL[0]
-		+ num_gl * max_num_p_gl_from_go_to_gl, 0);
+		+ num_gl * max_num_p_gl_from_go_to_gl, UINT_MAX);
 
 	std::fill(numpGLfromGLtoGR, numpGLfromGLtoGR + num_gl, 0);
 	std::fill(pGLfromGLtoGR[0], pGLfromGLtoGR[0]
-		+ num_gl * max_num_p_gl_from_gl_to_gr, 0);
+		+ num_gl * max_num_p_gl_from_gl_to_gr, UINT_MAX);
 
 	std::fill(pGLfromMFtoGL, pGLfromMFtoGL + num_gl, 0);
 
 	std::fill(numpMFfromMFtoGL, numpMFfromMFtoGL + num_mf, 0);
 	std::fill(pMFfromMFtoGL[0], pMFfromMFtoGL[0]
-		+ num_mf * max_num_p_mf_from_mf_to_gl, 0);
+		+ num_mf * max_num_p_mf_from_mf_to_gl, UINT_MAX);
 
 	std::fill(numpMFfromMFtoGR, numpMFfromMFtoGR + num_mf, 0);
 	std::fill(pMFfromMFtoGR[0], pMFfromMFtoGR[0]
-		+ num_mf * max_num_p_mf_from_mf_to_gr, 0);
+		+ num_mf * max_num_p_mf_from_mf_to_gr, UINT_MAX);
 
 	std::fill(numpMFfromMFtoGO, numpMFfromMFtoGO + num_mf, 0);
 	std::fill(pMFfromMFtoGO[0], pMFfromMFtoGO[0]
-		+ num_mf * max_num_p_mf_from_mf_to_go, 0);
+		+ num_mf * max_num_p_mf_from_mf_to_go, UINT_MAX);
 
 	std::fill(numpGOfromGLtoGO, numpGOfromGLtoGO + num_go, 0);
 	std::fill(pGOfromGLtoGO[0], pGOfromGLtoGO[0]
-		+ num_go * max_num_p_go_from_gl_to_go, 0);
+		+ num_go * max_num_p_go_from_gl_to_go, UINT_MAX);
 
 	std::fill(numpGOfromGOtoGL, numpGOfromGOtoGL + num_go, 0);
 	std::fill(pGOfromGOtoGL[0], pGOfromGOtoGL[0]
-		+ num_go * max_num_p_go_from_go_to_gl, 0);
+		+ num_go * max_num_p_go_from_go_to_gl, UINT_MAX);
 
 	std::fill(numpGOfromMFtoGO, numpGOfromMFtoGO + num_go, 0);
 	std::fill(pGOfromMFtoGO[0], pGOfromMFtoGO[0]
-		+ num_go * max_num_p_go_from_mf_to_go, 0);
+		+ num_go * max_num_p_go_from_mf_to_go, UINT_MAX);
 
 	std::fill(numpGOfromGOtoGR, numpGOfromGOtoGR + num_go, 0);
 	std::fill(pGOfromGOtoGR[0], pGOfromGOtoGR[0]
-		+ num_go * max_num_p_go_from_go_to_gr, 0);
+		+ num_go * max_num_p_go_from_go_to_gr, UINT_MAX);
 
 	std::fill(numpGOfromGRtoGO, numpGOfromGRtoGO + num_go, 0);
 	std::fill(pGOfromGRtoGO[0], pGOfromGRtoGO[0]
-		+ num_go * max_num_p_go_from_gr_to_go, 0);
+		+ num_go * max_num_p_go_from_gr_to_go, UINT_MAX);
 
 	std::fill(numpGOGABAInGOGO, numpGOGABAInGOGO + num_go, 0);
 	std::fill(pGOGABAInGOGO[0], pGOGABAInGOGO[0]
-		+ num_go * num_con_go_to_go, INT_MAX);
+		+ num_go * num_con_go_to_go, UINT_MAX);
 
 	std::fill(numpGOGABAOutGOGO, numpGOGABAOutGOGO + num_go, 0);
 	std::fill(pGOGABAOutGOGO[0], pGOGABAOutGOGO[0]
-		+ num_go * num_con_go_to_go, INT_MAX);
+		+ num_go * num_con_go_to_go, UINT_MAX);
 
 	std::fill(numpGOCoupInGOGO, numpGOCoupInGOGO + num_go, 0);
 	std::fill(pGOCoupInGOGO[0], pGOCoupInGOGO[0]
-		+ num_go * num_p_go_to_go_gj, 0);
+		+ num_go * num_p_go_to_go_gj, UINT_MAX);
 
 	std::fill(numpGOCoupOutGOGO, numpGOCoupOutGOGO + num_go, 0);
 	std::fill(pGOCoupOutGOGO[0], pGOCoupOutGOGO[0]
-		+ num_go * num_p_go_to_go_gj, 0);
+		+ num_go * num_p_go_to_go_gj, UINT_MAX);
 
 	std::fill(pGOCoupOutGOGOCCoeff[0], pGOCoupOutGOGOCCoeff[0]
-		+ num_go * num_p_go_to_go_gj, 0.0);
+		+ num_go * num_p_go_to_go_gj, UINT_MAX);
 
 	std::fill(pGOCoupInGOGOCCoeff[0], pGOCoupInGOGOCCoeff[0]
-		+ num_go * num_p_go_to_go_gj, 0.0);
+		+ num_go * num_p_go_to_go_gj, UINT_MAX);
 
 	std::fill(numpGRfromGLtoGR, numpGRfromGLtoGR + num_gr, 0);
 	std::fill(pGRfromGLtoGR[0], pGRfromGLtoGR[0]
-		+ num_gr * max_num_p_gr_from_gl_to_gr, 0);
+		+ num_gr * max_num_p_gr_from_gl_to_gr, UINT_MAX);
 
 	std::fill(numpGRfromGRtoGO, numpGRfromGRtoGO + num_gr, 0);
 	std::fill(pGRfromGRtoGO[0], pGRfromGRtoGO[0]
-		+ num_gr * max_num_p_gr_from_gr_to_go, 0);
+		+ num_gr * max_num_p_gr_from_gr_to_go, UINT_MAX);
 
 	std::fill(pGRDelayMaskfromGRtoGO[0], pGRDelayMaskfromGRtoGO[0]
-		+ num_gr * max_num_p_gr_from_gr_to_go, 0);
+		+ num_gr * max_num_p_gr_from_gr_to_go, UINT_MAX);
 
 	std::fill(numpGRfromGOtoGR, numpGRfromGOtoGR + num_gr, 0);
 	std::fill(pGRfromGOtoGR[0], pGRfromGOtoGR[0]
-		+ num_gr * max_num_p_gr_from_go_to_gr, 0);
+		+ num_gr * max_num_p_gr_from_go_to_gr, UINT_MAX);
 
 	std::fill(numpGRfromMFtoGR, numpGRfromMFtoGR + num_gr, 0);
 	std::fill(pGRfromMFtoGR[0], pGRfromMFtoGR[0]
-		+ num_gr * max_num_p_gr_from_mf_to_gr, 0);
+		+ num_gr * max_num_p_gr_from_mf_to_gr, UINT_MAX);
 }
 
 void InNetConnectivityState::deallocMemory()
@@ -1142,7 +1142,7 @@ void InNetConnectivityState::translateMFGL()
 				numpGRfromMFtoGR[i]++;
 			}
 		}
-	}	
+	}
 
 	int grMFInputCounter = 0;
 	for (int i = 0; i < num_gr; i++)
