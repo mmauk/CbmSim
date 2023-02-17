@@ -190,6 +190,14 @@ void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum
 			zones[i]->runPFPCBinaryPlastCUDA(streams, 1, curTime);
 		}
 	}
+	// TODO: add in non-super-jump cascade to commandline
+	else if (pf_pc_plast == CASCADE)
+	{
+		for (int i = 0; i < numZones; i++)
+		{
+			zones[i]->runPFPCAbbottCascadePlastCUDA(streams, 1, curTime);
+		}
+	}
 
 #ifdef NO_ASYNC
 	syncCUDA("1f");

@@ -46,6 +46,7 @@ public:
 	void runPFPCSumCUDA(cudaStream_t **sts, int streamN);
 	void cpyPFPCSumCUDA(cudaStream_t **sts, int streamN);
 	void runPFPCBinaryPlastCUDA(cudaStream_t **sts, int streamN, uint32_t t);
+	void runPFPCAbbottCascadePlastCUDA(cudaStream_t **sts, int streamN, uint32_t t);
 	void runPFPCGradedPlastCUDA(cudaStream_t **sts, int streamN, uint32_t t);
 
 	void runSumPFSCCUDA(cudaStream_t **sts, int streamN);
@@ -140,6 +141,8 @@ private:
 	//purkinje cell variables
 	float **pfSynWeightPCGPU;
 	float *pfSynWeightPCLinear;
+	uint8_t *pfPCSynWeightStatesLinear; // for cascade plasticity only
+	uint8_t **pfPCSynWeightStatesGPU; // for cascade plasticity only
 	float **inputPFPCGPU;
 	size_t *inputPFPCGPUPitch;
 	float **inputSumPFPCMZGPU;

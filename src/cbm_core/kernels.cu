@@ -425,7 +425,125 @@ __global__ void updatePFPCBinarySynWeightKernel(float *synWPFPC, uint64_t *histo
 	}
 }
 
-__global__ void updatePFPCSynWeightKernel(float *synWPFPC, uint64_t *historyGR, uint64_t plastCheckMask,
+template <typename randState>
+__global__ void updatePFPCAbbottCascadeLTDPlastKernel(float *synWPFPC, uint8_t *synStatesPFPC, uint64_t *historyGPU,
+		uint64_t plastCheckMask, unsigned int offset, float synWLow, float trans_prob_base, float *randoms)
+{
+	int i = blockIdx.x * blockDim.x + threadIdx.x + offset;
+	if ((historyGPU[i] & plastCheckMask) > 0)
+	{
+		switch (synStatesPFPC[i])
+		{
+			case 1:
+				if (randoms[i] < trans_prob_base / 8.0)
+				{
+					synStatesPFPC[i] = 0;
+				}
+				break;
+			case 2:
+				if (randoms[i] < trans_prob_base / 4.0)
+				{
+					synStatesPFPC[i] = 1;
+				}
+				break;
+			case 3:
+				if (randoms[i] < trans_prob_base / 2.0)
+				{
+					synStatesPFPC[i] = 2;
+				}
+				break;
+			case 4:
+				if (randoms[i] < trans_prob_base)
+				{
+					synStatesPFPC[i] = 3;
+					synWPFPC[i] = synWLow;
+				}
+				break;
+			case 5:
+				if (randoms[i] < trans_prob_base / 2.0)
+				{
+					synStatesPFPC[i] = 3;
+					synWPFPC[i] = synWLow;
+				}
+				break;
+			case 6:
+				if (randoms[i] < trans_prob_base / 4.0)
+				{
+					synStatesPFPC[i] = 3;
+					synWPFPC[i] = synWLow;
+				}
+				break;
+			case 7:
+				if (randoms[i] < trans_prob_base / 8.0)
+				{
+					synStatesPFPC[i] = 3;
+					synWPFPC[i] = synWLow;
+				}
+				break;
+		}
+	}
+}
+
+template <typename randState>
+__global__ void updatePFPCAbbottCascadeLTPPlastKernel(float *synWPFPC, uint8_t *synStatesPFPC, uint64_t *historyGPU,
+	  uint64_t plastCheckMask, unsigned int offset, float synWHigh, float trans_prob_base, float *randoms)
+{
+	int i = blockIdx.x * blockDim.x + threadIdx.x + offset;
+	if ((historyGPU[i] & plastCheckMask) > 0)
+	{
+		switch (synStatesPFPC[i])
+		{
+			case 0:
+				if (randoms[i] < trans_prob_base / 8.0)
+				{
+					synStatesPFPC[i] = 4;
+					synWPFPC[i] = synWHigh;
+				}
+				break;
+			case 1:
+				if (randoms[i] < trans_prob_base / 4.0)
+				{
+					synStatesPFPC[i] = 4;
+					synWPFPC[i] = synWHigh;
+				}
+				break;
+			case 2:
+				if (randoms[i] < trans_prob_base / 2.0)
+				{
+					synStatesPFPC[i] = 4;
+					synWPFPC[i] = synWHigh;
+				}
+				break;
+			case 3:
+				if (randoms[i] < trans_prob_base)
+				{
+					synStatesPFPC[i] = 4;
+					synWPFPC[i] = synWHigh;
+				}
+				break;
+			case 4:
+				if (randoms[i] < trans_prob_base / 2.0)
+				{
+					synStatesPFPC[i] = 5;
+				}
+				break;
+			case 5:
+				if (randoms[i] < trans_prob_base / 4.0)
+				{
+					synStatesPFPC[i] = 6;
+				}
+				break;
+			case 6:
+				if (randoms[i] < trans_prob_base / 8.0)
+				{
+					synStatesPFPC[i] = 7;
+				}
+				break;
+		}
+	}
+}
+
+__global__ void updatePFPCGradedSynWeightKernel(float *synWPFPC, uint64_t *historyGR, uint64_t plastCheckMask,
 		unsigned int offset, float plastStep)
 {
 	int i=blockIdx.x*blockDim.x+threadIdx.x+offset;
@@ -739,7 +857,7 @@ void callUpdateGROutBCKernel(cudaStream_t &st, unsigned int numBlocks, unsigned 
 		int32_t *numBCPerGRGPU)
 {
 	updateGRBCOutGPU<<<numBlocks, numGRPerBlock, numBC*sizeof(uint32_t), st>>>(apBufGPU, grInBCGPU, grInBCGPUPitch,
-			delayMasksGPU, delayMasksGPUPitch, conGRtoBCGPU, conGRtoBCGPUPitch, numBCPerGRGPU, numBC/numGRPerBlock);
+		delayMasksGPU, delayMasksGPUPitch, conGRtoBCGPU, conGRtoBCGPUPitch, numBCPerGRGPU, numBC/numGRPerBlock);
 }
 
 void callUpdateGRHistKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
@@ -754,8 +872,28 @@ void callPFPCBinaryPlastKernel(cudaStream_t &st, unsigned int numBlocks, unsigne
 		int offSet, float pfPCPlastStep, float synWLow, float synWHigh, float trans_prob, float *randoms)
 {
 	uint64_t mask = ((uint64_t)1)<<(pastBinNToCheck-1);
-		updatePFPCBinarySynWeightKernel<randState><<<numBlocks, numGRPerBlock, 0, st>>>(synWeightGPU, historyGPU,
-				mask, offSet, pfPCPlastStep, synWLow, synWHigh, trans_prob, randoms);
+	updatePFPCBinarySynWeightKernel<randState><<<numBlocks, numGRPerBlock, 0, st>>>(synWeightGPU, historyGPU,
+		mask, offSet, pfPCPlastStep, synWLow, synWHigh, trans_prob, randoms);
+}
+
+template<typename randState>
+void callPFPCAbbottCascadeLTDPlastKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
+		float *synWeightGPU, uint8_t *synStatesGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck,
+		int offSet, float synWLow, float trans_prob_base, float *randoms)
+{
+	uint64_t mask = ((uint64_t)1)<<(pastBinNToCheck-1);
+	updatePFPCAbbottCascadeLTDPlastKernel<randState><<<numBlocks, numGRPerBlock, 0, st>>>(synWeightGPU, synStatesGPU,
+		historyGPU, mask, offSet, synWLow, trans_prob_base, randoms);
+}
+
+template<typename randState>
+void callPFPCAbbottCascadeLTPPlastKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
+		float *synWeightGPU, uint8_t *synStatesGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck,
+		int offSet, float synWHigh, float trans_prob_base, float *randoms)
+{
+	uint64_t mask = ((uint64_t)1)<<(pastBinNToCheck-1);
+	updatePFPCAbbottCascadeLTPPlastKernel<randState><<<numBlocks, numGRPerBlock, 0, st>>>(synWeightGPU, synStatesGPU,
+		historyGPU, mask, offSet, synWHigh, trans_prob_base, randoms);
 }
 
 void callPFPCGradedPlastKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
@@ -763,7 +901,7 @@ void callPFPCGradedPlastKernel(cudaStream_t &st, unsigned int numBlocks, unsigne
 		int offSet, float pfPCPlastStep)
 {
 	uint64_t mask = ((uint64_t)1)<<(pastBinNToCheck-1);
-		updatePFPCSynWeightKernel<<<numBlocks, numGRPerBlock, 0, st>>>(synWeightGPU, historyGPU,
+		updatePFPCGradedSynWeightKernel<<<numBlocks, numGRPerBlock, 0, st>>>(synWeightGPU, historyGPU,
 				mask, offSet, pfPCPlastStep);
 }
 
@@ -790,9 +928,17 @@ template void callCurandSetupKernel<curandStateMRG32k3a, dim3, dim3>
 (cudaStream_t &st, curandStateMRG32k3a *state, uint32_t seed, dim3 &block_dim, dim3 &thread_dim);
 
 template void callCurandGenerateUniformKernel<curandStateMRG32k3a>(cudaStream_t &st, curandStateMRG32k3a *state,
-	  uint32_t block_dim, uint32_t thread_dim, float *randoms, uint32_t rand_offset);
+		uint32_t block_dim, uint32_t thread_dim, float *randoms, uint32_t rand_offset);
 
 template void callPFPCBinaryPlastKernel<curandStateMRG32k3a>(cudaStream_t &st, unsigned int numBlocks,
 		unsigned int numGRPerBlock, float *synWeightGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck,
 		int offSet, float pfPCPlastStep, float synWLow, float synWHigh, float trans_prob, float *randoms);
+
+template void callPFPCAbbottCascadeLTDPlastKernel<curandStateMRG32k3a>(cudaStream_t &st, unsigned int numBlocks,
+		unsigned int numGRPerBlock, float *synWeightGPU, uint8_t *synStatesGPU, uint64_t *historyGPU,
+		unsigned int pastBinNToCheck, int offSet, float synWLow, float trans_prob_base, float *randoms);
+
+template void callPFPCAbbottCascadeLTPPlastKernel<curandStateMRG32k3a>(cudaStream_t &st, unsigned int numBlocks,
+		unsigned int numGRPerBlock, float *synWeightGPU, uint8_t *synStatesGPU, uint64_t *historyGPU,
+		unsigned int pastBinNToCheck, int offSet, float synWHigh, float trans_prob_base, float *randoms);
 

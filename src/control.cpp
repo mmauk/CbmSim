@@ -125,7 +125,7 @@ void Control::init_sim(std::string in_sim_filename)
 	std::fstream sim_file_buf(in_sim_filename.c_str(), std::ios::in | std::ios::binary);
 	read_con_params(sim_file_buf);
 	populate_act_params(s_file); // FIXME: place act params in separate file so we don't have to make s_file class attrib
-	simState = new CBMState(numMZones, sim_file_buf);
+	simState = new CBMState(numMZones, pf_pc_plast, sim_file_buf);
 	simCore  = new CBMSimCore(simState, gpuIndex, gpuP2);
 	mfFreq   = new ECMFPopulation(num_mf, mfRandSeed, CSTonicMFFrac, CSPhasicMFFrac,
 								  contextMFFrac, nucCollFrac, bgFreqMin, csbgFreqMin,

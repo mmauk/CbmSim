@@ -98,10 +98,21 @@ void callUpdatePFPCOutKernel(cudaStream_t &st, unsigned int numBlocks, unsigned 
 void callUpdateGRHistKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
 		uint32_t *apBufGPU, uint64_t *historyGPU, uint32_t apBufGRHistMask);
 
+// TODO: does not need to be templated :WutFace:
 template <typename randState>
 void callPFPCBinaryPlastKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
 		float *synWeightGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck,
 		int offSet, float pfPCPlastStep, float synWLow, float synWHigh, float trans_prob, float *randoms);
+
+template<typename randState>
+void callPFPCAbbottCascadeLTDPlastKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
+		float *synWeightGPU, uint8_t *synStatesGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck,
+		int offSet, float synWLow, float trans_prob_base, float *randoms);
+
+template<typename randState>
+void callPFPCAbbottCascadeLTPPlastKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
+		float *synWeightGPU, uint8_t *synStatesGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck,
+		int offSet, float synWHigh, float trans_prob_base, float *randoms);
 
 void callPFPCGradedPlastKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
 		float *synWeightGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck,

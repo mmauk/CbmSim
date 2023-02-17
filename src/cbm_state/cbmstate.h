@@ -27,7 +27,7 @@ class CBMState
 		CBMState();
 		CBMState(unsigned int nZones);
 		// TODO: make a choice which of two below constructors want to keep
-		CBMState(unsigned int nZones, std::fstream &sim_file_buf);
+		CBMState(unsigned int nZones, enum plasticity plast_type, std::fstream &sim_file_buf);
 		//CBMState(unsigned int nZones, std::string inFile);
 		~CBMState();
 

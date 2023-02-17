@@ -833,12 +833,6 @@ static void draw_go_raster(GtkWidget *drawing_area, cairo_t *cr, Control *contro
 /* weights plot */
 static void draw_pf_pc_plot(GtkWidget *drawing_area, cairo_t *cr, Control *control)
 {
-	const float *pfpc_weights = control->simCore->getMZoneList()[0]->exportPFPCWeights();
-	for (int i = 0; i < 4096; i++)
-	{
-		control->sample_pfpc_syn_weights[i] = pfpc_weights[i];
-	}
-
 	// background color setup
 	cairo_set_source_rgb(cr, 0, 0, 0);
 	cairo_paint(cr);
@@ -864,9 +858,10 @@ static void draw_pf_pc_plot(GtkWidget *drawing_area, cairo_t *cr, Control *contr
 	cairo_set_source_rgb(cr, 0.0, 0.0, 1.0);
 
 	// TODO: place scaling in above scale
+	const float *pfpc_weights = control->simCore->getMZoneList()[0]->exportPFPCWeights();
 	for (int i = 0; i < 4096; i++)
 	{
-		cairo_rectangle(cr, i, (int)(da.height * control->sample_pfpc_syn_weights[i]), 2, 2);
+		cairo_rectangle(cr, i, (int)(da.height * pfpc_weights[i]), 2, 2);
 		cairo_fill(cr);
 	}
 }
@@ -1013,16 +1008,16 @@ static void on_go_raster(GtkWidget *widget, Control *control)
 		DEFAULT_RASTER_WINDOW_WIDTH, DEFAULT_RASTER_WINDOW_HEIGHT);
 }
 
-static void on_pfpc_window(GtkWidget *widget, Control *control)
-{
-	generate_plot(widget, draw_pf_pc_plot, control, "PF-PC Weights",
-		DEFAULT_PFPC_WINDOW_WIDTH, DEFAULT_PFPC_WINDOW_HEIGHT);
-}
-
 static void on_pc_window(GtkWidget *widget, Control *control)
 {
 	generate_plot(widget, draw_pc_plot, control, "PC Window",
 		DEFAULT_PC_WINDOW_WIDTH, DEFAULT_PC_WINDOW_HEIGHT);
+}
+
+static void on_pfpc_window(GtkWidget *widget, Control *control)
+{
+	generate_plot(widget, draw_pf_pc_plot, control, "PF-PC Weights",
+		DEFAULT_PFPC_WINDOW_WIDTH, DEFAULT_PFPC_WINDOW_HEIGHT);
 }
 
 static bool on_parameters(GtkWidget *widget, gpointer data)
@@ -1216,8 +1211,8 @@ int gui_init_and_run(int *argc, char ***argv, Control *control)
 			{"PC Window", gtk_button_new(), 1, 2,
 				{ "clicked", G_CALLBACK(on_pc_window), control, false }
 			},
-			{"Parameters", gtk_button_new(), 1, 3,
-				{ "clicked", G_CALLBACK(on_parameters), NULL, false }
+			{"PFPC Weights", gtk_button_new(), 1, 3,
+				{ "clicked", G_CALLBACK(on_pfpc_window), control, false }
 			},
 		},
 		.dcn_plast_button = {

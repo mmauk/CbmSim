@@ -10,6 +10,7 @@
 
 #include "logger.h"
 #include "file_utility.h"
+#include "array_util.h"
 #include "sfmt.h"
 #include "connectivityparams.h"
 #include "activityparams.h"
@@ -25,10 +26,11 @@ MZoneActivityState::MZoneActivityState(int randSeed)
 	LOG_DEBUG("Finished allocating and initializing mzone activity state.");
 }
 
-MZoneActivityState::MZoneActivityState(std::fstream &infile)
+MZoneActivityState::MZoneActivityState(enum plasticity plast_type, std::fstream &infile)
 {
 	allocateMemory();
 	stateRW(true, infile);
+	initializePFPCSynWVars(plast_type);
 }
 
 MZoneActivityState::~MZoneActivityState() {}
@@ -62,18 +64,19 @@ void MZoneActivityState::allocateMemory()
 	threshBC  = std::make_unique<float[]>(num_bc);
 
 	// purkinje cells
-	apPC          = std::make_unique<uint8_t[]>(num_pc);
-	apBufPC       = std::make_unique<uint32_t[]>(num_pc);
-	inputBCPC     = std::make_unique<uint32_t[]>(num_pc);
-	inputSCPC     = std::make_unique<uint32_t[]>(num_pc);
-	pfSynWeightPC = std::make_unique<float[]>(num_pc * num_p_pc_from_gr_to_pc);
-	inputSumPFPC  = std::make_unique<float[]>(num_pc);
-	gPFPC         = std::make_unique<float[]>(num_pc);
-	gBCPC         = std::make_unique<float[]>(num_pc);
-	gSCPC         = std::make_unique<float[]>(num_pc);
-	vPC           = std::make_unique<float[]>(num_pc);
-	threshPC      = std::make_unique<float[]>(num_pc);
-	histPCPopAct = std::make_unique<uint32_t[]>(numPopHistBinsPC);
+	apPC                = std::make_unique<uint8_t[]>(num_pc);
+	apBufPC             = std::make_unique<uint32_t[]>(num_pc);
+	inputBCPC           = std::make_unique<uint32_t[]>(num_pc);
+	inputSCPC           = std::make_unique<uint32_t[]>(num_pc);
+	pfSynWeightPC       = std::make_unique<float[]>(num_pc * num_p_pc_from_gr_to_pc);
+	pfPCSynWeightStates = std::make_unique<uint8_t[]>(num_pc * num_p_pc_from_gr_to_pc);
+	inputSumPFPC        = std::make_unique<float[]>(num_pc);
+	gPFPC               = std::make_unique<float[]>(num_pc);
+	gBCPC               = std::make_unique<float[]>(num_pc);
+	gSCPC               = std::make_unique<float[]>(num_pc);
+	vPC                 = std::make_unique<float[]>(num_pc);
+	threshPC            = std::make_unique<float[]>(num_pc);
+	histPCPopAct        = std::make_unique<uint32_t[]>(numPopHistBinsPC);
 
 	// inferior olivary cells
 	apIO      = std::make_unique<uint8_t[]>(num_io);
@@ -139,6 +142,44 @@ void MZoneActivityState::initializeVals(int randSeed)
 
 	std::fill(mfSynWeightNC.get(), mfSynWeightNC.get()
 		+ num_nc * num_p_nc_from_mf_to_nc, initSynWofMFtoNC);
+}
+
+// TODO: do some unit tests, especially in fisher_yates_shuffle
+void MZoneActivityState::initializePFPCSynWVars(enum plasticity plast_type)
+{
+	if (plast_type == BINARY || plast_type == CASCADE)
+	{
+		float temp_low_weight, temp_high_weight;
+		uint32_t num_pfpc_syn_w_low = num_pc * num_p_pc_from_gr_to_pc * fracSynWLow;
+		if (plast_type == BINARY)
+		{
+			temp_low_weight = binPlastWeightLow;
+			temp_high_weight = binPlastWeightHigh;
+		}
+		else
+		{
+			uint32_t num_pfpc_state_low = num_pc * num_p_pc_from_gr_to_pc * fracLowState;
+			temp_low_weight = cascPlastWeightLow;
+			temp_high_weight = cascPlastWeightHigh;
+			memset(pfPCSynWeightStates.get(), CASCADE_STATE_MIN_SHALLOWEST, num_pfpc_state_low * sizeof(uint8_t));
+			memset(pfPCSynWeightStates.get() + num_pfpc_state_low,
+				   CASCADE_STATE_MAX_SHALLOWEST,
+				   (1 - fracLowState) * num_pc * num_p_pc_from_gr_to_pc * sizeof(uint8_t));
+			fisher_yates_shuffle<uint8_t>(pfPCSynWeightStates.get(), num_pc * num_p_pc_from_gr_to_pc);
+		}
+
+		// reset weights 0 through num_pfpc_syn_w_low to low weight, rest to high weight
+		// NOTE: no memset for floats :sigh:
+		for (uint32_t i = 0; i < num_pfpc_syn_w_low; i++)
+		{
+			pfSynWeightPC[i] = temp_low_weight;
+		}
+		for (uint32_t i = num_pfpc_syn_w_low; i < num_pc * num_p_pc_from_gr_to_pc; i++)
+		{
+			pfSynWeightPC[i] = temp_high_weight;
+		}
+		fisher_yates_shuffle<float>(pfSynWeightPC.get(), num_pc * num_p_pc_from_gr_to_pc);
+	}
 }
 
 void MZoneActivityState::stateRW(bool read, std::fstream &file)
