@@ -543,6 +543,118 @@ __global__ void updatePFPCAbbottCascadeLTPPlastKernel(float *synWPFPC, uint8_t *
 	}
 }
 
+template <typename randState>
+__global__ void updatePFPCMaukCascadeLTDPlastKernel(float *synWPFPC, uint8_t *synStatesPFPC, uint64_t *historyGPU,
+		uint64_t plastCheckMask, unsigned int offset, float synWLow, float trans_prob_base, float *randoms)
+{
+	int i = blockIdx.x * blockDim.x + threadIdx.x + offset;
+	if ((historyGPU[i] & plastCheckMask) > 0)
+	{
+		switch (synStatesPFPC[i])
+		{
+			case 1:
+				if (randoms[i] < trans_prob_base / 8.0)
+				{
+					synStatesPFPC[i] = 0;
+				}
+				break;
+			case 2:
+				if (randoms[i] < trans_prob_base / 4.0)
+				{
+					synStatesPFPC[i] = 1;
+				}
+				break;
+			case 3:
+				if (randoms[i] < trans_prob_base / 2.0)
+				{
+					synStatesPFPC[i] = 2;
+				}
+				break;
+			case 4:
+				if (randoms[i] < trans_prob_base)
+				{
+					synStatesPFPC[i] = 3;
+					synWPFPC[i] = synWLow;
+				}
+				break;
+			case 5:
+				if (randoms[i] < trans_prob_base / 2.0)
+				{
+					synStatesPFPC[i] = 4;
+				}
+				break;
+			case 6:
+				if (randoms[i] < trans_prob_base / 4.0)
+				{
+					synStatesPFPC[i] = 5;
+				}
+				break;
+			case 7:
+				if (randoms[i] < trans_prob_base / 8.0)
+				{
+					synStatesPFPC[i] = 6;
+				}
+				break;
+		}
+	}
+}
+
+template <typename randState>
+__global__ void updatePFPCMaukCascadeLTPPlastKernel(float *synWPFPC, uint8_t *synStatesPFPC, uint64_t *historyGPU,
+	  uint64_t plastCheckMask, unsigned int offset, float synWHigh, float trans_prob_base, float *randoms)
+{
+	int i = blockIdx.x * blockDim.x + threadIdx.x + offset;
+	if ((historyGPU[i] & plastCheckMask) > 0)
+	{
+		switch (synStatesPFPC[i])
+		{
+			case 0:
+				if (randoms[i] < trans_prob_base / 8.0)
+				{
+					synStatesPFPC[i] = 1;
+				}
+				break;
+			case 1:
+				if (randoms[i] < trans_prob_base / 4.0)
+				{
+					synStatesPFPC[i] = 2;
+				}
+				break;
+			case 2:
+				if (randoms[i] < trans_prob_base / 2.0)
+				{
+					synStatesPFPC[i] = 3;
+				}
+				break;
+			case 3:
+				if (randoms[i] < trans_prob_base)
+				{
+					synStatesPFPC[i] = 4;
+					synWPFPC[i] = synWHigh;
+				}
+				break;
+			case 4:
+				if (randoms[i] < trans_prob_base / 2.0)
+				{
+					synStatesPFPC[i] = 5;
+				}
+				break;
+			case 5:
+				if (randoms[i] < trans_prob_base / 4.0)
+				{
+					synStatesPFPC[i] = 6;
+				}
+				break;
+			case 6:
+				if (randoms[i] < trans_prob_base / 8.0)
+				{
+					synStatesPFPC[i] = 7;
+				}
+				break;
+		}
+	}
+}
+
 __global__ void updatePFPCGradedSynWeightKernel(float *synWPFPC, uint64_t *historyGR, uint64_t plastCheckMask,
 		unsigned int offset, float plastStep)
 {
@@ -896,6 +1008,26 @@ void callPFPCAbbottCascadeLTPPlastKernel(cudaStream_t &st, unsigned int numBlock
 		historyGPU, mask, offSet, synWHigh, trans_prob_base, randoms);
 }
 
+template<typename randState>
+void callPFPCMaukCascadeLTDPlastKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
+		float *synWeightGPU, uint8_t *synStatesGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck,
+		int offSet, float synWLow, float trans_prob_base, float *randoms)
+{
+	uint64_t mask = ((uint64_t)1)<<(pastBinNToCheck-1);
+	updatePFPCMaukCascadeLTDPlastKernel<randState><<<numBlocks, numGRPerBlock, 0, st>>>(synWeightGPU, synStatesGPU,
+		historyGPU, mask, offSet, synWLow, trans_prob_base, randoms);
+}
+
+template<typename randState>
+void callPFPCMaukCascadeLTPPlastKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
+		float *synWeightGPU, uint8_t *synStatesGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck,
+		int offSet, float synWHigh, float trans_prob_base, float *randoms)
+{
+	uint64_t mask = ((uint64_t)1)<<(pastBinNToCheck-1);
+	updatePFPCMaukCascadeLTPPlastKernel<randState><<<numBlocks, numGRPerBlock, 0, st>>>(synWeightGPU, synStatesGPU,
+		historyGPU, mask, offSet, synWHigh, trans_prob_base, randoms);
+}
+
 void callPFPCGradedPlastKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
 		float *synWeightGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck,
 		int offSet, float pfPCPlastStep)
@@ -939,6 +1071,14 @@ template void callPFPCAbbottCascadeLTDPlastKernel<curandStateMRG32k3a>(cudaStrea
 		unsigned int pastBinNToCheck, int offSet, float synWLow, float trans_prob_base, float *randoms);
 
 template void callPFPCAbbottCascadeLTPPlastKernel<curandStateMRG32k3a>(cudaStream_t &st, unsigned int numBlocks,
+		unsigned int numGRPerBlock, float *synWeightGPU, uint8_t *synStatesGPU, uint64_t *historyGPU,
+		unsigned int pastBinNToCheck, int offSet, float synWHigh, float trans_prob_base, float *randoms);
+
+template void callPFPCMaukCascadeLTDPlastKernel<curandStateMRG32k3a>(cudaStream_t &st, unsigned int numBlocks,
+		unsigned int numGRPerBlock, float *synWeightGPU, uint8_t *synStatesGPU, uint64_t *historyGPU,
+		unsigned int pastBinNToCheck, int offSet, float synWLow, float trans_prob_base, float *randoms);
+
+template void callPFPCMaukCascadeLTPPlastKernel<curandStateMRG32k3a>(cudaStream_t &st, unsigned int numBlocks,
 		unsigned int numGRPerBlock, float *synWeightGPU, uint8_t *synStatesGPU, uint64_t *historyGPU,
 		unsigned int pastBinNToCheck, int offSet, float synWHigh, float trans_prob_base, float *randoms);
 

@@ -114,6 +114,16 @@ void callPFPCAbbottCascadeLTPPlastKernel(cudaStream_t &st, unsigned int numBlock
 		float *synWeightGPU, uint8_t *synStatesGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck,
 		int offSet, float synWHigh, float trans_prob_base, float *randoms);
 
+template<typename randState>
+void callPFPCMaukCascadeLTDPlastKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
+		float *synWeightGPU, uint8_t *synStatesGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck,
+		int offSet, float synWLow, float trans_prob_base, float *randoms);
+
+template<typename randState>
+void callPFPCMaukCascadeLTPPlastKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
+		float *synWeightGPU, uint8_t *synStatesGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck,
+		int offSet, float synWHigh, float trans_prob_base, float *randoms);
+
 void callPFPCGradedPlastKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
 		float *synWeightGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck,
 		int offSet, float pfPCPlastStep);

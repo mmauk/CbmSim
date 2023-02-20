@@ -147,7 +147,7 @@ void MZoneActivityState::initializeVals(int randSeed)
 // TODO: do some unit tests, especially in fisher_yates_shuffle
 void MZoneActivityState::initializePFPCSynWVars(enum plasticity plast_type)
 {
-	if (plast_type == BINARY || plast_type == CASCADE)
+	if (plast_type == BINARY || plast_type == ABBOTT_CASCADE || plast_type == MAUK_CASCADE)
 	{
 		float temp_low_weight, temp_high_weight;
 		uint32_t num_pfpc_syn_w_low = num_pc * num_p_pc_from_gr_to_pc * fracSynWLow;

@@ -13,7 +13,7 @@ sess_file="TESTS.sess"
 binary="${build_dir}cbm_sim"
 
 passed_tests=0
-num_tests=50
+num_tests=52
 
 printf "Running all tests...\n"
 # workflow 0 test cases: building a simulation
@@ -606,7 +606,7 @@ else
 fi
 
 curr_date="$(date +%m%d%Y)"
-err="$( { $binary --binary -s $sess_file -i $workflow_1_input -o TEST_CASE_40 --cascade > /dev/null; } 2>&1 )"
+err="$( { $binary --binary -s $sess_file -i $workflow_1_input -o TEST_CASE_40 --abbott-cascade > /dev/null; } 2>&1 )"
 if [[ $err =~ "Mutually exclusive or duplicate pfpc plasticity arguments found. Exiting..." ]]
 then
 	printf "TEST CASE 40 PASSED\n"
@@ -616,7 +616,7 @@ else
 fi
 
 curr_date="$(date +%m%d%Y)"
-err="$( { $binary --cascade -s $sess_file -i $workflow_1_input -o TEST_CASE_41 --binary > /dev/null; } 2>&1 )"
+err="$( { $binary --abbott-cascade -s $sess_file -i $workflow_1_input -o TEST_CASE_41 --binary > /dev/null; } 2>&1 )"
 if [[ $err =~ "Mutually exclusive or duplicate pfpc plasticity arguments found. Exiting..." ]]
 then
 	printf "TEST CASE 41 PASSED\n"
@@ -626,7 +626,7 @@ else
 fi
 
 curr_date="$(date +%m%d%Y)"
-err="$( { $binary --binary -s $sess_file -i $workflow_1_input -o TEST_CASE_42 --binary > /dev/null; } 2>&1 )"
+err="$( { $binary --binary -s $sess_file -i $workflow_1_input -o TEST_CASE_42 --mauk-cascade > /dev/null; } 2>&1 )"
 if [[ $err =~ "Mutually exclusive or duplicate pfpc plasticity arguments found. Exiting..." ]]
 then
 	printf "TEST CASE 42 PASSED\n"
@@ -636,8 +636,8 @@ else
 fi
 
 curr_date="$(date +%m%d%Y)"
-err="$( { $binary --mfnc-off -s $sess_file -i $workflow_1_input -o TEST_CASE_43 --mfnc-off > /dev/null; } 2>&1 )"
-if [[ $err =~ "Duplicate mfnc plasticity arguments found. Exiting..." ]]
+err="$( { $binary --mauk-cascade -s $sess_file -i $workflow_1_input -o TEST_CASE_43 --binary > /dev/null; } 2>&1 )"
+if [[ $err =~ "Mutually exclusive or duplicate pfpc plasticity arguments found. Exiting..." ]]
 then
 	printf "TEST CASE 43 PASSED\n"
 	(( passed_tests++ ))
@@ -645,9 +645,10 @@ else
 	printf "TEST CASE 43 FAILED\n"
 fi
 
+
 curr_date="$(date +%m%d%Y)"
-err="$( { $binary -s $sess_file --session $sess_file -i $workflow_1_input -o TEST_CASE_44 > /dev/null; } 2>&1 )"
-if [[ $err =~ "Found both short and long form of option '-s'. Exiting..." ]]
+err="$( { $binary --binary -s $sess_file -i $workflow_1_input -o TEST_CASE_44 --binary > /dev/null; } 2>&1 )"
+if [[ $err =~ "Mutually exclusive or duplicate pfpc plasticity arguments found. Exiting..." ]]
 then
 	printf "TEST CASE 44 PASSED\n"
 	(( passed_tests++ ))
@@ -656,8 +657,8 @@ else
 fi
 
 curr_date="$(date +%m%d%Y)"
-err="$( { $binary -s $sess_file -i $workflow_1_input --input $workflow_1_input -o TEST_CASE_45 > /dev/null; } 2>&1 )"
-if [[ $err =~ "Found both short and long form of option '-i'. Exiting..." ]]
+err="$( { $binary --mfnc-off -s $sess_file -i $workflow_1_input -o TEST_CASE_45 --mfnc-off > /dev/null; } 2>&1 )"
+if [[ $err =~ "Duplicate mfnc plasticity arguments found. Exiting..." ]]
 then
 	printf "TEST CASE 45 PASSED\n"
 	(( passed_tests++ ))
@@ -666,8 +667,8 @@ else
 fi
 
 curr_date="$(date +%m%d%Y)"
-err="$( { $binary -s $sess_file -i $workflow_1_input -o TEST_CASE_46 --output TEST_CASE_46 > /dev/null; } 2>&1 )"
-if [[ $err =~ "Found both short and long form of option '-o'. Exiting..." ]]
+err="$( { $binary -s $sess_file --session $sess_file -i $workflow_1_input -o TEST_CASE_46 > /dev/null; } 2>&1 )"
+if [[ $err =~ "Found both short and long form of option '-s'. Exiting..." ]]
 then
 	printf "TEST CASE 46 PASSED\n"
 	(( passed_tests++ ))
@@ -676,8 +677,8 @@ else
 fi
 
 curr_date="$(date +%m%d%Y)"
-err="$( { $binary -s $sess_file -i $workflow_1_input -o TEST_CASE_47 -r PC --raster PC > /dev/null; } 2>&1 )"
-if [[ $err =~ "Found both short and long form of option '-r'. Exiting..." ]]
+err="$( { $binary -s $sess_file -i $workflow_1_input --input $workflow_1_input -o TEST_CASE_47 > /dev/null; } 2>&1 )"
+if [[ $err =~ "Found both short and long form of option '-i'. Exiting..." ]]
 then
 	printf "TEST CASE 47 PASSED\n"
 	(( passed_tests++ ))
@@ -686,8 +687,8 @@ else
 fi
 
 curr_date="$(date +%m%d%Y)"
-err="$( { $binary -s $sess_file -i $workflow_1_input -o TEST_CASE_48 -p PC --psth PC > /dev/null; } 2>&1 )"
-if [[ $err =~ "Found both short and long form of option '-p'. Exiting..." ]]
+err="$( { $binary -s $sess_file -i $workflow_1_input -o TEST_CASE_46 --output TEST_CASE_48 > /dev/null; } 2>&1 )"
+if [[ $err =~ "Found both short and long form of option '-o'. Exiting..." ]]
 then
 	printf "TEST CASE 48 PASSED\n"
 	(( passed_tests++ ))
@@ -696,8 +697,8 @@ else
 fi
 
 curr_date="$(date +%m%d%Y)"
-err="$( { $binary -s $sess_file -i $workflow_1_input -o TEST_CASE_49 -w PFPC --weights PFPC > /dev/null; } 2>&1 )"
-if [[ $err =~ "Found both short and long form of option '-w'. Exiting..." ]]
+err="$( { $binary -s $sess_file -i $workflow_1_input -o TEST_CASE_49 -r PC --raster PC > /dev/null; } 2>&1 )"
+if [[ $err =~ "Found both short and long form of option '-r'. Exiting..." ]]
 then
 	printf "TEST CASE 49 PASSED\n"
 	(( passed_tests++ ))
@@ -706,13 +707,33 @@ else
 fi
 
 curr_date="$(date +%m%d%Y)"
-err="$( { $binary -v TUI --visual TUI -s $sess_file -i $workflow_1_input -o TEST_CASE_50 > /dev/null; } 2>&1 )"
-if [[ $err =~ "Found both short and long form of option '-v'. Exiting..." ]]
+err="$( { $binary -s $sess_file -i $workflow_1_input -o TEST_CASE_50 -p PC --psth PC > /dev/null; } 2>&1 )"
+if [[ $err =~ "Found both short and long form of option '-p'. Exiting..." ]]
 then
 	printf "TEST CASE 50 PASSED\n"
 	(( passed_tests++ ))
 else
 	printf "TEST CASE 50 FAILED\n"
+fi
+
+curr_date="$(date +%m%d%Y)"
+err="$( { $binary -s $sess_file -i $workflow_1_input -o TEST_CASE_51 -w PFPC --weights PFPC > /dev/null; } 2>&1 )"
+if [[ $err =~ "Found both short and long form of option '-w'. Exiting..." ]]
+then
+	printf "TEST CASE 51 PASSED\n"
+	(( passed_tests++ ))
+else
+	printf "TEST CASE 51 FAILED\n"
+fi
+
+curr_date="$(date +%m%d%Y)"
+err="$( { $binary -v TUI --visual TUI -s $sess_file -i $workflow_1_input -o TEST_CASE_52 > /dev/null; } 2>&1 )"
+if [[ $err =~ "Found both short and long form of option '-v'. Exiting..." ]]
+then
+	printf "TEST CASE 52 PASSED\n"
+	(( passed_tests++ ))
+else
+	printf "TEST CASE 52 FAILED\n"
 fi
 
 printf "All tests finished.\n"

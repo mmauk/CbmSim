@@ -33,7 +33,8 @@ const std::vector<std::string> command_line_single_opts
 	"--pfpc-off",
 	"--mfnc-off",
 	"--binary",
-	"--cascade",
+	"--abbott-cascade",
+	"--mauk-cascade",
 };
 
 /*
@@ -183,10 +184,11 @@ void print_usage_info()
 	std::cout << std::right << std::setw(20) << "\t-s, --session [FILE]" << "\tsets the simulation to run a session using FILE as the session file\n";
 	std::cout << std::right << std::setw(20) << "\t-i, --input [FILE]" << "\tspecify the input simulation file\n";
 	std::cout << std::right << std::setw(20) << "\t-o, --output [DIR]" << "\tspecify the output directory basename - all output is saved in 'ROOT/data/outputs'\n";
-	std::cout << std::right << std::setw(10) << "\t--pfpc-off|--binary|--cascade" << "\tturns off or sets PFPC plasticity mode; options are mutually exclusive and work as follows:\n\n";
+	std::cout << std::right << std::setw(10) << "\t--pfpc-off|--binary|--abbott-cascade|--mauk-cascade" << "\tturns off or sets PFPC plasticity mode; options are mutually exclusive and work as follows:\n\n";
 	std::cout << "\t\t\t\t \t--pfpc-off - turns PFPC plasticity off\n";
 	std::cout << "\t\t\t\t \t--binary - turns PFPC plasticity on and sets the type of plasticity to 'dual' ie 'binary'\n";
-	std::cout << "\t\t\t\t \t--cascade - turns PFPC plasticity on and sets the type of plasticity to 'cascade'\n\n";
+	std::cout << "\t\t\t\t \t--abbott-cascade - turns PFPC plasticity on and sets the type of plasticity to 'abbott cascade'\n\n";
+	std::cout << "\t\t\t\t \t--mauk-cascade - turns PFPC plasticity on and sets the type of plasticity to 'mauk cascade'\n\n";
 	std::cout << std::right << std::setw(10) << "\t" << "\t\t\tif none of these options is given, PFPC plasticity is turned on and set to 'graded' by default\n\n";
 	std::cout << std::right << std::setw(10) << "\t--mfnc-off" << "\t\tturns off MFNC plasticity; if not included, MFNC plasticity is turned on and set to 'graded' by default\n";
 	std::cout << "\t-r, --raster {[CODE]} comma-separated list of cell ids to be saved for that cell type. Possible CODEs are:\n\n";
@@ -240,7 +242,7 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl)
 	// fill plasticity values, testing for mutually exclusive options
 	for (auto token: tokens)
 	{
-		if (token == "--pfpc-off" || token == "--binary" || token == "--cascade")
+		if (token == "--pfpc-off" || token == "--binary" || token == "--abbott-cascade" || token == "--mauk-cascade")
 		{
 			if (!p_cl.pfpc_plasticity.empty())
 			{
@@ -439,7 +441,8 @@ void validate_commandline(parsed_commandline &p_cl)
 			{
 				// just notify user what we already set above
 				if (p_cl.pfpc_plasticity == "dual") LOG_DEBUG("Turning PFPC plasticity on in 'dual' mode...");
-				else if (p_cl.pfpc_plasticity == "cascade") LOG_DEBUG("Turning PFPC plasticity on in 'cascade' mode...");
+				else if (p_cl.pfpc_plasticity == "abbott-cascade") LOG_DEBUG("Turning PFPC plasticity on in 'abbott cascade' mode...");
+				else if (p_cl.pfpc_plasticity == "mauk-cascade") LOG_DEBUG("Turning PFPC plasticity on in 'mauk cascade' mode...");
 				else if (p_cl.pfpc_plasticity == "off") LOG_DEBUG("Turning PFPC plasticity off..");
 			}
 			if (p_cl.mfnc_plasticity.empty())

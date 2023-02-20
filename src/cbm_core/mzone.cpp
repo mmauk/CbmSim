@@ -854,9 +854,78 @@ void MZone::runPFPCAbbottCascadePlastCUDA(cudaStream_t **sts, int streamN, uint3
 				}
 			}
 		}
-
 	}
 }
+
+void MZone::runPFPCMaukCascadePlastCUDA(cudaStream_t **sts, int streamN, uint32_t t)
+{
+	cudaError_t error;
+	if (t % (uint32_t)tsPerHistBinGR == 0)
+	{
+		int numGRPerIO = num_gr / num_io;
+		for (int i = 0; i < num_io; i++)
+		{
+			if (as->pfPCPlastTimerIO[i] < (tsLTDstartAPIO + (int)tsLTDDurationIO) &&
+				as->pfPCPlastTimerIO[i] >= tsLTDstartAPIO)
+			{
+				int curGROffset = 0;
+				int curGPUInd = 0;
+				int curIOInd = 0;
+
+				error = cudaSetDevice(curGPUInd + gpuIndStart);
+				for (int i = 0; i < num_gr; i += num_p_pc_from_gr_to_pc)
+				{
+					if (i >= (curGPUInd + 1) * numGRPerGPU)
+					{
+						curGPUInd++;
+						curGROffset = 0;
+						error = cudaSetDevice(curGPUInd+gpuIndStart);
+					}
+					if (i >= (curIOInd + 1) * numGRPerIO)
+					{
+						curIOInd++;
+					}
+					callPFPCMaukCascadeLTDPlastKernel<curandStateMRG32k3a>(sts[curGPUInd][streamN + curIOInd],
+							updatePFPCSynWNumBlocks, updatePFPCSynWNumGRPerB, pfSynWeightPCGPU[curGPUInd],
+							pfPCSynWeightStatesGPU[curGPUInd], histGRGPU[curGPUInd], grPCHistCheckBinIO, curGROffset,
+							cascPlastWeightLow, cascPlastProbMin, pfpcSynWRandNums[curGPUInd]);
+
+					curGROffset += num_p_pc_from_gr_to_pc;
+				}
+			}
+			else if (as->pfPCPlastTimerIO[i] >= tsLTPstartAPIO ||
+					as->pfPCPlastTimerIO[i] < tsLTPEndAPIO)
+			{
+				int curGROffset = 0;
+				int curGPUInd = 0;
+				int curIOInd = 0;
+
+				error = cudaSetDevice(curGPUInd + gpuIndStart);
+				for (int i = 0; i < num_gr; i += num_p_pc_from_gr_to_pc)
+				{
+					if (i >= (curGPUInd + 1) * numGRPerGPU)
+					{
+						curGPUInd++;
+						curGROffset = 0;
+						error = cudaSetDevice(curGPUInd+gpuIndStart);
+					}
+					if (i >= (curIOInd + 1) * numGRPerIO)
+					{
+						curIOInd++;
+					}
+					callPFPCMaukCascadeLTPPlastKernel<curandStateMRG32k3a>(sts[curGPUInd][streamN + curIOInd],
+							updatePFPCSynWNumBlocks, updatePFPCSynWNumGRPerB, pfSynWeightPCGPU[curGPUInd],
+							pfPCSynWeightStatesGPU[curGPUInd], histGRGPU[curGPUInd], grPCHistCheckBinIO, curGROffset,
+							cascPlastWeightHigh, cascPlastProbMax, pfpcSynWRandNums[curGPUInd]);
+
+					curGROffset += num_p_pc_from_gr_to_pc;
+				}
+			}
+		}
+	}
+
+}
+
 
 void MZone::runPFPCGradedPlastCUDA(cudaStream_t **sts, int streamN, uint32_t t)
 {

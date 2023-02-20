@@ -47,6 +47,7 @@ public:
 	void cpyPFPCSumCUDA(cudaStream_t **sts, int streamN);
 	void runPFPCBinaryPlastCUDA(cudaStream_t **sts, int streamN, uint32_t t);
 	void runPFPCAbbottCascadePlastCUDA(cudaStream_t **sts, int streamN, uint32_t t);
+	void runPFPCMaukCascadePlastCUDA(cudaStream_t **sts, int streamN, uint32_t t);
 	void runPFPCGradedPlastCUDA(cudaStream_t **sts, int streamN, uint32_t t);
 
 	void runSumPFSCCUDA(cudaStream_t **sts, int streamN);
