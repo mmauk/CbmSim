@@ -368,6 +368,7 @@ static void on_create_dir(GtkWidget *widget, struct gui *gui)
 								char *full_path = create_dir_name_from(OUTPUT_DATA_PATH.c_str(), gtk_entry_get_text(GTK_ENTRY(entry))); 
 								gui->ctrl_ptr->data_out_path = std::string(full_path); // data is safely copied to data_out_path
 								gui->ctrl_ptr->data_out_base_name = std::string(gtk_entry_get_text(GTK_ENTRY(entry)));
+								gui->ctrl_ptr->data_out_run_name = gui->ctrl_ptr->data_out_path + "/run_" + std::to_string(gui->ctrl_ptr->run_num);
 								gui->ctrl_ptr->data_out_dir_created = true;
 								free(full_path); // free current allocated memory
 							}
@@ -387,6 +388,7 @@ static void on_create_dir(GtkWidget *widget, struct gui *gui)
 						char *full_path = create_dir_name_from(OUTPUT_DATA_PATH.c_str(), gtk_entry_get_text(GTK_ENTRY(entry))); 
 						gui->ctrl_ptr->data_out_path = std::string(full_path); // data is safely copied to data_out_path
 						gui->ctrl_ptr->data_out_base_name = std::string(gtk_entry_get_text(GTK_ENTRY(entry)));
+						gui->ctrl_ptr->data_out_run_name = gui->ctrl_ptr->data_out_path + "/run_" + std::to_string(gui->ctrl_ptr->run_num);
 						gui->ctrl_ptr->data_out_dir_created = true;
 						free(full_path); // free current allocated memory
 					}
@@ -719,35 +721,41 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 
 static void on_toggle_run(GtkWidget *widget, struct gui *gui)
 {
-	if (gui->ctrl_ptr->simState && gui->ctrl_ptr->simCore && gui->ctrl_ptr->mfFreq && gui->ctrl_ptr->mfs)
-	{
-		switch (gui->ctrl_ptr->run_state)
-		{
-			case NOT_IN_RUN:
-				// TODO: start sim in a new thread
-				gtk_button_set_label(GTK_BUTTON(widget), "Pause");
-				gui->ctrl_ptr->run_state = IN_RUN_NO_PAUSE;
-				gtk_widget_show(gui->normal_buttons[1].widget);
-				// FIXME: thats a segfault: where is the object this guy is called upon???
-				//g_thread_new("sim_thread", (GThreadFunc)&Control::runSession, gui);
-				gui->ctrl_ptr->runSession(gui);
-				gtk_button_set_label(GTK_BUTTON(widget), "Run");
-				gtk_widget_hide(gui->normal_buttons[1].widget);
-				break;
-			case IN_RUN_NO_PAUSE:
-				gtk_button_set_label(GTK_BUTTON(widget), "Continue");
-				gui->ctrl_ptr->run_state = IN_RUN_PAUSE;
-				break;
-			case IN_RUN_PAUSE:
-				gtk_button_set_label(GTK_BUTTON(widget), "Pause");
-				gui->ctrl_ptr->run_state = IN_RUN_NO_PAUSE;
-				break;
-		}
-	}
-	else
+	if (!gui->ctrl_ptr->simState &&
+		!gui->ctrl_ptr->simCore &&
+		!gui->ctrl_ptr->mfFreq &&
+		!gui->ctrl_ptr->mfs)
 	{
 		LOG_WARN("trying to run an uninitialized simulation.");
 		LOG_WARN("(Hint: initialize the simulation before running it.)");
+		return;
+	}
+	if (!gui->ctrl_ptr->data_out_dir_created)
+	{
+		LOG_WARN("Output directory not created.");
+		LOG_WARN("(Hint: You MUST create an output directory to run a sim)");
+		return;
+	}
+	switch (gui->ctrl_ptr->run_state)
+	{
+		case NOT_IN_RUN:
+			// TODO: start sim in a new thread
+			gtk_button_set_label(GTK_BUTTON(widget), "Pause");
+			gui->ctrl_ptr->run_state = IN_RUN_NO_PAUSE;
+			gtk_widget_show(gui->normal_buttons[1].widget);
+			gui->ctrl_ptr->runSession(gui);
+			gtk_button_set_label(GTK_BUTTON(widget), "Run");
+			gtk_widget_hide(gui->normal_buttons[1].widget);
+			gui->ctrl_ptr->reset_sim();
+			break;
+		case IN_RUN_NO_PAUSE:
+			gtk_button_set_label(GTK_BUTTON(widget), "Continue");
+			gui->ctrl_ptr->run_state = IN_RUN_PAUSE;
+			break;
+		case IN_RUN_PAUSE:
+			gtk_button_set_label(GTK_BUTTON(widget), "Pause");
+			gui->ctrl_ptr->run_state = IN_RUN_NO_PAUSE;
+			break;
 	}
 }
 

@@ -149,35 +149,48 @@ void Control::init_sim(std::string in_sim_filename)
 
 void Control::reset_sim()
 {
-	// 'move previous run to "{data_out}/run_0/"
+	// move previous run to "{data_out}/run_(i-1)/"
 	int status = mkdir(data_out_run_name.c_str(), 0775);
 	if (status == -1)
 	{
 		LOG_FATAL("Could not create directory '%s'. Maybe it already exists. Exiting...", data_out_run_name.c_str());
 		exit(10);
 	}
-	status = rename(data_out_path, data_out_run_name);
-	if (status == -1)
+
+	struct dirent *dp;
+	char data_out_path_abs[64];
+	realpath(data_out_path.c_str(), data_out_path_abs);
+	std::string abs_out_path_cpp_str = std::string(data_out_path_abs);
+	DIR *dir = opendir(abs_out_path_cpp_str.c_str());
+	if (!dir)
 	{
-		LOG_FATAL("Could not move directory '%s' to '%s",data_out_path.c_str(), data_out_run_name.c_str());
+		//LOG_FATAL("Could not find output directory '%s'", abs_out_path_cpp_str.c_str());
 		exit(11);
 	}
+	while ((dp = readdir(dir)))
+	{
+		if (strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0)
+		{
+			printf("%s\n", dp->d_name);
+		}
+	}
 
+	// update current output name to "{data_out}/run_(i)"
 	run_num++;
 	data_out_run_name = "run_" + std::to_string(run_num);
-	int status = mkdir(data_out_run_name.c_str(), 0775);
+	status = mkdir(data_out_run_name.c_str(), 0775);
 	if (status == -1)
 	{
 		LOG_FATAL("Could not create directory '%s'. Maybe it already exists. Exiting...", data_out_run_name.c_str());
 		exit(12);
 	}
 
-	simState->readState(sim_file_buf);
-	// TODO: simCore, mfFreq, mfs
-	
-	reset_rasters();
-	reset_psths();
-	reset_spike_sums();
+	//simState->readState(sim_file_buf);
+	//// TODO: simCore, mfFreq, mfs
+	//
+	//reset_rasters();
+	//reset_psths();
+	//reset_spike_sums();
 }
 
 void Control::save_sim_to_file()
