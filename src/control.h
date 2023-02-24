@@ -147,6 +147,8 @@ class Control
 		uint32_t msPostCS = 0;
 		uint32_t msMeasure = 0; // derived param, from msPreCS, msPostCS and csLength 
 
+		uint32_t run_num = 0;
+
 		enum plasticity pf_pc_plast = GRADED;
 		enum plasticity mf_nc_plast = GRADED;
 
@@ -155,6 +157,7 @@ class Control
 		// 2) create the output directory
 		std::string data_out_path      = "";
 		std::string data_out_base_name = "";
+		std::string data_out_run_name  = "";
 
 		std::string out_sim_name  = "";
 		std::string out_info_name = "";
@@ -190,7 +193,7 @@ class Control
 		void set_plasticity_modes(std::string pfpc_plasticity, std::string mfnc_plasticity);
 		void initialize_session(std::string sess_file);
 		void init_sim(std::string in_sim_filename);
-		void reset_sim(std::string in_sim_filename);
+		void reset_sim();
 
 		void save_sim_to_file();
 

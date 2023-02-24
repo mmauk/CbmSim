@@ -40,6 +40,7 @@ Control::Control(parsed_commandline &p_cl)
 		// assume that validated commandline opts includes 1) input file 2) session file 3) output directory name
 		data_out_path = OUTPUT_DATA_PATH + p_cl.output_basename;
 		data_out_base_name = p_cl.output_basename;
+		data_out_run_name = data_out_path + "/run_" + std::to_string(run_num);
 		// NOTE: make the output directory here, so in case of error, user not
 		// run an entire simulation just to not have files save
 		int status = mkdir(data_out_path.c_str(), 0775);
@@ -145,19 +146,38 @@ void Control::init_sim(std::string in_sim_filename)
 	LOG_DEBUG("Simulation initialized.");
 }
 
-void Control::reset_sim(std::string in_sim_filename)
+
+void Control::reset_sim()
 {
-	std::fstream sim_file_buf(in_sim_filename.c_str(), std::ios::in | std::ios::binary);
-	read_con_params(sim_file_buf);
-	//read_act_params(sim_file_buf);
+	// 'move previous run to "{data_out}/run_0/"
+	int status = mkdir(data_out_run_name.c_str(), 0775);
+	if (status == -1)
+	{
+		LOG_FATAL("Could not create directory '%s'. Maybe it already exists. Exiting...", data_out_run_name.c_str());
+		exit(10);
+	}
+	status = rename(data_out_path, data_out_run_name);
+	if (status == -1)
+	{
+		LOG_FATAL("Could not move directory '%s' to '%s",data_out_path.c_str(), data_out_run_name.c_str());
+		exit(11);
+	}
+
+	run_num++;
+	data_out_run_name = "run_" + std::to_string(run_num);
+	int status = mkdir(data_out_run_name.c_str(), 0775);
+	if (status == -1)
+	{
+		LOG_FATAL("Could not create directory '%s'. Maybe it already exists. Exiting...", data_out_run_name.c_str());
+		exit(12);
+	}
+
 	simState->readState(sim_file_buf);
 	// TODO: simCore, mfFreq, mfs
 	
 	reset_rasters();
 	reset_psths();
 	reset_spike_sums();
-	sim_file_buf.close();
-	// TODO: more things to reset?
 }
 
 void Control::save_sim_to_file()
