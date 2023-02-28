@@ -7,7 +7,7 @@
 #include "file_parse.h"
 #include "tty.h"
 #include "array_util.h"
-#include "gui.h" /* tenuous inclide at best :pogO: */
+#include "gui.h" /* tenuous include at best :pogO: */
 
 Control::Control(parsed_commandline &p_cl)
 {
@@ -146,10 +146,9 @@ void Control::init_sim(std::string in_sim_filename)
 	LOG_DEBUG("Simulation initialized.");
 }
 
-
 void Control::reset_sim()
 {
-	// move previous run to "{data_out}/run_(i-1)/"
+  // create run_{trial} directory, which will store previous run data, if any
 	int status = mkdir(data_out_run_name.c_str(), 0775);
 	if (status == -1)
 	{
@@ -157,32 +156,48 @@ void Control::reset_sim()
 		exit(10);
 	}
 
+  // open data output path for this invocation of cbm_sim
 	struct dirent *dp;
-	char data_out_path_abs[64];
+  char *data_out_path_abs = (char *)calloc(PATH_MAX/2, sizeof(char));
+  char *data_out_run_path_abs = (char *)calloc(PATH_MAX/2, sizeof(char));
 	realpath(data_out_path.c_str(), data_out_path_abs);
-	std::string abs_out_path_cpp_str = std::string(data_out_path_abs);
-	DIR *dir = opendir(abs_out_path_cpp_str.c_str());
+	realpath(data_out_run_name.c_str(), data_out_run_path_abs);
+	DIR *dir = opendir(data_out_path_abs);
 	if (!dir)
 	{
-		//LOG_FATAL("Could not find output directory '%s'", abs_out_path_cpp_str.c_str());
+		LOG_FATAL("Could not find output directory '%s'", data_out_path.c_str());
 		exit(11);
 	}
+
+  // now actually move the previous run data
+  struct stat statbuf;
 	while ((dp = readdir(dir)))
 	{
 		if (strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0)
 		{
-			printf("%s\n", dp->d_name);
+      char *entry_path_buf_old = (char *)calloc(PATH_MAX/2, sizeof(char));
+      snprintf(entry_path_buf_old, PATH_MAX/2, "%s/%s", data_out_path_abs, dp->d_name);
+      stat(entry_path_buf_old, &statbuf);
+      if (S_ISREG(statbuf.st_mode))
+      {
+        char *entry_path_buf_new = (char *)calloc(PATH_MAX/2, sizeof(char));
+        snprintf(entry_path_buf_new, PATH_MAX/2, "%s/%s", data_out_run_path_abs, dp->d_name);
+        rename(entry_path_buf_old, entry_path_buf_new);
+      }
+      free(entry_path_buf_old);
 		}
 	}
+  free(data_out_path_abs);
+  free(data_out_run_path_abs);
 
 	// update current output name to "{data_out}/run_(i)"
 	run_num++;
-	data_out_run_name = "run_" + std::to_string(run_num);
+	data_out_run_name = data_out_path + "/run_" + std::to_string(run_num);
 	status = mkdir(data_out_run_name.c_str(), 0775);
 	if (status == -1)
 	{
-		LOG_FATAL("Could not create directory '%s'. Maybe it already exists. Exiting...", data_out_run_name.c_str());
-		exit(12);
+    LOG_FATAL("Could not create directory '%s'. Maybe it already exists. Exiting...", data_out_run_name.c_str());
+    exit(12);
 	}
 
 	//simState->readState(sim_file_buf);
@@ -546,7 +561,7 @@ void Control::create_psth_filenames(std::map<std::string, bool> &psth_map)
 			std::string cell_id = CELL_IDS[i];
 			if (psth_map[cell_id] || use_gui)
 			{
-				pf_names[i] = data_out_path + "/" + data_out_base_name 
+				pf_names[i] = data_out_path + "/" + data_out_base_name
 							+ "_" + cell_id + "_PSTH_"
 							+ get_current_time_as_string("%m%d%Y")
 							+ BIN_EXT;
@@ -580,7 +595,7 @@ void Control::create_weights_filenames(std::map<std::string, bool> &weights_map)
 void Control::initialize_rast_cell_nums()
 {
 	rast_cell_nums[MF] = num_mf;
-	rast_cell_nums[GR] = num_gr; 
+	rast_cell_nums[GR] = num_gr;
 	rast_cell_nums[GO] = num_go;
 	rast_cell_nums[BC] = num_bc;
 	rast_cell_nums[SC] = num_sc;
