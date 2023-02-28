@@ -196,6 +196,7 @@ class Control
 		void init_sim(std::string in_sim_filename);
 		void reset_sim();
 
+    bool validAfterReset();
 		void save_sim_to_file();
 
 		void write_header_info(std::fstream &out_buf);

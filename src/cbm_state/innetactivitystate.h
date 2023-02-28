@@ -26,6 +26,7 @@ public:
 	void readState(std::fstream &infile);
 	void writeState(std::fstream &outfile);
 	void resetState();
+  bool inInitialState();
 
 	//mossy fiber
 	std::unique_ptr<uint8_t[]> histMF{nullptr};

@@ -210,6 +210,17 @@ void Control::reset_sim()
 	LOG_DEBUG("Simulation reset, and ready to get at 'em!");
 }
 
+bool Control::validAfterReset()
+{
+  std::string previous_run_out_path = data_out_path + "/run_" + std::to_sstring(run_num-1);
+  std::string previous_run_out_path_abs = "";
+	assert(file_exists(data_out_path, previous_run_out_path, previous_run_out_path_abs),
+    "ERROR: Could not find previous run folder", __func__);
+	assert(simState->validAfterReset()),
+    "ERROR: Something went wrong in cbm state: check its logs", __func__);
+
+}
+
 void Control::save_sim_to_file()
 {
 	if (out_sim_filename_created)

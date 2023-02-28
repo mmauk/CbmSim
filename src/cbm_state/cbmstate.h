@@ -32,6 +32,7 @@ class CBMState
 		~CBMState();
     
     void resetActivityState(std::fstream &sim_file_buf);
+    bool validAfterReset();
 		void readState(std::fstream &infile);
 		void writeState(std::fstream &outfile);
 

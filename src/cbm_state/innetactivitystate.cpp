@@ -35,9 +35,78 @@ void InNetActivityState::writeState(std::fstream &outfile)
 	stateRW(false, outfile);
 }
 
+//TODO: rewrite: must include zero-ing out all arrays not invovled in initializeVals
 void InNetActivityState::resetState()
 {
 	initializeVals();
+}
+
+// TODO: finish
+bool InNetActivityState::inInitialState()
+{
+	// mf
+	histMF    = std::make_unique<uint8_t[]>(num_mf);
+	apBufMF   = std::make_unique<uint32_t[]>(num_mf);
+
+	// go
+	synWscalerGOtoGO = std::make_unique<float[]>(num_go);
+	synWscalerGRtoGO = std::make_unique<float[]>(num_go);
+	apGO             = std::make_unique<uint8_t[]>(num_go);
+	apBufGO          = std::make_unique<uint32_t[]>(num_go);
+	vGO              = std::make_unique<float[]>(num_go);
+	vCoupleGO        = std::make_unique<float[]>(num_go);
+	threshCurGO      = std::make_unique<float[]>(num_go);
+
+	inputMFGO  = std::make_unique<uint32_t[]>(num_go);
+	depAmpMFGO = std::make_unique<float[]>(num_mf);
+	gi_MFtoGO  = std::make_unique<float[]>(num_mf);
+	gSum_MFGO  = std::make_unique<float[]>(num_go);
+	inputGOGO  = std::make_unique<float[]>(num_go);
+
+	gi_GOtoGO  = std::make_unique<float[]>(num_go);
+	depAmpGOGO = std::make_unique<float[]>(num_go);
+	gSum_GOGO  = std::make_unique<float[]>(num_go);
+	depAmpGOGR = std::make_unique<float[]>(num_go);
+	dynamicAmpGOGR = std::make_unique<float[]>(num_go);
+
+	gNMDAMFGO      = std::make_unique<float[]>(num_go);
+	gNMDAIncMFGO   = std::make_unique<float[]>(num_go);
+	gGRGO          = std::make_unique<float[]>(num_go);
+	gGRGO_NMDA     = std::make_unique<float[]>(num_go);
+
+	depAmpMFGR     = std::make_unique<float[]>(num_mf);
+	apGR           = std::make_unique<uint8_t[]>(num_gr);
+	apBufGR        = std::make_unique<uint32_t[]>(num_gr);
+
+	gMFGR          = std::make_unique<float[]>(num_gr * max_num_p_gr_from_mf_to_gr);
+	gMFSumGR       = std::make_unique<float[]>(num_gr);
+	apMFtoGR       = std::make_unique<float[]>(num_gr);
+
+	gGOGR          = std::make_unique<float[]>(num_gr * max_num_p_gr_from_go_to_gr);
+	gGOSumGR       = std::make_unique<float[]>(num_gr);
+	threshGR       = std::make_unique<float[]>(num_gr);
+	vGR            = std::make_unique<float[]>(num_gr);
+	gKCaGR         = std::make_unique<float[]>(num_gr);
+	historyGR      = std::make_unique<uint64_t[]>(num_gr);
+
+	// only actively initializing those arrays whose initial values we want
+	// differ from the default initilizer value
+
+	// mf
+	std::fill(depAmpMFGO.get(), depAmpMFGO.get() + num_mf, 1.0);
+	std::fill(depAmpMFGR.get(), depAmpMFGR.get() + num_mf, 1.0);
+
+	// go
+	std::fill(synWscalerGOtoGO.get(), synWscalerGOtoGO.get() + num_go, 1.0);
+	std::fill(synWscalerGRtoGO.get(), synWscalerGRtoGO.get() + num_go, 1.0);
+
+	std::fill(vGO.get(), vGO.get() + num_go, eLeakGO);
+	std::fill(threshCurGO.get(), threshCurGO.get() + num_go, threshRestGO);
+
+	// gr
+	std::fill(vGR.get(), vGR.get() + num_gr, eLeakGR);
+	std::fill(threshGR.get(), threshGR.get() + num_gr, threshRestGR);
+
 }
 
 void InNetActivityState::stateRW(bool read, std::fstream &file)

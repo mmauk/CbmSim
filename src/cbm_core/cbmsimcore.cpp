@@ -57,15 +57,18 @@ CBMSimCore::~CBMSimCore()
 
 void CBMSimCore::resetSimCoreActivity(CBMState *state)
 {
+	LOG_DEBUG("Resetting innet...");
   inputNet->resetInNetActivity();
+	LOG_DEBUG("Finished Resetting innet");
 
 	for (int i = 0; i < numZones; i++)
 	{
     // TODO: test whether we need to give this guy the pointers, I do not think so, as we aren't
     // deallocating that memory, so the memory addresses should stay the same. Else, check MZone constructor
+	  LOG_DEBUG("Resetting mzone...");
     zones[i]->resetMZoneActivity();
+	  LOG_DEBUG("Finished Resetting mzone");
 	}
-	LOG_DEBUG("Mzone construction complete");
 	initAuxVars();
 	LOG_DEBUG("AuxVars good");
 }
