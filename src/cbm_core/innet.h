@@ -23,6 +23,7 @@ public:
 	InNet(InNetConnectivityState *cs, InNetActivityState *as, int gpuIndStart, int numGPUs);
 	~InNet();
 
+  void resetInNetActivity();
 	void writeToState();
 
 	const uint8_t* exportAPGO();
@@ -248,7 +249,10 @@ protected:
 	void initMFCUDA();
 	void initGRCUDA();
 	void initGOCUDA();
-	void initSCCUDA();
+
+  void resetMFActivityCUDA();
+  void resetGRActivityCUDA();
+  void resetGOActivityCUDA();
 
 private:
 	template<typename Type>

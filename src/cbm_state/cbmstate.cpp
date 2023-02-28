@@ -53,24 +53,6 @@ CBMState::CBMState(unsigned int nZones, std::fstream &sim_file_buf) : numZones(n
 	LOG_DEBUG("Finished initializing cbm state.");
 }
 
-//CBMState::CBMState(unsigned int nZones,
-//	std::string inFile) : numZones(nZones)
-//{
-//	std::fstream inStateFileBuffer(inFile.c_str(), std::ios::in | std::ios::binary);
-//	innetConState  = new InNetConnectivityState(inStateFileBuffer);
-//	innetActState  = new InNetActivityState(inStateFileBuffer);
-//
-//	mzoneConStates = new MZoneConnectivityState*[nZones];
-//	mzoneActStates = new MZoneActivityState*[nZones];
-//
-//	for (int i = 0; i < nZones; i++)
-//	{
-//		mzoneConStates[i] = new MZoneConnectivityState(inStateFileBuffer);
-//		mzoneActStates[i] = new MZoneActivityState(inStateFileBuffer);
-//	}
-//	inStateFileBuffer.close();
-//}
-
 CBMState::~CBMState()
 {
 	delete innetConState;
@@ -82,6 +64,15 @@ CBMState::~CBMState()
 	}
 	delete[] mzoneConStates;
 	delete[] mzoneActStates;
+}
+
+void CBMState::resetActivityState(std::fstream &sim_file_buf)
+{
+	innetActState->readState(sim_file_buf);
+	for (int i = 0; i < numZones; i++)
+	{
+		mzoneActStates[i]->readState(sim_file_buf);
+	}
 }
 
 void CBMState::readState(std::fstream &infile)

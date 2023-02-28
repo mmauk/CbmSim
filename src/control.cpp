@@ -142,6 +142,7 @@ void Control::init_sim(std::string in_sim_filename)
 	initialize_psths();
 	initialize_spike_sums();
 	sim_file_buf.close();
+  in_sim_name = in_sim_filename;
 	sim_initialized = true;
 	LOG_DEBUG("Simulation initialized.");
 }
@@ -193,19 +194,20 @@ void Control::reset_sim()
 	// update current output name to "{data_out}/run_(i)"
 	run_num++;
 	data_out_run_name = data_out_path + "/run_" + std::to_string(run_num);
-	status = mkdir(data_out_run_name.c_str(), 0775);
-	if (status == -1)
-	{
-    LOG_FATAL("Could not create directory '%s'. Maybe it already exists. Exiting...", data_out_run_name.c_str());
-    exit(12);
-	}
 
-	//simState->readState(sim_file_buf);
-	//// TODO: simCore, mfFreq, mfs
-	//
-	//reset_rasters();
-	//reset_psths();
-	//reset_spike_sums();
+	std::fstream sim_file_buf(in_sim_name.c_str(), std::ios::in | std::ios::binary);
+	simState->resetActivityState(sim_file_buf);
+  simCore->resetSimCoreActivity(simState);
+  mfFreq->regenMFFrequencies(mfRandSeed, bgFreqMin, csbgFreqMin,
+								  contextFreqMin, tonicFreqMin, phasicFreqMin, bgFreqMax,
+								  csbgFreqMax, contextFreqMax, tonicFreqMax, phasicFreqMax,
+								  collaterals_off);
+	mfs->resetPoissonRegenCells();
+	reset_rasters();
+	reset_psths();
+	reset_spike_sums();
+	sim_file_buf.close();
+	LOG_DEBUG("Simulation reset, and ready to get at 'em!");
 }
 
 void Control::save_sim_to_file()

@@ -44,6 +44,7 @@ public:
 	void updateGRStim(int startGRStim, int numGRStim);
 	void updateErrDrive(unsigned int zoneN, float errDriveRelative);
 
+  void resetSimCoreActivity(CBMState *state);
 	void writeToState();
 	void writeState(std::fstream& outfile);
 

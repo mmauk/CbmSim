@@ -28,6 +28,9 @@ public:
 
 	~ECMFPopulation();
 
+  void regenMFFrequencies(int randSeed, float bgFreqMin, float csBGFreqMin,
+    float ctxtFreqMin, float csTFreqMin, float csPFreqMin, float bgFreqMax, float csBGFreqMax,
+    float ctxtFreqMax, float csTFreqMax, float csPFreqMax, bool turnOffColls);
 	void writeToFile(std::fstream &outfile);
 	void writeMFLabels(std::string labelFileName);
 

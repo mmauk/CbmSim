@@ -34,7 +34,7 @@ PoissonRegenCells::PoissonRegenCells(int randSeed, float threshDecayTau, unsigne
 	dnCellIndex = (uint32_t *)calloc(num_mf, sizeof(uint32_t));
 	mZoneIndex  = (uint32_t *)calloc(num_mf, sizeof(uint32_t));
 
-	memset(isTrueMF, true, num_mf * sizeof(bool));
+  memset(isTrueMF, true, num_mf * sizeof(bool));
 
 	prepCollaterals(randSeedGen->IRandom(0, INT_MAX));
 }
@@ -54,6 +54,15 @@ PoissonRegenCells::~PoissonRegenCells()
 	free(isTrueMF);
 	free(dnCellIndex);
 	free(mZoneIndex);
+}
+
+void PoissonRegenCells::resetPoissonRegenCells()
+{
+	memset(aps, 0, num_mf * sizeof(uint8_t));
+	memset(isTrueMF, true, num_mf * sizeof(bool));
+	memset(dnCellIndex, 0, num_mf * sizeof(uint32_t));
+	memset(mZoneIndex, 0, num_mf * sizeof(uint32_t));
+	prepCollaterals(randSeedGen->IRandom(0, INT_MAX));
 }
 
 void PoissonRegenCells::prepCollaterals(int rSeed)

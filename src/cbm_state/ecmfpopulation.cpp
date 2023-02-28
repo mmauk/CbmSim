@@ -23,8 +23,8 @@ ECMFPopulation::ECMFPopulation(int numMF, int randSeed, float fracCSTMF, float f
     int numCSTMFB;
     int numCSPMF;
     int numCtxtMF;
-	int numCollNC;
-	int numImportMF;
+    int numCollNC;
+    int numImportMF;
 
 	this->turnOffColls = turnOffColls;
 	this->numMF = numMF;
@@ -44,19 +44,19 @@ ECMFPopulation::ECMFPopulation(int numMF, int randSeed, float fracCSTMF, float f
 
 	for (int i = 0; i < numMF; i++)
 	{
-		mfFreqBG[i] = randGen.Random() * (bgFreqMax - bgFreqMin) + bgFreqMin;
+    mfFreqBG[i] = randGen.Random() * (bgFreqMax - bgFreqMin) + bgFreqMin;
 		
-		mfFreqInCSTonicA[i] = mfFreqBG[i];
-		mfFreqInCSTonicB[i] = mfFreqBG[i];
-		mfFreqInCSPhasic[i] = mfFreqBG[i];
+    mfFreqInCSTonicA[i] = mfFreqBG[i];
+    mfFreqInCSTonicB[i] = mfFreqBG[i];
+    mfFreqInCSPhasic[i] = mfFreqBG[i];
 
-        isCSTonicA[i]   = false;
-        isCSTonicB[i]   = false;
-        isCSPhasic[i]   = false;
-        isContext[i] 	= false;
-		isCollateral[i] = false;
-		isImport[i] 	= false;
-		isAny[i] 		= false;
+    isCSTonicA[i]   = false;
+    isCSTonicB[i]   = false;
+    isCSPhasic[i]   = false;
+    isContext[i]    = false;
+    isCollateral[i] = false;
+    isImport[i]     = false;
+    isAny[i]        = false;
 	}
 
 	numCSTMF = fracCSTMF * numMF;
@@ -64,7 +64,7 @@ ECMFPopulation::ECMFPopulation(int numMF, int randSeed, float fracCSTMF, float f
 
 	if (secondCS) numCSTMFB = numCSTMF; 
 	else numCSTMFB = 0;
-    	
+
 	numCSPMF    = fracCSPMF * numMF;
 	numCtxtMF   = fracCtxtMF * numMF;
 	numCollNC   = fracCollNC * numMF;
@@ -183,6 +183,72 @@ ECMFPopulation::~ECMFPopulation()
 	delete[] isCollateral;
 	delete[] isImport;
 	delete[] isAny;
+}
+
+void ECMFPopulation::regenMFFrequencies(int randSeed, float bgFreqMin, float csBGFreqMin,
+  float ctxtFreqMin, float csTFreqMin, float csPFreqMin, float bgFreqMax, float csBGFreqMax,
+  float ctxtFreqMax, float csTFreqMax, float csPFreqMax, bool turnOffColls)
+{
+	CRandomSFMT0 randGen(randSeed);
+  for (int i = 0; i < numMF; i++)
+  {
+    if (isContext[i])
+    {
+    	mfFreqBG[i] = randGen.Random() * (ctxtFreqMax - ctxtFreqMin) + ctxtFreqMin;
+
+      mfFreqInCSTonicA[i] = mfFreqBG[i];
+      mfFreqInCSTonicB[i] = mfFreqBG[i];
+      mfFreqInCSPhasic[i] = mfFreqBG[i];
+
+      randGen.Random();
+    }
+    else if (isCSPhasic[i])
+    {
+      mfFreqBG[i] = randGen.Random() * (csBGFreqMax - csBGFreqMin) + csBGFreqMin;
+
+      mfFreqInCSTonicA[i] = mfFreqBG[i];
+      mfFreqInCSTonicB[i] = mfFreqBG[i];
+
+      mfFreqInCSPhasic[i] = randGen.Random()*(csPFreqMax - csPFreqMin) + csPFreqMin;
+    }
+    else if (isCollateral[i] && !turnOffColls)
+    {
+      mfFreqBG[i]         = -1;
+      mfFreqInCSTonicA[i] = -1;
+      mfFreqInCSTonicB[i] = -1;
+      mfFreqInCSPhasic[i] = -1;
+      // NOTE: that we were choosing random twice before.
+      // any reason why?
+      randGen.Random(); 
+    } 
+    else if (isImport[i])
+    {
+    	mfFreqBG[i] = randGen.Random() * (csBGFreqMax - csBGFreqMin) + csBGFreqMin;
+    	mfFreqInCSTonicA[i] = -2;
+    	mfFreqInCSTonicB[i] = -2;
+    	mfFreqInCSPhasic[i] = -2;
+
+    	randGen.Random();
+    } 
+    else if (isCSTonicA[i])
+    {
+      mfFreqBG[i] = randGen.Random() * (csBGFreqMax - csBGFreqMin) + csBGFreqMin;
+
+      mfFreqInCSTonicA[i] = randGen.Random() * (csTFreqMax - csTFreqMin) + csTFreqMin;
+      mfFreqInCSPhasic[i] = mfFreqInCSTonicA[i];
+    } 
+    else if (isCSTonicB[i])
+    {
+        mfFreqBG[i] = randGen.Random() * (csBGFreqMax - csBGFreqMin) + csBGFreqMin;
+
+        mfFreqInCSTonicB[i] = randGen.Random() * (csTFreqMax - csTFreqMin) + csTFreqMin;
+        mfFreqInCSPhasic[i] = mfFreqInCSTonicB[i];
+    }
+    else
+    {
+	    randGen.Random();
+    }
+  }
 }
 
 void ECMFPopulation::setMFs(int numTypeMF, int numMF, CRandomSFMT0 &randGen, bool *isAny, bool *isType)

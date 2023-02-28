@@ -30,7 +30,8 @@ class CBMState
 		CBMState(unsigned int nZones, std::fstream &sim_file_buf);
 		//CBMState(unsigned int nZones, std::string inFile);
 		~CBMState();
-
+    
+    void resetActivityState(std::fstream &sim_file_buf);
 		void readState(std::fstream &infile);
 		void writeState(std::fstream &outfile);
 

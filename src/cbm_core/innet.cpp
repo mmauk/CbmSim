@@ -25,8 +25,8 @@ InNet::InNet(InNetConnectivityState *cs,
 	// them, so caller deletes them. we assume the innet
 	// object goes out of scope before or at the time of 
 	// the calling class.
-	this->cs = cs; 
-	this->as = as; 
+	this->cs = cs;
+	this->as = as;
 
 	this->gpuIndStart = gpuIndStart;
 	this->numGPUs     = numGPUs;
@@ -205,6 +205,20 @@ InNet::~InNet()
 	delete[] counter;
 
 	LOG_DEBUG("Finished deleting innet gpu arrays.");
+}
+
+void InNet::resetInNetActivity()
+{
+  resetMFActivityCUDA();
+	LOG_DEBUG("Reset MF CUDA");
+	LOG_DEBUG("Last error: %s", cudaGetErrorString(cudaGetLastError()));
+  resetGRActivityCUDA();
+	LOG_DEBUG("Reset GR CUDA");
+	LOG_DEBUG("Last error: %s", cudaGetErrorString(cudaGetLastError()));
+  resetGOActivityCUDA();
+	LOG_DEBUG("Reset GO CUDA");
+	LOG_DEBUG("Last error: %s", cudaGetErrorString(cudaGetLastError()));
+	LOG_DEBUG("Finished resetting per-cell cuda variables.");
 }
 
 void InNet::writeToState()
@@ -1109,8 +1123,8 @@ void InNet::initGOCUDA()
 {
 	//FIXME: change the types of some of these arrays (see joe's biasManip sim)
 	grInputGOSumH   = new uint32_t*[numGPUs];
-	apGOH		    = new uint32_t*[numGPUs];
-	apGOGPU		    = new uint32_t*[numGPUs];
+	apGOH         = new uint32_t*[numGPUs];
+	apGOGPU       = new uint32_t*[numGPUs];
 	grInputGOGPU    = new uint32_t*[numGPUs];
 	grInputGOGPUP   = new size_t[numGPUs];
 	grInputGOSumGPU = new uint32_t*[numGPUs];
@@ -1170,6 +1184,139 @@ void InNet::initGOCUDA()
 		cudaDeviceSynchronize();
 	}
 	LOG_DEBUG("Finished initializing GO cuda variables.");
+}
+
+void InNet::resetMFActivityCUDA()
+{
+	//reset MF GPU variables
+	LOG_DEBUG("Resetting MF cuda variables...");
+	for(int i=0; i<numGPUs; i++)
+	{
+		cudaSetDevice(i + gpuIndStart);
+		cudaMemset(apMFH[i], 0, num_mf * sizeof(uint32_t));
+		cudaMemset(depAmpMFH[i], 1, num_mf * sizeof(float));
+		cudaMemset(apMFGPU[i], 0, num_mf*sizeof(uint32_t));
+		cudaMemset(depAmpMFGPU[i], 1, num_mf*sizeof(float));
+		cudaDeviceSynchronize();
+	}
+	LOG_DEBUG("Finished resetting MF cuda variables.");
+}
+
+void InNet::resetGRActivityCUDA()
+{
+  memset(outputGRH, 0, num_gr * sizeof(uint8_t));
+
+	LOG_DEBUG("Resetting transposed copies of act state vars...");
+
+	// create a transposed copy of the matrices from activity state and connectivity
+	for (int i = 0; i < max_num_p_gr_from_go_to_gr; i++)
+	{
+		for (int j = 0; j < num_gr; j++)
+		{
+			gGOGRT[i][j] = as->gGOGR[j * max_num_p_gr_from_go_to_gr + i];
+		}
+	}
+
+	for (int i = 0; i < max_num_p_gr_from_mf_to_gr; i++)
+	{
+		for (int j = 0; j < num_gr; j++)
+		{
+			gMFGRT[i][j] = as->gMFGR[j * max_num_p_gr_from_mf_to_gr + i];
+		}
+	}
+	
+	LOG_DEBUG("Finished resetting of act state vars.");
+
+	//reset GR GPU variables
+	LOG_DEBUG("Resetting GR cuda variables...");
+	
+	for (int i = 0; i < numGPUs; i++)
+	{
+		int cpyStartInd = numGRPerGPU * i;
+		int cpySize     = numGRPerGPU;
+		cudaSetDevice(i + gpuIndStart);
+
+		cudaMemcpy(gKCaGRGPU[i], &(as->gKCaGR[cpyStartInd]), cpySize * sizeof(float),
+			cudaMemcpyHostToDevice);
+
+		for(int j = 0; j < max_num_p_gr_from_mf_to_gr; j++)
+		{
+			cudaMemcpy((void *)((char *)gEGRGPU[i] + j * gEGRGPUP[i]), &gMFGRT[j][cpyStartInd],
+				cpySize * sizeof(float), cudaMemcpyHostToDevice);	
+		}
+	
+		cudaMemcpy(vGRGPU[i], &(as->vGR[cpyStartInd]), cpySize * sizeof(float), cudaMemcpyHostToDevice);	
+		cudaMemcpy(gEGRSumGPU[i], &(as->gMFSumGR[cpyStartInd]), cpySize * sizeof(float),
+			cudaMemcpyHostToDevice);	
+		cudaMemset(gEDirectGPU[i], 0.0, cpySize * sizeof(float));
+		cudaMemset(gESpilloverGPU[i], 0.0, cpySize * sizeof(float));
+		cudaMemcpy(apMFtoGRGPU[i], &(as->apMFtoGR[cpyStartInd]), cpySize * sizeof(int), cudaMemcpyHostToDevice);
+		cudaMemset(depAmpMFGRGPU[i], 1.0, cpySize * sizeof(float));	
+		cudaMemset(depAmpGOGRGPU[i], 1.0, cpySize * sizeof(float));
+		cudaMemset(dynamicAmpGOGRGPU[i], 0.0, cpySize * sizeof(float));
+		
+		for (int j = 0; j < max_num_p_gr_from_go_to_gr; j++)
+		{
+			cudaMemcpy((void *)((char *)gIGRGPU[i] + j * gIGRGPUP[i]), &gGOGRT[j][cpyStartInd],
+				cpySize * sizeof(float), cudaMemcpyHostToDevice);
+		}
+
+		cudaMemcpy(gIGRSumGPU[i], &(as->gGOSumGR[cpyStartInd]), cpySize * sizeof(float), cudaMemcpyHostToDevice);
+		cudaMemset(gIDirectGPU[i], 0.0, cpySize * sizeof(float));	
+		cudaMemset(gISpilloverGPU[i], 0.0, cpySize * sizeof(float));
+
+		cudaMemcpy(apBufGRGPU[i], &(as->apBufGR[cpyStartInd]), cpySize * sizeof(uint32_t),
+			cudaMemcpyHostToDevice);
+		cudaMemcpy(threshGRGPU[i], &(as->threshGR[cpyStartInd]), cpySize * sizeof(float),
+			cudaMemcpyHostToDevice);
+
+		// TODO: place initial value of gLeak into activityparams file and actually use that
+		// (since its not default val of float)
+		cudaMemset(gLeakGRGPU[i], 0.11, cpySize * sizeof(float));
+		cudaMemset(gNMDAGRGPU[i], 0.0, cpySize * sizeof(float));
+		cudaMemset(gNMDAIncGRGPU[i], 0.0, cpySize * sizeof(float));
+
+
+		cudaMemcpy(historyGRGPU[i], &(as->historyGR[cpyStartInd]),
+			cpySize * sizeof(uint64_t), cudaMemcpyHostToDevice);
+
+		cudaMemset(outputGRGPU[i], 0, cpySize * sizeof(uint8_t));
+		cudaMemset(apGRGPU[i], 0, cpySize * sizeof(uint32_t));
+
+		cudaDeviceSynchronize();
+	}
+	LOG_DEBUG("Finished resetting GR cuda variables.");
+}
+
+void InNet::resetGOActivityCUDA()
+{
+
+	memset(counter, 0, num_go * sizeof(int));
+
+	// reset GO vars
+	LOG_DEBUG("Resetting GO cuda variables...");
+	for (int i = 0; i < numGPUs; i++)
+	{
+		cudaSetDevice(i + gpuIndStart);
+		cudaMemset(apGOH[i], 0, num_go * sizeof(uint32_t));
+		cudaMemset(depAmpGOH[i], 1, num_go * sizeof(float));
+		cudaMemset(dynamicAmpGOH[i], 1, num_go * sizeof(float));
+		cudaMemset(grInputGOSumH[i], 0, num_go * sizeof(uint32_t));
+
+		cudaMemset(apGOGPU[i], 0, num_go*sizeof(uint32_t));
+		cudaMemset(depAmpGOGPU[i], 1, num_go*sizeof(float));
+		cudaMemset(dynamicAmpGOGPU[i], 1, num_go*sizeof(float));
+
+		for (int j = 0; j < updateGRGOOutNumGRRows; j++)
+		{
+			cudaMemset(((char *)grInputGOGPU[i]+j * grInputGOGPUP[i]),
+					0, num_go * sizeof(uint32_t));
+		}
+		cudaMemset(grInputGOSumGPU[i], 0, num_go*sizeof(uint32_t));
+
+		cudaDeviceSynchronize();
+	}
+	LOG_DEBUG("Finished resetting GO cuda variables.");
 }
 
 /* =========================== PRIVATE FUNCTIONS ============================= */

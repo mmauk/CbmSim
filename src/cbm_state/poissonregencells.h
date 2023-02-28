@@ -28,6 +28,8 @@ public:
 	PoissonRegenCells(int randSeed, float threshDecayTau, unsigned int numZones, float sigma=0);
 	~PoissonRegenCells();
 
+  void resetPoissonRegenCells();
+
 	const uint8_t* calcPoissActivity(const float *freqencies, MZone **mZoneList, int ispikei = 18); 
 	bool* calcTrueMFs(const float *freqencies);
 	const uint8_t* getAPs();

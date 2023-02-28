@@ -159,6 +159,7 @@ class Control
 		std::string data_out_base_name = "";
 		std::string data_out_run_name  = "";
 
+    std::string in_sim_name   = "";
 		std::string out_sim_name  = "";
 		std::string out_info_name = "";
 

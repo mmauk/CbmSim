@@ -25,8 +25,8 @@ MZone::MZone(MZoneConnectivityState *cs, MZoneActivityState *as, int randSeed, u
 	randGen = new CRandomSFMT0(randSeed);
 
 	// shallow copies. caller owns the data.
-	this->cs = cs; 
-	this->as = as; 
+	this->cs = cs;
+	this->as = as;
 
 	// NOTE if we turn these guys into unique ptrs, we'll have to refactor
 	// consider ownership: who should own these guys? maybe they should be global to both
@@ -303,6 +303,98 @@ void MZone::initSCCUDA()
 		cudaDeviceSynchronize();
 	}
 	LOG_DEBUG("Finished initializing SC cuda variables...");
+}
+
+void MZone::resetBCActivityCUDA()
+{
+  cudaMemset(inputSumPFBCH, 0, num_bc * sizeof(uint32_t));
+
+	// reset BC vars
+	LOG_DEBUG("Resetting BC cuda variables...");
+	for (int i = 0; i < numGPUs; i++)
+	{
+		cudaSetDevice(i + gpuIndStart);
+
+		for (int j = 0; j < num_bc / numGPUs; j++)
+		{
+			cudaMemset(((char *)inputPFBCGPU[i] + j * inputPFBCGPUP[i]), 0,
+				num_p_bc_from_gr_to_bc * sizeof(uint32_t));
+		}
+		cudaMemset(inputSumPFBCGPU[i], 0, num_bc / numGPUs*sizeof(uint32_t));
+		cudaDeviceSynchronize();
+	}
+	LOG_DEBUG("Finished Resetting BC cuda variables...");
+}
+
+void MZone::resetSCActivityCUDA()
+{
+	cudaMemset(inputSumPFSCH, 0, num_sc * sizeof(uint32_t));
+
+	// reset SC vars
+	LOG_DEBUG("Resetting SC cuda variables...");
+	for (int i = 0; i < numGPUs; i++)
+	{
+		cudaSetDevice(i + gpuIndStart);
+		for(int j =0; j < num_sc / numGPUs; j++)
+		{
+			cudaMemset(((char *)inputPFSCGPU[i] + j * inputPFSCGPUP[i]), 0,
+					num_p_sc_from_gr_to_sc * sizeof(uint32_t));
+		}
+		cudaMemset(inputSumPFSCGPU[i], 0, num_sc / numGPUs * sizeof(uint32_t));
+
+		cudaDeviceSynchronize();
+	}
+	LOG_DEBUG("Finished initializing SC cuda variables...");
+}
+
+void MZone::resetMZoneActivity()
+{
+	LOG_DEBUG("Resetting CUDA...");
+
+	//reset host cuda memory
+	for (int i = 0; i < num_pc; i++)
+	{
+		inputSumPFPCMZH[i] = 0;
+	}
+	
+	for (int i = 0; i < num_pc; i++)
+	{
+		for (int j = 0; j < num_p_pc_from_gr_to_pc; j++)
+		{
+			pfSynWeightPCLinear[i * num_p_pc_from_gr_to_pc + j] = as->pfSynWeightPC[i * num_p_pc_from_gr_to_pc + j];
+		}
+	}
+
+	for (int i = 0; i < numGPUs; i++)
+	{
+		int cpyStartInd = i * numGRPerGPU;
+		int cpySize     = numGRPerGPU;
+		cudaSetDevice(i + gpuIndStart);
+
+		//reset device cuda memory
+		cudaMemcpy(pfSynWeightPCGPU[i], &pfSynWeightPCLinear[cpyStartInd],
+				numGRPerGPU*sizeof(float), cudaMemcpyHostToDevice);
+
+		for (int j = 0; j < num_pc/numGPUs; j++)
+		{
+			cudaMemset(((char *)inputPFPCGPU[i] + j * inputPFPCGPUPitch[i]),
+					0, num_p_pc_from_gr_to_pc * sizeof(float));
+		}
+		cudaMemset(inputSumPFPCMZGPU[i], 0, num_pc / numGPUs * sizeof(float));
+
+		cudaDeviceSynchronize();
+	}
+
+  resetBCActivityCUDA();
+	LOG_DEBUG("Reset BC CUDA");
+	LOG_DEBUG("Last error: %s", cudaGetErrorString(cudaGetLastError()));
+
+	resetSCActivityCUDA();
+	LOG_DEBUG("Reset SC CUDA");
+	LOG_DEBUG("Last error: %s", cudaGetErrorString(cudaGetLastError()));
+	
+	testReduction();
+	LOG_DEBUG("Finished Test.");
 }
 
 void MZone::writeToState()

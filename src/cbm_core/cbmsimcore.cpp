@@ -55,6 +55,20 @@ CBMSimCore::~CBMSimCore()
 	delete[] streams;
 }
 
+void CBMSimCore::resetSimCoreActivity(CBMState *state)
+{
+  inputNet->resetInNetActivity();
+
+	for (int i = 0; i < numZones; i++)
+	{
+    // TODO: test whether we need to give this guy the pointers, I do not think so, as we aren't
+    // deallocating that memory, so the memory addresses should stay the same. Else, check MZone constructor
+    zones[i]->resetMZoneActivity();
+	}
+	LOG_DEBUG("Mzone construction complete");
+	initAuxVars();
+	LOG_DEBUG("AuxVars good");
+}
 // for speed
 void CBMSimCore::writeToState()
 {

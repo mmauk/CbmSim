@@ -21,6 +21,7 @@ public:
 			uint64_t **histGRGPU, int gpuIndStart, int numGPUs);
 	~MZone();
 
+  void resetMZoneActivity();
 	void writeToState();
 	void cpyPFPCSynWCUDA();
 
@@ -156,6 +157,10 @@ private:
 	void initCUDA();
 	void initBCCUDA();
 	void initSCCUDA();
+
+  void resetBCActivityCUDA();
+  void resetSCActivityCUDA();
+
 	void testReduction();
 };
 
