@@ -1,5 +1,5 @@
 /*
- * mzoneactivitystate.h
+* mzoneactivitystate.h
  *
  *  Created on: Nov 26, 2012
  *      Author: consciousness
@@ -20,9 +20,10 @@ public:
 	MZoneActivityState(std::fstream &infile);
 
 	~MZoneActivityState();
-	
+
 	void readState(std::fstream &infile);
 	void writeState(std::fstream &outfile);
+  bool inInitialState();
 
 	//stellate cells
 	std::unique_ptr<uint8_t[]> apSC{nullptr};

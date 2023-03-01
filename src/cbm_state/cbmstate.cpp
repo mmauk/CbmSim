@@ -80,7 +80,7 @@ bool CBMState::validAfterReset()
   assert(innetActState->inInitialState(), "ERROR: innetactivitystate is not in its initial state!", __func__);
 	for (int i = 0; i < numZones; i++)
 	{
-    //assert(mzoneActStates[i]->inInitialState(), "ERROR: mzoneactivitystate is not in its initial state!", __func__);
+    assert(mzoneActStates[i]->inInitialState(), "ERROR: mzoneactivitystate is not in its initial state!", __func__);
 	}
   return true;
 }
