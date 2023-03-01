@@ -20,6 +20,7 @@
 
 #include <stdint.h>
 #include <limits>
+#include <cmath>
 
 template <typename T>
 bool nearly_equal(T a, T b)
@@ -53,7 +54,7 @@ bool arr_filled_with_float_t(T *arr, uint64_t len, T val)
 {
 	for (size_t i = 0; i < len; i++)
 	{
-		if (!nearly_equal(a[i], val)) return false;
+		if (!nearly_equal(arr[i], val)) return false;
 	}
 	return true;
 }

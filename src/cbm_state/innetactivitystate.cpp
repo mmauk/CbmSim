@@ -6,7 +6,8 @@
  *  Updated on: March, 2022
  *      Author: the gallogly
  */ 
-#include "logger.h"
+#include "assert.h"
+#include "array_util.h"
 #include "innetactivitystate.h"
 
 InNetActivityState::InNetActivityState()
@@ -45,92 +46,92 @@ void InNetActivityState::resetState()
 bool InNetActivityState::inInitialState()
 {
 	// mf
-	assert(arr_filled_with_int_t<uint8_t>(histMF.get(), num_mf, 0,
+	assert(arr_filled_with_int_t<uint8_t>(histMF.get(), num_mf, 0),
 		   "ERROR: histMF not all zero", __func__);
-	assert(arr_filled_with_int_t<uint32_t>(apBufMF.get(), num_mf, 0,
+	assert(arr_filled_with_int_t<uint32_t>(apBufMF.get(), num_mf, 0),
 		   "ERROR: apBufMF not all zero", __func__);
 
 	// go
-	assert(arr_filled_with_int_t<uint8_t>(apGO.get(), num_go, 0,
+	assert(arr_filled_with_int_t<uint8_t>(apGO.get(), num_go, 0),
 		   "ERROR: apGO not all zero", __func__);
-	assert(arr_filled_with_int_t<uint32_t>(apBufGO.get(), num_go, 0,
+	assert(arr_filled_with_int_t<uint32_t>(apBufGO.get(), num_go, 0),
 		   "ERROR: apBufGO not all zero", __func__);
-	assert(arr_filled_with_float_t<float>(vCoupleGO.get(), num_go, 0.0,
+	assert(arr_filled_with_float_t<float>(vCoupleGO.get(), num_go, 0.0),
 		   "ERROR: vCoupleGO not all zero", __func__);
-	assert(arr_filled_with_int_t<uint32_t>(inputMFGO.get(), num_go, 0,
+	assert(arr_filled_with_int_t<uint32_t>(inputMFGO.get(), num_go, 0),
 		   "ERROR: inputMFGO not all zero", __func__);
-	assert(arr_filled_with_float_t<float>(gi_MFtoGO.get(), num_mf, 0.0,
+	assert(arr_filled_with_float_t<float>(gi_MFtoGO.get(), num_mf, 0.0),
 		   "ERROR: gi_MFtoGO not all zero", __func__);
-	assert(arr_filled_with_float_t<float>(gSum_MFGO.get(), num_go, 0.0,
+	assert(arr_filled_with_float_t<float>(gSum_MFGO.get(), num_go, 0.0),
 		   "ERROR: gSum_MFGO not all zero", __func__);
-	assert(arr_filled_with_float_t<float>(inputGOGO.get(), num_go, 0.0,
+	assert(arr_filled_with_float_t<float>(inputGOGO.get(), num_go, 0.0),
 		   "ERROR: inputGOGO not all zero", __func__);
-	assert(arr_filled_with_float_t<float>(gi_GOtoGO.get(), num_go, 0.0,
+	assert(arr_filled_with_float_t<float>(gi_GOtoGO.get(), num_go, 0.0),
 		   "ERROR: gi_GOtoGO not all zero", __func__);
-	assert(arr_filled_with_float_t<float>(depAmpGOGO.get(), num_go, 0.0,
+	assert(arr_filled_with_float_t<float>(depAmpGOGO.get(), num_go, 0.0),
 		   "ERROR: depAmpGOGO not all zero", __func__);
-	assert(arr_filled_with_float_t<float>(gSum_GOGO.get(), num_go, 0.0,
+	assert(arr_filled_with_float_t<float>(gSum_GOGO.get(), num_go, 0.0),
 		   "ERROR: gSum_GOGO not all zero", __func__);
-	assert(arr_filled_with_float_t<float>(depAmpGOGR.get(), num_go, 0.0,
+	assert(arr_filled_with_float_t<float>(depAmpGOGR.get(), num_go, 0.0),
 		   "ERROR: depAmpGOGR not all zero", __func__);
-	assert(arr_filled_with_float_t<float>(dynamicAmpGOGR.get(), num_go, 0.0,
+	assert(arr_filled_with_float_t<float>(dynamicAmpGOGR.get(), num_go, 0.0),
 		   "ERROR: dynamicAmpGOGR not all zero", __func__);
-	assert(arr_filled_with_float_t<float>(gNMDAMFGO.get(), num_go, 0.0,
+	assert(arr_filled_with_float_t<float>(gNMDAMFGO.get(), num_go, 0.0),
 		   "ERROR: gNMDAMFGO not all zero", __func__);
-	assert(arr_filled_with_float_t<float>(gNMDAIncMFGO.get(), num_go, 0.0,
+	assert(arr_filled_with_float_t<float>(gNMDAIncMFGO.get(), num_go, 0.0),
 		   "ERROR: gNMDAIncMFGO not all zero", __func__);
-	assert(arr_filled_with_float_t<float>(gGRGO.get(), num_go, 0.0,
+	assert(arr_filled_with_float_t<float>(gGRGO.get(), num_go, 0.0),
 		   "ERROR: gGRGO not all zero", __func__);
-	assert(arr_filled_with_float_t<float>(gGRGO_NMDA.get(), num_go, 0.0,
+	assert(arr_filled_with_float_t<float>(gGRGO_NMDA.get(), num_go, 0.0),
 		   "ERROR: gGRGO_NMDA not all zero", __func__);
 
-	assert(arr_filled_with_int_t<uint8_t>(apGR.get(), num_gr, 0,
+	assert(arr_filled_with_int_t<uint8_t>(apGR.get(), num_gr, 0),
 		   "ERROR: apGR not all zero", __func__);
-	assert(arr_filled_with_int_t<uint32_t>(apBufGR.get(), num_gr, 0,
+	assert(arr_filled_with_int_t<uint32_t>(apBufGR.get(), num_gr, 0),
 		   "ERROR: apBufGR not all zero", __func__);
 
-	assert(arr_filled_with_float_t<float>(gMFGR.get(), num_gr * max_num_p_gr_from_mf_to_gr, 0.0,
+	assert(arr_filled_with_float_t<float>(gMFGR.get(), num_gr * max_num_p_gr_from_mf_to_gr, 0.0),
 		   "ERROR: gMFGR not all zero", __func__);
 
-	assert(arr_filled_with_float_t<float>(gMFSumGR.get(), num_gr, 0.0,
+	assert(arr_filled_with_float_t<float>(gMFSumGR.get(), num_gr, 0.0),
 		   "ERROR: gMFSumGR not all zero", __func__);
-	assert(arr_filled_with_float_t<float>(gMFSumGR.get(), num_gr, 0.0,
+	assert(arr_filled_with_float_t<float>(gMFSumGR.get(), num_gr, 0.0),
 		   "ERROR: apMFtoGR not all zero", __func__);
 
-	assert(arr_filled_with_float_t<float>(gGOGR.get(), num_gr * max_num_p_gr_from_go_to_gr, 0.0,
+	assert(arr_filled_with_float_t<float>(gGOGR.get(), num_gr * max_num_p_gr_from_go_to_gr, 0.0),
 		   "ERROR: gGOGR not all zero", __func__);
-	assert(arr_filled_with_float_t<float>(gGOSumGR.get(), num_gr, 0.0,
+	assert(arr_filled_with_float_t<float>(gGOSumGR.get(), num_gr, 0.0),
 		   "ERROR: gGOSumGR not all zero", __func__);
-	assert(arr_filled_with_float_t<float>(gKCaGR.get(), num_gr, 0.0,
+	assert(arr_filled_with_float_t<float>(gKCaGR.get(), num_gr, 0.0),
 		   "ERROR: gKCaGR not all zero", __func__);
-	assert(arr_filled_with_int_t<uint64_t>(historyGR.get(), num_gr, 0,
+	assert(arr_filled_with_int_t<uint64_t>(historyGR.get(), num_gr, 0),
 		   "ERROR: historyGR not all zero", __func__);
 
 	// only actively initializing those arrays whose initial values we want
 	// differ from the default initilizer value
 
 	// mf
-	assert(arr_filled_with_float_t<float>(depAmpMFGO.get(), num_mf, 1.0,
+	assert(arr_filled_with_float_t<float>(depAmpMFGO.get(), num_mf, 1.0),
 		   "ERROR: depAmpMFGO not all one", __func__);
-	assert(arr_filled_with_float_t<float>(depAmpMFGR.get(), num_mf, 1.0,
+	assert(arr_filled_with_float_t<float>(depAmpMFGR.get(), num_mf, 1.0),
 		   "ERROR: depAmpMFGR not all one", __func__);
 
 	// go
-	assert(arr_filled_with_float_t<float>(synWscalerGOtoGO.get(), num_go, 1.0,
+	assert(arr_filled_with_float_t<float>(synWscalerGOtoGO.get(), num_go, 1.0),
 		   "ERROR: synWscalerGOtoGO not all one", __func__);
-	assert(arr_filled_with_float_t<float>(synWscalerGRtoGO.get(), num_go, 1.0,
+	assert(arr_filled_with_float_t<float>(synWscalerGRtoGO.get(), num_go, 1.0),
 		   "ERROR: synWscalerGRtoGO not all one", __func__);
 
-	assert(arr_filled_with_float_t<float>(vGO.get(), num_go, eLeakGO,
+	assert(arr_filled_with_float_t<float>(vGO.get(), num_go, eLeakGO),
 		   "ERROR: vGO not all eLeakGO", __func__);
-	assert(arr_filled_with_float_t<float>(threshCurGO.get(), num_go, threshRestGO,
+	assert(arr_filled_with_float_t<float>(threshCurGO.get(), num_go, threshRestGO),
 		   "ERROR: threshCurGO not all threshRestGO", __func__);
-	std::fill(threshCurGO.get(), threshCurGO.get() + num_go, threshRestGO);
 
-	assert(arr_filled_with_float_t<float>(vGR.get(), num_gr, eLeakGR,
+	assert(arr_filled_with_float_t<float>(vGR.get(), num_gr, eLeakGR),
 		   "ERROR: vGR not all eLeakGR", __func__);
-	assert(arr_filled_with_float_t<float>(threshCurGR.get(), num_gr, threshRestGR,
-		   "ERROR: threshCurGR not all threshRestGR", __func__);
+	assert(arr_filled_with_float_t<float>(threshGR.get(), num_gr, threshRestGR),
+		   "ERROR: threshGR not all threshRestGR", __func__);
+  return true;
 }
 
 void InNetActivityState::stateRW(bool read, std::fstream &file)

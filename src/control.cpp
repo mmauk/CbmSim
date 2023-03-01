@@ -2,7 +2,7 @@
 #include <iomanip>
 #include <gtk/gtk.h>
 
-#include "logger.h"
+#include "assert.h"
 #include "control.h"
 #include "file_parse.h"
 #include "tty.h"
@@ -212,7 +212,7 @@ void Control::reset_sim()
 
 bool Control::validAfterReset()
 {
-  std::string previous_run_out_path = data_out_path + "/run_" + std::to_sstring(run_num-1);
+  std::string previous_run_out_path = data_out_path + "/run_" + std::to_string(run_num-1);
   std::string previous_run_out_path_abs = "";
 	assert(file_exists(data_out_path, previous_run_out_path, previous_run_out_path_abs),
     "ERROR: Could not find previous run folder", __func__);
