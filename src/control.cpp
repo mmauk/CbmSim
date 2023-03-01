@@ -216,7 +216,7 @@ bool Control::validAfterReset()
   std::string previous_run_out_path_abs = "";
 	assert(file_exists(data_out_path, previous_run_out_path, previous_run_out_path_abs),
     "ERROR: Could not find previous run folder", __func__);
-	assert(simState->validAfterReset()),
+	assert(simState->validAfterReset(),
     "ERROR: Something went wrong in cbm state: check its logs", __func__);
 
 }
