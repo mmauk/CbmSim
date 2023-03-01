@@ -14,10 +14,6 @@
 #define FOREACH(array, iter) \
    FOREACH_NELEM(array, NELEM(array), iter)
 
-#define ARR_FILLED_WITH(array, nelem, val) \
-   FOREACH_NELEM((array), (nelem), (a)) { \
-	  if (*(a) != 
-
 #include <stdint.h>
 #include <limits>
 #include <cmath>
