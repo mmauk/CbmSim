@@ -8,7 +8,8 @@
 #include <iostream>
 #include <algorithm> /* std::fill */
 
-#include "assert.h"
+#include "logger.h"
+#include "assert_macro.h"
 #include "array_util.h"
 #include "file_utility.h"
 #include "sfmt.h"
@@ -16,13 +17,11 @@
 #include "activityparams.h"
 #include "mzoneactivitystate.h"
 
-MZoneActivityState::MZoneActivityState() {}
-
-MZoneActivityState::MZoneActivityState(int randSeed)
+MZoneActivityState::MZoneActivityState()
 {
 	LOG_DEBUG("Allocating and initializing mzone activity state...");
 	allocateMemory();
-	initializeVals(randSeed);
+	initializeVals();
 	LOG_DEBUG("Finished allocating and initializing mzone activity state.");
 }
 
@@ -44,115 +43,120 @@ void MZoneActivityState::writeState(std::fstream &outfile)
 	stateRW(false, outfile);
 }
 
+void MZoneActivityState::resetState()
+{
+	initializeVals();
+}
+
 bool MZoneActivityState::inInitialState()
 {
   // stellate cells
-  assert(arr_filled_with_int_t<uint32_t>(apBufSC.get(), num_sc, 0),
+  ASSERT(arr_filled_with_int_t<uint32_t>(apBufSC.get(), num_sc, 0),
         "ERROR: apBufSC not all zero", __func__);
-  assert(arr_filled_with_float_t<float>(gPFSC.get(), num_sc, 0),
+  ASSERT(arr_filled_with_float_t<float>(gPFSC.get(), num_sc, 0),
         "ERROR: gPFSC not all zero", __func__);
-  assert(arr_filled_with_float_t<float>(vSC.get(), num_sc, 0),
+  ASSERT(arr_filled_with_float_t<float>(vSC.get(), num_sc, 0),
         "ERROR: vSC not all zero", __func__);
 
   // basket cells
-  assert(arr_filled_with_int_t<uint8_t>(apBC.get(), num_bc, 0),
+  ASSERT(arr_filled_with_int_t<uint8_t>(apBC.get(), num_bc, 0),
         "ERROR: apBC not all zero", __func__);
-  assert(arr_filled_with_int_t<uint32_t>(apBufBC.get(), num_bc, 0),
+  ASSERT(arr_filled_with_int_t<uint32_t>(apBufBC.get(), num_bc, 0),
         "ERROR: apBufBC not all zero", __func__);
-  assert(arr_filled_with_int_t<uint32_t>(inputPCBC.get(), num_bc, 0),
+  ASSERT(arr_filled_with_int_t<uint32_t>(inputPCBC.get(), num_bc, 0),
         "ERROR: inputPCBC not all zero", __func__);
-  assert(arr_filled_with_float_t<float>(gPFBC.get(), num_bc, 0),
+  ASSERT(arr_filled_with_float_t<float>(gPFBC.get(), num_bc, 0),
         "ERROR: gPFBC not all zero", __func__);
-  assert(arr_filled_with_float_t<float>(gPCBC.get(), num_bc, 0),
+  ASSERT(arr_filled_with_float_t<float>(gPCBC.get(), num_bc, 0),
         "ERROR: gPCBC not all zero", __func__);
 
   // purkinje cells
-  assert(arr_filled_with_int_t<uint8_t>(apPC.get(), num_pc, 0),
+  ASSERT(arr_filled_with_int_t<uint8_t>(apPC.get(), num_pc, 0),
         "ERROR: apPC not all zero", __func__);
-  assert(arr_filled_with_int_t<uint32_t>(apBufPC.get(), num_pc, 0),
+  ASSERT(arr_filled_with_int_t<uint32_t>(apBufPC.get(), num_pc, 0),
         "ERROR: apBufPC not all zero", __func__);
-  assert(arr_filled_with_int_t<uint32_t>(inputBCPC.get(), num_pc, 0),
+  ASSERT(arr_filled_with_int_t<uint32_t>(inputBCPC.get(), num_pc, 0),
         "ERROR: inputBCPC not all zero", __func__);
-  assert(arr_filled_with_int_t<uint32_t>(inputSCPC.get(), num_pc, 0),
+  ASSERT(arr_filled_with_int_t<uint32_t>(inputSCPC.get(), num_pc, 0),
         "ERROR: inputSCPC not all zero", __func__);
-  assert(arr_filled_with_float_t<float>(inputSumPFPC.get(), num_pc, 0),
+  ASSERT(arr_filled_with_float_t<float>(inputSumPFPC.get(), num_pc, 0),
         "ERROR: inputSumPFPC not all zero", __func__);
-  assert(arr_filled_with_float_t<float>(gPFPC.get(), num_pc, 0),
+  ASSERT(arr_filled_with_float_t<float>(gPFPC.get(), num_pc, 0),
         "ERROR: gPFPC not all zero", __func__);
-  assert(arr_filled_with_float_t<float>(gBCPC.get(), num_pc, 0),
+  ASSERT(arr_filled_with_float_t<float>(gBCPC.get(), num_pc, 0),
         "ERROR: gBCPC not all zero", __func__);
-  assert(arr_filled_with_float_t<float>(gSCPC.get(), num_pc, 0),
+  ASSERT(arr_filled_with_float_t<float>(gSCPC.get(), num_pc, 0),
         "ERROR: gSCPC not all zero", __func__);
 
   // inferior olive cells
-  assert(arr_filled_with_int_t<uint8_t>(apIO.get(), num_io, 0),
+  ASSERT(arr_filled_with_int_t<uint8_t>(apIO.get(), num_io, 0),
         "ERROR: apIO not all zero", __func__);
-  assert(arr_filled_with_int_t<uint8_t>(apBufIO.get(), num_io, 0),
+  ASSERT(arr_filled_with_int_t<uint8_t>(apBufIO.get(), num_io, 0),
         "ERROR: apBufIO not all zero", __func__);
-  assert(arr_filled_with_int_t<uint8_t>(inputNCIO.get(), num_io * num_p_io_from_nc_to_io, 0),
+  ASSERT(arr_filled_with_int_t<uint8_t>(inputNCIO.get(), num_io * num_p_io_from_nc_to_io, 0),
         "ERROR: inputNCIO not all zero", __func__);
-  assert(arr_filled_with_float_t<float>(gNCIO.get(), num_io * num_p_io_from_nc_to_io, 0),
+  ASSERT(arr_filled_with_float_t<float>(gNCIO.get(), num_io * num_p_io_from_nc_to_io, 0),
         "ERROR: gNCIO not all zero", __func__);
-  assert(arr_filled_with_float_t<float>(vCoupleIO.get(), num_io, 0),
+  ASSERT(arr_filled_with_float_t<float>(vCoupleIO.get(), num_io, 0),
         "ERROR: vCoupleIO not all zero", __func__);
-  assert(arr_filled_with_int_t<int32_t>(pfPCPlastTimerIO.get(), num_io, 0),
+  ASSERT(arr_filled_with_int_t<int32_t>(pfPCPlastTimerIO.get(), num_io, 0),
         "ERROR: pfPCPlastTimerIO not all zero", __func__);
 
   // nucleus cells
-  assert(arr_filled_with_int_t<uint8_t>(apNC.get(), num_nc, 0),
+  ASSERT(arr_filled_with_int_t<uint8_t>(apNC.get(), num_nc, 0),
         "ERROR: apNC not all zero", __func__);
-  assert(arr_filled_with_int_t<uint32_t>(apBufNC.get(), num_nc, 0),
+  ASSERT(arr_filled_with_int_t<uint32_t>(apBufNC.get(), num_nc, 0),
         "ERROR: apBufNC not all zero", __func__);
-  assert(arr_filled_with_int_t<uint8_t>(inputPCNC.get(), num_nc * num_p_nc_from_pc_to_nc, 0),
+  ASSERT(arr_filled_with_int_t<uint8_t>(inputPCNC.get(), num_nc * num_p_nc_from_pc_to_nc, 0),
         "ERROR: inputPCNC not all zero", __func__);
-  assert(arr_filled_with_int_t<uint8_t>(inputMFNC.get(), num_nc * num_p_nc_from_mf_to_nc, 0),
+  ASSERT(arr_filled_with_int_t<uint8_t>(inputMFNC.get(), num_nc * num_p_nc_from_mf_to_nc, 0),
         "ERROR: inputMFNC not all zero", __func__);
-  assert(arr_filled_with_float_t<float>(gPCNC.get(), num_nc * num_p_nc_from_pc_to_nc, 0),
+  ASSERT(arr_filled_with_float_t<float>(gPCNC.get(), num_nc * num_p_nc_from_pc_to_nc, 0),
         "ERROR: gPCNC not all zero", __func__);
-  assert(arr_filled_with_float_t<float>(gMFAMPANC.get(), num_nc * num_p_nc_from_mf_to_nc, 0),
+  ASSERT(arr_filled_with_float_t<float>(gMFAMPANC.get(), num_nc * num_p_nc_from_mf_to_nc, 0),
         "ERROR: gMFAMPANC not all zero", __func__);
-  assert(arr_filled_with_float_t<float>(synIOPReleaseNC.get(), num_nc, 0),
+  ASSERT(arr_filled_with_float_t<float>(synIOPReleaseNC.get(), num_nc, 0),
         "ERROR: synIOPReleaseNC not all zero", __func__);
 
   // validate non-zero initialized values
 
-  assert(arr_filled_with_int_t<uint8_t>(apSC.get(), num_sc, eLeakSC),
+  ASSERT(arr_filled_with_int_t<uint8_t>(apSC.get(), num_sc, eLeakSC),
         "ERROR: apSC not all eLeakSC", __func__);
-  assert(arr_filled_with_float_t<float>(threshSC.get(), num_sc, threshRestSC),
+  ASSERT(arr_filled_with_float_t<float>(threshSC.get(), num_sc, threshRestSC),
         "ERROR: threshRestSC not all zero", __func__);
 
-  assert(arr_filled_with_int_t<uint8_t>(apBC.get(), num_bc, eLeakBC),
+  ASSERT(arr_filled_with_int_t<uint8_t>(apBC.get(), num_bc, eLeakBC),
         "ERROR: apBC not all eLeakBC", __func__);
-  assert(arr_filled_with_float_t<float>(threshBC.get(), num_bc, threshRestBC),
+  ASSERT(arr_filled_with_float_t<float>(threshBC.get(), num_bc, threshRestBC),
         "ERROR: threshRestBC not all zero", __func__);
 
-  assert(arr_filled_with_float_t<float>(vPC.get(), num_pc, eLeakPC),
+  ASSERT(arr_filled_with_float_t<float>(vPC.get(), num_pc, eLeakPC),
         "ERROR: vPC not all eLeakPC", __func__);
-  assert(arr_filled_with_float_t<float>(threshPC.get(), num_pc, threshRestPC),
+  ASSERT(arr_filled_with_float_t<float>(threshPC.get(), num_pc, threshRestPC),
         "ERROR: threshPC not all threshRestPC", __func__);
 
   // below is tricky due to dichotomoy between graded and rest about how to initialize weights
-  assert(arr_filled_with_float_t<float>(pfSynWeightPC.get(), num_pc * num_p_pc_from_gr_to_pc, initSynWofGRtoPC),
+  ASSERT(arr_filled_with_float_t<float>(pfSynWeightPC.get(), num_pc * num_p_pc_from_gr_to_pc, initSynWofGRtoPC),
         "ERROR: pfSynWeightPC not all initSynWofGRtoPC", __func__);
 
-  assert(histPCPopActSum == 0, "ERROR: histPCPopActSum not set to zero", __func__);
-  assert(histPCPopActCurBinN == 0, "ERROR: histPCPopActCurBinN not set to zero", __func__);
-  assert(pcPopAct == 0, "ERROR: pcPopAct not set to zero", __func__);
+  ASSERT(histPCPopActSum == 0, "ERROR: histPCPopActSum not set to zero", __func__);
+  ASSERT(histPCPopActCurBinN == 0, "ERROR: histPCPopActCurBinN not set to zero", __func__);
+  ASSERT(pcPopAct == 0, "ERROR: pcPopAct not set to zero", __func__);
 
-  assert(arr_filled_with_float_t<float>(vIO.get(), num_io, eLeakIO),
+  ASSERT(arr_filled_with_float_t<float>(vIO.get(), num_io, eLeakIO),
         "ERROR: vIO not all eLeakIO", __func__);
-  assert(arr_filled_with_float_t<float>(threshIO.get(), num_io, threshRestIO),
+  ASSERT(arr_filled_with_float_t<float>(threshIO.get(), num_io, threshRestIO),
         "ERROR: threshIO not all threshRestIO", __func__);
 
-  assert(errDrive == 0, "ERROR: errDrive not set to zero", __func__);
-  assert(noLTPMFNC == 0, "ERROR: noLTPMFNC not set to zero", __func__);
-  assert(noLTDMFNC == 0, "ERROR: noLTDMFNC not set to zero", __func__);
+  ASSERT(errDrive == 0, "ERROR: errDrive not set to zero", __func__);
+  ASSERT(noLTPMFNC == 0, "ERROR: noLTPMFNC not set to zero", __func__);
+  ASSERT(noLTDMFNC == 0, "ERROR: noLTDMFNC not set to zero", __func__);
 
-  assert(arr_filled_with_float_t<float>(vNC.get(), num_nc, eLeakNC),
+  ASSERT(arr_filled_with_float_t<float>(vNC.get(), num_nc, eLeakNC),
         "ERROR: vNC not all eLeakNC", __func__);
-  assert(arr_filled_with_float_t<float>(threshNC.get(), num_nc, threshRestNC),
+  ASSERT(arr_filled_with_float_t<float>(threshNC.get(), num_nc, threshRestNC),
         "ERROR: threshNC not all threshRestNC", __func__);
-  assert(arr_filled_with_float_t<float>(mfSynWeightNC.get(), num_nc * num_p_nc_from_mf_to_nc, initSynWofMFtoNC),
+  ASSERT(arr_filled_with_float_t<float>(mfSynWeightNC.get(), num_nc * num_p_nc_from_mf_to_nc, initSynWofMFtoNC),
         "ERROR: mfSynWeightNC not all initSynWofMFtoNC", __func__);
 
   return true;
@@ -213,48 +217,72 @@ void MZoneActivityState::allocateMemory()
 	synIOPReleaseNC = std::make_unique<float[]>(num_nc);
 }
 
-void MZoneActivityState::initializeVals(int randSeed)
+void MZoneActivityState::initializeVals()
 {
-	// only actively initializing those arrays whose initial values we want
-	// differ from the default initilizer value
-
-	// sc
-	std::fill(vSC.get(), vSC.get() + num_sc, eLeakSC);
+	// stellate cells
+	memset(apSC.get(), 0, num_sc * sizeof(uint8_t));
+	memset(apBufSC.get(), 0, num_sc * sizeof(uint32_t));
+	memset(gPFSC.get(), 0, num_sc * sizeof(float));
 	std::fill(threshSC.get(), threshSC.get() + num_sc, threshRestSC);
+	std::fill(vSC.get(), vSC.get() + num_sc, eLeakSC);
 
-	// bc
+	// basket cells
+	memset(apBC.get(), 0, num_bc * sizeof(uint8_t));
+	memset(apBufBC.get(), 0, num_bc * sizeof(uint32_t));
+	memset(inputPCBC.get(), 0, num_bc * sizeof(uint32_t));
+	memset(gPFBC.get(), 0, num_bc * sizeof(float));
+	memset(gPCBC.get(), 0, num_bc * sizeof(float));
 	std::fill(vBC.get(), vBC.get() + num_bc, eLeakBC);
 	std::fill(threshBC.get(), threshBC.get() + num_bc, threshRestBC);
 
+	// purkinje cells
 	// pc
-	std::fill(vPC.get(), vPC.get() + num_pc, eLeakPC);
-	std::fill(threshPC.get(), threshPC.get() + num_pc, threshRestPC);
-
+	memset(apPC.get(), 0, num_pc * sizeof(uint8_t));
+	memset(apBufPC.get(), 0, num_pc * sizeof(uint32_t));
+	memset(inputBCPC.get(), 0, num_pc * sizeof(uint32_t));
+	memset(inputSCPC.get(), 0, num_pc * sizeof(uint32_t));
 	std::fill(pfSynWeightPC.get(), pfSynWeightPC.get()
 		+ num_pc * num_p_pc_from_gr_to_pc, initSynWofGRtoPC);
-
-  // TODO: remove
+	memset(inputSumPFPC.get(), 0, num_pc * sizeof(float));
+	memset(gPFPC.get(), 0, num_pc * sizeof(float));
+	memset(gBCPC.get(), 0, num_pc * sizeof(float));
+	memset(gSCPC.get(), 0, num_pc * sizeof(float));
+	std::fill(vPC.get(), vPC.get() + num_pc, eLeakPC);
+	std::fill(threshPC.get(), threshPC.get() + num_pc, threshRestPC);
 	std::fill(histPCPopAct.get(), histPCPopAct.get() + (int)numPopHistBinsPC, 0);
 
 	histPCPopActSum     = 0;
 	histPCPopActCurBinN = 0;
 	pcPopAct            = 0;
 
-	// IO
-	std::fill(vIO.get(), vIO.get() + num_io, eLeakIO);
+	// inferior olivary cells
+	memset(apIO.get(), 0, num_io * sizeof(uint8_t));
+	memset(apBufIO.get(), 0, num_io * sizeof(uint8_t));
+	memset(inputNCIO.get(), 0, num_io * num_p_io_from_nc_to_io * sizeof(uint8_t));
+	memset(gNCIO.get(), 0, num_io * num_p_io_from_nc_to_io * sizeof(float));
 	std::fill(threshIO.get(), threshIO.get() + num_io, threshRestIO);
+	std::fill(vIO.get(), vIO.get() + num_io, eLeakIO);
+	memset(vCoupleIO.get(), 0, num_io * sizeof(float));
+	memset(pfPCPlastTimerIO.get(), 0, num_io * sizeof(int32_t));
 
 	errDrive = 0;
+
+	// nucleus cells
+	memset(apNC.get(), 0, num_nc * sizeof(uint8_t));
+	memset(apBufNC.get(), 0, num_nc * sizeof(uint32_t));
+	memset(inputPCNC.get(), 0, num_nc * num_p_nc_from_pc_to_nc * sizeof(uint8_t));
+	memset(inputMFNC.get(), 0, num_nc * num_p_nc_from_mf_to_nc * sizeof(uint8_t));
+	memset(gPCNC.get(), 0, num_nc * num_p_nc_from_pc_to_nc * sizeof(float));
+	std::fill(mfSynWeightNC.get(), mfSynWeightNC.get()
+		+ num_nc * num_p_nc_from_mf_to_nc, initSynWofMFtoNC);
+	memset(gMFAMPANC.get(), 0, num_nc * num_p_nc_from_mf_to_nc * sizeof(float));
+	std::fill(threshNC.get(), threshNC.get() + num_nc, threshRestNC);
+	std::fill(vNC.get(), vNC.get() + num_nc, eLeakNC);
+	memset(synIOPReleaseNC.get(), 0, num_nc * sizeof(float));
 	
 	// NC
 	noLTPMFNC = 0;
 	noLTDMFNC = 0;
-
-	std::fill(vNC.get(), vNC.get() + num_nc, eLeakNC);
-	std::fill(threshNC.get(), threshNC.get() + num_nc, threshRestNC);
-
-	std::fill(mfSynWeightNC.get(), mfSynWeightNC.get()
-		+ num_nc * num_p_nc_from_mf_to_nc, initSynWofMFtoNC);
 }
 
 void MZoneActivityState::stateRW(bool read, std::fstream &file)

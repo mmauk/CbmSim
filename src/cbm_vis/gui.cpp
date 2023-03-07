@@ -1,6 +1,6 @@
 #include <sys/stat.h>
 
-#include "assert.h"
+#include "assert_macro.h"
 #include "array_util.h"
 #include "connectivityparams.h"
 #include "commandline.h" // for OUTPUT_DATA_PATH def
@@ -737,6 +737,7 @@ static void on_toggle_run(GtkWidget *widget, struct gui *gui)
 			gtk_button_set_label(GTK_BUTTON(widget), "Run");
 			gtk_widget_hide(gui->normal_buttons[1].widget);
 			gui->ctrl_ptr->reset_sim();
+			//gui->ctrl_ptr->validAfterReset();
 			break;
 		case IN_RUN_NO_PAUSE:
 			gtk_button_set_label(GTK_BUTTON(widget), "Continue");
@@ -1025,7 +1026,7 @@ static void on_pc_window(GtkWidget *widget, Control *control)
 
 static bool on_parameters(GtkWidget *widget, gpointer data)
 {
-	assert(false, "[DEBUG]: Not implemented", __func__);
+	ASSERT(false, "[DEBUG]: Not implemented", __func__);
   return true;
 }
 

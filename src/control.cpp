@@ -2,8 +2,9 @@
 #include <iomanip>
 #include <gtk/gtk.h>
 
-#include "assert.h"
 #include "control.h"
+#include "logger.h"
+#include "assert_macro.h"
 #include "file_parse.h"
 #include "tty.h"
 #include "array_util.h"
@@ -195,8 +196,7 @@ void Control::reset_sim()
 	run_num++;
 	data_out_run_name = data_out_path + "/run_" + std::to_string(run_num);
 
-	std::fstream sim_file_buf(in_sim_name.c_str(), std::ios::in | std::ios::binary);
-	simState->resetActivityState(sim_file_buf);
+	simState->resetActivityState();
   simCore->resetSimCoreActivity(simState);
   mfFreq->regenMFFrequencies(mfRandSeed, bgFreqMin, csbgFreqMin,
 								  contextFreqMin, tonicFreqMin, phasicFreqMin, bgFreqMax,
@@ -206,7 +206,6 @@ void Control::reset_sim()
 	reset_rasters();
 	reset_psths();
 	reset_spike_sums();
-	sim_file_buf.close();
 	LOG_DEBUG("Simulation reset, and ready to get at 'em!");
 }
 
@@ -214,9 +213,9 @@ bool Control::validAfterReset()
 {
   std::string previous_run_out_path = data_out_path + "/run_" + std::to_string(run_num-1);
   std::string previous_run_out_path_abs = "";
-	assert(file_exists(data_out_path, previous_run_out_path, previous_run_out_path_abs),
+	ASSERT(file_exists(data_out_path, previous_run_out_path, previous_run_out_path_abs),
     "ERROR: Could not find previous run folder", __func__);
-	assert(simState->validAfterReset(),
+	ASSERT(simState->validAfterReset(),
     "ERROR: Something went wrong in cbm state: check its logs", __func__);
 
 }
@@ -817,9 +816,9 @@ void Control::runSession(struct gui *gui)
 			reset_spike_sums();
 		}
 		// save gr rasters into new file every trial 
-		save_gr_raster();
-		save_pfpc_weights_to_file(trial);
-		save_mfdcn_weights_to_file(trial);
+		//save_gr_raster();
+		//save_pfpc_weights_to_file(trial);
+		//save_mfdcn_weights_to_file(trial);
 		trial++;
 	}
 	trial--; // setting so that is valid for drawing go rasters after a sim

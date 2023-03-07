@@ -28,10 +28,9 @@ class CBMState
 		CBMState(unsigned int nZones);
 		// TODO: make a choice which of two below constructors want to keep
 		CBMState(unsigned int nZones, std::fstream &sim_file_buf);
-		//CBMState(unsigned int nZones, std::string inFile);
 		~CBMState();
     
-    void resetActivityState(std::fstream &sim_file_buf);
+    void resetActivityState();
     bool validAfterReset();
 		void readState(std::fstream &infile);
 		void writeState(std::fstream &outfile);

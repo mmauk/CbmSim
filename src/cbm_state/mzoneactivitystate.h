@@ -16,13 +16,13 @@ class MZoneActivityState
 {
 public:
 	MZoneActivityState();
-	MZoneActivityState(int randSeed);
 	MZoneActivityState(std::fstream &infile);
 
 	~MZoneActivityState();
 
 	void readState(std::fstream &infile);
 	void writeState(std::fstream &outfile);
+	void resetState();
   bool inInitialState();
 
 	//stellate cells
@@ -88,7 +88,7 @@ public:
 
 private:
 	void allocateMemory();
-	void initializeVals(int randSeed);
+	void initializeVals();
 	void stateRW(bool read, std::fstream &file);
 };
 

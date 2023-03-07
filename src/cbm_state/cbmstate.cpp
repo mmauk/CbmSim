@@ -5,7 +5,8 @@
  *      Author: consciousness
  */
 
-#include "assert.h"
+#include "logger.h"
+#include "assert_macro.h"
 #include "cbmstate.h"
 
 CBMState::CBMState() {}
@@ -17,7 +18,6 @@ CBMState::CBMState(unsigned int nZones) : numZones(nZones)
 
 	int innetCRSeed = randGen.IRandom(0, INT_MAX);
 	int *mzoneCRSeed = new int[nZones];
-	int *mzoneARSeed = new int[nZones];
 
 	innetConState  = new InNetConnectivityState(innetCRSeed);
 	innetActState  = new InNetActivityState();
@@ -27,12 +27,10 @@ CBMState::CBMState(unsigned int nZones) : numZones(nZones)
 	for (int i = 0; i < nZones; i++)
 	{
 		mzoneCRSeed[i] = randGen.IRandom(0, INT_MAX);
-		mzoneARSeed[i] = randGen.IRandom(0, INT_MAX);
 		mzoneConStates[i] = new MZoneConnectivityState(mzoneCRSeed[i]);
-		mzoneActStates[i] = new MZoneActivityState(mzoneARSeed[i]);
+		mzoneActStates[i] = new MZoneActivityState();
 	}
 	delete[] mzoneCRSeed;
-	delete[] mzoneARSeed;
 	LOG_DEBUG("Finished generating cbm state.");
 }
 
@@ -66,21 +64,21 @@ CBMState::~CBMState()
 	delete[] mzoneActStates;
 }
 
-void CBMState::resetActivityState(std::fstream &sim_file_buf)
+void CBMState::resetActivityState()
 {
-	innetActState->readState(sim_file_buf);
+	innetActState->resetState();
 	for (int i = 0; i < numZones; i++)
 	{
-		mzoneActStates[i]->readState(sim_file_buf);
+		mzoneActStates[i]->resetState();
 	}
 }
 
 bool CBMState::validAfterReset()
 {
-  assert(innetActState->inInitialState(), "ERROR: innetactivitystate is not in its initial state!", __func__);
+  ASSERT(innetActState->inInitialState(), "ERROR: innetactivitystate is not in its initial state!", __func__);
 	for (int i = 0; i < numZones; i++)
 	{
-    assert(mzoneActStates[i]->inInitialState(), "ERROR: mzoneactivitystate is not in its initial state!", __func__);
+    ASSERT(mzoneActStates[i]->inInitialState(), "ERROR: mzoneactivitystate is not in its initial state!", __func__);
 	}
   return true;
 }
