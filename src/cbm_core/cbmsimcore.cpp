@@ -154,13 +154,13 @@ void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum
 	inputNet->cpyGRGOSumGPUtoHostCUDA(streams, 3);
 
 	inputNet->updateMFtoGOOut();
-	inputNet->calcGOActivities(); 
+	inputNet->calcGOActivities();
 
 	inputNet->updateGOtoGOOut();
 	inputNet->updateGOtoGROutParameters(spillFrac);
 
 	inputNet->cpyDepAmpGOGRHosttoGPUCUDA(streams, 2); // NOTE: currently does nothing (08/11/2022)
-	inputNet->cpyDynamicAmpGOGRHosttoGPUCUDA(streams, 3); 
+	inputNet->cpyDynamicAmpGOGRHosttoGPUCUDA(streams, 3);
 	inputNet->cpyAPGOHosttoGPUCUDA(streams, 7);
 
 	// TODO: put in macro def for num_gpus so we don't run this line if running on one GPU
