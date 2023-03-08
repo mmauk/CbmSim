@@ -138,42 +138,36 @@ void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum
 
 	curTime++;
 
+	inputNet->cpyAPMFHosttoGPUCUDA(streams, 6);
+	inputNet->updateMFtoGROut();
+	inputNet->cpyDepAmpMFHosttoGPUCUDA(streams, 5);
+
+	inputNet->runUpdateMFInGRDepressionCUDA(streams, 2);
+	inputNet->runUpdateMFInGRCUDA(streams, 0);
+
 	inputNet->runGRActivitiesCUDA(streams, 0);
 
-#ifdef NO_ASYNC
-	syncCUDA("1a");
-#endif
+	inputNet->runUpdateGRHistoryCUDA(streams, 4, curTime);
 
-	for (int i = 0; i < numZones; i++)
-	{
-		zones[i]->runPFPCSumCUDA(streams, i + 1);
-	}
-
-#ifdef NO_ASYNC
-	syncCUDA("1b");
-#endif
-	for (int i = 0; i < numZones; i++)
-	{
-		zones[i]->runSumPFBCCUDA(streams, 2);
-		zones[i]->runSumPFSCCUDA(streams, 3);
-	}
-
-#ifdef NO_ASYNC
-	syncCUDA("1c");
-#endif
-	
-#ifdef NO_ASYNC
-	syncCUDA("1d");
-#endif
-
+	inputNet->runUpdateGROutGOCUDA(streams, 7);
 	inputNet->runSumGRGOOutCUDA(streams, 4);
-#ifdef NO_ASYNC
-	syncCUDA("1e");
-#endif
+	inputNet->cpyGRGOSumGPUtoHostCUDA(streams, 3);
 
-#ifdef NO_ASYNC
-	syncCUDA("1f");
-#endif
+	inputNet->updateMFtoGOOut();
+	inputNet->calcGOActivities(); 
+
+	inputNet->updateGOtoGOOut();
+	inputNet->updateGOtoGROutParameters(spillFrac);
+
+	inputNet->cpyDepAmpGOGRHosttoGPUCUDA(streams, 2); // NOTE: currently does nothing (08/11/2022)
+	inputNet->cpyDynamicAmpGOGRHosttoGPUCUDA(streams, 3); 
+	inputNet->cpyAPGOHosttoGPUCUDA(streams, 7);
+
+	// TODO: put in macro def for num_gpus so we don't run this line if running on one GPU
+	//syncCUDA("2");
+	inputNet->runUpdateGOInGRCUDA(streams, 1);
+	inputNet->runUpdateGOInGRDepressionCUDA(streams, 3);
+	inputNet->runUpdateGOInGRDynamicSpillCUDA(streams, 4);
 
 	if (pf_pc_plast == GRADED)
 	{
@@ -182,245 +176,44 @@ void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum
 			zones[i]->runPFPCPlastCUDA(streams, 1, curTime);
 		}
 	}
-#ifdef NO_ASYNC
-	syncCUDA("1f");
-#endif
-	inputNet->cpyDepAmpMFHosttoGPUCUDA(streams, 5);
-
-#ifdef NO_ASYNC
-	syncCUDA("1g");
-#endif
-
-	inputNet->cpyAPMFHosttoGPUCUDA(streams, 6);
-#ifdef NO_ASYNC
-	syncCUDA("1h");
-#endif
-	
-	inputNet->cpyDepAmpGOGRHosttoGPUCUDA(streams, 2); // NOTE: currently does nothing (08/11/2022)
-	
-#ifdef NO_ASYNC
-	syncCUDA("1i");
-#endif
-	
-	inputNet->cpyDynamicAmpGOGRHosttoGPUCUDA(streams, 3); 
-
-#ifdef NO_ASYNC
-	syncCUDA("1j");
-#endif
-
-	inputNet->cpyAPGOHosttoGPUCUDA(streams, 7);
-
-#ifdef NO_ASYNC
-	syncCUDA("1k");
-#endif
-			
-#ifdef NO_ASYNC
-	syncCUDA("1l");
-#endif
-
-#ifdef NO_ASYNC
-	syncCUDA("1m");
-#endif
-
-	for (int i = 0; i < numZones; i++)
-	{
-		zones[i]->calcPCActivities();
-		zones[i]->calcSCActivities();
-		zones[i]->calcBCActivities();
-	}
-
-	// TODO: put in macro def for num_gpus so we don't run this line if running on one GPU
-	//syncCUDA("2");
-
-#ifdef NO_ASYNC
-	syncCUDA("2a");
-#endif
-	inputNet->runUpdateMFInGRCUDA(streams, 0);
-#ifdef NO_ASYNC
-	syncCUDA("2b");
-#endif
-	inputNet->runUpdateGOInGRCUDA(streams, 1);
-#ifdef NO_ASYNC
-	syncCUDA("2c");
-#endif
-
-#ifdef NO_ASYNC
-	syncCUDA("2d");
-#endif
-
-	inputNet->runUpdateMFInGRDepressionCUDA(streams, 2);
-
-#ifdef NO_ASYNC
-	syncCUDA("2e");
-#endif
-
-	inputNet->runUpdateGOInGRDepressionCUDA(streams, 3);
-
-#ifdef NO_ASYNC
-	syncCUDA("2f");
-#endif
-
-	inputNet->runUpdateGOInGRDynamicSpillCUDA(streams, 4);
 
 	for (int i = 0; i < numZones; i++)
 	{
 		zones[i]->runPFPCOutCUDA(streams, i + 2);
+		zones[i]->runPFPCSumCUDA(streams, 1);
 		zones[i]->cpyPFPCSumCUDA(streams, i + 2);
+
 		zones[i]->runUpdatePFBCSCOutCUDA(streams, i + 4); // adding i might break things in future
-	}
-#ifdef NO_ASYNC
-	syncCUDA("2g");
-#endif
-
-#ifdef NO_ASYNC
-	syncCUDA("2h");
-#endif
-
-	inputNet->runUpdateGROutGOCUDA(streams, 7);
-#ifdef NO_ASYNC
-	syncCUDA("2i");
-#endif
-
-#ifdef NO_ASYNC
-	syncCUDA("2i");
-#endif
-
-	for (int i = 0; i < numZones; i++)
-	{
 		zones[i]->cpyPFBCSumGPUtoHostCUDA(streams, 5);
 		zones[i]->cpyPFSCSumGPUtoHostCUDA(streams, 3);
-	}
+		zones[i]->runSumPFBCCUDA(streams, 2);
+		zones[i]->runSumPFSCCUDA(streams, 3);
 
-#ifdef NO_ASYNC
-	syncCUDA("2j");
-#endif
-
-#ifdef NO_ASYNC
-	syncCUDA("2k");
-#endif
-
-	inputNet->cpyGRGOSumGPUtoHostCUDA(streams, 3);
-#ifdef NO_ASYNC
-	syncCUDA("2ia");
-#endif
-
-#ifdef NO_ASYNC
-	syncCUDA("2iz");
-#endif
-
-	inputNet->runUpdateGRHistoryCUDA(streams, 4, curTime);
-#ifdef NO_ASYNC
-	syncCUDA("2ib");
-#endif
-
-	inputNet->calcGOActivities(); 
-#ifdef NO_ASYNC
-	syncCUDA("2ic");
-#endif
-	
-#ifdef NO_ASYNC
-	syncCUDA("2id");
-#endif
-
-#ifdef NO_ASYNC
-	syncCUDA("2ie");
-#endif
-	
-	inputNet->updateMFtoGOOut();
-#ifdef NO_ASYNC
-	syncCUDA("2if");
-#endif
-	
-	inputNet->updateGOtoGOOut();
-#ifdef NO_ASYNC
-	syncCUDA("2ig");
-#endif
-
-	inputNet->updateMFtoGROut();
-#ifdef NO_ASYNC
-	syncCUDA("2ih");
-#endif
-
-	inputNet->updateGOtoGROutParameters(spillFrac);
-#ifdef NO_ASYNC
-	syncCUDA("2ii");
-#endif
-
-#ifdef NO_ASYNC
-	syncCUDA("2ij");
-#endif
-
-#ifdef NO_ASYNC
-	syncCUDA("2ik");
-#endif
-
-#ifdef NO_ASYNC
-	syncCUDA("2il");
-#endif
-
-#ifdef NO_ASYNC
-	syncCUDA("2im");
-#endif
-
-	for (int i = 0; i < numZones; i++)
-	{
-		zones[i]->calcIOActivities();
-#ifdef NO_ASYNC
-		syncCUDA("2in");
-#endif
-
-		zones[i]->calcNCActivities();
-#ifdef NO_ASYNC
-		syncCUDA("2io");
-#endif
-
-		zones[i]->updateMFNCOut();
-#ifdef NO_ASYNC
-		syncCUDA("2ip");
-#endif
-
+		zones[i]->calcSCActivities();
+		zones[i]->calcBCActivities();
 		zones[i]->updateBCPCOut();
-#ifdef NO_ASYNC
-		syncCUDA("2iq");
-#endif
 		zones[i]->updateSCPCOut();
-#ifdef NO_ASYNC
-		syncCUDA("2ir");
-#endif
 
+		zones[i]->calcPCActivities();
 		zones[i]->updatePCOut();
-#ifdef NO_ASYNC
-		syncCUDA("2is");
-#endif
 
+		zones[i]->calcIOActivities();
 		zones[i]->updateIOOut();
-#ifdef NO_ASYNC
-		syncCUDA("2it");
-#endif
-		zones[i]->updateNCOut();
-#ifdef NO_ASYNC
-		syncCUDA("2iu");
-#endif
+
 		// temp solution: by default mfnc plast is GRADED. no other
 		// plasticity modes are given for these synapses
 		if (mf_nc_plast != OFF )
 		{
 			zones[i]->updateMFNCSyn(inputNet->exportHistMF(), curTime);
-		}
-			
-#ifdef NO_ASYNC
-		syncCUDA("2iv");
-#endif
-	}
-	
-#ifdef NO_ASYNC
-		syncCUDA("2iw");
-#endif
+	  }
+
+		zones[i]->updateMFNCOut();
+		zones[i]->calcNCActivities();
+		zones[i]->updateNCOut();
+
+  }
 
 	inputNet->resetMFHist(curTime);
-#ifdef NO_ASYNC
-		syncCUDA("2ix");
-#endif
 }
 
 void CBMSimCore::updateMFInput(const uint8_t *mfIn)

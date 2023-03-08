@@ -379,7 +379,7 @@ __global__ void updateGRHistory(uint32_t *apBuf, uint64_t *apHist, uint32_t bufT
 {
 	int i=blockIdx.x*blockDim.x+threadIdx.x;
 	uint64_t tempHist=apHist[i]<<1;
-	apHist[i]=tempHist|((apBuf[i]&bufTestMask)>0)*0x00000001; 
+	apHist[i]=tempHist|((apBuf[i]&bufTestMask)>0)*0x00000001;
 }
 
 __global__ void updatePFBCSCOutGPU(uint32_t *apBuf, uint32_t *delay,
