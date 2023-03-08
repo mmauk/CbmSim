@@ -160,8 +160,8 @@ void Control::reset_sim()
 
   // open data output path for this invocation of cbm_sim
 	struct dirent *dp;
-  char *data_out_path_abs = (char *)calloc(PATH_MAX/2, sizeof(char));
-  char *data_out_run_path_abs = (char *)calloc(PATH_MAX/2, sizeof(char));
+  char *data_out_path_abs = (char *)calloc(PATH_MAX, sizeof(char));
+  char *data_out_run_path_abs = (char *)calloc(PATH_MAX, sizeof(char));
 	realpath(data_out_path.c_str(), data_out_path_abs);
 	realpath(data_out_run_name.c_str(), data_out_run_path_abs);
 	DIR *dir = opendir(data_out_path_abs);
@@ -177,13 +177,13 @@ void Control::reset_sim()
 	{
 		if (strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0)
 		{
-      char *entry_path_buf_old = (char *)calloc(PATH_MAX/2, sizeof(char));
-      snprintf(entry_path_buf_old, PATH_MAX/2, "%s/%s", data_out_path_abs, dp->d_name);
+      char *entry_path_buf_old = (char *)calloc(PATH_MAX, sizeof(char));
+      snprintf(entry_path_buf_old, PATH_MAX, "%s/%s", data_out_path_abs, dp->d_name);
       stat(entry_path_buf_old, &statbuf);
       if (S_ISREG(statbuf.st_mode))
       {
-        char *entry_path_buf_new = (char *)calloc(PATH_MAX/2, sizeof(char));
-        snprintf(entry_path_buf_new, PATH_MAX/2, "%s/%s", data_out_run_path_abs, dp->d_name);
+        char *entry_path_buf_new = (char *)calloc(PATH_MAX, sizeof(char));
+        snprintf(entry_path_buf_new, PATH_MAX, "%s/%s", data_out_run_path_abs, dp->d_name);
         rename(entry_path_buf_old, entry_path_buf_new);
       }
       free(entry_path_buf_old);
@@ -217,7 +217,7 @@ bool Control::validAfterReset()
     "ERROR: Could not find previous run folder", __func__);
 	ASSERT(simState->validAfterReset(),
     "ERROR: Something went wrong in cbm state: check its logs", __func__);
-
+	return true;
 }
 
 void Control::save_sim_to_file()

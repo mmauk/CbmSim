@@ -119,7 +119,6 @@ bool MZoneActivityState::inInitialState()
         "ERROR: synIOPReleaseNC not all zero", __func__);
 
   // validate non-zero initialized values
-
   ASSERT(arr_filled_with_int_t<uint8_t>(apSC.get(), num_sc, eLeakSC),
         "ERROR: apSC not all eLeakSC", __func__);
   ASSERT(arr_filled_with_float_t<float>(threshSC.get(), num_sc, threshRestSC),

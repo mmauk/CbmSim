@@ -307,7 +307,9 @@ void MZone::initSCCUDA()
 
 void MZone::resetBCActivityCUDA()
 {
+	cudaSetDevice(gpuIndStart);
   cudaMemset(inputSumPFBCH, 0, num_bc * sizeof(uint32_t));
+	cudaDeviceSynchronize();
 
 	// reset BC vars
 	LOG_DEBUG("Resetting BC cuda variables...");
@@ -328,7 +330,9 @@ void MZone::resetBCActivityCUDA()
 
 void MZone::resetSCActivityCUDA()
 {
+	cudaSetDevice(gpuIndStart);
 	cudaMemset(inputSumPFSCH, 0, num_sc * sizeof(uint32_t));
+	cudaDeviceSynchronize();
 
 	// reset SC vars
 	LOG_DEBUG("Resetting SC cuda variables...");
