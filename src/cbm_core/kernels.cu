@@ -780,6 +780,7 @@ __global__ void curandGenerateUniformsKernel(randState *state, float *randoms, u
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	curandStateMRG32k3a localState = state[i];
 	randoms[i + rand_offset] = curand_uniform(&localState);
+	state[i] = localState;
 }
 
 //**---------------end random kernels---------**

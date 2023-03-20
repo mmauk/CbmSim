@@ -178,7 +178,7 @@ void MZone::initCUDA(cudaStream_t **stream)
 		cudaMalloc((void **)&mrg32k3aRNGs[i],
 				updatePFPCSynWNumGRPerB * updatePFPCSynWNumBlocks * sizeof(curandStateMRG32k3a));
 		callCurandSetupKernel<curandStateMRG32k3a, dim3, dim3>
-		(stream[i][1], mrg32k3aRNGs[i], curandInitSeed, updatePFPCSynWGridDim, updatePFPCSynWBlockDim);
+		(stream[i][1], mrg32k3aRNGs[i], (curandInitSeed + (uint32_t)i) % UINT_MAX, updatePFPCSynWGridDim, updatePFPCSynWBlockDim);
 		cudaMalloc((void **)&pfpcSynWRandNums[i], numGRPerGPU * sizeof(float));
 		cudaDeviceSynchronize();
 	}
