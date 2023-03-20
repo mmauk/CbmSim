@@ -7,18 +7,18 @@ begin filetype run
 	begin section trial_def
 
 		// trial defs 
-		def trial isi_500_paired_trial
+		def trial isi_250_paired_trial
 			int use_cs 1
 			int cs_onset 400
-			int cs_len 500
+			int cs_len 250
 			float cs_percent 100.0
 			int use_us 1
-			int us_onset 900
+			int us_onset 650
 		end
 
 		// session defs
-		def session isi_500_session
-			isi_500_paired_trial 200
+		def session isi_250_session
+			isi_250_paired_trial 300
 		end 
 	end
 
@@ -130,6 +130,22 @@ begin filetype run
 		float gluScaleGO 0.0
 		float goGABAGOGOSynDepF 1.0
 		float goGABAGOGOSynRecTau 100.0
+
+		// experimental params!
+		float fracSynWLow 0.5 // for cascade and binary plasticity ONLY
+		float fracLowState 0.5 // cascade plasticity ONLY: fraction of states which start at highest state of low weight
+		float cascPlastProbMin 0.9
+		float cascPlastProbMax 0.1
+		float cascPlastWeightLow 0.25
+		float cascPlastWeightHigh 0.55
+
+		float binPlastProbMin 0.8
+		float binPlastProbMax 0.2
+		float binPlastWeightLow 0.3
+		float binPlastWeightHigh 0.7
+
+		// experimental params!
+
 		float synLTDStepSizeGRtoPC -0.00275
 		float synLTPStepSizeGRtoPC 0.00030556
 		float mGluRDecayGO 0.98

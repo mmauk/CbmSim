@@ -43,8 +43,9 @@ NON_CUDA_DEBUG_OBJS := $(NON_CUDA_SRCS:%.cpp=$(DEBUG_DIR)%.o)
 RELEASE_OBJS := $(CUDA_RELEASE_OBJS) $(NON_CUDA_RELEASE_OBJS)
 DEBUG_OBJS   := $(CUDA_DEBUG_OBJS) $(NON_CUDA_DEBUG_OBJS)
 
-NVCC       := nvcc
-NVCC_FLAGS := -arch=native -Xcompiler -fPIC -O3
+NVCC             := nvcc
+NVCC_FLAGS       := -arch=native -Xcompiler -fPIC -O3
+NVCC_DEBUG_FLAGS := -arch=native --maxrregcount=64 -Xcompiler -fPIC -g -G
 
 CPP             := g++-11
 CPP_FLAGS       := -m64 -pipe -std=c++14 -fopenmp -O3 -fPIC
@@ -72,7 +73,7 @@ $(BUILD_DIR)%.o: %.cpp
 	$(CPP) $(CPP_FLAGS) $(CUDA_INC_FLAGS) $(GTK_INC_FLAGS) -c $< -o $@
 
 $(DEBUG_DIR)%.o: %.cu
-	$(NVCC) $(NVCC_FLAGS) $(CUDA_INC_FLAGS) -c $< -o $@
+	$(NVCC) $(NVCC_DEBUG_FLAGS) $(CUDA_INC_FLAGS) -c $< -o $@
 
 $(DEBUG_DIR)%.o: %.cpp
 	$(CPP) $(CPP_DEBUG_FLAGS) $(CUDA_INC_FLAGS) $(GTK_INC_FLAGS) -c $< -o $@

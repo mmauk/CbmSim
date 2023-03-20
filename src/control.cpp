@@ -91,13 +91,14 @@ void Control::set_plasticity_modes(std::string pfpc_plasticity, std::string mfnc
 	if (pfpc_plasticity == "off") pf_pc_plast = OFF;
 	else if (pfpc_plasticity == "graded") pf_pc_plast = GRADED;
 	else if (pfpc_plasticity == "binary") pf_pc_plast = BINARY;
-	else if (pfpc_plasticity == "cascade") pf_pc_plast = CASCADE;
+	else if (pfpc_plasticity == "abbott-cascade") pf_pc_plast = ABBOTT_CASCADE;
+	else if (pfpc_plasticity == "mauk-cascade") pf_pc_plast = MAUK_CASCADE;
 
-
+	// TODO: check if we have good evidence to implement diff plast types for mfnc plast
 	if (mfnc_plasticity == "off") mf_nc_plast = OFF;
 	else if (mfnc_plasticity == "graded") mf_nc_plast = GRADED;
-	else if (mfnc_plasticity == "binary") mf_nc_plast = BINARY;
-	else if (mfnc_plasticity == "cascade") mf_nc_plast = CASCADE;
+	else if (mfnc_plasticity == "abbott-cascade") mf_nc_plast = ABBOTT_CASCADE;
+	else if (mfnc_plasticity == "mauk-cascade") mf_nc_plast = MAUK_CASCADE;
 }
 
 void Control::initialize_session(std::string sess_file)
@@ -125,7 +126,7 @@ void Control::init_sim(std::string in_sim_filename)
 	std::fstream sim_file_buf(in_sim_filename.c_str(), std::ios::in | std::ios::binary);
 	read_con_params(sim_file_buf);
 	populate_act_params(s_file); // FIXME: place act params in separate file so we don't have to make s_file class attrib
-	simState = new CBMState(numMZones, sim_file_buf);
+	simState = new CBMState(numMZones, pf_pc_plast, sim_file_buf);
 	simCore  = new CBMSimCore(simState, gpuIndex, gpuP2);
 	mfFreq   = new ECMFPopulation(num_mf, mfRandSeed, CSTonicMFFrac, CSPhasicMFFrac,
 								  contextMFFrac, nucCollFrac, bgFreqMin, csbgFreqMin,

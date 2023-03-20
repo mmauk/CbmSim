@@ -12,12 +12,17 @@
 #include <memory> /* unique_ptr, make_unique */
 #include <cstdint>
 
+enum plasticity {OFF, GRADED, BINARY, ABBOTT_CASCADE, MAUK_CASCADE};
+
+enum {CASCADE_STATE_MIN_DEEPEST, CASCADE_STATE_MIN_DEEPER, CASCADE_STATE_MIN_SHALLOW, CASCADE_STATE_MIN_SHALLOWEST,
+      CASCADE_STATE_MAX_SHALLOWEST, CASCADE_STATE_MAX_SHALLOWER, CASCADE_STATE_MAX_DEEPER, CASCADE_STATE_MAX_DEEPEST};
+
 class MZoneActivityState
 {
 public:
 	MZoneActivityState();
 	MZoneActivityState(int randSeed);
-	MZoneActivityState(std::fstream &infile);
+	MZoneActivityState(enum plasticity plast_type, std::fstream &infile);
 
 	~MZoneActivityState();
 	
@@ -46,6 +51,7 @@ public:
 	std::unique_ptr<uint32_t[]> inputBCPC{nullptr};
 	std::unique_ptr<uint32_t[]> inputSCPC{nullptr};
 	std::unique_ptr<float[]> pfSynWeightPC{nullptr};
+	std::unique_ptr<uint8_t[]> pfPCSynWeightStates{nullptr};
 	std::unique_ptr<float[]> inputSumPFPC{nullptr};
 	std::unique_ptr<float[]> gPFPC{nullptr};
 	std::unique_ptr<float[]> gBCPC{nullptr};
@@ -88,6 +94,8 @@ public:
 private:
 	void allocateMemory();
 	void initializeVals(int randSeed);
+// hacky solution: meant to re-initialize weights and states given casc and bin params
+	void initializePFPCSynWVars(enum plasticity plast_type);
 	void stateRW(bool read, std::fstream &file);
 };
 

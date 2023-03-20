@@ -36,7 +36,7 @@ CBMState::CBMState(unsigned int nZones) : numZones(nZones)
 	LOG_DEBUG("Finished generating cbm state.");
 }
 
-CBMState::CBMState(unsigned int nZones, std::fstream &sim_file_buf) : numZones(nZones)
+CBMState::CBMState(unsigned int nZones, enum plasticity plast_type, std::fstream &sim_file_buf) : numZones(nZones)
 {
 	LOG_DEBUG("Initializing cbm state from file...");
 	innetConState  = new InNetConnectivityState(sim_file_buf);
@@ -48,7 +48,7 @@ CBMState::CBMState(unsigned int nZones, std::fstream &sim_file_buf) : numZones(n
 	for (int i = 0; i < nZones; i++)
 	{
 		mzoneConStates[i] = new MZoneConnectivityState(sim_file_buf);
-		mzoneActStates[i] = new MZoneActivityState(sim_file_buf);
+		mzoneActStates[i] = new MZoneActivityState(plast_type, sim_file_buf);
 	}
 	LOG_DEBUG("Finished initializing cbm state.");
 }

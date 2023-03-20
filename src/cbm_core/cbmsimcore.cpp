@@ -91,6 +91,7 @@ void CBMSimCore::initCUDAStreams()
 		error = cudaSetDevice(i + gpuIndStart);
 		LOG_DEBUG("Selecting device %d", i);
 		LOG_DEBUG("%s", cudaGetErrorString(error));
+		// introducing one extra stream dedicated for rng processing
 		streams[i] = new cudaStream_t[8];
 		LOG_DEBUG("Resetting device %d", i);
 		LOG_DEBUG("%s", cudaGetErrorString(error));
@@ -307,7 +308,7 @@ void CBMSimCore::construct(CBMState *state,
 	for (int i = 0; i < numZones; i++)
 	{
 		// same thing for zones as with innet
-		zones[i] = new MZone(state->getMZoneConStateInternal(i),
+		zones[i] = new MZone(streams, state->getMZoneConStateInternal(i),
 			state->getMZoneActStateInternal(i), mzoneRSeed[i], inputNet->getApBufGRGPUPointer(),
 			inputNet->getHistGRGPUPointer(), this->gpuIndStart, numGPUs);
 	}
