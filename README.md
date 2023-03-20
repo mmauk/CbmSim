@@ -92,13 +92,14 @@ run mode will be placed there.
 
 The following table summarizes the optional arguments:
 
-| Option      | Argument       | Description                                                    |
-| ----------- | -------------- | -------------------------------------------------------------- |
-| --visual    | TUI or GUI     | run from the commandline or the GUI                            |
-| --pfpc-off  | None           | turn parallel fiber to purkinje cell plasticity off            |
-| --binary    | None           | set parallel fiber to purkinje cell plasticity mode to binary  |
-| --cascade   | None           | set parallel fiber to purkinje cell plasticity mode to cascade |
-| --mfnc-off  | None           | turn mossy fiber to deep nucleus plasticity off                |
+| Option           | Argument       | Description                                                           |
+| ---------------- | -------------- | --------------------------------------------------------------------- |
+| --visual         | TUI or GUI     | run from the commandline or the GUI                                   |
+| --pfpc-off       | None           | turn parallel fiber to purkinje cell plasticity off                   |
+| --binary         | None           | set parallel fiber to purkinje cell plasticity mode to binary         |
+| --abbott-cascade | None           | set parallel fiber to purkinje cell plasticity mode to abbott cascade |
+| --mauk-cascade   | None           | set parallel fiber to purkinje cell plasticity mode to mauk cascade   |
+| --mfnc-off       | None           | turn mossy fiber to deep nucleus plasticity off                       |
 
 The following table summarizes the output arguments:
 

@@ -757,9 +757,9 @@ void Control::runSession(struct gui *gui)
 			reset_spike_sums();
 		}
 		// save gr rasters into new file every trial 
-		save_gr_raster();
-		save_pfpc_weights_to_file(trial);
-		save_mfdcn_weights_to_file(trial);
+		//save_gr_raster();
+		//save_pfpc_weights_to_file(trial);
+		//save_mfdcn_weights_to_file(trial);
 		trial++;
 	}
 	trial--; // setting so that is valid for drawing go rasters after a sim

@@ -18,7 +18,7 @@ DEBUG_TARGET   := $(DEBUG_DIR)cbm_sim
 INC_DIRS  := $(shell find $(SRC_DIR) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
-ifeq ($(shell uname -rv | awk '{print $$2}' | tr -d '#[:digit:]-'), Ubuntu)
+ifeq (Ubuntu, $(findstring Ubuntu, $(shell uname -rv)))
 	CUDA_PKG_NAME   := cuda-11.8
 	CUDART_PKG_NAME := cudart-11.8
 else
