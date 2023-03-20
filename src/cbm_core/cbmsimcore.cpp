@@ -170,11 +170,23 @@ void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum
 	inputNet->runUpdateGOInGRDepressionCUDA(streams, 3);
 	inputNet->runUpdateGOInGRDynamicSpillCUDA(streams, 4);
 
-	if (pf_pc_plast == GRADED)
+	for (int i = 0; i < numZones; i++)
 	{
-		for (int i = 0; i < numZones; i++)
+		if (pf_pc_plast == GRADED)
 		{
-			zones[i]->runPFPCPlastCUDA(streams, 1, curTime);
+			zones[i]->runPFPCGradedPlastCUDA(streams, 1, curTime);
+		}
+		else if (pf_pc_plast == BINARY)
+		{
+			zones[i]->runPFPCBinaryPlastCUDA(streams, 1, curTime);
+		}
+		else if (pf_pc_plast == ABBOTT_CASCADE)
+		{
+			zones[i]->runPFPCAbbottCascadePlastCUDA(streams, 1, curTime);
+		}
+		else if (pf_pc_plast == MAUK_CASCADE)
+		{
+			zones[i]->runPFPCMaukCascadePlastCUDA(streams, 1, curTime);
 		}
 	}
 
