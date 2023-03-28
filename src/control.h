@@ -89,6 +89,8 @@ class Control
 		bool pfpc_weights_filenames_created = false;
 		bool mfnc_weights_filenames_created = false;
 
+		bool pfpc_weights_states_filenames_created = false;
+
 		enum sim_run_state run_state = NOT_IN_RUN; 
 
 		// params that I do not know how to categorize
@@ -165,6 +167,8 @@ class Control
 		std::string pfpc_weights_file = "";
 		std::string mfnc_weights_file = "";
 
+		std::string pfpc_weights_states_file = "";
+
 		struct cell_spike_sums spike_sums[NUM_CELL_TYPES];
 		struct cell_firing_rates firing_rates[NUM_CELL_TYPES];
 
@@ -204,19 +208,21 @@ class Control
 		void save_mfdcn_weights_to_file(int32_t trial = -1);
 		void load_mfdcn_weights_from_file(std::string in_mfdcn_file);
 
+		void save_pfpc_weights_states_to_file(int32_t trial = -1);
+
 		void create_out_sim_filename();
 		void create_out_info_filename();
 		void create_raster_filenames(std::map<std::string, bool> &rast_map);
 		void create_psth_filenames(std::map<std::string, bool> &psth_map);
 		void create_weights_filenames(std::map<std::string, bool> &weights_map);
+		void create_pfpc_weights_states_filenames();
 		void initialize_rast_cell_nums();
 		void initialize_cell_spikes();
 		void initialize_spike_sums();
 		void initialize_rasters(); 
+		void initialize_psths();
 		void initialize_psth_save_funcs();
 		void initialize_raster_save_funcs();
-
-		void initialize_psths();
 
 		void runSession(struct gui *gui);
 

@@ -383,6 +383,19 @@ void MZone::cpyPFPCSynWCUDA()
 	}
 }
 
+void MZone::cpyPFPCWeightStatesCUDA()
+{
+	for (int i = 0; i < numGPUs; i++)
+	{
+		cudaSetDevice(i + gpuIndStart);
+		cudaMemcpy((void *)&pfPCSynWeightStatesLinear[i*numGRPerGPU],
+			pfPCSynWeightStatesGPU[i], numGRPerGPU * sizeof(uint8_t),
+			cudaMemcpyDeviceToHost);
+	}
+	memcpy(as->pfPCSynWeightStates.get(), pfPCSynWeightStatesLinear,
+		num_gr * sizeof(uint8_t));
+}
+
 void MZone::setErrDrive(float errDriveRelative)
 {
 	as->errDrive = errDriveRelative * maxExtIncVIO;
@@ -1048,6 +1061,12 @@ const float* MZone::exportPFPCWeights()
 const float* MZone::exportMFDCNWeights()
 {
 	return (const float *)as->mfSynWeightNC.get(); 
+}
+
+const uint8_t* MZone::exportPFPCWeightStates()
+{
+	cpyPFPCWeightStatesCUDA();
+	return (const uint8_t *)pfPCSynWeightStatesLinear; 
 }
 
 void MZone::load_pfpc_weights_from_file(std::fstream &in_file_buf)

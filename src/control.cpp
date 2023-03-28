@@ -54,6 +54,7 @@ Control::Control(parsed_commandline &p_cl)
 		create_raster_filenames(p_cl.raster_files); //optional
 		create_psth_filenames(p_cl.psth_files); //optional
 		create_weights_filenames(p_cl.weights_files); //optional
+		create_pfpc_weights_states_filenames(); // only initialized for cascade plast modes
 		init_sim(p_cl.input_sim_file);
 	}
 	else // user ran executable with no args FIXME: find out how to initialize with gui, couple similar parts of code
@@ -396,13 +397,13 @@ void Control::save_pfpc_weights_to_file(int32_t trial)
 			curr_pfpc_weights_filename = data_out_path + "/" + get_file_basename(pfpc_weights_file)
 									   + "_TRIAL_" + std::to_string(trial) + BIN_EXT;
 		}
-		LOG_DEBUG("Saving granule to purkinje weights to file...");
 		if (!simCore)
 		{
 			LOG_ERROR("Trying to write uninitialized weights to file.");
 			LOG_ERROR("(Hint: Try initializing a sim or loading the weights first.)");
 			return;
 		}
+		LOG_DEBUG("Saving granule to purkinje weights to file...");
 		const float *pfpc_weights = simCore->getMZoneList()[0]->exportPFPCWeights();
 		std::fstream outPFPCFileBuffer(curr_pfpc_weights_filename.c_str(), std::ios::out | std::ios::binary);
 		rawBytesRW((char *)pfpc_weights, num_gr * sizeof(float), false, outPFPCFileBuffer);
@@ -433,13 +434,13 @@ void Control::save_mfdcn_weights_to_file(int32_t trial)
 			curr_mfnc_weights_filename = data_out_path + "/" + get_file_basename(curr_mfnc_weights_filename)
 									   + "_TRIAL_" + std::to_string(trial) + BIN_EXT;
 		}
-		LOG_DEBUG("Saving mossy fiber to deep nucleus weigths to file...");
 		if (!simCore)
 		{
 			LOG_ERROR("Trying to write uninitialized weights to file.");
 			LOG_ERROR("(Hint: Try initializing a sim or loading the weights first.)");
 			return;
 		}
+		LOG_DEBUG("Saving mossy fiber to deep nucleus weigths to file...");
 		// TODO: make a export function for mfdcn weights
 		const float *mfdcn_weights = simCore->getMZoneList()[0]->exportMFDCNWeights();
 		std::fstream outMFDCNFileBuffer(curr_mfnc_weights_filename.c_str(), std::ios::out | std::ios::binary);
@@ -459,6 +460,30 @@ void Control::load_mfdcn_weights_from_file(std::string in_mfdcn_file)
 	std::fstream inMFDCNFileBuffer(in_mfdcn_file.c_str(), std::ios::in | std::ios::binary);
 	simCore->getMZoneList()[0]->load_mfdcn_weights_from_file(inMFDCNFileBuffer);
 	inMFDCNFileBuffer.close();
+}
+
+void Control::save_pfpc_weights_states_to_file(int32_t trial)
+{
+	if (pfpc_weights_states_filenames_created)
+	{
+		std::string curr_pfpc_weights_state_filename = pfpc_weights_states_file;
+		if (trial != -1)
+		{
+			curr_pfpc_weights_state_filename = data_out_path + "/" + get_file_basename(curr_pfpc_weights_state_filename)
+											 + "_TRIAL_" + std::to_string(trial) + BIN_EXT;
+		}
+		if (!simCore)
+		{
+			LOG_ERROR("Trying to write uninitialized weights to file.");
+			LOG_ERROR("(Hint: Try initializing a sim or loading the weights first.)");
+			return;
+		}
+		LOG_DEBUG("Saving parallel fiber to purkinje cell weight states to file...");
+		const uint8_t *pfpc_weights_states = simCore->getMZoneList()[0]->exportPFPCWeightStates();
+		std::fstream pfpc_weights_states_file_buf(curr_pfpc_weights_state_filename.c_str(), std::ios::out | std::ios::binary);
+		rawBytesRW((char *)pfpc_weights_states, num_gr * sizeof(const uint8_t), false, pfpc_weights_states_file_buf);
+		pfpc_weights_states_file_buf.close();
+	}
 }
 
 void Control::create_out_sim_filename()
@@ -542,6 +567,18 @@ void Control::create_weights_filenames(std::map<std::string, bool> &weights_map)
 							   + BIN_EXT;
 			mfnc_weights_filenames_created = true; // only useful so far for gui...
 		}
+	}
+}
+
+// NOTE: this function expects to be called after set_plasticity_modes!
+void Control::create_pfpc_weights_states_filenames()
+{
+	if (pf_pc_plast == ABBOTT_CASCADE || pf_pc_plast == MAUK_CASCADE)
+	{
+		pfpc_weights_states_file = data_out_path + "/" + data_out_base_name
+								 + "_PFPC_WEIGHTS_STATES_" + get_current_time_as_string("%m%d%Y")
+								 + BIN_EXT;
+		pfpc_weights_states_filenames_created = true; // for gui use ig ig fr fr
 	}
 }
 
@@ -758,8 +795,12 @@ void Control::runSession(struct gui *gui)
 		}
 		// save gr rasters into new file every trial 
 		//save_gr_raster();
-		//save_pfpc_weights_to_file(trial);
+		save_pfpc_weights_to_file(trial);
 		//save_mfdcn_weights_to_file(trial);
+		if (pf_pc_plast == ABBOTT_CASCADE || pf_pc_plast == MAUK_CASCADE)
+		{
+			save_pfpc_weights_states_to_file(trial);
+		}
 		trial++;
 	}
 	trial--; // setting so that is valid for drawing go rasters after a sim

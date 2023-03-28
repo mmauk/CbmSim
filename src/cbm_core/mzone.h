@@ -23,6 +23,7 @@ public:
 
 	void writeToState();
 	void cpyPFPCSynWCUDA();
+	void cpyPFPCWeightStatesCUDA();
 
 	void setErrDrive(float errDriveRelative);
 	void updateMFActivities(const uint8_t *actMF);
@@ -72,6 +73,8 @@ public:
 	const float* exportgPFPC();
 	const float* exportPFPCWeights();
 	const float* exportMFDCNWeights();
+
+	const uint8_t* exportPFPCWeightStates();
 
 	void load_pfpc_weights_from_file(std::fstream &in_file_buf);
 	void load_mfdcn_weights_from_file(std::fstream &in_file_buf);
