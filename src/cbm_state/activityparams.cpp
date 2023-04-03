@@ -29,7 +29,6 @@ float eSCtoPC                    = 0.0;
 float gDecTauBCtoPC              = 0.0;
 float gIncBCtoPC                 = 0.0;
 float gGABADecTauGOtoGO          = 0.0;
-float gIncDirectGOtoGR           = 0.0;
 float gDirectTauGOtoGR           = 0.0;
 float gIncFracSpilloverGOtoGR    = 0.0; 
 float gSpilloverTauGOtoGR        = 0.0;
@@ -196,7 +195,6 @@ void populate_act_params(parsed_sess_file &s_file)
 	gDecTauBCtoPC              = std::stof(s_file.parsed_var_sections["activity"].param_map["gDecTauBCtoPC"]); 
 	gIncBCtoPC                 = std::stof(s_file.parsed_var_sections["activity"].param_map["gIncBCtoPC"]); 
 	gGABADecTauGOtoGO          = std::stof(s_file.parsed_var_sections["activity"].param_map["gGABADecTauGOtoGO"]); 
-	gIncDirectGOtoGR           = std::stof(s_file.parsed_var_sections["activity"].param_map["gIncDirectGOtoGR"]); 
 	gDirectTauGOtoGR           = std::stof(s_file.parsed_var_sections["activity"].param_map["gDirectTauGOtoGR"]); 
 	gIncFracSpilloverGOtoGR    = std::stof(s_file.parsed_var_sections["activity"].param_map["gIncFracSpilloverGOtoGR"]); 
 	gSpilloverTauGOtoGR        = std::stof(s_file.parsed_var_sections["activity"].param_map["gSpilloverTauGOtoGR"]); 
@@ -367,7 +365,6 @@ void read_act_params(std::fstream &in_param_buf)
 	in_param_buf.read((char *)&gDecTauBCtoPC, sizeof(float));
 	in_param_buf.read((char *)&gIncBCtoPC, sizeof(float));
 	in_param_buf.read((char *)&gGABADecTauGOtoGO, sizeof(float));
-	in_param_buf.read((char *)&gIncDirectGOtoGR, sizeof(float));
 	in_param_buf.read((char *)&gDirectTauGOtoGR, sizeof(float));
 	in_param_buf.read((char *)&gIncFracSpilloverGOtoGR, sizeof(float));
 	in_param_buf.read((char *)&gSpilloverTauGOtoGR, sizeof(float));
@@ -537,7 +534,6 @@ void write_act_params(std::fstream &out_param_buf)
 	out_param_buf.write((char *)&gDecTauBCtoPC, sizeof(float));
 	out_param_buf.write((char *)&gIncBCtoPC, sizeof(float));
 	out_param_buf.write((char *)&gGABADecTauGOtoGO, sizeof(float));
-	out_param_buf.write((char *)&gIncDirectGOtoGR, sizeof(float));
 	out_param_buf.write((char *)&gDirectTauGOtoGR, sizeof(float));
 	out_param_buf.write((char *)&gIncFracSpilloverGOtoGR, sizeof(float));
 	out_param_buf.write((char *)&gSpilloverTauGOtoGR, sizeof(float));

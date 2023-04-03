@@ -35,7 +35,6 @@ extern float eSCtoPC;
 extern float gDecTauBCtoPC;
 extern float gIncBCtoPC;
 extern float gGABADecTauGOtoGO;
-extern float gIncDirectGOtoGR;
 extern float gDirectTauGOtoGR;
 extern float gIncFracSpilloverGOtoGR;
 extern float gSpilloverTauGOtoGR;
