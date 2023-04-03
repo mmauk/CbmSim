@@ -461,14 +461,8 @@ void InNet::updateMFtoGROut()
 
 void InNet::updateMFtoGOOut()
 {
-	float recoveryRate = 1 / recoveryTauMF;
 	for (int i = 0; i < num_mf; i++)
 	{
-		as->gi_MFtoGO[i] = apMFH[0][i] * gIncMFtoGO * as->depAmpMFGO[i]
-		   + as->gi_MFtoGO[i] * gDecMFtoGO; 
-		as->depAmpMFGO[i] = apMFH[0][i] * as->depAmpMFGO[i] * fracDepMF
-		   + (!apMFH[0][i]) * (as->depAmpMFGO[i] + recoveryRate * (1 - as->depAmpMFGO[i])); 
-
 		if (apMFH[0][i])
 		{
 			for (int j = 0; j < cs->numpMFfromMFtoGO[i]; j++)
