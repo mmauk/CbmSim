@@ -110,9 +110,9 @@ void Control::initialize_session(std::string sess_file)
 	parse_lexed_sess_file(l_file, s_file);
 	translate_parsed_trials(s_file, td);
 
-	trialTime   = std::stoi(s_file.parsed_var_sections["trial_spec"].param_map["trialTime"].value);
-	msPreCS     = std::stoi(s_file.parsed_var_sections["trial_spec"].param_map["msPreCS"].value);
-	msPostCS    = std::stoi(s_file.parsed_var_sections["trial_spec"].param_map["msPostCS"].value);
+	trialTime   = std::stoi(s_file.parsed_var_sections["trial_spec"].param_map["trialTime"]);
+	msPreCS     = std::stoi(s_file.parsed_var_sections["trial_spec"].param_map["msPreCS"]);
+	msPostCS    = std::stoi(s_file.parsed_var_sections["trial_spec"].param_map["msPostCS"]);
 	msMeasure = msPreCS + td.cs_lens[0] + msPostCS;
 
 	trials_data_initialized = true;
@@ -334,7 +334,7 @@ void Control::write_sess_info(std::fstream &out_buf)
 		{
 			col_2_width = INFO_FILE_COL_WIDTH - max_trial_param_len - 2 * TAB_WIDTH - 6;
 			out_buf << "#" << std::setw(2*TAB_WIDTH) << "" << std::left << std::setw(max_trial_param_len)
-					  << var.first << std::right << " : " << std::left << std::setw(col_2_width) << var.second.value << "#\n";
+					  << var.first << std::right << " : " << std::left << std::setw(col_2_width) << var.second << "#\n";
 		}
 		out_buf << "#" << std::right << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH-1) << "#\n"; 
 	}

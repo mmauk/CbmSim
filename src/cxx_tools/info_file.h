@@ -86,7 +86,7 @@ typedef struct
  * Description:
  *     obtains the length of the longest key in the input map.
  */
-uint32_t get_max_key_len(std::map<std::string, variable> &map);
+uint32_t get_max_key_len(std::map<std::string, std::string> &map);
 
 /*
  * Description;

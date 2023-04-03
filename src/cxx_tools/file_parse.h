@@ -68,12 +68,12 @@ typedef struct
  */
 typedef struct
 {
-	std::map<std::string, variable> param_map;
+	std::map<std::string, std::string> param_map;
 } parsed_var_section;
 
 typedef struct
 {
-	std::map<std::string, std::map<std::string, variable>> trial_map;
+	std::map<std::string, std::map<std::string, std::string>> trial_map;
 	std::map<std::string, std::vector<std::pair<std::string, std::string>>> block_map;
 	std::vector<std::pair<std::string, std::string>> session;  // <-- pairs of block identifier and number of blocks 
 } parsed_trial_section;

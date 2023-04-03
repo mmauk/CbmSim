@@ -102,7 +102,7 @@ void set_info_file_str_props(enum when when, info_file_data &if_data)
  *     structure. Unfortunately, this function has O(N) time complexity, but the input map is not 
  *     expected to exceed 10 elements, so the penalties at higher N will most likely never be seen.
  */
-uint32_t get_max_key_len(std::map<std::string, variable> &map)
+uint32_t get_max_key_len(std::map<std::string, std::string> &map)
 {
 	uint32_t max_len = 0;
 	uint32_t test_len;
