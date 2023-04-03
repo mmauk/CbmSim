@@ -506,8 +506,6 @@ void InNet::updateGOtoGOOut()
 		for (int i = 0; i < num_go; i++)
 		{
 			
-			as->gi_GOtoGO[i] =  as->apGO[i] * gGABAIncGOtoGO * as->depAmpGOGO[i]
-			   + as->gi_GOtoGO[i] * gGABADecGOtoGO; 
 			as->depAmpGOGO[i] = 1;
 		}
 

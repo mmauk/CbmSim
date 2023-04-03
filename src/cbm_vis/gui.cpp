@@ -550,7 +550,7 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 				}
 			},
 			{
-				gtk_adjustment_new(gGABAIncGOtoGO, 0.0, 1.0, 0.01, 0.1, 0.0),
+				gtk_adjustment_new(gogoW, 0.0, 1.0, 0.01, 0.1, 0.0),
 				NULL, 3, 0, 2,
 				{
 					NULL, "GO-GO", 2, 0
@@ -558,7 +558,7 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 				{
 					"activate",
 					G_CALLBACK(on_update_weight),
-					&gGABAIncGOtoGO,
+					&gogoW,
 					false
 				}
 			},

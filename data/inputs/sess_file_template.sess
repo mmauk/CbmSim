@@ -82,7 +82,6 @@ begin filetype run
 		float gDirectTauGOtoGR 7.0
 		float gIncFracSpilloverGOtoGR 1.0
 		float gSpilloverTauGOtoGR 150.0
-		float gGABAIncGOtoGO 0.01
 		float gDecTauGRtoGO 4.0
 		float gDecTauMFtoGO 3.0
 		float gConstGO 0.0
