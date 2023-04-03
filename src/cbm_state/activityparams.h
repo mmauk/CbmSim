@@ -42,7 +42,6 @@ extern float gSpilloverTauGOtoGR;
 extern float gGABAIncGOtoGO;
 extern float gDecTauGRtoGO;
 extern float gDecTauMFtoGO;
-extern float gIncMFtoGO;
 extern float gConstGO;
 extern float NMDA_AMPAratioMFGO;
 extern float gDecTauMFtoGONMDA;

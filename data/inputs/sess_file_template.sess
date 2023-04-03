@@ -86,7 +86,6 @@ begin filetype run
 		float gGABAIncGOtoGO 0.01
 		float gDecTauGRtoGO 4.0
 		float gDecTauMFtoGO 3.0
-		float gIncMFtoGO 0.0009
 		float gConstGO 0.0
 		float NMDA_AMPAratioMFGO 1.3
 		float gDecTauMFtoGONMDA 30.0
