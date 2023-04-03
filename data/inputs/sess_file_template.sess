@@ -85,7 +85,6 @@ begin filetype run
 		float gSpilloverTauGOtoGR 150.0
 		float gGABAIncGOtoGO 0.01
 		float gDecTauGRtoGO 4.0
-		float gIncGRtoGO 0.0003
 		float gDecTauMFtoGO 3.0
 		float gIncMFtoGO 0.0009
 		float gConstGO 0.0
