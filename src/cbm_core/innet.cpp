@@ -500,35 +500,26 @@ void InNet::updateGOtoGROutParameters(float spillFrac)
 
 void InNet::updateGOtoGOOut()
 {
-#pragma omp parallel
+
+#pragma omp parallel for
+	for (int i = 0; i < num_go; i++)
 	{
-#pragma omp for
-		for (int i = 0; i < num_go; i++)
+		if (as->apGO[i])
 		{
-			
-			as->depAmpGOGO[i] = 1;
-		}
-
-#pragma omp for
-		for (int i = 0; i < num_go; i++)
-		{
-			if (as->apGO[i])
+			for (int j = 0; j < cs->numpGOGABAOutGOGO[i]; j++)
 			{
-				for (int j = 0; j < cs->numpGOGABAOutGOGO[i]; j++)
-				{
-					as->inputGOGO[cs->pGOGABAOutGOGO[i][j]]++;
-				}
+				as->inputGOGO[cs->pGOGABAOutGOGO[i][j]]++;
 			}
 		}
+	}
 
-#pragma omp for
-		for (int i = 0; i < num_go; i++)
+#pragma omp parallel for
+	for (int i = 0; i < num_go; i++)
+	{
+		for(int j = 0; j < cs->numpGOCoupInGOGO[i]; j++)
 		{
-			for(int j = 0; j < cs->numpGOCoupInGOGO[i]; j++)
-			{
-				as->vCoupleGO[i] += (as->vGO[cs->pGOCoupInGOGO[i][j]] - as->vGO[i])
-					  * coupleRiRjRatioGO * cs->pGOCoupInGOGOCCoeff[i][j];
-			}
+			as->vCoupleGO[i] += (as->vGO[cs->pGOCoupInGOGO[i][j]] - as->vGO[i])
+				  * coupleRiRjRatioGO * cs->pGOCoupInGOGOCCoeff[i][j];
 		}
 	}
 }
