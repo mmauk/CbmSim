@@ -537,7 +537,7 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 				}
 			},
 			{
-				gtk_adjustment_new(gIncDirectGOtoGR, 0.0, 1.0, 0.01, 0.1, 0.0),
+				gtk_adjustment_new(gogrW, 0.0, 1.0, 0.01, 0.1, 0.0),
 				NULL, 1, 3, 2, 
 				{
 					NULL, "GO-GR", 0, 3
@@ -545,7 +545,7 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 				{
 					"activate",
 					G_CALLBACK(on_update_weight),
-					&gIncDirectGOtoGR,
+					&gogrW,
 					false
 				}
 			},

@@ -704,7 +704,7 @@ void InNet::runUpdateGOInGRCUDA(cudaStream_t **sts, int streamN)
 				num_go, apGOGPU[i], dynamicAmpGOGRGPU[i], gIGRGPU[i], gIGRGPUP[i],
 				grConGOOutGRGPU[i], grConGOOutGRGPUP[i],
 				numGOInPerGRGPU[i], gIGRSumGPU[i], gIDirectGPU[i], gISpilloverGPU[i], 
-				gDirectDecGOtoGR, gogrW, gIncFracSpilloverGOtoGR, gSpilloverDecGOtoGR);
+				gDirectDecGOtoGR, gogrW, gSpilloverDecGOtoGR, gIncFracSpilloverGOtoGR);
 #ifdef DEBUGOUT
 		error=cudaGetLastError();
 		cerr<<"runUpdateGOInGRCUDA: kernel launch for gpu #"<<i<<
