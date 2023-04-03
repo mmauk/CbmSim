@@ -511,7 +511,7 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 				}
 			},
 			{
-				gtk_adjustment_new(gIncMFtoGO, 0.0, 1.0, 0.0001, 0.1, 0.0),
+				gtk_adjustment_new(mfgoW, 0.0, 1.0, 0.0001, 0.1, 0.0),
 				NULL, 1, 1, 4, 
 				{
 					NULL, "MF-GO", 0, 1
@@ -519,7 +519,7 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui)
 				{
 					"activate",
 					G_CALLBACK(on_update_weight),
-					&gIncMFtoGO,
+					&mfgoW,
 					false
 				}
 			},
