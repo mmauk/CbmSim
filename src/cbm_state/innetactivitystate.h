@@ -42,7 +42,6 @@ public:
 
 	std::unique_ptr<uint32_t[]> inputMFGO{nullptr};
 	std::unique_ptr<float[]> depAmpMFGO{nullptr};
-	std::unique_ptr<float[]> gi_MFtoGO{nullptr};
 	std::unique_ptr<float[]> gSum_MFGO{nullptr};
 	std::unique_ptr<float[]> inputGOGO{nullptr};
 
