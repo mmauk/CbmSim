@@ -54,7 +54,7 @@ Control::Control(parsed_commandline &p_cl)
 		create_raster_filenames(p_cl.raster_files); //optional
 		create_psth_filenames(p_cl.psth_files); //optional
 		create_weights_filenames(p_cl.weights_files); //optional
-		create_pfpc_weights_states_filenames(); // only initialized for cascade plast modes
+		create_pfpc_weights_states_filenames(p_cl.weights_files); // only initialized for cascade plast modes
 		init_sim(p_cl.input_sim_file);
 	}
 	else // user ran executable with no args FIXME: find out how to initialize with gui, couple similar parts of code
@@ -549,11 +549,13 @@ void Control::create_psth_filenames(std::map<std::string, bool> &psth_map)
 	}
 }
 
-void Control::create_weights_filenames(std::map<std::string, bool> &weights_map) 
+void Control::create_weights_filenames(std::map<std::string, bool> &weights_map)
 {
 	if (data_out_dir_created)
 	{
-		if (weights_map["PFPC"] || use_gui)
+    // check that pfpc plasticity is specified as graded, off, or binary
+		if ((pf_pc_plast != ABBOTT_CASCADE && pf_pc_plast != MAUK_CASCADE)
+        && (weights_map["PFPC"] || use_gui))
 		{
 			pfpc_weights_file = data_out_path + "/" + data_out_base_name
 							   + "_PFPC_WEIGHTS_" + get_current_time_as_string("%m%d%Y")
@@ -571,9 +573,10 @@ void Control::create_weights_filenames(std::map<std::string, bool> &weights_map)
 }
 
 // NOTE: this function expects to be called after set_plasticity_modes!
-void Control::create_pfpc_weights_states_filenames()
+void Control::create_pfpc_weights_states_filenames(std::map<std::string, bool> &weights_map)
 {
-	if (pf_pc_plast == ABBOTT_CASCADE || pf_pc_plast == MAUK_CASCADE)
+	if ((pf_pc_plast == ABBOTT_CASCADE || pf_pc_plast == MAUK_CASCADE)
+      && (weights_map["PFPC"] || use_gui))
 	{
 		pfpc_weights_states_file = data_out_path + "/" + data_out_base_name
 								 + "_PFPC_WEIGHTS_STATES_" + get_current_time_as_string("%m%d%Y")

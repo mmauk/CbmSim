@@ -215,7 +215,8 @@ class Control
 		void create_raster_filenames(std::map<std::string, bool> &rast_map);
 		void create_psth_filenames(std::map<std::string, bool> &psth_map);
 		void create_weights_filenames(std::map<std::string, bool> &weights_map);
-		void create_pfpc_weights_states_filenames();
+
+    void create_pfpc_weights_states_filenames(std::map<std::string, bool> &weights_map);
 		void initialize_rast_cell_nums();
 		void initialize_cell_spikes();
 		void initialize_spike_sums();
