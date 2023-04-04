@@ -7,18 +7,18 @@ begin filetype run
 	begin section trial_def
 
 		// trial defs 
-		def trial isi_500_paired_trial
+		def trial isi_250_paired_trial
 			use_cs 1
 			cs_onset 400
-			cs_len 500
+			cs_len 250
 			cs_percent 100.0
 			use_us 1
-			us_onset 900
+			us_onset 650
 		end
 
 		// session defs
-		def session isi_500_session
-			isi_500_paired_trial 500
+		def session isi_250_session
+			isi_250_paired_trial 200
 		end 
 	end
 
