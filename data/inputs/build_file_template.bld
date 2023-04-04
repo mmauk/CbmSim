@@ -1,0 +1,222 @@
+begin filetype build
+
+// this file aims to give the simulation all the parameters necessary to conduct synaptogenesis
+// as well as to initialize all activity arrays with non-zero initial values.
+// NOTES:
+//     - num_cell type variables are not in original conParams_binChoice2_1.txt
+//     - num_p_cellA_to_cellB type variables are not in original conParams_binChoice2_t.txt
+//     - LAST UPDATED: 04/03/2023
+//     - SIM LAST TUNED: 09/26/2022
+
+	begin section connectivity 
+		// cell numbers
+		mf_x 128
+		mf_y 32
+		num_mf 4096
+		
+		gl_x 512
+		gl_y 128
+		num_gl 65536
+		
+		gr_x 2048
+		gr_y 512
+		num_gr 1048576
+		
+		go_x 128
+		go_y 32
+		num_go 4096
+
+		ubc_x 64
+		ubc_y 16
+		num_ubc 1024
+		
+		// mzone numbers
+		num_bc 128
+		num_sc 512
+		num_pc 32
+		num_nc 8
+		num_io 4
+
+		// mf -> gl (uses Joe's Con alg (06/01/2022))
+		span_mf_to_gl_x 512 
+		span_mf_to_gl_y 128
+		num_p_mf_to_gl 66177
+		
+		// before was 40 as a conservative size (06/07/2022)
+		max_num_p_mf_from_mf_to_gl 16
+		
+		// NOTE: not a maxnump as alg is adaptive
+		initial_mf_output 14
+		max_mf_to_gl_attempts 4
+		
+		// gl -> gr (uses connectCommon (06/01/2022))
+		span_gl_to_gr_x 4
+		span_gl_to_gr_y 4
+		num_p_gl_to_gr 25
+	
+		low_num_p_gl_from_gl_to_gr 80
+		max_num_p_gr_from_gl_to_gr 5
+		max_num_p_gl_from_gl_to_gr 200
+		
+		low_gl_to_gr_attempts 20000
+		max_gl_to_gr_attempts 50000
+		
+		// gr -> go (both pf and aa use Joe's Con Alg (06/01/2022))
+		span_pf_to_go_x 2048
+		span_pf_to_go_y 150
+		num_p_pf_to_go 309399
+		
+		max_num_p_go_from_gr_to_go 4000 // (was 5000) should be 4000 08/09/2022
+		max_num_p_gr_from_gr_to_go 50 // should be 22 08/09/2022 (change to 22, no gr activity???)
+		
+		// one value we play around with
+		max_pf_to_go_input 3000 // (was 3750) should be 3000 08/09/2022
+		max_pf_to_go_attempts 5
+		
+		span_aa_to_go_x 150
+		span_aa_to_go_y 150
+		num_p_aa_to_go 22801
+		
+		// one value we play around with
+		max_aa_to_go_input 1000 // (was 1250) should be 1000 08/08/2022
+		max_aa_to_go_attempts 15
+		
+		// go <-> go (uses Joe's Con Alg (06/01/2022))
+		span_go_to_go_x 10
+		span_go_to_go_y 10
+		num_p_go_to_go 121
+		
+		num_con_go_to_go 12
+		
+		msPerTimeStep 1.0
+		numPopHistBinsPC 8.0
+		ampl_go_to_go 0.35
+		std_dev_go_to_go 1.95
+		p_recip_go_go 1.0
+		p_recip_lower_base_go_go 0.0
+		go_go_recip_cons 1 // will be interpreted as boolean
+		reduce_base_recip_go_go 0 // will be interpreted as boolean
+		
+		max_go_to_go_attempts 200
+		
+		// go <-> go gap junctions
+		span_go_to_go_gj_x 8
+		span_go_to_go_gj_y 8
+		num_p_go_to_go_gj 81
+		
+		// go -> gl (uses Joe's Con Alg (06/01/2022))
+		span_go_to_gl_x 56
+		span_go_to_gl_y 56
+		num_p_go_to_gl 3249
+		
+		max_num_p_gl_from_go_to_gl 1
+		max_num_p_go_from_go_to_gl 64
+		
+		ampl_go_to_gl 0.01
+		std_dev_go_to_gl_ml 100.0 // medial lateral
+		std_dev_go_to_gl_s 100.0 // sagittal
+		
+		max_go_to_gl_attempts 100
+		
+		// gl -> go (uses connectCommon (06/01/2022))
+		// NOTE: span values taken from spanGODecDenOnGL
+		span_gl_to_go_x 12
+		span_gl_to_go_y 12
+		num_p_gl_to_go 169
+		
+		low_num_p_gl_from_gl_to_go 1
+		max_num_p_gl_from_gl_to_go 1
+		max_num_p_go_from_gl_to_go 16
+		
+		initial_go_input 1
+		
+		low_gl_to_go_attempts 20000
+		max_gl_to_go_attempts 50000
+
+		// TRANSLATIONS
+		// go -> gr
+		max_num_p_go_from_go_to_gr 12800 // not used (TODO check)
+		max_num_p_gr_from_go_to_gr 3
+		
+		// mf -> gr
+		max_num_p_gr_from_mf_to_gr 5
+		max_num_p_mf_from_mf_to_gr 4000 // not used (TODO check)
+		
+		// mf -> go
+		max_num_p_go_from_mf_to_go 16 // used as array initializer bound
+		max_num_p_mf_from_mf_to_go 20 // used as array initializer bound 
+		
+		// delay mask vars
+		gr_pf_vel_in_gr_x_per_t_step 147
+		gr_af_delay_in_t_step 1
+		
+		// TODO: check in future
+		// MZONE VARS
+		// bc -> pc
+		num_p_bc_from_bc_to_pc 4
+		num_p_pc_from_bc_to_pc 16
+		
+		// gr -> bc
+		num_p_bc_from_gr_to_bc 8192 // num_gr / num_bc
+		num_p_bc_from_gr_to_bc_p2 13 // num_gr_p2 - (num_pc_p2 + 2) 
+		
+		// pc -> bc
+		num_p_pc_from_pc_to_bc 16
+		num_p_bc_from_pc_to_bc 4
+		
+		// sc -> pc
+		num_p_sc_from_sc_to_pc 1
+		num_p_pc_from_sc_to_pc 16
+		
+		// gr -> sc
+		num_p_sc_from_gr_to_sc 2048 // num_gr / num_sc
+		num_p_sc_from_gr_to_sc_p2 11 
+		
+		// pc -> nc
+		num_p_pc_from_pc_to_nc 3
+		num_p_nc_from_pc_to_nc 12 // via connectivity relation
+		
+		// gr -> pc
+		num_p_pc_from_gr_to_pc 32768 // num_gr / num_pc
+		num_p_pc_from_gr_to_pc_p2 15
+		
+		// mf -> nc
+		num_p_mf_from_mf_to_nc 1 // 1 possible mf input to nc (mf collateral)
+		num_p_nc_from_mf_to_nc 512 // num_mf / num_nc
+		
+		// nc -> io
+		num_p_nc_from_nc_to_io 4 // num_io
+		num_p_io_from_nc_to_io 8
+		
+		// io -> pc
+		num_p_io_from_io_to_pc 8 // num_pc / num_io
+		// num_p_pc_from_io_to_pc
+		
+		// io <-> io
+		num_p_io_in_io_to_io 3 // num_io - 1
+		num_p_io_out_io_to_io 3 // num_io - 1
+	end
+
+	begin section activity
+		// innet
+		eLeakGO -70.0
+		threshRestGO -34.0
+		eLeakGR -65.0 
+		threshRestGR -40.0 
+
+		// mzone
+		eLeakSC -60.0
+		threshRestSC -50.0
+		eLeakBC -70.0
+		threshRestBC -65.0
+		eLeakPC -60.0
+		threshRestPC -60.62
+		initSynWofGRtoPC 0.5 
+		eLeakIO -60.0
+		threshRestIO -57.4
+		eLeakNC -65.0
+		threshRestNC -72.0
+		initSynWofMFtoNC 0.00085 
+	end
+end
+

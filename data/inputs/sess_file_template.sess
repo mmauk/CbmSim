@@ -1,0 +1,190 @@
+// this is the new format for the session file.
+// the aim is to make this format more general and
+// more forgiving to the end user.
+
+begin filetype run 
+
+	begin section trial_def
+
+		// trial defs 
+		def trial isi_500_paired_trial
+			use_cs 1
+			cs_onset 400
+			cs_len 500
+			cs_percent 100.0
+			use_us 1
+			us_onset 900
+		end
+
+		// session defs
+		def session isi_500_session
+			isi_500_paired_trial 500
+		end 
+	end
+
+	begin section mf_input
+		mfRandSeed 3
+		threshDecayTau 4.0
+
+		nucCollFrac 0.02
+
+		CSTonicMFFrac 0.05
+		tonicFreqMin  100.0
+		tonicFreqMax  110.0
+
+		CSPhasicMFFrac 0.0
+		phasicFreqMin  200.0
+		phasicFreqMax  250.0
+	
+		// separate set of contextual MF due to position of rabbit
+		contextMFFrac  0.0
+		contextFreqMin 20.0 
+		contextFreqMax 50.0
+
+		bgFreqMin   10.0
+		csbgFreqMin 10.0
+		bgFreqMax   30.0
+		csbgFreqMax 30.0
+
+		collaterals_off 0
+		secondCS        1
+
+		fracImport  0.0
+		fracOverlap 0.2
+	end
+
+	begin section trial_spec
+		trialTime 5000
+		msPreCS 400
+		msPostCS 400
+	end
+
+// generally, this section will not need to be modified by the end-user.
+// the only instance would be when the end-user desires to tune the simulation
+// to different modes of input to the simulation, or when homeostatic plasticity
+// is being tested
+
+	begin section activity
+		coupleRiRjRatioGO 0.0
+		coupleRiRjRatioIO 0.05
+		eBCtoPC -80.0
+		eGABAGO -64.0
+		eGOGR -75.0
+		eMFGR 0.0
+		eMGluRGO -96.0
+		eNCtoIO -80.0
+		ePCtoBC -70.0
+		ePCtoNC -80.0
+		eSCtoPC -80.0
+		gDecTauBCtoPC 7.0
+		gIncBCtoPC 0.0003
+		gGABADecTauGOtoGO 10.0
+		gIncDirectGOtoGR 0.01
+		gDirectTauGOtoGR 7.0
+		gIncFracSpilloverGOtoGR 1.0
+		gSpilloverTauGOtoGR 150.0
+		gGABAIncGOtoGO 0.01
+		gDecTauGRtoGO 4.0
+		gIncGRtoGO 0.0003
+		gDecTauMFtoGO 3.0
+		gIncMFtoGO 0.0009
+		gConstGO 0.0
+		NMDA_AMPAratioMFGO 1.3
+		gDecTauMFtoGONMDA 30.0
+		gIncDirectMFtoGR 0.0265 // was 0.0237 // was 0.0239
+		gDirectTauMFtoGR 0.0 // very crucial synapse!!!
+		gIncFracSpilloverMFtoGR 0.2
+		gSpilloverTauMFtoGR 15.0
+		recoveryTauMF 35.0
+		fracDepMF 0.6
+		recoveryTauGO 20.0
+		fracDepGO 0.6
+		gIncMFtoUBC 0.11
+		gIncGOtoUBC 0.15
+		gIncUBCtoUBC 0.15
+		gIncUBCtoGO 0.04
+		gIncUBCtoGR 0.12
+		gKIncUBC 0.0135
+		gKTauUBC 85.0
+		gConstUBC 0.13
+		threshTauUBC 80.0
+		gMGluRDecGRtoGO 0.98
+		gMGluRIncDecayGO 0.98
+		gMGluRIncScaleGO 0.0
+		gMGluRScaleGRtoGO 0.0
+		gDecT0ofNCtoIO 0.56
+		gDecTSofNCtoIO 0.5
+		gDecTTofNCtoIO 70.0
+		gIncNCtoIO 0.0015
+		gIncTauNCtoIO 300.0
+		gDecTauPCtoBC 5.0
+		gDecTauPCtoNC 4.15
+		gIncAvgPCtoNC 0.1
+		gDecTauGRtoBC 2.0
+		gDecTauGRtoPC 4.15
+		gDecTauGRtoSC 2.0
+		gIncGRtoPC 0.55e-05
+		gDecTauSCtoPC 4.15
+		gIncSCtoPC 0.0001
+		gluDecayGO 0.98
+		gluScaleGO 0.0
+		goGABAGOGOSynDepF 1.0
+		goGABAGOGOSynRecTau 100.0
+		synLTDStepSizeGRtoPC -0.00275
+		synLTPStepSizeGRtoPC 0.00030556
+		mGluRDecayGO 0.98
+		mGluRScaleGO 0.0
+		maxExtIncVIO 30.0
+		gmaxAMPADecTauMFtoNC 6.0
+		synLTDStepSizeMFtoNC -6.25e-07
+		synLTDPCPopActThreshMFtoNC 12.0
+		synLTPStepSizeMFtoNC 5.0e-06
+		synLTPPCPopActThreshMFtoNC 2.0
+		gmaxNMDADecTauMFtoNC 50.0
+		msLTDDurationIO 100.0
+		msLTDStartAPIO -100.0
+		msLTPEndAPIO -100.0
+		msLTPStartAPIO 0.0
+		msPerHistBinGR 5.0
+		msPerHistBinMF 5.0
+		msPerTimeStep 1.0
+		relPDecT0ofNCtoIO 78.0
+		relPDecTSofNCtoIO 40.0
+		relPDecTTofNCtoIO 1.0
+		relPIncNCtoIO 0.25
+		relPIncTauNCtoIO 0.8
+		gIncPCtoBC 0.15
+		gIncGRtoBC 0.00225
+		gIncGRtoSC 0.008
+		rawGLeakBC 0.13
+		rawGLeakGO 0.02
+		rawGLeakGR 0.1
+		rawGLeakIO 0.15
+		rawGLeakNC 0.1
+		rawGLeakPC 0.2
+		rawGLeakSC 0.2
+		rawGMFAMPAIncNC 2.35 // 3.0
+		rawGMFNMDAIncNC 2.35 // 3.0
+		threshDecTauBC 10.0
+		threshDecTauGO 11.0
+		threshDecTauUBC 20.0
+		threshDecTauGR 3.0
+		threshDecTauIO 200.0
+		threshDecTauNC 5.0
+		threshDecTauPC 6.0
+		threshDecTauSC 18.0
+		threshMaxBC 0.0
+		threshMaxGO 10.0
+		threshMaxGR -20.0
+		threshMaxIO 10.0
+		threshMaxNC -40.0
+		threshMaxPC -48.0
+		threshMaxSC 0.0
+		weightScale 1.0
+		rawGRGOW 0.0007
+		rawMFGOW 0.0035
+		gogrW 0.015
+		gogoW 0.0125
+	end
+end
+
