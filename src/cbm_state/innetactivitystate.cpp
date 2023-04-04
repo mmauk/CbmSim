@@ -58,7 +58,6 @@ void InNetActivityState::stateRW(bool read, std::fstream &file)
 	rawBytesRW((char *)gSum_MFGO.get(), num_go * sizeof(float), read, file);
 	rawBytesRW((char *)inputGOGO.get(), num_go * sizeof(float), read, file);
 
-	rawBytesRW((char *)gi_GOtoGO.get(), num_go * sizeof(float), read, file);
 	rawBytesRW((char *)depAmpGOGO.get(), num_go * sizeof(float), read, file);
 	rawBytesRW((char *)gSum_GOGO.get(), num_go * sizeof(float), read, file);
 	rawBytesRW((char *)depAmpGOGR.get(), num_go * sizeof(float), read, file);
@@ -101,10 +100,9 @@ void InNetActivityState::allocateMemory()
 	threshCurGO      = std::make_unique<float[]>(num_go);
 
 	inputMFGO  = std::make_unique<uint32_t[]>(num_go);
-	Sum_MFGO  = std::make_unique<float[]>(num_go);
+	gSum_MFGO  = std::make_unique<float[]>(num_go);
 	inputGOGO  = std::make_unique<float[]>(num_go);
 
-	gi_GOtoGO  = std::make_unique<float[]>(num_go);
 	depAmpGOGO = std::make_unique<float[]>(num_go);
 	gSum_GOGO  = std::make_unique<float[]>(num_go);
 	depAmpGOGR = std::make_unique<float[]>(num_go);

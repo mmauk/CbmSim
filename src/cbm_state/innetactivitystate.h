@@ -44,7 +44,6 @@ public:
 	std::unique_ptr<float[]> gSum_MFGO{nullptr};
 	std::unique_ptr<float[]> inputGOGO{nullptr};
 
-	std::unique_ptr<float[]> gi_GOtoGO{nullptr};
 	std::unique_ptr<float[]> depAmpGOGO{nullptr};
 	std::unique_ptr<float[]> gSum_GOGO{nullptr};
 	std::unique_ptr<float[]> depAmpGOGR{nullptr};
