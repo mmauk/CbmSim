@@ -490,9 +490,7 @@ void Control::create_raster_filenames(std::map<std::string, bool> &rast_map)
 			if (rast_map[cell_id] || use_gui)
 			{
 				rf_names[i] = data_out_path + "/" + data_out_base_name
-											+ "_" + cell_id + "_RASTER_"
-											+ get_current_time_as_string("%m%d%Y")
-											+ BIN_EXT;
+											+ "_" + cell_id + "_RASTER" + BIN_EXT;
 			}
 		}
 		raster_filenames_created = true;
@@ -509,9 +507,7 @@ void Control::create_psth_filenames(std::map<std::string, bool> &psth_map)
 			if (psth_map[cell_id] || use_gui)
 			{
 				pf_names[i] = data_out_path + "/" + data_out_base_name 
-							+ "_" + cell_id + "_PSTH_"
-							+ get_current_time_as_string("%m%d%Y")
-							+ BIN_EXT;
+							+ "_" + cell_id + "_PSTH" + BIN_EXT;
 			}
 		}
 		psth_filenames_created = true;
@@ -525,15 +521,13 @@ void Control::create_weights_filenames(std::map<std::string, bool> &weights_map)
 		if (weights_map["PFPC"] || use_gui)
 		{
 			pfpc_weights_file = data_out_path + "/" + data_out_base_name
-							   + "_PFPC_WEIGHTS_" + get_current_time_as_string("%m%d%Y")
-							   + BIN_EXT;
+							   + "_PFPC_WEIGHTS" + BIN_EXT;
 			pfpc_weights_filenames_created = true; // only useful so far for gui...
 		}
 		if (weights_map["MFNC"] || use_gui)
 		{
 			mfnc_weights_file = data_out_path + "/" + data_out_base_name
-							   + "_MFNC_WEIGHTS_" + get_current_time_as_string("%m%d%Y")
-							   + BIN_EXT;
+							   + "_MFNC_WEIGHTS" + BIN_EXT;
 			mfnc_weights_filenames_created = true; // only useful so far for gui...
 		}
 	}
