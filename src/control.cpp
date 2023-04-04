@@ -474,9 +474,7 @@ void Control::create_out_info_filename()
 	if (data_out_dir_created)
 	{
 		out_info_name = data_out_path + "/"
-					  + data_out_base_name + "_"
-					  + get_current_time_as_string("%m%d%Y")
-					  + TXT_EXT;
+					  + data_out_base_name + TXT_EXT;
 		out_info_filename_created = true;
 	}
 }
