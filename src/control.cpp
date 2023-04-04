@@ -486,11 +486,9 @@ void Control::create_raster_filenames(std::map<std::string, bool> &rast_map)
 	{
 		for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 		{
-			std::string cell_id = CELL_IDS[i];
-			if (rast_map[cell_id] || use_gui)
+			if (rast_map[CELL_IDS[i]] || use_gui)
 			{
-				rf_names[i] = data_out_path + "/" + data_out_base_name
-											+ "_" + cell_id + "_RASTER" + BIN_EXT;
+				rf_names[i] = data_out_path + "/" + data_out_base_name + RAST_EXT[i];
 			}
 		}
 		raster_filenames_created = true;
@@ -503,11 +501,9 @@ void Control::create_psth_filenames(std::map<std::string, bool> &psth_map)
 	{
 		for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 		{
-			std::string cell_id = CELL_IDS[i];
-			if (psth_map[cell_id] || use_gui)
+			if (psth_map[CELL_IDS[i]] || use_gui)
 			{
-				pf_names[i] = data_out_path + "/" + data_out_base_name 
-							+ "_" + cell_id + "_PSTH" + BIN_EXT;
+				pf_names[i] = data_out_path + "/" + data_out_base_name + PSTH_EXT[i];
 			}
 		}
 		psth_filenames_created = true;
@@ -520,14 +516,12 @@ void Control::create_weights_filenames(std::map<std::string, bool> &weights_map)
 	{
 		if (weights_map["PFPC"] || use_gui)
 		{
-			pfpc_weights_file = data_out_path + "/" + data_out_base_name
-							   + "_PFPC_WEIGHTS" + BIN_EXT;
+			pfpc_weights_file = data_out_path + "/" + data_out_base_name + WEIGHTS_EXT[0];
 			pfpc_weights_filenames_created = true; // only useful so far for gui...
 		}
 		if (weights_map["MFNC"] || use_gui)
 		{
-			mfnc_weights_file = data_out_path + "/" + data_out_base_name
-							   + "_MFNC_WEIGHTS" + BIN_EXT;
+			mfnc_weights_file = data_out_path + "/" + data_out_base_name + WEIGHTS_EXT[1];
 			mfnc_weights_filenames_created = true; // only useful so far for gui...
 		}
 	}

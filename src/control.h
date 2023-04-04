@@ -26,6 +26,11 @@
 #define NUM_WEIGHTS_TYPES 2
 #define NUM_SAVE_OPTS 19
 
+// should put these in file_utility.h
+const std::string RAST_EXT[NUM_CELL_TYPES] = {".mfr", ".grr", ".gor", ".bcr", ".scr", ".pcr", ".ior", ".ncr"}; 
+const std::string PSTH_EXT[NUM_CELL_TYPES] = {".mfp", ".grp", ".gop", ".bcp", ".scp", ".pcp", ".iop", ".ncp"}; 
+const std::string WEIGHTS_EXT[NUM_WEIGHTS_TYPES] = {".pfpcw", ".mfncw"}; 
+
 enum save_opts {
 	MF_RAST, GR_RAST, GO_RAST, BC_RAST, SC_RAST, PC_RAST, IO_RAST, NC_RAST,
 	MF_PSTH, GR_PSTH, GO_PSTH, BC_PSTH, SC_PSTH, PC_PSTH, IO_PSTH, NC_PSTH,
