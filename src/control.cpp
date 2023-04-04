@@ -799,7 +799,7 @@ void Control::runSession(struct gui *gui)
 		// save gr rasters into new file every trial 
 		//save_gr_raster();
 		save_pfpc_weights_to_file(trial);
-		//save_mfdcn_weights_to_file(trial);
+		save_mfdcn_weights_to_file(trial);
 		if (pf_pc_plast == ABBOTT_CASCADE || pf_pc_plast == MAUK_CASCADE)
 		{
 			save_pfpc_weights_states_to_file(trial);
