@@ -906,6 +906,10 @@ void MZone::runPFPCMaukCascadePlastCUDA(cudaStream_t **sts, int streamN, uint32_
 					{
 						curIOInd++;
 					}
+					callCurandGenerateUniformKernel<curandStateMRG32k3a>(sts[curGPUInd][streamN + curIOInd],
+						  mrg32k3aRNGs[curGPUInd], updatePFPCSynWNumBlocks, updatePFPCSynWNumGRPerB,
+						  pfpcSynWRandNums[curGPUInd], curGROffset);
+
 					callPFPCMaukCascadeLTDPlastKernel<curandStateMRG32k3a>(sts[curGPUInd][streamN + curIOInd],
 							updatePFPCSynWNumBlocks, updatePFPCSynWNumGRPerB, pfSynWeightPCGPU[curGPUInd],
 							pfPCSynWeightStatesGPU[curGPUInd], histGRGPU[curGPUInd], grPCHistCheckBinIO, curGROffset,
@@ -934,6 +938,10 @@ void MZone::runPFPCMaukCascadePlastCUDA(cudaStream_t **sts, int streamN, uint32_
 					{
 						curIOInd++;
 					}
+					callCurandGenerateUniformKernel<curandStateMRG32k3a>(sts[curGPUInd][streamN + curIOInd],
+						  mrg32k3aRNGs[curGPUInd], updatePFPCSynWNumBlocks, updatePFPCSynWNumGRPerB,
+						  pfpcSynWRandNums[curGPUInd], curGROffset);
+
 					callPFPCMaukCascadeLTPPlastKernel<curandStateMRG32k3a>(sts[curGPUInd][streamN + curIOInd],
 							updatePFPCSynWNumBlocks, updatePFPCSynWNumGRPerB, pfSynWeightPCGPU[curGPUInd],
 							pfPCSynWeightStatesGPU[curGPUInd], histGRGPU[curGPUInd], grPCHistCheckBinIO, curGROffset,
