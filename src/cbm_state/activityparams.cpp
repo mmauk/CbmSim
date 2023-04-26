@@ -80,6 +80,19 @@ float gluDecayGO                 = 0.0;
 float gluScaleGO                 = 0.0;
 float goGABAGOGOSynDepF          = 0.0;
 float goGABAGOGOSynRecTau        = 0.0;
+
+// experimental short term plasticity params
+extern float grEligBase          = 0.0;
+extern float grEligMax           = 0.0;
+extern float grEligExpScale      = 0.0;
+extern float grEligDecayTau      = 0.0;
+extern float grEligDecay         = 0.0;
+extern float grEligDecayTauBkgd  = 0.0;
+extern float grEligDecayBkgd     = 0.0;
+extern float grStpInc            = 0.0;
+// experimental short term plasticity params
+
+// experimental long term plasticity params
 float fracSynWLow                = 0.0;
 float fracLowState               = 0.0;
 float cascPlastProbMin           = 0.0;
@@ -90,6 +103,8 @@ float binPlastProbMin            = 0.0;
 float binPlastProbMax            = 0.0;
 float binPlastWeightLow          = 0.0;
 float binPlastWeightHigh         = 0.0;
+// experimental long term plasticity params
+
 float synLTDStepSizeGRtoPC       = 0.0; 
 float synLTPStepSizeGRtoPC       = 0.0; 
 float mGluRDecayGO               = 0.0;
@@ -259,6 +274,14 @@ void populate_act_params(parsed_sess_file &s_file)
 	gluScaleGO                 = std::stof(s_file.parsed_var_sections["activity"].param_map["gluScaleGO"].value); 
 	goGABAGOGOSynDepF          = std::stof(s_file.parsed_var_sections["activity"].param_map["goGABAGOGOSynDepF"].value); 
 	goGABAGOGOSynRecTau        = std::stof(s_file.parsed_var_sections["activity"].param_map["goGABAGOGOSynRecTau"].value); 
+
+  grEligBase          = std::stof(s_file.parsed_var_sections["activity"].param_map["grEligBase"].value);
+  grEligMax           = std::stof(s_file.parsed_var_sections["activity"].param_map["grEligMax"].value);
+  grEligExpScale      = std::stof(s_file.parsed_var_sections["activity"].param_map["grEligExpScale"].value);
+  grEligDecayTau      = std::stof(s_file.parsed_var_sections["activity"].param_map["grEligDecayTau"].value);
+  grEligDecayTauBkgd  = std::stof(s_file.parsed_var_sections["activity"].param_map["grEligDecayTauBkgd"].value);
+  grStpInc            = std::stof(s_file.parsed_var_sections["activity"].param_map["grStpInc"].value);
+
 	fracSynWLow                = std::stof(s_file.parsed_var_sections["activity"].param_map["fracSynWLow"].value);
 	fracLowState               = std::stof(s_file.parsed_var_sections["activity"].param_map["fracLowState"].value);
 	cascPlastProbMin           = std::stof(s_file.parsed_var_sections["activity"].param_map["cascPlastProbMin"].value);
@@ -326,6 +349,11 @@ void populate_act_params(parsed_sess_file &s_file)
 
 	/* derived act params */
 	// assume that we have initialized conparams already, else will get float error
+
+
+  grEligDecay = 1.0 - exp(-msPerTimeStep / grEligDecayTau);
+  grEligDecayTauBkgd = exp(-msPerTimeStep / grEligDecayTauBkgd);
+
 	numTSinMFHist       = msPerHistBinMF / msPerTimeStep;
 	gLeakGO             = rawGLeakGO; // / (6 - msPerTimeStep);
 	gDecMFtoGO          = exp(-msPerTimeStep / gDecTauMFtoGO);
@@ -442,6 +470,16 @@ void read_act_params(std::fstream &in_param_buf)
 	in_param_buf.read((char *)&gluScaleGO, sizeof(float));
 	in_param_buf.read((char *)&goGABAGOGOSynDepF, sizeof(float));
 	in_param_buf.read((char *)&goGABAGOGOSynRecTau, sizeof(float));
+
+  in_param_buf.read((char *)&grEligBase, sizeof(float));
+  in_param_buf.read((char *)&grEligMax, sizeof(float));
+  in_param_buf.read((char *)&grEligExpScale, sizeof(float));
+  in_param_buf.read((char *)&grEligDecayTau, sizeof(float));
+  in_param_buf.read((char *)&grEligDecay, sizeof(float));
+  in_param_buf.read((char *)&grEligDecayTauBkgd, sizeof(float));
+  in_param_buf.read((char *)&grEligDecayBkgd, sizeof(float));
+  in_param_buf.read((char *)&grStpInc, sizeof(float));
+
 	in_param_buf.read((char *)&fracSynWLow, sizeof(float));
 	in_param_buf.read((char *)&fracLowState, sizeof(float));
 	in_param_buf.read((char *)&cascPlastProbMin, sizeof(float));
@@ -624,6 +662,16 @@ void write_act_params(std::fstream &out_param_buf)
 	out_param_buf.write((char *)&gluScaleGO, sizeof(float));
 	out_param_buf.write((char *)&goGABAGOGOSynDepF, sizeof(float));
 	out_param_buf.write((char *)&goGABAGOGOSynRecTau, sizeof(float));
+
+  out_param_buf.write((char *)&grEligBase, sizeof(float));
+  out_param_buf.write((char *)&grEligMax, sizeof(float));
+  out_param_buf.write((char *)&grEligExpScale, sizeof(float));
+  out_param_buf.write((char *)&grEligDecayTau, sizeof(float));
+  out_param_buf.write((char *)&grEligDecay, sizeof(float));
+  out_param_buf.write((char *)&grEligDecayTauBkgd, sizeof(float));
+  out_param_buf.write((char *)&grEligDecayBkgd, sizeof(float));
+  out_param_buf.write((char *)&grStpInc, sizeof(float));
+
 	out_param_buf.write((char *)&fracSynWLow, sizeof(float));
 	out_param_buf.write((char *)&fracLowState, sizeof(float));
 	out_param_buf.write((char *)&cascPlastProbMin, sizeof(float));

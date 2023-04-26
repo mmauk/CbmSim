@@ -84,6 +84,19 @@ extern float gluDecayGO;
 extern float gluScaleGO;
 extern float goGABAGOGOSynDepF;
 extern float goGABAGOGOSynRecTau;
+
+// experimental short term plasticity params
+extern float grEligBase;
+extern float grEligMax;
+extern float grEligExpScale;
+extern float grEligDecayTau;
+extern float grEligDecay;
+extern float grEligDecayTauBkgd;
+extern float grEligDecayBkgd;
+extern float grStpInc;
+// experimental short term plasticity params
+
+// experimental long term plasticity params
 extern float fracSynWLow;
 extern float fracLowState;
 extern float cascPlastProbMin;
@@ -94,6 +107,8 @@ extern float binPlastProbMin;
 extern float binPlastProbMax;
 extern float binPlastWeightLow;
 extern float binPlastWeightHigh;
+// experimental long term plasticity params
+
 extern float synLTDStepSizeGRtoPC;
 extern float synLTPStepSizeGRtoPC;
 extern float mGluRDecayGO;
