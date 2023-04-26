@@ -2,7 +2,5 @@
 scripts/**
 build/**
 data/outputs/**
-data/inputs/**
-!data/inputs/sess_file_template.sess
 logs/**
 
