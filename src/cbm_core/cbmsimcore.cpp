@@ -133,7 +133,8 @@ void CBMSimCore::syncCUDA(std::string title)
 	}
 }
 
-void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum plasticity mf_nc_plast)
+void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum plasticity mf_nc_plast,
+	uint32_t use_cs, uint32_t use_us)
 {
 	syncCUDA("1");
 
@@ -172,6 +173,8 @@ void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum
 
 	for (int i = 0; i < numZones; i++)
 	{
+		// for now, run STP regardless: may add in commandline option in the future
+		zones[i]->runPFPCSTPCuda(streams, 0, use_cs, use_us); // short term plasticity
 		if (pf_pc_plast == GRADED)
 		{
 			zones[i]->runPFPCGradedPlastCUDA(streams, 1, curTime);

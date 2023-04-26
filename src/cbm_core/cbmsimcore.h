@@ -36,7 +36,9 @@ public:
 	CBMSimCore(CBMState *state, int gpuIndStart = -1, int numGPUP2 = -1);
 	~CBMSimCore();
 
-	void calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum plasticity mf_nc_plast);
+	void calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum plasticity mf_nc_plast,
+	uint32_t use_cs, uint32_t use_us);
+
 	void updateMFInput(const uint8_t *mfIn);
 	void updateTrueMFs(bool *isTrueMF);
 	void updateGRStim(int startGRStim, int numGRStim);

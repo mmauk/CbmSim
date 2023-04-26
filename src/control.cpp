@@ -734,7 +734,7 @@ void Control::runSession(struct gui *gui)
 			bool *isTrueMF = mfs->calcTrueMFs(mfFreq->getMFBG()); /* only used for mfdcn plasticity */
 			simCore->updateTrueMFs(isTrueMF);
 			simCore->updateMFInput(mfAP);
-			simCore->calcActivity(spillFrac, pf_pc_plast, mf_nc_plast); 
+			simCore->calcActivity(spillFrac, pf_pc_plast, mf_nc_plast, useCS, useUS); 
 
 			if (ts >= onsetCS && ts < onsetCS + csLength)
 			{
