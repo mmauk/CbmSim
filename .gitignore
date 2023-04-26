@@ -1,6 +1,7 @@
 .git
 scripts/**
 build/**
+data/inputs/**
 data/outputs/**
 logs/**
 
