@@ -665,6 +665,33 @@ __global__ void updatePFPCGradedSynWeightKernel(float *synWPFPC, uint64_t *histo
 	synWPFPC[i]=(synWPFPC[i]>1)+(synWPFPC[i]<=1)*synWPFPC[i];
 }
 
+__global__ void updatePFPCSTPKernel(uint32_t use_cs, uint32_t use_us, float grEligBase, float grEligMax,
+	float grEligExpScale, float grEligDecay, float grStpDecay, float grStpInc, float *grEligGPU, float *pfpcSTPsGPU,
+	uint32_t *apBufGPU, uint32_t *delayMaskGPU)
+{
+	int index = blockIdx.x * blockDim.x + threadIdx.x;
+	uint32_t apGR = (apBufGPU[index] & delayMaskGPU[index]) > 0;
+
+	grEligGPU[index] = apGR * grEligGPU[index] * grEligExpScale
+		+ (1 - apGR) * (grEligGPU[index] - (grEligGPU[index] - grEligBase) * grEligDecay);
+
+	// ensure the eligibility is greater than grEligBase
+	grEligGPU[index] = (grEligGPU[index] < grEligBase) * grEligBase + (grEligGPU[index] >= grEligBase) * grEligGPU[index];
+
+	// rule for inducing stp
+	if (grEligGPU[index] > grEligMax)
+	{
+		pfpcSTPsGPU[index] += grStpInc;
+		grEligGPU[index] = grEligBase;
+	}
+
+	// special stp decay rule: only do so during background trials
+	if (use_cs == 0 && use_us == 0)
+	{
+		pfpcSTPsGPU[index] *= grStpDecay;
+	}
+}
+
 //**---------------end IO kernels-------------**
 
 
@@ -1038,6 +1065,14 @@ void callPFPCGradedPlastKernel(cudaStream_t &st, unsigned int numBlocks, unsigne
 				mask, offSet, pfPCPlastStep);
 }
 
+void callPFPCSTPKernel(cudaStream_t &st, uint32_t numBlocks, uint32_t numGRPerBlock, uint32_t use_cs, uint32_t use_us,
+	float grEligBase, float grEligMax, float grEligExpScale, float grEligDecay, float grStpDecay, float grStpInc,
+	float *grEligGPU, float *pfpcSTPsGPU, uint32_t *apBufGPU, uint32_t *delayMaskGPU)
+{
+	// TODO: write in numBlocks and numGRPerBlock vars
+	updatePFPCSTPKernel<<<numBlocks, numGRPerBlock, 0, st>>>(use_cs, use_cs, grEligBase, grEligMax,
+		  grEligExpScale, grEligDecay, grStpDecay, grStpInc, grEligGPU, pfpcSTPsGPU, apBufGPU, delayMaskGPU);
+}
 //**---------------end kernel calls------------**
 
 // template initializations

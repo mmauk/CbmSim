@@ -45,8 +45,9 @@ public:
 	std::unique_ptr<float[]> vBC{nullptr};
 	std::unique_ptr<float[]> threshBC{nullptr};
 
-  // technically granule cells
-  std::unique_ptr<float[]> grElig{nullptr};
+	// technically granule cells
+	std::unique_ptr<float[]> grElig{nullptr};
+	std::unique_ptr<float[]> pfpcSTPs{nullptr};
 
 	//purkinje cells
 	std::unique_ptr<uint8_t[]> apPC{nullptr};

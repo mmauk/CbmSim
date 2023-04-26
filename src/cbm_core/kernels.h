@@ -128,5 +128,9 @@ void callPFPCGradedPlastKernel(cudaStream_t &st, unsigned int numBlocks, unsigne
 		float *synWeightGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck,
 		int offSet, float pfPCPlastStep);
 
+void callPFPCSTPKernel(cudaStream_t &st, uint32_t numBlocks, uint32_t numGRPerBlock, uint32_t use_cs, uint32_t use_us,
+	float grEligBase, float grEligMax, float grEligExpScale, float grEligDecay, float grStpDecay, float grStpInc,
+	float *grEligGPU, float *pfpcSTPsGPU, uint32_t *apBufGPU, uint32_t *delayMaskGPU);
+
 #endif /* KERNELS_H_ */
 

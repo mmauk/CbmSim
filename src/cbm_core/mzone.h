@@ -50,6 +50,7 @@ public:
 	void runPFPCAbbottCascadePlastCUDA(cudaStream_t **sts, int streamN, uint32_t t);
 	void runPFPCMaukCascadePlastCUDA(cudaStream_t **sts, int streamN, uint32_t t);
 	void runPFPCGradedPlastCUDA(cudaStream_t **sts, int streamN, uint32_t t);
+	void runPFPCSTPCuda(cudaStream_t **sts, int streamN, uint32_t use_cs, uint32_t use_us); // short term plasticity
 
 	void runSumPFSCCUDA(cudaStream_t **sts, int streamN);
 	void cpyPFSCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN);
@@ -142,8 +143,11 @@ private:
 	//end gpu related variables
 	//end basket cell variables
 
+	// technically granule
+	float **grEligGPU;
+	float **pfpcSTPsGPU;
+
 	//purkinje cell variables
-  float **grEligGPU;
 	float **pfSynWeightPCGPU;
 	float *pfSynWeightPCLinear;
 	uint8_t *pfPCSynWeightStatesLinear; // for cascade plasticity only

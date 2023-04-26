@@ -89,7 +89,8 @@ MZone::~MZone()
 	}
 
 	delete[] delayMaskGRGPU;
-  delete[] grEligGPU;
+	delete[] grEligGPU;
+	delete[] pfpcSTPsGPU;
 	delete[] pfSynWeightPCGPU;
 	delete[] pfPCSynWeightStatesGPU;
 	delete[] inputPFPCGPU;
@@ -215,7 +216,8 @@ void MZone::initCUDA(cudaStream_t **stream)
 		}
 	}
 
-  grEligGPU = new float*[numGPUs];
+	grEligGPU = new float*[numGPUs];
+	pfpcSTPsGPU = new float*[numGPUs];
 	pfSynWeightPCGPU = new float*[numGPUs];
 	pfPCSynWeightStatesGPU = new uint8_t*[numGPUs];
 	inputPFPCGPU = new float*[numGPUs];
@@ -235,7 +237,8 @@ void MZone::initCUDA(cudaStream_t **stream)
 			cpySize * sizeof(uint32_t), cudaMemcpyHostToDevice);
 
 		//allocate device cuda memory
-    cudaMalloc((void **)&grEligGPU[i], numGRPerGPU * sizeof(float));
+		cudaMalloc((void **)&grEligGPU[i], numGRPerGPU * sizeof(float));
+		cudaMalloc((void **)&pfpcSTPsGPU[i], numGRPerGPU * sizeof(float));
 		cudaMalloc((void **)&pfSynWeightPCGPU[i], numGRPerGPU * sizeof(float));
 		cudaMalloc((void **)&pfPCSynWeightStatesGPU[i], numGRPerGPU * sizeof(float));
 		cudaMallocPitch((void **)&inputPFPCGPU[i], (size_t *)&inputPFPCGPUPitch[i],
@@ -244,8 +247,10 @@ void MZone::initCUDA(cudaStream_t **stream)
 
 		cudaDeviceSynchronize();
 		//initialize device cuda memory
-    cudaMemcpy(grEligGPU[i], as->grElig.get() + cpyStartInd,
-        numGRPerGPU * sizeof(float), cudaMemcpyHostToDevice);
+		cudaMemcpy(grEligGPU[i], as->grElig.get() + cpyStartInd,
+			numGRPerGPU * sizeof(float), cudaMemcpyHostToDevice);
+		cudaMemcpy(pfpcSTPsGPU[i], as->pfpcSTPs.get() + cpyStartInd,
+			numGRPerGPU * sizeof(float), cudaMemcpyHostToDevice);
 		cudaMemcpy(pfSynWeightPCGPU[i], &pfSynWeightPCLinear[cpyStartInd],
 				numGRPerGPU*sizeof(float), cudaMemcpyHostToDevice);
 		cudaMemcpy(pfPCSynWeightStatesGPU[i], &pfPCSynWeightStatesLinear[cpyStartInd],
@@ -1009,6 +1014,17 @@ void MZone::runPFPCGradedPlastCUDA(cudaStream_t **sts, int streamN, uint32_t t)
 
 			curGROffset += num_p_pc_from_gr_to_pc;
 		}
+	}
+}
+
+void MZone::runPFPCSTPCuda(cudaStream_t **sts, int streamN, uint32_t use_cs, uint32_t use_us)
+{
+	for (uint32_t i = 0; i < numGPUs; i++)
+	{
+		cudaSetDevice(i+gpuIndStart);
+		callPFPCSTPKernel(sts[i][streamN], updatePFPCSynWNumBlocks, updatePFPCSynWNumGRPerB, use_cs, use_us,
+			grEligBase, grEligMax, grEligExpScale, grEligDecay, grStpDecay, grStpInc, grEligGPU[i], pfpcSTPsGPU[i],
+			apBufGRGPU[i], delayMaskGRGPU[i]);
 	}
 }
 
