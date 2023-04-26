@@ -91,8 +91,8 @@ extern float grEligMax;
 extern float grEligExpScale;
 extern float grEligDecayTau;
 extern float grEligDecay;
-extern float grEligDecayTauBkgd;
-extern float grEligDecayBkgd;
+extern float grStpDecayTau;
+extern float grStpDecay;
 extern float grStpInc;
 // experimental short term plasticity params
 

@@ -89,6 +89,7 @@ MZone::~MZone()
 	}
 
 	delete[] delayMaskGRGPU;
+  delete[] grEligGPU;
 	delete[] pfSynWeightPCGPU;
 	delete[] pfPCSynWeightStatesGPU;
 	delete[] inputPFPCGPU;
@@ -214,6 +215,7 @@ void MZone::initCUDA(cudaStream_t **stream)
 		}
 	}
 
+  grEligGPU = new float*[numGPUs];
 	pfSynWeightPCGPU = new float*[numGPUs];
 	pfPCSynWeightStatesGPU = new uint8_t*[numGPUs];
 	inputPFPCGPU = new float*[numGPUs];
@@ -233,6 +235,7 @@ void MZone::initCUDA(cudaStream_t **stream)
 			cpySize * sizeof(uint32_t), cudaMemcpyHostToDevice);
 
 		//allocate device cuda memory
+    cudaMalloc((void **)&grEligGPU[i], numGRPerGPU * sizeof(float));
 		cudaMalloc((void **)&pfSynWeightPCGPU[i], numGRPerGPU * sizeof(float));
 		cudaMalloc((void **)&pfPCSynWeightStatesGPU[i], numGRPerGPU * sizeof(float));
 		cudaMallocPitch((void **)&inputPFPCGPU[i], (size_t *)&inputPFPCGPUPitch[i],
@@ -241,6 +244,8 @@ void MZone::initCUDA(cudaStream_t **stream)
 
 		cudaDeviceSynchronize();
 		//initialize device cuda memory
+    cudaMemcpy(grEligGPU[i], as->grElig.get() + cpyStartInd,
+        numGRPerGPU * sizeof(float), cudaMemcpyHostToDevice);
 		cudaMemcpy(pfSynWeightPCGPU[i], &pfSynWeightPCLinear[cpyStartInd],
 				numGRPerGPU*sizeof(float), cudaMemcpyHostToDevice);
 		cudaMemcpy(pfPCSynWeightStatesGPU[i], &pfPCSynWeightStatesLinear[cpyStartInd],

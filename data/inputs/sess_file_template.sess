@@ -136,7 +136,7 @@ begin filetype run
     float grEligMax 1.0
     float grEligExpScale 2.5
     float grEligDecayTau 20
-    float grEligDecayTauBkgd 24.5
+    float grStpDecayTau 24.5
     float grStpInc 0.00025
     // experimental short term plasticity params!
 

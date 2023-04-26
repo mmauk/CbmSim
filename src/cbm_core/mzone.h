@@ -143,6 +143,7 @@ private:
 	//end basket cell variables
 
 	//purkinje cell variables
+  float **grEligGPU;
 	float **pfSynWeightPCGPU;
 	float *pfSynWeightPCLinear;
 	uint8_t *pfPCSynWeightStatesLinear; // for cascade plasticity only

@@ -82,14 +82,14 @@ float goGABAGOGOSynDepF          = 0.0;
 float goGABAGOGOSynRecTau        = 0.0;
 
 // experimental short term plasticity params
-extern float grEligBase          = 0.0;
-extern float grEligMax           = 0.0;
-extern float grEligExpScale      = 0.0;
-extern float grEligDecayTau      = 0.0;
-extern float grEligDecay         = 0.0;
-extern float grEligDecayTauBkgd  = 0.0;
-extern float grEligDecayBkgd     = 0.0;
-extern float grStpInc            = 0.0;
+float grEligBase          = 0.0;
+float grEligMax           = 0.0;
+float grEligExpScale      = 0.0;
+float grEligDecayTau      = 0.0;
+float grEligDecay         = 0.0;
+float grStpDecayTau       = 0.0;
+float grStpDecay          = 0.0;
+float grStpInc            = 0.0;
 // experimental short term plasticity params
 
 // experimental long term plasticity params
@@ -275,12 +275,12 @@ void populate_act_params(parsed_sess_file &s_file)
 	goGABAGOGOSynDepF          = std::stof(s_file.parsed_var_sections["activity"].param_map["goGABAGOGOSynDepF"].value); 
 	goGABAGOGOSynRecTau        = std::stof(s_file.parsed_var_sections["activity"].param_map["goGABAGOGOSynRecTau"].value); 
 
-  grEligBase          = std::stof(s_file.parsed_var_sections["activity"].param_map["grEligBase"].value);
-  grEligMax           = std::stof(s_file.parsed_var_sections["activity"].param_map["grEligMax"].value);
-  grEligExpScale      = std::stof(s_file.parsed_var_sections["activity"].param_map["grEligExpScale"].value);
-  grEligDecayTau      = std::stof(s_file.parsed_var_sections["activity"].param_map["grEligDecayTau"].value);
-  grEligDecayTauBkgd  = std::stof(s_file.parsed_var_sections["activity"].param_map["grEligDecayTauBkgd"].value);
-  grStpInc            = std::stof(s_file.parsed_var_sections["activity"].param_map["grStpInc"].value);
+  grEligBase                 = std::stof(s_file.parsed_var_sections["activity"].param_map["grEligBase"].value);
+  grEligMax                  = std::stof(s_file.parsed_var_sections["activity"].param_map["grEligMax"].value);
+  grEligExpScale             = std::stof(s_file.parsed_var_sections["activity"].param_map["grEligExpScale"].value);
+  grEligDecayTau             = std::stof(s_file.parsed_var_sections["activity"].param_map["grEligDecayTau"].value);
+  grStpDecayTau              = std::stof(s_file.parsed_var_sections["activity"].param_map["grStpDecayTau"].value);
+  grStpInc                   = std::stof(s_file.parsed_var_sections["activity"].param_map["grStpInc"].value);
 
 	fracSynWLow                = std::stof(s_file.parsed_var_sections["activity"].param_map["fracSynWLow"].value);
 	fracLowState               = std::stof(s_file.parsed_var_sections["activity"].param_map["fracLowState"].value);
@@ -352,7 +352,7 @@ void populate_act_params(parsed_sess_file &s_file)
 
 
   grEligDecay = 1.0 - exp(-msPerTimeStep / grEligDecayTau);
-  grEligDecayTauBkgd = exp(-msPerTimeStep / grEligDecayTauBkgd);
+  grStpDecay  = exp(-msPerTimeStep / grStpDecayTau);
 
 	numTSinMFHist       = msPerHistBinMF / msPerTimeStep;
 	gLeakGO             = rawGLeakGO; // / (6 - msPerTimeStep);
@@ -476,8 +476,8 @@ void read_act_params(std::fstream &in_param_buf)
   in_param_buf.read((char *)&grEligExpScale, sizeof(float));
   in_param_buf.read((char *)&grEligDecayTau, sizeof(float));
   in_param_buf.read((char *)&grEligDecay, sizeof(float));
-  in_param_buf.read((char *)&grEligDecayTauBkgd, sizeof(float));
-  in_param_buf.read((char *)&grEligDecayBkgd, sizeof(float));
+  in_param_buf.read((char *)&grStpDecayTau, sizeof(float));
+  in_param_buf.read((char *)&grStpDecay, sizeof(float));
   in_param_buf.read((char *)&grStpInc, sizeof(float));
 
 	in_param_buf.read((char *)&fracSynWLow, sizeof(float));
@@ -668,8 +668,8 @@ void write_act_params(std::fstream &out_param_buf)
   out_param_buf.write((char *)&grEligExpScale, sizeof(float));
   out_param_buf.write((char *)&grEligDecayTau, sizeof(float));
   out_param_buf.write((char *)&grEligDecay, sizeof(float));
-  out_param_buf.write((char *)&grEligDecayTauBkgd, sizeof(float));
-  out_param_buf.write((char *)&grEligDecayBkgd, sizeof(float));
+  out_param_buf.write((char *)&grStpDecayTau, sizeof(float));
+  out_param_buf.write((char *)&grStpDecay, sizeof(float));
   out_param_buf.write((char *)&grStpInc, sizeof(float));
 
 	out_param_buf.write((char *)&fracSynWLow, sizeof(float));
