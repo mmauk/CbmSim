@@ -125,7 +125,7 @@ void callPFPCMaukCascadeLTPPlastKernel(cudaStream_t &st, unsigned int numBlocks,
 		int offSet, float synWHigh, float trans_prob_base, float *randoms);
 
 void callPFPCGradedPlastKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
-		float *synWeightGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck,
+		float *synWeightGPU, float *stpPFPC, uint64_t *historyGPU, unsigned int pastBinNToCheck,
 		int offSet, float pfPCPlastStep);
 
 void callPFPCSTPKernel(cudaStream_t &st, uint32_t numBlocks, uint32_t numGRPerBlock, uint32_t use_cs, uint32_t use_us,

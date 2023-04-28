@@ -655,14 +655,15 @@ __global__ void updatePFPCMaukCascadeLTPPlastKernel(float *synWPFPC, uint8_t *sy
 	}
 }
 
-__global__ void updatePFPCGradedSynWeightKernel(float *synWPFPC, uint64_t *historyGR, uint64_t plastCheckMask,
+__global__ void updatePFPCGradedSynWeightKernel(float *synWPFPC, float *stpPFPC, uint64_t *historyGR, uint64_t plastCheckMask,
 		unsigned int offset, float plastStep)
 {
 	int i=blockIdx.x*blockDim.x+threadIdx.x+offset;
-	synWPFPC[i]=synWPFPC[i]+((historyGR[i]&plastCheckMask)>0)*plastStep;
+	synWPFPC[i] += ((historyGR[i] & plastCheckMask) > 0) * plastStep;
 
-	synWPFPC[i]=(synWPFPC[i]>0)*synWPFPC[i];
-	synWPFPC[i]=(synWPFPC[i]>1)+(synWPFPC[i]<=1)*synWPFPC[i];
+	synWPFPC[i] = (synWPFPC[i]>0)*synWPFPC[i];
+	synWPFPC[i] = (synWPFPC[i]>1)+(synWPFPC[i]<=1)*synWPFPC[i];
+	synWPFPC[i] += stpPFPC[i]; // -> this may not be what we want
 }
 
 __global__ void updatePFPCSTPKernel(uint32_t use_cs, uint32_t use_us, float grEligBase, float grEligMax,
@@ -1057,12 +1058,12 @@ void callPFPCMaukCascadeLTPPlastKernel(cudaStream_t &st, unsigned int numBlocks,
 }
 
 void callPFPCGradedPlastKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
-		float *synWeightGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck,
+		float *synWeightGPU, float *stpPFPC, uint64_t *historyGPU, unsigned int pastBinNToCheck,
 		int offSet, float pfPCPlastStep)
 {
 	uint64_t mask = ((uint64_t)1)<<(pastBinNToCheck-1);
-		updatePFPCGradedSynWeightKernel<<<numBlocks, numGRPerBlock, 0, st>>>(synWeightGPU, historyGPU,
-				mask, offSet, pfPCPlastStep);
+	updatePFPCGradedSynWeightKernel<<<numBlocks, numGRPerBlock, 0, st>>>(synWeightGPU, stpPFPC, historyGPU,
+		mask, offSet, pfPCPlastStep);
 }
 
 void callPFPCSTPKernel(cudaStream_t &st, uint32_t numBlocks, uint32_t numGRPerBlock, uint32_t use_cs, uint32_t use_us,

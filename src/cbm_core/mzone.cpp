@@ -1010,7 +1010,7 @@ void MZone::runPFPCGradedPlastCUDA(cudaStream_t **sts, int streamN, uint32_t t)
 			}
 			callPFPCGradedPlastKernel(sts[curGPUInd][streamN + curIOInd],
 					updatePFPCSynWNumBlocks, updatePFPCSynWNumGRPerB, pfSynWeightPCGPU[curGPUInd],
-					histGRGPU[curGPUInd], grPCHistCheckBinIO, curGROffset, pfPCPlastStepIO[curIOInd]);
+					pfpcSTPsGPU[curGPUInd], histGRGPU[curGPUInd], grPCHistCheckBinIO, curGROffset, pfPCPlastStepIO[curIOInd]);
 
 			curGROffset += num_p_pc_from_gr_to_pc;
 		}
