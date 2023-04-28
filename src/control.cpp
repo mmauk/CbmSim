@@ -642,6 +642,9 @@ void Control::initialize_rasters()
 		io_vm_raster = allocate2DArray<float>(msMeasure, num_io);
 	}
 
+	gr_elig_raster  = allocate2DArray<float>(msMeasure, num_gr);
+	pfpc_stp_raster = allocate2DArray<float>(msMeasure, num_gr);
+
 	raster_arrays_initialized = true;
 }
 
@@ -797,7 +800,7 @@ void Control::runSession(struct gui *gui)
 			reset_spike_sums();
 		}
 		// save gr rasters into new file every trial 
-		//save_gr_raster();
+		save_gr_raster();
 		save_pfpc_weights_to_file(trial);
 		save_mfdcn_weights_to_file(trial);
 		if (pf_pc_plast == ABBOTT_CASCADE || pf_pc_plast == MAUK_CASCADE)
@@ -890,6 +893,12 @@ void Control::save_rasters()
 		if (!rf_names[i].empty())
 			rast_save_funcs[i]();
 	}
+	std::string gr_elig_rast_name = data_out_path + "/gr_elig_rast_trial_" + std::to_string(trial) + BIN_EXT;
+	LOG_DEBUG("Saving gr eligibility raster to file...");
+	write2DArray<float>(gr_elig_rast_name, gr_elig_raster, msMeasure, num_gr);
+	std::string pfpc_stp_rast_name = data_out_path + "/pfpc_stp_rast_trial_" + std::to_string(trial) + BIN_EXT;
+	LOG_DEBUG("Saving pfpc stp raster to file...");
+	write2DArray<float>(pfpc_stp_rast_name, pfpc_stp_raster, msMeasure, num_gr);
 }
 
 void Control::save_psths()
@@ -1010,6 +1019,24 @@ void Control::fill_rasters(uint32_t raster_counter, uint32_t psth_counter)
 			nc_vm_raster[psth_counter][i] = vm_nc[i];
 		}
 	}
+
+	const float *gr_elig_ptr = simCore->getMZoneList()[0]->exportGREligToState();
+	if (gr_elig_ptr)
+	{
+		for (int i = 0; i < num_gr; i++)
+		{
+			gr_elig_raster[raster_counter][i] = gr_elig_ptr[i]; 
+		}
+	}
+
+	const float *pfpc_stp_ptr = simCore->getMZoneList()[0]->exportPFPCSTPToState();
+	if (pfpc_stp_ptr)
+	{
+		for (int i = 0; i < num_gr; i++)
+		{
+			pfpc_stp_raster[raster_counter][i] = pfpc_stp_ptr[i]; 
+		}
+	}
 }
 
 void Control::fill_psths(uint32_t psth_counter)
@@ -1053,6 +1080,9 @@ void Control::delete_rasters()
 		delete2DArray<float>(nc_vm_raster);
 		delete2DArray<float>(io_vm_raster);
 	}
+
+	delete2DArray<float>(gr_elig_raster);
+	delete2DArray<float>(pfpc_stp_raster);
 }
 
 void Control::delete_psths()

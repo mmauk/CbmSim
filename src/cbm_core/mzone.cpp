@@ -1089,6 +1089,44 @@ void MZone::cpyPFBCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN)
 	}
 }
 
+const float* MZone::exportGREligToState()
+{
+	int cpyStartInd;
+	cudaError_t error;
+	for (int i = 0; i < numGPUs; i++)
+	{
+		cpyStartInd = i * numGRPerGPU;
+		cudaSetDevice(i + gpuIndStart);
+		error = cudaMemcpy(as->grElig.get() + cpyStartInd, grEligGPU[i],
+			numGRPerGPU * sizeof(float), cudaMemcpyDeviceToHost);
+		if (error != cudaSuccess)
+		{
+			LOG_ERROR("CUDA Error: %s", cudaGetErrorString(error));
+			return NULL;
+		}
+	}
+	return (const float *)as->grElig.get();
+}
+
+const float* MZone::exportPFPCSTPToState()
+{
+	int cpyStartInd;
+	cudaError_t error;
+	for (int i = 0; i < numGPUs; i++)
+	{
+		cpyStartInd = i * numGRPerGPU;
+		cudaSetDevice(i + gpuIndStart);
+		error = cudaMemcpy(as->pfpcSTPs.get() + cpyStartInd, pfpcSTPsGPU[i],
+			numGRPerGPU * sizeof(float), cudaMemcpyDeviceToHost);
+		if (error != cudaSuccess)
+		{
+			LOG_ERROR("CUDA Error: %s", cudaGetErrorString(error));
+			return NULL;
+		}
+	}
+	return (const float *)as->pfpcSTPs.get();
+}
+
 const float* MZone::exportPFPCWeights()
 {
 	cpyPFPCSynWCUDA();

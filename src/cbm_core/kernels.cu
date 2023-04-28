@@ -1069,7 +1069,6 @@ void callPFPCSTPKernel(cudaStream_t &st, uint32_t numBlocks, uint32_t numGRPerBl
 	float grEligBase, float grEligMax, float grEligExpScale, float grEligDecay, float grStpDecay, float grStpInc,
 	float *grEligGPU, float *pfpcSTPsGPU, uint32_t *apBufGPU, uint32_t *delayMaskGPU)
 {
-	// TODO: write in numBlocks and numGRPerBlock vars
 	updatePFPCSTPKernel<<<numBlocks, numGRPerBlock, 0, st>>>(use_cs, use_cs, grEligBase, grEligMax,
 		  grEligExpScale, grEligDecay, grStpDecay, grStpInc, grEligGPU, pfpcSTPsGPU, apBufGPU, delayMaskGPU);
 }

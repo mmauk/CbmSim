@@ -72,6 +72,10 @@ public:
 	const float* exportVmIO();
 	const float* exportgBCPC();
 	const float* exportgPFPC();
+
+	const float* exportGREligToState();
+	const float* exportPFPCSTPToState();
+
 	const float* exportPFPCWeights();
 	const float* exportMFDCNWeights();
 

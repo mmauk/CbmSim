@@ -189,6 +189,9 @@ class Control
 		float **nc_vm_raster;
 		float **io_vm_raster;
 
+		float **gr_elig_raster;
+		float **pfpc_stp_raster;
+
 		void build_sim();
 
 		void set_plasticity_modes(std::string pfpc_plasticity, std::string mfnc_plasticity);
@@ -216,7 +219,7 @@ class Control
 		void create_psth_filenames(std::map<std::string, bool> &psth_map);
 		void create_weights_filenames(std::map<std::string, bool> &weights_map);
 
-    void create_pfpc_weights_states_filenames(std::map<std::string, bool> &weights_map);
+    	void create_pfpc_weights_states_filenames(std::map<std::string, bool> &weights_map);
 		void initialize_rast_cell_nums();
 		void initialize_cell_spikes();
 		void initialize_spike_sums();
