@@ -18,7 +18,7 @@ begin filetype run
 
 		// session defs
 		def session isi_250_session
-			isi_250_paired_trial 200
+			isi_250_paired_trial 1
 		end 
 	end
 

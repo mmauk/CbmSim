@@ -752,6 +752,12 @@ void Control::runSession(struct gui *gui)
 	
 	if (!use_gui)
 	{
+	   //int max = 0;
+	   //for (int i = 0; i < num_go; i++) {
+	   // 	if (max < simCore->getInputNet()->counter_maxes[i]) max = simCore->getInputNet()->counter_maxes[i];
+	   //}
+	   //LOG_INFO("Max count: %d\n", max);
+
 		save_rasters();
 		save_psths();
 		save_sim_to_file();

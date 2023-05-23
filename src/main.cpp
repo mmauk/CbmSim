@@ -14,6 +14,8 @@
 #include <omp.h>
 #include <iomanip>
 
+#include <valgrind/callgrind.h>
+
 #include "control.h"
 #include "gui.h"
 #include "commandline.h"
@@ -47,9 +49,11 @@ int main(int argc, char **argv)
 		}
 		else if (!p_cl.session_file.empty())
 		{
+			CALLGRIND_START_INSTRUMENTATION;
+			CALLGRIND_TOGGLE_COLLECT;
 			control->runSession(NULL); // saving is done at the end of runSession.
-									   // might consider moving to own function and calling
-									   // from here
+			CALLGRIND_TOGGLE_COLLECT; // might consider moving to own function and calling
+			CALLGRIND_STOP_INSTRUMENTATION; // from here
 		}
 	}
 	else if (p_cl.vis_mode == "GUI")

@@ -25,6 +25,9 @@ public:
 
 	void writeToState();
 
+	int *counter;
+	int *counter_maxes;
+
 	const uint8_t* exportAPGO();
 	const uint8_t* exportAPMF();
 	const uint8_t* exportHistMF();
@@ -142,8 +145,6 @@ protected:
 
 	float **depAmpGOH;
 	float **dynamicAmpGOH;
-
-	int *counter;
 
 	uint32_t **apGOGPU;
 	uint32_t **grInputGOGPU;

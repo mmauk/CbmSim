@@ -203,6 +203,7 @@ InNet::~InNet()
 	delete[] dynamicAmpGOGPU;
 
 	delete[] counter;
+	delete[] counter_maxes;
 
 	LOG_DEBUG("Finished deleting innet gpu arrays.");
 }
@@ -487,8 +488,17 @@ void InNet::updateGOtoGROutParameters(float spillFrac)
 	{
 		as->depAmpGOGR[i] = 1;
 
-		as->dynamicAmpGOGR[i] = baselvl + (scalerGOGR * (1 / (1 + (exp((counter[i] - halfShift) / steepness)))));
-		counter[i] = (1 - as->apGO[i]) * counter[i] + 1; 
+		int temp_count = counter[i];
+		//as->dynamicAmpGOGR[i] = baselvl + (scalerGOGR * (1 / (1 + (exp((counter[i] - halfShift) / steepness)))));
+		as->dynamicAmpGOGR[i] = (temp_count > 120) ? 0 : baselvl + scalerGOGR * (
+			6.45656306e-1 +
+			-1.59299833e-02 * temp_count +
+			1.33411763e-04 * temp_count * temp_count +
+			-3.76557533e-07 * temp_count * temp_count * temp_count
+		);
+		temp_count = (1 - as->apGO[i]) * temp_count + 1;
+		counter[i] = temp_count;
+		//if (counter[i] > counter_maxes[i]) counter_maxes[i] = counter[i];
 
 		for (int j = 0; j < numGPUs; j++)
 		{
@@ -1105,6 +1115,8 @@ void InNet::initGOCUDA()
 	LOG_DEBUG("Allocating GO cuda variables...");
 	counter = new int[num_go];
 	memset(counter, 0, num_go * sizeof(int));
+	counter_maxes = new int[num_go];
+	memset(counter_maxes, 0, num_go * sizeof(int));
 
 	// allocate host and device memory	
 	for (int i = 0; i < numGPUs; i++)

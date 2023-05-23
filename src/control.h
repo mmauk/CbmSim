@@ -102,8 +102,8 @@ class Control
 		float inputStrength = 0.0;
 
 		// sim params -> TODO: place in simcore
-		uint32_t gpuIndex = 2;
-		uint32_t gpuP2    = 2;
+		uint32_t gpuIndex = 0;
+		uint32_t gpuP2    = 3;
 
 		uint32_t trial;
 		uint32_t raster_counter;
