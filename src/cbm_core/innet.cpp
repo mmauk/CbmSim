@@ -182,6 +182,26 @@ InNet::~InNet()
 		cudaFreeHost(depAmpGOH[i]);
 		cudaFreeHost(dynamicAmpGOH[i]);
 
+		// new vars
+
+		cudaFree(vGOGPU[i]);
+		cudaFree(vCoupleGOGOGPU[i]);
+		cudaFree(threshGOGPU[i]);
+		cudaFree(apBufGOGPU[i]);
+		cudaFree(inputMFGOGPU[i]);
+		cudaFree(inputGOGOGPU[i]);
+		cudaFree(inputGRGOGPU[i]);
+		cudaFree(gSumMFGOGPU[i]);
+		cudaFree(gSumGOGOGPU[i]);
+		cudaFree(synWScalerGOGOGPU[i]);
+		cudaFree(synWScalerGRGOGPU[i]);
+		cudaFree(gNMDAMFGOGPU[i]);
+		cudaFree(gNMDAIncMFGOGPU[i]);
+		cudaFree(gGRGOGPU[i]);
+		cudaFree(gGRGO_NMDAGPU[i]);
+
+		// end new vars
+
 		cudaFree(apGOGPU[i]);
 		cudaFree(depAmpGOGPU[i]);
 		cudaFree(dynamicAmpGOGPU[i]);
@@ -193,6 +213,27 @@ InNet::~InNet()
 
 	delete[] grInputGOSumH;
 	delete[] apGOH;
+
+	// new vars
+
+	delete[] vGOGPU;
+	delete[] vCoupleGOGOGPU;
+	delete[] threshGOGPU;
+	delete[] apBufGOGPU;
+	delete[] inputMFGOGPU;
+	delete[] inputGOGOGPU;
+	delete[] inputGRGOGPU;
+	delete[] gSumMFGOGPU;
+	delete[] gSumGOGOGPU;
+	delete[] synWScalerGOGOGPU;
+	delete[] synWScalerGRGOGPU;
+	delete[] gNMDAMFGOGPU;
+	delete[] gNMDAIncMFGOGPU;
+	delete[] gGRGOGPU;
+	delete[] gGRGO_NMDAGPU;
+
+	// end new vars
+
 	delete[] apGOGPU;
 	delete[] grInputGOGPU;
 	delete[] grInputGOGPUP;
@@ -379,75 +420,26 @@ void InNet::updateMFActivties(const uint8_t *actInMF)
 	}
 }
 
-void InNet::calcGOActivities()
+void InNet::runGOActivitiesCUDA(cudaStream_t **sts, int streamN)
 {
-	memset(sumGRInputGO, 0, num_go * sizeof(uint32_t));
+	cudaError_t error;
+	
 	for (int i = 0; i < numGPUs; i++)
 	{
-#pragma omp parallel for
-		for (int j = 0; j < num_go; j++)
-		{
-			sumGRInputGO[i] += grInputGOSumH[i][j];
-		}
-	}
+		error = cudaSetDevice(i + gpuIndStart);
 
-#pragma omp parallel for
-	for (int i = 0; i < num_go; i++)
-	{
-		float tempVGO = as->vGO[i];
-
-		//NMDA Low
-		float gNMDAIncGRGO = (0.00000082263 * tempVGO * tempVGO * tempVGO)
-						   + (0.00021653 * tempVGO * tempVGO)
-						   + (0.0195 * tempVGO)
-						   + 0.6117; 
-
-		//NMDA High
-		as->gNMDAIncMFGO[i] = (0.00000011969 * tempVGO * tempVGO * tempVGO)
-							+ (0.000089369 * tempVGO * tempVGO)
-							+ (0.0151 * tempVGO)
-							+ 0.7713; 
-
-		as->gSum_MFGO[i] = (as->inputMFGO[i] * mfgoW)
-						 + as->gSum_MFGO[i] * gDecMFtoGO;
-		as->gSum_GOGO[i] = (as->inputGOGO[i] * gogoW * as->synWscalerGOtoGO[i])
-						 +  as->gSum_GOGO[i] * gGABADecGOtoGO;
-		as->gNMDAMFGO[i] = as->inputMFGO[i] * (mfgoW * NMDA_AMPAratioMFGO * as->gNMDAIncMFGO[i])
-						 + as->gNMDAMFGO[i] * gDecayMFtoGONMDA;
-		
-		as->gGRGO[i] = (sumGRInputGO[i] * grgoW * as->synWscalerGRtoGO[i])
-					 + as->gGRGO[i] * gDecGRtoGO;
-		as->gGRGO_NMDA[i] = sumGRInputGO[i] * ((grgoW * as->synWscalerGRtoGO[i]) * 0.6 * gNMDAIncGRGO)
-						  + as->gGRGO_NMDA[i] * gDecayMFtoGONMDA;
-		
-		as->threshCurGO[i] += (threshRestGO - as->threshCurGO[i]) * threshDecGO;
-		
-		tempVGO += (gLeakGO * (eLeakGO - tempVGO))
-				+ (as->gSum_GOGO[i] * (eGABAGO - tempVGO))
-				- (as->gSum_MFGO[i] + as->gGRGO[i] + as->gNMDAMFGO[i]
-					+ as->gGRGO_NMDA[i]) * tempVGO
-				- (as->vCoupleGO[i] * tempVGO);
-
-		if (tempVGO > threshMaxGO) tempVGO = threshMaxGO;
-		
-		as->apGO[i]    = tempVGO > as->threshCurGO[i];
-		as->apBufGO[i] = (as->apBufGO[i] << 1) | (as->apGO[i] * 0x00000001);
-
-		as->threshCurGO[i] = as->apGO[i] * threshMaxGO
-						   + (1 - as->apGO[i]) * as->threshCurGO[i];
-
-		as->inputMFGO[i]  = 0;
-		as->inputGOGO[i]  = 0;
-		as->vGO[i]        = tempVGO;
-	}
-
-	for (int i = 0; i < numGPUs; i++)
-	{
-#pragma omp parallel for
-		for (int j = 0; j < num_go; j++)
-		{
-			apGOH[i][j] = as->apGO[j];
-		}
+		callGOActKernel(sts[i][streamN], calcGOActNumBlocks, calcGOActNumGOPerB,
+			vGOGPU[i], vCoupleGOGOGPU[i], threshGOGPU[i], apBufGOGPU[i], apGOGPU[i],
+			inputMFGOGPU[i], inputGOGOGPU[i], inputGRGOGPU[i], gSumMFGOGPU[i], gSumGOGOGPU[i],
+			synWScalerGOGOGPU[i], synWScalerGRGOGPU[i], NMDA_AMPAratioMFGO, gNMDAMFGOGPU[i], 
+			gNMDAIncMFGOGPU[i], gGRGOGPU[i], gGRGO_NMDAGPU[i], gLeakGO, eLeakGO, threshRestGO, threshMaxGO,
+			threshDecGO, mfgoW, gogoW, grgoW, gDecMFtoGO, gGABADecGOtoGO, gDecayMFtoGONMDA,
+			gDecGRtoGO, eGABAGO);
+#ifdef DEBUGOUT
+		error=cudaGetLastError();
+		cerr<<"goActivityCUDA: kernel launch for gpu #"<<i<<
+				": "<<cudaGetErrorString(error)<<endl;
+#endif
 	}
 }
 
@@ -816,6 +808,14 @@ void InNet::initCUDA()
 	calcGRActNumGRPerB = 512;
 	calcGRActNumBlocks = numGRPerGPU / calcGRActNumGRPerB;
 
+	// new vars
+
+	numGOPerGPU = num_go / numGPUs;
+	calcGOActNumGOPerB = 512;
+	calcGOActNumBlocks = numGOPerGPU / calcGOActNumGOPerB;
+
+	// end new vars
+
 	updateGRGOOutNumGRPerR = 512 * (num_go > 512) + num_go * (num_go <= 512);
 	updateGRGOOutNumGRRows = numGRPerGPU / updateGRGOOutNumGRPerR;
 
@@ -1111,7 +1111,27 @@ void InNet::initGRCUDA()
 
 void InNet::initGOCUDA()
 {
-	//FIXME: change the types of some of these arrays (see joe's biasManip sim)
+
+	// new vars
+
+	vGOGPU            = new float*[numGPUs];
+	vCoupleGOGOGPU    = new float*[numGPUs];
+	threshGOGPU       = new float*[numGPUs];
+	apBufGOGPU        = new uint32_t*[numGPUs];
+	inputMFGOGPU      = new uint32_t*[numGPUs];
+	inputGOGOGPU      = new uint32_t*[numGPUs];
+	inputGRGOGPU      = new uint32_t*[numGPUs];
+	gSumMFGOGPU       = new float*[numGPUs];
+	gSumGOGOGPU       = new float*[numGPUs];
+	synWScalerGOGOGPU = new float*[numGPUs];
+	synWScalerGRGOGPU = new float*[numGPUs];
+	gNMDAMFGOGPU      = new float*[numGPUs];
+	gNMDAIncMFGOGPU   = new float*[numGPUs];
+	gGRGOGPU          = new float*[numGPUs];
+	gGRGO_NMDAGPU     = new float*[numGPUs];
+
+	// end new vars
+
 	grInputGOSumH   = new uint32_t*[numGPUs];
 	apGOH		    = new uint32_t*[numGPUs];
 	apGOGPU		    = new uint32_t*[numGPUs];
@@ -1129,15 +1149,35 @@ void InNet::initGOCUDA()
 	counter_maxes = new int[num_go];
 	memset(counter_maxes, 0, num_go * sizeof(int));
 
-	// allocate host and device memory	
+	// allocate host and device memory
 	for (int i = 0; i < numGPUs; i++)
 	{
 		cudaSetDevice(i + gpuIndStart);
-		cudaMallocHost((void **)&grInputGOSumH[i], num_go*sizeof(uint32_t));
-		cudaMallocHost((void **)&apGOH[i], num_go*sizeof(uint32_t));
-		cudaMallocHost((void **)&depAmpGOH[i], num_go*sizeof(float));
-		cudaMallocHost((void **)&dynamicAmpGOH[i], num_go*sizeof(float));
-	
+		cudaMallocHost((void **)&grInputGOSumH[i], numGOPerGPU*sizeof(uint32_t));
+		cudaMallocHost((void **)&apGOH[i], numGOPerGPU*sizeof(uint32_t));
+		cudaMallocHost((void **)&depAmpGOH[i], numGOPerGPU*sizeof(float));
+		cudaMallocHost((void **)&dynamicAmpGOH[i], numGOPerGPU*sizeof(float));
+
+		// new vars
+
+		cudaMalloc((void **)vGOGPU[i], numGOPerGPU * sizeof(float));
+		cudaMalloc((void **)vCoupleGOGOGPU[i], numGOPerGPU * sizeof(float));
+		cudaMalloc((void **)threshGOGPU[i], numGOPerGPU * sizeof(float));
+		cudaMalloc((void **)apBufGOGPU[i], numGOPerGPU * sizeof(uint32_t));
+		cudaMalloc((void **)inputMFGOGPU[i], numGOPerGPU * sizeof(uint32_t));
+		cudaMalloc((void **)inputGOGOGPU[i], numGOPerGPU * sizeof(uint32_t));
+		cudaMalloc((void **)inputGRGOGPU[i], numGOPerGPU * sizeof(uint32_t));
+		cudaMalloc((void **)gSumMFGOGPU[i], numGOPerGPU * sizeof(float));
+		cudaMalloc((void **)gSumGOGOGPU[i], numGOPerGPU * sizeof(float));
+		cudaMalloc((void **)synWScalerGOGOGPU[i], numGOPerGPU * sizeof(float));
+		cudaMalloc((void **)synWScalerGRGOGPU[i], numGOPerGPU * sizeof(float));
+		cudaMalloc((void **)gNMDAMFGOGPU[i], numGOPerGPU * sizeof(float));
+		cudaMalloc((void **)gNMDAIncMFGOGPU[i], numGOPerGPU * sizeof(float));
+		cudaMalloc((void **)gGRGOGPU[i], numGOPerGPU * sizeof(float));
+		cudaMalloc((void **)gGRGO_NMDAGPU[i], numGOPerGPU * sizeof(float));
+
+		// end new vars
+
 		//allocate gpu memory
 		cudaMalloc((void **)&apGOGPU[i], num_go*sizeof(uint32_t));
 		cudaMalloc((void **)&depAmpGOGPU[i], num_go*sizeof(float));
@@ -1156,11 +1196,39 @@ void InNet::initGOCUDA()
 	LOG_DEBUG("Initializing GO cuda variables...");
 	for (int i = 0; i < numGPUs; i++)
 	{
+		int cpyStartInd = numGOPerGPU * i;
+		int cpySize     = numGOPerGPU;
+
 		cudaSetDevice(i + gpuIndStart);
 		cudaMemset(apGOH[i], 0, num_go * sizeof(uint32_t));
 		cudaMemset(depAmpGOH[i], 1, num_go * sizeof(float));
 		cudaMemset(dynamicAmpGOH[i], 1, num_go * sizeof(float));
 		cudaMemset(grInputGOSumH[i], 0, num_go * sizeof(uint32_t));
+
+		// new vars
+
+		cudaMemset(vCoupleGOGOGPU[i], 0, numGOPerGPU * sizeof(float));
+		cudaMemset(apBufGOGPU[i], 0, numGOPerGPU * sizeof(uint32_t));
+		cudaMemset(inputMFGOGPU[i], 0, numGOPerGPU * sizeof(uint32_t));
+		cudaMemset(inputGOGOGPU[i], 0, numGOPerGPU * sizeof(uint32_t));
+		cudaMemset(inputGRGOGPU[i], 0, numGOPerGPU * sizeof(uint32_t));
+		cudaMemset(gSumMFGOGPU[i], 0, numGOPerGPU * sizeof(float));
+		cudaMemset(gSumGOGOGPU[i], 0, numGOPerGPU * sizeof(float));
+		cudaMemset(gNMDAMFGOGPU[i], 0, numGOPerGPU * sizeof(float));
+		cudaMemset(gNMDAIncMFGOGPU[i], 0, numGOPerGPU * sizeof(float));
+		cudaMemset(gGRGOGPU[i], 0, numGOPerGPU * sizeof(float));
+		cudaMemset(gGRGO_NMDAGPU[i], 0, numGOPerGPU * sizeof(float));
+
+		cudaMemcpy(vGOGPU[i], as->vGO.get() + cpyStartInd,
+			cpySize * sizeof(float), cudaMemcpyHostToDevice);
+		cudaMemcpy(threshGOGPU[i], as->threshCurGO.get() + cpyStartInd,
+			cpySize * sizeof(float), cudaMemcpyHostToDevice);
+		cudaMemcpy(synWScalerGOGOGPU[i], as->synWscalerGOtoGO.get() + cpyStartInd,
+			cpySize * sizeof(float), cudaMemcpyHostToDevice);
+		cudaMemcpy(synWScalerGRGOGPU[i], as->synWscalerGRtoGO.get() + cpyStartInd,
+			cpySize * sizeof(float), cudaMemcpyHostToDevice);
+
+		// end new vars
 
 		cudaMemset(apGOGPU[i], 0, num_go*sizeof(uint32_t));
 		cudaMemset(depAmpGOGPU[i], 1, num_go*sizeof(float));

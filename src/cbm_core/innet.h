@@ -48,7 +48,7 @@ public:
 	const float* exportgSum_GRGO();
 
 	void updateMFActivties(const uint8_t *actInMF);
-	void calcGOActivities();
+	void runGOActivitiesCUDA(cudaStream_t **sts, int streamN);
 
 	void updateMFtoGROut();
 	void updateMFtoGOOut();
@@ -95,6 +95,14 @@ protected:
 
 	unsigned int calcGRActNumGRPerB;
 	unsigned int calcGRActNumBlocks;
+
+	// new vars
+	
+	uint32_t numGOPerGPU;
+	uint32_t calcGOActNumBlocks; 
+	uint32_t calcGOActNumGOPerB; 
+
+	// end new vars
 
 	unsigned int updateGRGOOutNumGRPerR;
 	unsigned int updateGRGOOutNumGRRows;
@@ -146,11 +154,30 @@ protected:
 	float **depAmpGOH;
 	float **dynamicAmpGOH;
 
+	// new vars
+
+	float **vGOGPU;
+	float **vCoupleGOGOGPU;
+	float **threshGOGPU;
+	uint32_t **apBufGOGPU;
+	uint32_t **inputMFGOGPU;
+	uint32_t **inputGOGOGPU;
+	uint32_t **inputGRGOGPU;
+	float **gSumMFGOGPU;
+	float **gSumGOGOGPU;
+	float **synWScalerGOGOGPU;
+	float **synWScalerGRGOGPU;
+	float **gNMDAMFGOGPU;
+	float **gNMDAIncMFGOGPU;
+	float **gGRGOGPU;
+	float **gGRGO_NMDAGPU;
+
+	// end new vars
+
 	uint32_t **apGOGPU;
 	uint32_t **grInputGOGPU;
-	uint32_t **grInputGOSumGPU;
-
 	size_t *grInputGOGPUP;
+	uint32_t **grInputGOSumGPU;
 
 	float **depAmpGOGRGPU;
 	float **depAmpGOGPU;

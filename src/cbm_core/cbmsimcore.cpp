@@ -153,7 +153,7 @@ void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum
 	inputNet->cpyGRGOSumGPUtoHostCUDA(streams, 3);
 
 	inputNet->updateMFtoGOOut();
-	inputNet->calcGOActivities();
+	inputNet->runGOActivitiesCUDA(streams, 5);
 
 	inputNet->updateGOtoGOOut();
 	inputNet->updateGOtoGROutParameters(spillFrac);

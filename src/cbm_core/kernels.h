@@ -86,6 +86,14 @@ void callUpdatePFPCOutKernel(cudaStream_t &st, unsigned int numBlocks, unsigned 
 		uint32_t *apBufGPU, uint32_t *delayMaskGPU,
 		float *pfPCSynWGPU, float *inPFPCGPU, size_t inPFPCGPUPitch, unsigned int numPFInPerPCP2);
 
+void callGOActKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGOPerBlock,
+	float *vGO, float *vCoupleGOGO, float *threshGO, uint32_t *apBufGO,
+	uint32_t *apGO, uint32_t *inputMFGO, uint32_t *inputGOGO, uint32_t *inputGRGO, float *gSum_MFGO, float *gSum_GOGO,
+	float *synWScalerGOtoGO, float *synWScalerGRtoGO, float NMDA_AMPARatioMFGO, float *gNMDAMFGO, 
+	float *gNMDAIncMFGO, float *gGRGO, float *gGRGO_NMDA, float gLeakGO, float eLeakGO, float threshRestGO, float threshMaxGO,
+	float threshDecGO, float mfgoW, float gogoW, float grgoW, float gDecMFtoGO, float gGABADecGOtoGO, float gDecMFtoGONMDA,
+	float gDecGRtoGO, float eGABAGO);
+
 void callUpdateGRHistKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
 		uint32_t *apBufGPU, uint64_t *historyGPU, uint32_t apBufGRHistMask);
 

@@ -411,6 +411,67 @@ __global__ void updatePFPCOutGPU(uint32_t *apBuf, uint32_t *delay,
 
 //**---------------end GR Kernels-------------------**
 
+//**---------------GO Kernels-------------------**
+
+//TODO: compute beforehand:
+//      a. inputGRGO sum -> taken care of by sumGRGOOutGPU
+//      b. inputMFGO sum -> move updateMFtoGOOut to GPU Kernel
+//      c. inputGOGO sum -> move updateGOtoGOOut to GPU Kernel
+//
+//      compute afterward:
+//      a. dynamicGOGR, depAmpGOGR, -> move updateGOtoGROutParameters to GPU Kernel
+__global__ void calcActivityGOGPU(float *vGO, float *vCoupleGOGO, float *threshGO, uint32_t *apBufGO,
+  uint32_t *apGO, uint32_t *inputMFGO, uint32_t *inputGOGO, uint32_t *inputGRGO, float *gSum_MFGO, float *gSum_GOGO,
+  float *synWScalerGOtoGO, float *synWScalerGRtoGO, float NMDA_AMPARatioMFGO, float *gNMDAMFGO, 
+  float *gNMDAIncMFGO, float *gGRGO, float *gGRGO_NMDA, float gLeakGO, float eLeakGO, float threshRestGO, float threshMaxGO,
+  float threshDecGO, float mfgoW, float gogoW, float grgoW, float gDecMFtoGO, float gGABADecGOtoGO, float gDecMFtoGONMDA,
+  float gDecGRtoGO, float eGABAGO)
+{
+
+	int i = blockIdx.x * blockDim.x + threadIdx.x;
+
+	float tempThreshGO = threshGO[i];
+	uint8_t tempAPGO = apGO[i];
+	float tempVGO = vGO[i];
+
+		//NMDA Low
+	float gNMDAIncGRGO = (0.00000082263 * tempVGO * tempVGO * tempVGO)
+					   + (0.00021653 * tempVGO * tempVGO)
+					   + (0.0195 * tempVGO)
+					   + 0.6117; 
+
+	//NMDA High
+	gNMDAIncMFGO[i] = (0.00000011969 * tempVGO * tempVGO * tempVGO)
+						+ (0.000089369 * tempVGO * tempVGO)
+						+ (0.0151 * tempVGO)
+						+ 0.7713;
+
+  gSum_MFGO[i]  = (inputMFGO[i] * mfgoW) + gSum_MFGO[i] * gDecMFtoGO;
+  gSum_GOGO[i]  = (inputGOGO[i] * gogoW * synWScalerGOtoGO[i]) + gSum_GOGO[i] * gGABADecGOtoGO;
+  gNMDAMFGO[i]  = (inputMFGO[i] * mfgoW * NMDA_AMPARatioMFGO * gNMDAIncMFGO[i])
+                + gNMDAMFGO[i] * gDecMFtoGONMDA;
+  gGRGO[i]      = (inputGRGO[i] * grgoW * synWScalerGRtoGO[i]) + gGRGO[i] * gDecGRtoGO;
+  gGRGO_NMDA[i] = (inputGRGO[i] * grgoW * synWScalerGRtoGO[i] * 0.6 * gNMDAIncGRGO)
+                + gGRGO_NMDA[i] * gDecMFtoGONMDA;
+
+  tempThreshGO += (threshRestGO - tempThreshGO) * threshDecGO;
+
+  tempVGO += gLeakGO * (eLeakGO - tempVGO) + gSum_GOGO[i] * (eGABAGO - tempVGO)
+          -  (gSum_MFGO[i] + gGRGO[i] + gNMDAMFGO[i] + gGRGO_NMDA[i]) * tempVGO
+          -  vCoupleGOGO[i] * tempVGO;
+
+  if (tempVGO > threshMaxGO) tempVGO = threshMaxGO;
+
+  tempAPGO = tempVGO > tempThreshGO;
+  apBufGO[i] = (apBufGO[i] << 1) | (tempAPGO * 0x00000001);
+
+  tempThreshGO = tempAPGO * threshMaxGO + (1 - tempAPGO) * tempThreshGO;
+
+  apGO[i] = tempAPGO;
+  vGO[i] = tempVGO;
+}
+
+//**---------------end GO Kernels-------------------**
 
 //**---------------IO kernels-----------------**
 
@@ -676,6 +737,21 @@ void callUpdatePFPCOutKernel(cudaStream_t &st, unsigned int numBlocks, unsigned 
 	updatePFPCOutGPU<<<numBlocks, numGRPerBlock, 0, st>>>(apBufGPU, delayMaskGPU, pfPCSynWGPU,
 			inPFPCGPU, inPFPCGPUPitch, 1<<numPFInPerPCP2, numPFInPerPCP2);
 }
+
+void callGOActKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGOPerBlock,
+	float *vGO, float *vCoupleGOGO, float *threshGO, uint32_t *apBufGO,
+	uint32_t *apGO, uint32_t *inputMFGO, uint32_t *inputGOGO, uint32_t *inputGRGO, float *gSum_MFGO, float *gSum_GOGO,
+	float *synWScalerGOtoGO, float *synWScalerGRtoGO, float NMDA_AMPARatioMFGO, float *gNMDAMFGO, 
+	float *gNMDAIncMFGO, float *gGRGO, float *gGRGO_NMDA, float gLeakGO, float eLeakGO, float threshRestGO, float threshMaxGO,
+	float threshDecGO, float mfgoW, float gogoW, float grgoW, float gDecMFtoGO, float gGABADecGOtoGO, float gDecMFtoGONMDA,
+	float gDecGRtoGO, float eGABAGO)
+{
+	calcActivityGOGPU<<<numBlocks, numGOPerBlock, 0, st>>>(vGO, vCoupleGOGO, threshGO, apBufGO,
+		apGO, inputMFGO, inputGOGO, inputGRGO, gSum_MFGO, gSum_GOGO, synWScalerGOtoGO, synWScalerGRtoGO,
+		NMDA_AMPARatioMFGO, gNMDAMFGO, gNMDAIncMFGO, gGRGO, gGRGO_NMDA, gLeakGO, eLeakGO, threshRestGO, threshMaxGO,
+		threshDecGO, mfgoW, gogoW, grgoW, gDecMFtoGO, gGABADecGOtoGO, gDecMFtoGONMDA, gDecGRtoGO, eGABAGO);
+}
+
 
 void callUpdateGROutGOKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock, unsigned int numGO,
 		uint32_t *apBufGPU, uint32_t *grInGOGPU, uint32_t grInGOGPUPitch,
