@@ -381,15 +381,19 @@ void InNet::updateMFActivties(const uint8_t *actInMF)
 
 void InNet::calcGOActivities()
 {
+	memset(sumGRInputGO, 0, num_go * sizeof(uint32_t));
+	for (int i = 0; i < numGPUs; i++)
+	{
+#pragma omp parallel for
+		for (int j = 0; j < num_go; j++)
+		{
+			sumGRInputGO[i] += grInputGOSumH[i][j];
+		}
+	}
+
 #pragma omp parallel for
 	for (int i = 0; i < num_go; i++)
 	{
-		sumGRInputGO[i] = 0;
-		for (int j = 0; j < numGPUs; j++)
-		{
-			sumGRInputGO[i] += grInputGOSumH[j][i];
-		}
-
 		float tempVGO = as->vGO[i];
 
 		//NMDA Low
@@ -424,7 +428,6 @@ void InNet::calcGOActivities()
 					+ as->gGRGO_NMDA[i]) * tempVGO
 				- (as->vCoupleGO[i] * tempVGO);
 
-		//tempVGO = threshMaxGO * (tempVGO > threshMaxGO) + tempVGO * (threshMaxGO > tempVGO); /* TODO: test whether gives same results as branched case */
 		if (tempVGO > threshMaxGO) tempVGO = threshMaxGO;
 		
 		as->apGO[i]    = tempVGO > as->threshCurGO[i];
@@ -436,10 +439,14 @@ void InNet::calcGOActivities()
 		as->inputMFGO[i]  = 0;
 		as->inputGOGO[i]  = 0;
 		as->vGO[i]        = tempVGO;
+	}
 
-		for (int j = 0; j < numGPUs; j++)
+	for (int i = 0; i < numGPUs; i++)
+	{
+#pragma omp parallel for
+		for (int j = 0; j < num_go; j++)
 		{
-			apGOH[j][i] = as->apGO[i];
+			apGOH[i][j] = as->apGO[j];
 		}
 	}
 }
@@ -489,21 +496,25 @@ void InNet::updateGOtoGROutParameters(float spillFrac)
 		as->depAmpGOGR[i] = 1;
 
 		int temp_count = counter[i];
-		//as->dynamicAmpGOGR[i] = baselvl + (scalerGOGR * (1 / (1 + (exp((counter[i] - halfShift) / steepness)))));
-		as->dynamicAmpGOGR[i] = (temp_count > 120) ? 0 : baselvl + scalerGOGR * (
-			6.45656306e-1 +
-			-1.59299833e-02 * temp_count +
-			1.33411763e-04 * temp_count * temp_count +
-			-3.76557533e-07 * temp_count * temp_count * temp_count
-		);
-		temp_count = (1 - as->apGO[i]) * temp_count + 1;
-		counter[i] = temp_count;
+		as->dynamicAmpGOGR[i] = baselvl + (scalerGOGR * (1 / (1 + (exp((counter[i] - halfShift) / steepness)))));
+		//as->dynamicAmpGOGR[i] = (temp_count > 120) ? 0 : baselvl + scalerGOGR * (
+		//	6.45656306e-1 +
+		//	-1.59299833e-02 * temp_count +
+		//	1.33411763e-04 * temp_count * temp_count +
+		//	-3.76557533e-07 * temp_count * temp_count * temp_count
+		//);
+		counter[i] = (1 - as->apGO[i]) * counter[i] + 1;
+		//counter[i] = temp_count;
 		//if (counter[i] > counter_maxes[i]) counter_maxes[i] = counter[i];
+	}
 
-		for (int j = 0; j < numGPUs; j++)
+	for (int i = 0; i < numGPUs; i++)
+	{
+#pragma omp parallel for
+		for (int j = 0; j < num_go; j++)
 		{
-			depAmpGOH[j][i] = 1;
-			dynamicAmpGOH[j][i] = as->dynamicAmpGOGR[i];
+			depAmpGOH[i][j] = 1;
+			dynamicAmpGOH[i][j] = as->dynamicAmpGOGR[j];
 		}
 	}
 }
@@ -511,7 +522,7 @@ void InNet::updateGOtoGROutParameters(float spillFrac)
 void InNet::updateGOtoGOOut()
 {
 
-#pragma omp parallel for
+//#pragma omp parallel for
 	for (int i = 0; i < num_go; i++)
 	{
 		if (as->apGO[i])
@@ -523,7 +534,7 @@ void InNet::updateGOtoGOOut()
 		}
 	}
 
-#pragma omp parallel for
+//#pragma omp parallel for
 	for (int i = 0; i < num_go; i++)
 	{
 		for(int j = 0; j < cs->numpGOCoupInGOGO[i]; j++)

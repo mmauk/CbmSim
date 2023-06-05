@@ -14,8 +14,6 @@
 #include <omp.h>
 #include <iomanip>
 
-#include <valgrind/callgrind.h>
-
 #include "control.h"
 #include "gui.h"
 #include "commandline.h"
@@ -38,7 +36,7 @@ int main(int argc, char **argv)
 	Control *control = new Control(p_cl);
 	int exit_status = 0;
 
-	omp_set_num_threads(1); /* for 4 gpus, 8 is the sweet spot. Unsure for 2. */
+	omp_set_num_threads(4); /* for 4 gpus, 8 is the sweet spot. Unsure for 2. */
 
 	if (p_cl.vis_mode == "TUI")
 	{
@@ -49,11 +47,9 @@ int main(int argc, char **argv)
 		}
 		else if (!p_cl.session_file.empty())
 		{
-			CALLGRIND_START_INSTRUMENTATION;
-			CALLGRIND_TOGGLE_COLLECT;
 			control->runSession(NULL); // saving is done at the end of runSession.
-			CALLGRIND_TOGGLE_COLLECT; // might consider moving to own function and calling
-			CALLGRIND_STOP_INSTRUMENTATION; // from here
+			// might consider moving to own function and calling
+			// from here
 		}
 	}
 	else if (p_cl.vis_mode == "GUI")

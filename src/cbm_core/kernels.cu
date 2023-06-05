@@ -84,8 +84,8 @@ __global__ void updateGRGOOutGPU(uint32_t *apBuf,
 	{
 		sharedIOBufGR[tid+i*blockDim.x]=0;
 	}
-
 	__syncthreads();
+
 	for(int i=0; i<tempNS; i++)
 	{
 		conRow=(uint32_t *)((char *)con+i*conPitch);

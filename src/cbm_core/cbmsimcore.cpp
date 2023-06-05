@@ -135,7 +135,6 @@ void CBMSimCore::syncCUDA(std::string title)
 void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum plasticity mf_nc_plast)
 {
 	syncCUDA("1");
-
 	curTime++;
 
 	inputNet->cpyAPMFHosttoGPUCUDA(streams, 6);
@@ -205,14 +204,11 @@ void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum
 		if (mf_nc_plast != OFF )
 		{
 			zones[i]->updateMFNCSyn(inputNet->exportHistMF(), curTime);
-	  }
-
+		}
 		zones[i]->updateMFNCOut();
 		zones[i]->calcNCActivities();
 		zones[i]->updateNCOut();
-
-  }
-
+	}
 	inputNet->resetMFHist(curTime);
 }
 
