@@ -51,12 +51,16 @@ void callUpdateGOInGRDepressionOPKernel(cudaStream_t &st, unsigned int numBlocks
 	  int32_t *numInPerGRGPU, float *depAmpGOGRGPU);
 
 void callUpdateMFInGRDepressionOPKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
-	  	unsigned int numInCells, float *depAmpGPU, uint32_t *conInGRGPU, size_t conInGRGPUP,
+		unsigned int numInCells, float *depAmpGPU, uint32_t *conInGRGPU, size_t conInGRGPUP,
 		int32_t *numInPerGRGPU, int *numMFperGR, float *depAmpMFGRGPU);
 
+//TODO: change this stupid name. this kernel computes the GO input from MF
+void callUpdateMFInGOOPKernel(cudaStream_t &st, uint32_t numBlocks, uint32_t numGOPerBlock,
+		uint32_t numInCells, uint32_t *apInGPU, uint32_t *conInGOGPU, size_t conInGOGPUP,
+		int32_t *numInPerGOGPU, uint32_t *inputMFGOGPU);
+
 void callUpdateGOInGRDynamicSpillOPKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
-		unsigned int numInCells, float *dynamicAmpGPU,
-		uint32_t *conInGRGPU, size_t conInGRGPUP,
+		unsigned int numInCells, float *dynamicAmpGPU, uint32_t *conInGRGPU, size_t conInGRGPUP,
 		int32_t *numInPerGRGPU, float *dynamicAmpGOGRGPU);
 
 void callUpdateInGROPKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,

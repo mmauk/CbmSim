@@ -7,8 +7,10 @@
 
 #include "kernels.h"
 
- extern __shared__ uint32_t sharedIOBufGR[];
- extern __shared__ float  sharedIOBufGRfloat[];
+extern __shared__ uint32_t sharedIOBufGR[];
+extern __shared__ float  sharedIOBufGRfloat[];
+
+extern __shared__ uint32_t sharedIOBufGO[];
 
 __global__ void testKernel(float *a, float *b, float *c)
  {
@@ -263,6 +265,29 @@ __global__ void updateMFGRDepressionInOPGPU(unsigned int inNLoads, float *depAmp
 	depAmpMFGRGPU[index] = tempDepAmpSum / numMFperGR[index];
 }
 
+__global__ void updateMFInGOOPGPU(uint32_t inNLoads, uint32_t *apIn, uint32_t *conFromIn,
+		size_t conFromInPitch, int32_t *numInPerGO, uint32_t *inputMFGOGPU)
+{
+	int tid = threadIdx.x;
+	int index = blockIdx.x * blockDim.x + threadIdx.x;
+	unsigned int *conRow;
+	int tempNSyn = numInPerGO[index];
+	int tempApInSum = 0;
+
+	for (int i = 0; i < inNLoads; i++)
+	{
+		sharedIOBufGO[tid + i * blockDim.x] = apIn[tid + i * blockDim.x];
+	}
+	__syncthreads();
+
+	for (int i = 0; i < tempNSyn; i++)
+	{
+		conRow = (uint32_t *)((char *)conFromIn + i * conFromInPitch);
+		tempApInSum += sharedIOBufGO[conRow[index]];
+	}
+	inputMFGOGPU[index] = tempApInSum;
+}
+
 __global__ void updateGOGRDynamicSpillInOPGPU(unsigned int inNLoads, float *dynamicAmp,
 		uint32_t *conFromIn, size_t conFromInPitch,
 		int32_t *numInPerGR, float *dynamicAmpGOGRGPU)
@@ -427,9 +452,7 @@ __global__ void calcActivityGOGPU(float *vGO, float *vCoupleGOGO, float *threshG
   float threshDecGO, float mfgoW, float gogoW, float grgoW, float gDecMFtoGO, float gGABADecGOtoGO, float gDecMFtoGONMDA,
   float gDecGRtoGO, float eGABAGO)
 {
-
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
-
 	float tempThreshGO = threshGO[i];
 	uint8_t tempAPGO = apGO[i];
 	float tempVGO = vGO[i];
@@ -446,19 +469,19 @@ __global__ void calcActivityGOGPU(float *vGO, float *vCoupleGOGO, float *threshG
 						+ (0.0151 * tempVGO)
 						+ 0.7713;
 
-  gSum_MFGO[i]  = (inputMFGO[i] * mfgoW) + gSum_MFGO[i] * gDecMFtoGO;
-  gSum_GOGO[i]  = (inputGOGO[i] * gogoW * synWScalerGOtoGO[i]) + gSum_GOGO[i] * gGABADecGOtoGO;
-  gNMDAMFGO[i]  = (inputMFGO[i] * mfgoW * NMDA_AMPARatioMFGO * gNMDAIncMFGO[i])
-                + gNMDAMFGO[i] * gDecMFtoGONMDA;
-  gGRGO[i]      = (inputGRGO[i] * grgoW * synWScalerGRtoGO[i]) + gGRGO[i] * gDecGRtoGO;
-  gGRGO_NMDA[i] = (inputGRGO[i] * grgoW * synWScalerGRtoGO[i] * 0.6 * gNMDAIncGRGO)
-                + gGRGO_NMDA[i] * gDecMFtoGONMDA;
+	gSum_MFGO[i]  = (inputMFGO[i] * mfgoW) + gSum_MFGO[i] * gDecMFtoGO;
+	gSum_GOGO[i]  = (inputGOGO[i] * gogoW * synWScalerGOtoGO[i]) + gSum_GOGO[i] * gGABADecGOtoGO;
+	gNMDAMFGO[i]  = (inputMFGO[i] * mfgoW * NMDA_AMPARatioMFGO * gNMDAIncMFGO[i])
+					+ gNMDAMFGO[i] * gDecMFtoGONMDA;
+	gGRGO[i]      = (inputGRGO[i] * grgoW * synWScalerGRtoGO[i]) + gGRGO[i] * gDecGRtoGO;
+	gGRGO_NMDA[i] = (inputGRGO[i] * grgoW * synWScalerGRtoGO[i] * 0.6 * gNMDAIncGRGO)
+					+ gGRGO_NMDA[i] * gDecMFtoGONMDA;
 
-  tempThreshGO += (threshRestGO - tempThreshGO) * threshDecGO;
+	tempThreshGO += (threshRestGO - tempThreshGO) * threshDecGO;
 
-  tempVGO += gLeakGO * (eLeakGO - tempVGO) + gSum_GOGO[i] * (eGABAGO - tempVGO)
-          -  (gSum_MFGO[i] + gGRGO[i] + gNMDAMFGO[i] + gGRGO_NMDA[i]) * tempVGO
-          -  vCoupleGOGO[i] * tempVGO;
+	tempVGO += gLeakGO * (eLeakGO - tempVGO) + gSum_GOGO[i] * (eGABAGO - tempVGO)
+				- (gSum_MFGO[i] + gGRGO[i] + gNMDAMFGO[i] + gGRGO_NMDA[i]) * tempVGO
+				- vCoupleGOGO[i] * tempVGO;
 
   if (tempVGO > threshMaxGO) tempVGO = threshMaxGO;
 
@@ -676,6 +699,14 @@ void callUpdateMFInGRDepressionOPKernel(cudaStream_t &st, unsigned int numBlocks
 {
 	updateMFGRDepressionInOPGPU<<<numBlocks, numGRPerBlock, numInCells * sizeof(uint32_t), st>>>
 	   (numInCells / numGRPerBlock, depAmpGPU, conInGRGPU, conInGRGPUP, numInPerGRGPU, numMFperGR, depAmpMFGRGPU);
+}
+
+void callUpdateMFInGOOPKernel(cudaStream_t &st, uint32_t numBlocks, uint32_t numGOPerBlock,
+		uint32_t numInCells, uint32_t *apInGPU, uint32_t *conInGOGPU, size_t conInGOGPUP,
+		int32_t *numInPerGOGPU, uint32_t *inputMFGOGPU)
+{
+	updateMFInGOOPGPU<<<numBlocks, numGOPerBlock, numInCells*sizeof(uint32_t), st>>>
+			(numInCells/numGOPerBlock, apInGPU, conInGOGPU, conInGOGPUP, numInPerGOGPU, inputMFGOGPU);
 }
 
 void callUpdateGOInGRDepressionOPKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,

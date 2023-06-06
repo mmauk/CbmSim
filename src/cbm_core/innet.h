@@ -51,7 +51,6 @@ public:
 	void runGOActivitiesCUDA(cudaStream_t **sts, int streamN);
 
 	void updateMFtoGROut();
-	void updateMFtoGOOut();
 	void updateGOtoGROutParameters(float spillFrac);
 	void updateGOtoGOOut();
 	void resetMFHist(uint32_t t);
@@ -69,6 +68,7 @@ public:
 	void cpyAPGOHosttoGPUCUDA(cudaStream_t **sts, int streamN);
 	void runUpdateMFInGRCUDA(cudaStream_t **sts, int streamN);
 	void runUpdateMFInGRDepressionCUDA(cudaStream_t **sts, int streamN);
+	void runUpdateMFInGOCUDA(cudaStream_t **sts, int streamN);
 	
 	void runUpdateUBCInGRDepressionCUDA(cudaStream_t **sts, int streamN);
 	void runUpdateUBCInGRCUDA(cudaStream_t **sts, int streamN);
@@ -109,7 +109,14 @@ protected:
 
 	unsigned int sumGRGOOutNumGOPerB;
 	unsigned int sumGRGOOutNumBlocks;
-	
+
+	// new vars
+
+	uint32_t updateMFInGOnumGOPerB; // -> named because one GO per thread
+	uint32_t updateMFInGONumBlocks;
+
+	// end new vars
+
 	unsigned int updateMFInGRNumGRPerB;
 	unsigned int updateMFInGRNumBlocks;
 	
@@ -136,6 +143,17 @@ protected:
 	//gpu related variables
 	uint32_t **apMFH;
 	uint32_t **apMFGPU;
+
+	// new vars
+	
+	uint32_t **numMFPerGO; // dims: (num_go)
+	uint32_t **pGOfromMFtoGOT; // dims: (maxMFperGO, num_go)
+
+	int32_t  **numMFInPerGOGPU;
+	uint32_t **goConMFOutGOGPU;
+	size_t *goConMFOutGOGPUP;
+
+	// end new vars
 
 	float **depAmpMFH;
 	float **depAmpMFGPU;
