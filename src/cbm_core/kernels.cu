@@ -265,6 +265,9 @@ __global__ void updateMFGRDepressionInOPGPU(unsigned int inNLoads, float *depAmp
 	depAmpMFGRGPU[index] = tempDepAmpSum / numMFperGR[index];
 }
 
+//TODO: these update functions do the same thing. Might be time to refactor ie 
+// create a more general update fnctn, take variadic args at the end in case 
+// we are updating more than just the input...gpu arr
 __global__ void updateMFInGOOPGPU(uint32_t inNLoads, uint32_t *apIn, uint32_t *conFromIn,
 		size_t conFromInPitch, int32_t *numInPerGO, uint32_t *inputMFGOGPU)
 {
@@ -286,6 +289,34 @@ __global__ void updateMFInGOOPGPU(uint32_t inNLoads, uint32_t *apIn, uint32_t *c
 		tempApInSum += sharedIOBufGO[conRow[index]];
 	}
 	inputMFGOGPU[index] = tempApInSum;
+}
+
+// keep in mind: this kernel runs for every POST-synaptic GO. thus why tid + i *blockDim.x 
+// is used to index the input spikes while index (ie absolute location in gpu memory of this
+// post-syn GO) is used to index conRow
+__global__ void updateGOInGOGOOPGPU(uint32_t inNLoads, uint32_t *apIn, uint32_t *conFromIn,
+		size_t conFromInPitch, int32_t *numInPerGO, uint32_t *inputGOGOGPU)
+{
+	int tid = threadIdx.x;
+	int index = blockIdx.x * blockDim.x + threadIdx.x;
+	unsigned int *conRow;
+	int tempNSyn = numInPerGO[index];
+	int tempApInSum = 0;
+
+	for (int i = 0; i < inNLoads; i++)
+	{
+		sharedIOBufGO[tid + i * blockDim.x] = apIn[tid + i * blockDim.x];
+	}
+	__syncthreads(); // necessary because sharedIOBufGO for tempNSyn in any given
+                     // instance of this kernel may be read (below) at an index which was written
+                     // to by another thread!
+
+	for (int i = 0; i < tempNSyn; i++)
+	{
+		conRow = (uint32_t *)((char *)conFromIn + i * conFromInPitch);
+		tempApInSum += sharedIOBufGO[conRow[index]]; // no need to atomic add, i no understand
+	}
+	inputGOGOGPU[index] = tempApInSum;
 }
 
 __global__ void updateGOGRDynamicSpillInOPGPU(unsigned int inNLoads, float *dynamicAmp,
@@ -440,7 +471,6 @@ __global__ void updatePFPCOutGPU(uint32_t *apBuf, uint32_t *delay,
 
 //TODO: compute beforehand:
 //      a. inputGRGO sum -> taken care of by sumGRGOOutGPU
-//      b. inputMFGO sum -> move updateMFtoGOOut to GPU Kernel
 //      c. inputGOGO sum -> move updateGOtoGOOut to GPU Kernel
 //
 //      compute afterward:
@@ -707,6 +737,14 @@ void callUpdateMFInGOOPKernel(cudaStream_t &st, uint32_t numBlocks, uint32_t num
 {
 	updateMFInGOOPGPU<<<numBlocks, numGOPerBlock, numInCells*sizeof(uint32_t), st>>>
 			(numInCells/numGOPerBlock, apInGPU, conInGOGPU, conInGOGPUP, numInPerGOGPU, inputMFGOGPU);
+}
+
+void callUpdateGOInGOOPKernel(cudaStream_t &st, uint32_t numBlocks, uint32_t numGOPerBlock,
+		uint32_t numInCells, uint32_t *apInGPU, uint32_t *conInGOGPU, size_t conInGOGPUP,
+		int32_t *numInPerGOGPU, uint32_t *inputGOGOGPU /* TODO: add in the coupling coef here as a mutable output arg (bad practice idgaf*/)
+{
+	updateGOInGOGOOPGPU<<<numBlocks, numGOPerBlock, numInCells*sizeof(uint32_t), st>>>
+			(numInCells/numGOPerBlock, apInGPU, conInGOGPU, conInGOGPUP, numInPerGOGPU, inputGOGOGPU);
 }
 
 void callUpdateGOInGRDepressionOPKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,

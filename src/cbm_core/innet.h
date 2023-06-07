@@ -52,7 +52,7 @@ public:
 
 	void updateMFtoGROut();
 	void updateGOtoGROutParameters(float spillFrac);
-	void updateGOtoGOOut();
+	//void updateGOtoGOOut();
 	void resetMFHist(uint32_t t);
 
 	void runGRActivitiesCUDA(cudaStream_t **sts, int streamN);
@@ -69,6 +69,7 @@ public:
 	void runUpdateMFInGRCUDA(cudaStream_t **sts, int streamN);
 	void runUpdateMFInGRDepressionCUDA(cudaStream_t **sts, int streamN);
 	void runUpdateMFInGOCUDA(cudaStream_t **sts, int streamN);
+	void runUpdateGOInGOCUDA(cudaStream_t **sts, int streamN);
 	
 	void runUpdateUBCInGRDepressionCUDA(cudaStream_t **sts, int streamN);
 	void runUpdateUBCInGRCUDA(cudaStream_t **sts, int streamN);
@@ -115,6 +116,9 @@ protected:
 	uint32_t updateMFInGOnumGOPerB; // -> named because one GO per thread
 	uint32_t updateMFInGONumBlocks;
 
+	uint32_t updateGOInGONumGOPerB;
+	uint32_t updateGOInGONumBlocks;
+
 	// end new vars
 
 	unsigned int updateMFInGRNumGRPerB;
@@ -146,12 +150,19 @@ protected:
 
 	// new vars
 	
-	uint32_t **numMFPerGO; // dims: (num_go)
 	uint32_t **pGOfromMFtoGOT; // dims: (maxMFperGO, num_go)
 
 	int32_t  **numMFInPerGOGPU;
-	uint32_t **goConMFOutGOGPU;
+	uint32_t **goConMFOutGOGPU; // TODO: pretty sure these are the input arrs, change that name :weird_champ:
 	size_t *goConMFOutGOGPUP;
+
+	uint32_t **pGOGABAInGOGOT;
+
+	int32_t **numGOInPerGOGPU;
+	uint32_t **goConGOOutGOGPU; // TODO: pretty sure these are the input arrs, change that name :weird_champ:
+	size_t *goConGOOutGOGPUP;
+
+	// TODO: add the coupling connectivity and coeff arrs here to for transferreal to gpu
 
 	// end new vars
 

@@ -138,7 +138,7 @@ void InNetActivityState::initializeVals()
 	std::fill(depAmpMFGR.get(), depAmpMFGR.get() + num_mf, 1.0);
 
 	// go
-	std::fill(synWscalerGOtoGO.get(), synWscalerGOtoGO.get() + num_go, 1.0);
+	std::fill(synWscalerGOtoGO.get(), synWscalerGOtoGO.get() + num_go, 1.0); // ig reference value by which we scale grgo and mfgo
 	std::fill(synWscalerGRtoGO.get(), synWscalerGRtoGO.get() + num_go, 1.0);
 
 	std::fill(vGO.get(), vGO.get() + num_go, eLeakGO);
