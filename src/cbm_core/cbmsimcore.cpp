@@ -163,9 +163,8 @@ void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum
 	//inputNet->cpyDynamicAmpGOGRHosttoGPUCUDA(streams, 3);
 	//inputNet->cpyAPGOHosttoGPUCUDA(streams, 7);
 
-	inputNet->runUpdateGOInGRCUDA(streams, 1);
-	//inputNet->runUpdateGOInGRDepressionCUDA(streams, 3);
 	inputNet->runUpdateGOInGRDynamicSpillCUDA(streams, 4);
+	inputNet->runUpdateGOInGRCUDA(streams, 1);
 
 	if (pf_pc_plast == GRADED)
 	{

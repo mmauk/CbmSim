@@ -76,7 +76,6 @@ public:
 	//void runUpdateUBCInGRCUDA(cudaStream_t **sts, int streamN);
 	
 	void runUpdateGOInGRCUDA(cudaStream_t **sts, int streamN);
-	//void runUpdateGOInGRDepressionCUDA(cudaStream_t **sts, int streamN);
 	void runUpdateGOInGRDynamicSpillCUDA(cudaStream_t **sts, int streamN);
 	
 	void runUpdateGROutGOCUDA(cudaStream_t **sts, int streamN);
