@@ -51,7 +51,6 @@ public:
 	void runGOActivitiesCUDA(cudaStream_t **sts, int streamN);
 
 	void updateMFtoGROut();
-	void updateGOtoGROutParameters(float spillFrac);
 	void resetMFHist(uint32_t t);
 
 	void runGRActivitiesCUDA(cudaStream_t **sts, int streamN);
@@ -71,6 +70,7 @@ public:
 	void runUpdateMFInGOCUDA(cudaStream_t **sts, int streamN);
 	void runUpdateGOInGOCUDA(cudaStream_t **sts, int streamN);
 	void runUpdateGOCoupInGOCUDA(cudaStream_t **sts, int streamN);
+	void runUpdateGOOutGRDynamicSpillCUDA(cudaStream_t **sts, int streamN, float spillFrac);
 
 	//void runUpdateUBCInGRDepressionCUDA(cudaStream_t **sts, int streamN);
 	//void runUpdateUBCInGRCUDA(cudaStream_t **sts, int streamN);
@@ -191,6 +191,8 @@ protected:
 	float **dynamicAmpGOH;
 
 	// new vars
+
+	uint32_t **goIsiCounterGPU;
 
 	float **vGOGPU;
 	float **vCoupleGOGOGPU;

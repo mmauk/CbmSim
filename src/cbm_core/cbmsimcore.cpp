@@ -157,7 +157,7 @@ void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum
 
 	inputNet->runUpdateGOInGOCUDA(streams, 4);
 	inputNet->runUpdateGOCoupInGOCUDA(streams, 5);
-	inputNet->updateGOtoGROutParameters(spillFrac);
+	inputNet->runUpdateGOOutGRDynamicSpillCUDA(streams, 1, spillFrac);
 
 	//inputNet->cpyDepAmpGOGRHosttoGPUCUDA(streams, 2); // NOTE: currently does nothing (08/11/2022)
 	//inputNet->cpyDynamicAmpGOGRHosttoGPUCUDA(streams, 3);

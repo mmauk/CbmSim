@@ -46,6 +46,10 @@ void callSumGRGOOutKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int
 void callSumGRBCOutKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGOPerBlock,
 		unsigned int numGROutRows, uint32_t *grInBCGPU,  size_t grInBCGPUPitch, uint32_t *grInBCSGPU);
 
+void callUpdateGOOutGRDynamicSpillOPKernel(cudaStream_t &st, uint32_t numBlocks, uint32_t numGOPerBlock,
+	float spillFrac, float gIncFracSpilloverGOtoGR, float gogrW, uint32_t *apGO,
+	uint32_t *isiCounter, float *dynamicAmpGOOut);
+
 void callUpdateGOInGRDepressionOPKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
 	  unsigned int numInCells, float *depAmpGPU, uint32_t *conInGRGPU, size_t conInGRGPUP,
 	  int32_t *numInPerGRGPU, float *depAmpGOGRGPU);

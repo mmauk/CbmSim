@@ -202,6 +202,7 @@ InNet::~InNet()
 		cudaFree(goCoupCoeffInGOGPU[i]);
 
 		cudaFree(vGOGPU[i]);
+		cudaFree(goIsiCounterGPU[i]);
 		cudaFree(vCoupleGOGOGPU[i]);
 		cudaFree(threshGOGPU[i]);
 		cudaFree(apBufGOGPU[i]);
@@ -247,6 +248,7 @@ InNet::~InNet()
 	delete[] goCoupCoeffInGOGPUP;
 
 	delete[] vGOGPU;
+	delete[] goIsiCounterGPU;
 	delete[] vCoupleGOGOGPU;
 	delete[] threshGOGPU;
 	delete[] apBufGOGPU;
@@ -542,41 +544,27 @@ void InNet::runUpdateGOCoupInGOCUDA(cudaStream_t **sts, int streamN)
 	}
 }
 
-void InNet::updateGOtoGROutParameters(float spillFrac)
+// again, for now just going with same num blocks and go per block as runUpdateGOInGOCUDA. can
+// make different values in future to test out block/thread combinations
+
+// FIXME: need to think about dynamicAmpGOGPU var as its used when updating dynamicAmpGOGRGPU input
+// variable due to array alloc size diffs! (dynamicAmpGOGPU should have length numGOPerGPU per device,
+// and dynamicAmpGOGRGPU should have length num_go as we need all go available in GR device kernels)
+void InNet::runUpdateGOOutGRDynamicSpillCUDA(cudaStream_t **sts, int streamN, float spillFrac)
 {
-	// TODO: place these in the build file as well
-	float scalerGOGR = gogrW * gIncFracSpilloverGOtoGR * 1.4;
-	float halfShift = 12.0;//shift;
-	float steepness = 20.0;//steep; 
-	float recoveryRate = 1 / recoveryTauGO;
-	float baselvl = spillFrac * gogrW;
-
-#pragma omp parallel for
-	for (int i = 0; i < num_go; i++)
+	cudaError_t error;
+	for (int i = 0; i < numGPUs; i++)
 	{
-		//as->depAmpGOGR[i] = 1;
-
-		int temp_count = counter[i];
-		as->dynamicAmpGOGR[i] = baselvl + (scalerGOGR * (1 / (1 + (exp((counter[i] - halfShift) / steepness)))));
-		//as->dynamicAmpGOGR[i] = (temp_count > 120) ? 0 : baselvl + scalerGOGR * (
-		//	6.45656306e-1 +
-		//	-1.59299833e-02 * temp_count +
-		//	1.33411763e-04 * temp_count * temp_count +
-		//	-3.76557533e-07 * temp_count * temp_count * temp_count
-		//);
-		counter[i] = (1 - as->apGO[i]) * counter[i] + 1;
-		//counter[i] = temp_count;
-		//if (counter[i] > counter_maxes[i]) counter_maxes[i] = counter[i];
+		error = cudaSetDevice(i + gpuIndStart);
+		callUpdateGOOutGRDynamicSpillOPKernel(sts[i][streamN], updateGOInGONumBlocks, updateGOInGONumGOPerB,
+			spillFrac, gIncFracSpilloverGOtoGR, gogrW, apGOGPU[i],
+			goIsiCounterGPU[i], dynamicAmpGOGPU[i]);
+#ifdef DEBUGOUT
+		error=cudaGetLastError();
+		cerr<<"runUpdateGOOutGRDynamicSpillCUDA: kernel launch for gpu #"<<i<<
+				": "<<cudaGetErrorString(error)<<endl;
+#endif
 	}
-
-	//for (int i = 0; i < numGPUs; i++)
-	//{
-	//	for (int j = 0; j < num_go; j++)
-	//	{
-	//		depAmpGOH[i][j] = 1;
-	//		dynamicAmpGOH[i][j] = as->dynamicAmpGOGR[j];
-	//	}
-	//}
 }
 
 void InNet::resetMFHist(uint32_t t)
@@ -1180,6 +1168,7 @@ void InNet::initGOCUDA()
 	goCoupCoeffInGOGPUP = new size_t[numGPUs];
 
 	vGOGPU            = new float*[numGPUs];
+	goIsiCounterGPU   = new uint32_t*[numGPUs];
 	vCoupleGOGOGPU    = new float*[numGPUs];
 	threshGOGPU       = new float*[numGPUs];
 	apBufGOGPU        = new uint32_t*[numGPUs];
@@ -1240,6 +1229,7 @@ void InNet::initGOCUDA()
 			numGOPerGPU * sizeof(uint32_t), num_p_go_to_go_gj);
 
 		cudaMalloc((void **)&vGOGPU[i], numGOPerGPU * sizeof(float));
+		cudaMalloc((void **)&goIsiCounterGPU[i], numGOPerGPU * sizeof(uint32_t));
 		cudaMalloc((void **)&vCoupleGOGOGPU[i], numGOPerGPU * sizeof(float));
 		cudaMalloc((void **)&threshGOGPU[i], numGOPerGPU * sizeof(float));
 		cudaMalloc((void **)&apBufGOGPU[i], numGOPerGPU * sizeof(uint32_t));
@@ -1318,6 +1308,7 @@ void InNet::initGOCUDA()
 		cudaMemset(grInputGOSumH[i], 0, num_go * sizeof(uint32_t));
 
 		// new vars
+		cudaMemset(goIsiCounterGPU[i], 0, numGOPerGPU * sizeof(uint32_t));
 		cudaMemset(vCoupleGOGOGPU[i], 0, numGOPerGPU * sizeof(float));
 		cudaMemset(apBufGOGPU[i], 0, numGOPerGPU * sizeof(uint32_t));
 		cudaMemset(inputMFGOGPU[i], 0, numGOPerGPU * sizeof(uint32_t));
