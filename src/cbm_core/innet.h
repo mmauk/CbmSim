@@ -70,6 +70,8 @@ public:
 	void runUpdateMFInGRDepressionCUDA(cudaStream_t **sts, int streamN);
 	void runUpdateMFInGOCUDA(cudaStream_t **sts, int streamN);
 	void runUpdateGOInGOCUDA(cudaStream_t **sts, int streamN);
+	void runUpdateGOCoupInGOCUDA(cudaStream_t **sts, int streamN);
+
 	
 	void runUpdateUBCInGRDepressionCUDA(cudaStream_t **sts, int streamN);
 	void runUpdateUBCInGRCUDA(cudaStream_t **sts, int streamN);
@@ -161,6 +163,20 @@ protected:
 	int32_t **numGOInPerGOGPU;
 	uint32_t **goConGOOutGOGPU; // TODO: pretty sure these are the input arrs, change that name :weird_champ:
 	size_t *goConGOOutGOGPUP;
+
+//		for(int j = 0; j < cs->numpGOCoupInGOGO[i]; j++)
+//		{
+//			as->vCoupleGO[i] += (as->vGO[cs->pGOCoupInGOGO[i][j]] - as->vGO[i])
+//				  * coupleRiRjRatioGO * cs->pGOCoupInGOGOCCoeff[i][j];
+//		}
+
+	uint32_t **pGOCoupInGOGOT;
+	float **pGOCoupInGOGOCCoeffT;
+	int32_t **numGOCoupInPerGOGPU;
+	uint32_t **goConCoupGOInGOGPU;
+	size_t *goConCoupGOInGOGPUP;
+	float **goCoupCoeffInGOGPU;
+	size_t *goCoupCoeffInGOGPUP;
 
 	// TODO: add the coupling connectivity and coeff arrs here to for transferreal to gpu
 

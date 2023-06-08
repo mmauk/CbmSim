@@ -39,6 +39,8 @@ InNet::InNet(InNetConnectivityState *cs,
 	pGRfromMFtoGRT = allocate2DArray<uint32_t>(max_num_p_gr_from_mf_to_gr, num_gr);
 	pGOfromMFtoGOT = allocate2DArray<uint32_t>(max_num_p_go_from_mf_to_go, num_go);
 	pGOGABAInGOGOT = allocate2DArray<uint32_t>(num_con_go_to_go, num_go);
+	pGOCoupInGOGOT = allocate2DArray<uint32_t>(num_p_go_to_go_gj, num_go);
+	pGOCoupInGOGOCCoeffT == allocate2DArray<float>(num_p_go_to_go_gj, num_go);
 	pGRfromGOtoGRT = allocate2DArray<uint32_t>(max_num_p_gr_from_go_to_gr, num_gr);
 	pGRfromGRtoGOT = allocate2DArray<uint32_t>(max_num_p_gr_from_gr_to_go, num_gr);
 
@@ -62,6 +64,8 @@ InNet::~InNet()
 	delete2DArray<uint32_t>(pGRfromMFtoGRT);
 	delete2DArray<uint32_t>(pGOfromMFtoGOT);
 	delete2DArray<uint32_t>(pGOGABAInGOGOT);
+	delete2DArray<uint32_t>(pGOCoupInGOGOT);
+	delete2DArray<float>(pGOCoupInGOGOCCoeffT);
 	delete2DArray<uint32_t>(pGRfromGOtoGRT);
 	delete2DArray<uint32_t>(pGRfromGRtoGOT);
 
@@ -194,6 +198,10 @@ InNet::~InNet()
 		cudaFree(numGOInPerGOGPU[i]);
 		cudaFree(goConGOOutGOGPU[i]);
 
+		cudaFree(numGOCoupInPerGOGPU[i]);
+		cudaFree(goConCoupGOInGOGPU[i]);
+		cudaFree(goCoupCoeffInGOGPU[i]);
+
 		cudaFree(vGOGPU[i]);
 		cudaFree(vCoupleGOGOGPU[i]);
 		cudaFree(threshGOGPU[i]);
@@ -232,6 +240,12 @@ InNet::~InNet()
 	delete[] numGOInPerGOGPU;
 	delete[] goConGOOutGOGPU;
 	delete[] goConGOOutGOGPUP;
+
+	delete[] numGOCoupInPerGOGPU;
+	delete[] goConCoupGOInGOGPU;
+	delete[] goConCoupGOInGOGPUP;
+	delete[] goCoupCoeffInGOGPU;
+	delete[] goCoupCoeffInGOGPUP;
 
 	delete[] vGOGPU;
 	delete[] vCoupleGOGOGPU;
@@ -502,6 +516,25 @@ void InNet::runUpdateGOInGOCUDA(cudaStream_t **sts, int streamN)
 		callUpdateGOInGOOPKernel(sts[i][streamN], updateGOInGONumBlocks, updateGOInGONumGOPerB,
 				num_go, apGOGPU[i], goConGOOutGOGPU[i], goConGOOutGOGPUP[i],
 				numGOInPerGOGPU[i], inputGOGOGPU[i]);
+#ifdef DEBUGOUT
+		error=cudaGetLastError();
+		cerr<<"runUpdateMFInGOCUDA: kernel launch for gpu #"<<i<<
+				": "<<cudaGetErrorString(error)<<endl;
+#endif
+	}
+}
+
+// for now just going with same num blocks and go per block as runUpdateGOInGOCUDA
+// as this fn could have easily been in that one
+void InNet::runUpdateGOCoupInGOCUDA(cudaStream_t **sts, int streamN)
+{
+	cudaError_t error;
+	for (int i = 0; i < numGPUs; i++)
+	{
+		error = cudaSetDevice(i + gpuIndStart);
+		callUpdateGOCoupInGOOPKernel(sts[i][streamN], updateGOInGONumBlocks, updateGOInGONumGOPerB,
+				vGOGPU[i], goConCoupGOInGOGPU[i], goConCoupGOInGOGPUP[i], numGOCoupInPerGOGPU[i],
+				coupleRiRjRatioGO, goCoupCoeffInGOGPU[i], goCoupCoeffInGOGPUP[i], vCoupleGOGOGPU[i]);
 #ifdef DEBUGOUT
 		error=cudaGetLastError();
 		cerr<<"runUpdateMFInGOCUDA: kernel launch for gpu #"<<i<<
@@ -1168,6 +1201,12 @@ void InNet::initGOCUDA()
 	goConGOOutGOGPU  = new uint32_t*[numGPUs];
 	goConGOOutGOGPUP = new size_t[numGPUs];
 
+	numGOCoupInPerGOGPU = new int32_t*[numGPUs];
+	goConCoupGOInGOGPU = new uint32_t*[numGPUs];
+	goConCoupGOInGOGPUP = new size_t[numGPUs];
+	goCoupCoeffInGOGPU = new float*[numGPUs];
+	goCoupCoeffInGOGPUP = new size_t[numGPUs];
+
 	vGOGPU            = new float*[numGPUs];
 	vCoupleGOGOGPU    = new float*[numGPUs];
 	threshGOGPU       = new float*[numGPUs];
@@ -1222,6 +1261,12 @@ void InNet::initGOCUDA()
 		cudaMallocPitch((void **)&goConGOOutGOGPU[i], (size_t *)&goConGOOutGOGPUP[i],
 			numGOPerGPU * sizeof(uint32_t), num_con_go_to_go);
 
+		cudaMalloc((void **)&numGOCoupInPerGOGPU[i], numGOPerGPU * sizeof(int32_t));
+		cudaMallocPitch((void **)&goConCoupGOInGOGPU[i], (size_t *)&goConCoupGOInGOGPUP[i],
+			numGOPerGPU * sizeof(uint32_t), num_p_go_to_go_gj);
+		cudaMallocPitch((void **)&goCoupCoeffInGOGPU[i], (size_t *)&goCoupCoeffInGOGPUP[i],
+			numGOPerGPU * sizeof(uint32_t), num_p_go_to_go_gj);
+
 		cudaMalloc((void **)&vGOGPU[i], numGOPerGPU * sizeof(float));
 		cudaMalloc((void **)&vCoupleGOGOGPU[i], numGOPerGPU * sizeof(float));
 		cudaMalloc((void **)&threshGOGPU[i], numGOPerGPU * sizeof(float));
@@ -1270,6 +1315,22 @@ void InNet::initGOCUDA()
 		for (int j = 0; j < num_go; j++)
 		{
 			pGOGABAInGOGOT[i][j] = cs->pGOGABAInGOGO[j][i];
+		}
+	}
+
+	for (int i = 0; i < num_p_go_to_go_gj; i++)
+	{
+		for (int j = 0; j < num_go; j++)
+		{
+			pGOCoupInGOGOT[i][j] = cs->pGOCoupInGOGO[j][i];
+		}
+	}
+
+	for (int i = 0; i < num_p_go_to_go_gj; i++)
+	{
+		for (int j = 0; j < num_go; j++)
+		{
+			pGOCoupInGOGOCCoeffT[i][j] = cs->pGOCoupInGOGOCCoeff[j][i];
 		}
 	}
 
@@ -1322,6 +1383,23 @@ void InNet::initGOCUDA()
 		{
 			cudaMemcpy((void *)((char *)goConGOOutGOGPU[i]+ j * goConGOOutGOGPUP[i]),
 				&pGOGABAInGOGOT[j][cpyStartInd], cpySize * sizeof(uint32_t), cudaMemcpyHostToDevice);
+		}
+
+		cudaMemcpy(numGOCoupInPerGOGPU[i], &(cs->numpGOCoupInGOGO[cpyStartInd]),
+			cpySize * sizeof(int32_t), cudaMemcpyHostToDevice);
+
+		//TODO: get the transpose host arrays allocated and copied to for those to copy from,
+		//      then delete all these arrs you alloc'd
+		for (int j = 0; j < num_p_go_to_go_gj; j++)
+		{
+			cudaMemcpy((void *)((char *)goConCoupGOInGOGPU[i] + j * goConCoupGOInGOGPUP[i]),
+				&pGOCoupInGOGOT[j][cpyStartInd], cpySize * sizeof(uint32_t), cudaMemcpyHostToDevice);
+		}
+
+		for (int j = 0; j < num_p_go_to_go_gj; j++)
+		{
+			cudaMemcpy((void *)((char *)goCoupCoeffInGOGPU[i] + j * goCoupCoeffInGOGPUP[i]),
+				&pGOCoupInGOGOCCoeffT[j][cpyStartInd], cpySize * sizeof(float), cudaMemcpyHostToDevice);
 		}
 
 		// end new vars

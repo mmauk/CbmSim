@@ -61,7 +61,11 @@ void callUpdateMFInGOOPKernel(cudaStream_t &st, uint32_t numBlocks, uint32_t num
 
 void callUpdateGOInGOOPKernel(cudaStream_t &st, uint32_t numBlocks, uint32_t numGOPerBlock,
 		uint32_t numInCells, uint32_t *apInGPU, uint32_t *conInGOGPU, size_t conInGOGPUP,
-		int32_t *numInPerGOGPU, uint32_t *inputGOGOGPU /* TODO: add in the coupling coef here as a mutable output arg (bad practice idgaf*/);
+		int32_t *numInPerGOGPU, uint32_t *inputGOGOGPU);
+
+void callUpdateGOCoupInGOOPKernel(cudaStream_t &st, uint32_t numBlocks, uint32_t numGOPerBlock,
+		float *vGO, uint32_t *conFromIn, size_t conFromInPitch, int32_t *numInCoupPerGO,
+		float coupleRiRjRatioGO, float *coupIn, size_t coupInPitch, float *vCoupleGO);
 
 void callUpdateGOInGRDynamicSpillOPKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
 		unsigned int numInCells, float *dynamicAmpGPU, uint32_t *conInGRGPU, size_t conInGRGPUP,
