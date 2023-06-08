@@ -159,14 +159,12 @@ void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum
 	inputNet->runUpdateGOCoupInGOCUDA(streams, 5);
 	inputNet->updateGOtoGROutParameters(spillFrac);
 
-	inputNet->cpyDepAmpGOGRHosttoGPUCUDA(streams, 2); // NOTE: currently does nothing (08/11/2022)
-	inputNet->cpyDynamicAmpGOGRHosttoGPUCUDA(streams, 3);
-	inputNet->cpyAPGOHosttoGPUCUDA(streams, 7);
+	//inputNet->cpyDepAmpGOGRHosttoGPUCUDA(streams, 2); // NOTE: currently does nothing (08/11/2022)
+	//inputNet->cpyDynamicAmpGOGRHosttoGPUCUDA(streams, 3);
+	//inputNet->cpyAPGOHosttoGPUCUDA(streams, 7);
 
-	// TODO: put in macro def for num_gpus so we don't run this line if running on one GPU
-	//syncCUDA("2");
 	inputNet->runUpdateGOInGRCUDA(streams, 1);
-	inputNet->runUpdateGOInGRDepressionCUDA(streams, 3);
+	//inputNet->runUpdateGOInGRDepressionCUDA(streams, 3);
 	inputNet->runUpdateGOInGRDynamicSpillCUDA(streams, 4);
 
 	if (pf_pc_plast == GRADED)

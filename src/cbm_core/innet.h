@@ -52,7 +52,6 @@ public:
 
 	void updateMFtoGROut();
 	void updateGOtoGROutParameters(float spillFrac);
-	//void updateGOtoGOOut();
 	void resetMFHist(uint32_t t);
 
 	void runGRActivitiesCUDA(cudaStream_t **sts, int streamN);
@@ -60,24 +59,24 @@ public:
 	void cpyDepAmpMFHosttoGPUCUDA(cudaStream_t **sts, int streamN);
 	void cpyAPMFHosttoGPUCUDA(cudaStream_t **sts, int streamN);
 	
-	void cpyDepAmpUBCHosttoGPUCUDA(cudaStream_t **sts, int streamN);
-	void cpyAPUBCHosttoGPUCUDA(cudaStream_t **sts, int streamN);
+	//void cpyDepAmpUBCHosttoGPUCUDA(cudaStream_t **sts, int streamN);
+	//void cpyAPUBCHosttoGPUCUDA(cudaStream_t **sts, int streamN);
 	
-	void cpyDepAmpGOGRHosttoGPUCUDA(cudaStream_t **sts, int streamN);
-	void cpyDynamicAmpGOGRHosttoGPUCUDA(cudaStream_t **sts, int streamN);
-	void cpyAPGOHosttoGPUCUDA(cudaStream_t **sts, int streamN);
+	//void cpyDepAmpGOGRHosttoGPUCUDA(cudaStream_t **sts, int streamN);
+	//void cpyDynamicAmpGOGRHosttoGPUCUDA(cudaStream_t **sts, int streamN);
+	//void cpyAPGOHosttoGPUCUDA(cudaStream_t **sts, int streamN);
+
 	void runUpdateMFInGRCUDA(cudaStream_t **sts, int streamN);
 	void runUpdateMFInGRDepressionCUDA(cudaStream_t **sts, int streamN);
 	void runUpdateMFInGOCUDA(cudaStream_t **sts, int streamN);
 	void runUpdateGOInGOCUDA(cudaStream_t **sts, int streamN);
 	void runUpdateGOCoupInGOCUDA(cudaStream_t **sts, int streamN);
 
-	
-	void runUpdateUBCInGRDepressionCUDA(cudaStream_t **sts, int streamN);
-	void runUpdateUBCInGRCUDA(cudaStream_t **sts, int streamN);
+	//void runUpdateUBCInGRDepressionCUDA(cudaStream_t **sts, int streamN);
+	//void runUpdateUBCInGRCUDA(cudaStream_t **sts, int streamN);
 	
 	void runUpdateGOInGRCUDA(cudaStream_t **sts, int streamN);
-	void runUpdateGOInGRDepressionCUDA(cudaStream_t **sts, int streamN);
+	//void runUpdateGOInGRDepressionCUDA(cudaStream_t **sts, int streamN);
 	void runUpdateGOInGRDynamicSpillCUDA(cudaStream_t **sts, int streamN);
 	
 	void runUpdateGROutGOCUDA(cudaStream_t **sts, int streamN);
@@ -164,12 +163,6 @@ protected:
 	uint32_t **goConGOOutGOGPU; // TODO: pretty sure these are the input arrs, change that name :weird_champ:
 	size_t *goConGOOutGOGPUP;
 
-//		for(int j = 0; j < cs->numpGOCoupInGOGO[i]; j++)
-//		{
-//			as->vCoupleGO[i] += (as->vGO[cs->pGOCoupInGOGO[i][j]] - as->vGO[i])
-//				  * coupleRiRjRatioGO * cs->pGOCoupInGOGOCCoeff[i][j];
-//		}
-
 	uint32_t **pGOCoupInGOGOT;
 	float **pGOCoupInGOGOCCoeffT;
 	int32_t **numGOCoupInPerGOGPU;
@@ -177,8 +170,6 @@ protected:
 	size_t *goConCoupGOInGOGPUP;
 	float **goCoupCoeffInGOGPU;
 	size_t *goCoupCoeffInGOGPUP;
-
-	// TODO: add the coupling connectivity and coeff arrs here to for transferreal to gpu
 
 	// end new vars
 

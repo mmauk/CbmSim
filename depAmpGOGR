@@ -1,0 +1,181 @@
+ *     one variable to the next. First I search for the token as-is in the token definitions
+ *     1) collecting the commandline tokens, as-is, into a vector of strings (for easier manipulation)
+ *    then the filename as-given as input is returned.
+	getGRGPUData<uint8_t>(outputGRGPU, as->apGR.get());
+	getGRGPUData<uint32_t>(apBufGRGPU, as->apBufGR.get());
+	getGRGPUData<float>(gEGRSumGPU, as->gMFSumGR.get());
+	getGRGPUData<float>(gIGRSumGPU, as->gGOSumGR.get());
+	getGRGPUData<float>(threshGRGPU, as->threshGR.get());
+	getGRGPUData<float>(vGRGPU, as->vGR.get());
+	getGRGPUData<float>(gKCaGRGPU, as->gKCaGR.get());
+	getGRGPUData<uint64_t>(historyGRGPU, as->historyGR.get());
+			as->gMFGR[j * max_num_p_gr_from_mf_to_gr + i] = gMFGRT[i][j];
+			as->gGOGR[j * max_num_p_gr_from_go_to_gr + i] = gGOGRT[i][j];
+//	getGRGPUData<uint8_t>(outputGRGPU, as->apGR.get());
+//	getGRGPUData<uint32_t>(apBufGRGPU, as->apBufGR.get());
+//		/* as-> apBufGR[j] |= 1u; // try this to see if we get the same result */
+//		as->apBufGR[j] = as->apBufGR[j] | 1u; 
+//		cudaMemcpy(apBufGRGPU[i], &(as->apBufGR[cpyStartInd]),
+	return (const uint8_t *)as->apGO.get();
+	return (const uint8_t *)as->histMF.get();
+	getGRGPUData<float>(gEGRSumGPU, as->gMFSumGR.get());
+	return (const float *)as->gMFSumGR.get();
+	getGRGPUData<float>(gIGRSumGPU, as->gGOSumGR.get());
+	return (const float *)as->gGOSumGR.get();
+	return (const float *)as->gSum_MFGO.get();
+	return (const float *)as->gGRGO.get();
+		as->histMF[i] = as->histMF[i] || (actInMF[i] > 0);
+		as->apBufMF[i] = (as->apBufMF[i] << 1) | ((actInMF[i] > 0) * 0x00000001);
+		as->depAmpMFGR[i] = apMFH[0][i] * as->depAmpMFGR[i] * fracDepMF
+		   + (!apMFH[0][i]) * (as->depAmpMFGR[i] + recoveryRate * (1 - as->depAmpMFGR[i])); 
+			depAmpMFH[j][i] = as->depAmpMFGR[i];
+		as->depAmpGOGR[i] = 1;
+		as->dynamicAmpGOGR[i] = baselvl + (scalerGOGR * (1 / (1 + (exp((counter[i] - halfShift) / steepness)))));
+		//as->dynamicAmpGOGR[i] = (temp_count > 120) ? 0 : baselvl + scalerGOGR * (
+		counter[i] = (1 - as->apGO[i]) * counter[i] + 1;
+			dynamicAmpGOH[i][j] = as->dynamicAmpGOGR[j];
+//		if (as->apGO[i])
+//				as->inputGOGO[cs->pGOGABAOutGOGO[i][j]]++;
+//			as->vCoupleGO[i] += (as->vGO[cs->pGOCoupInGOGO[i][j]] - as->vGO[i])
+			as->histMF[i] = false;
+			gGOGRT[i][j]         = as->gGOGR[j * max_num_p_gr_from_go_to_gr + i];
+			gMFGRT[i][j]         = as->gMFGR[j * max_num_p_gr_from_mf_to_gr + i];
+		cudaMemcpy(gKCaGRGPU[i], &(as->gKCaGR[cpyStartInd]), cpySize * sizeof(float),
+		cudaMemcpy(vGRGPU[i], &(as->vGR[cpyStartInd]), cpySize * sizeof(float), cudaMemcpyHostToDevice);
+		cudaMemcpy(gEGRSumGPU[i], &(as->gMFSumGR[cpyStartInd]), cpySize * sizeof(float),
+		cudaMemcpy(apMFtoGRGPU[i], &(as->apMFtoGR[cpyStartInd]), cpySize * sizeof(int), cudaMemcpyHostToDevice);
+		cudaMemcpy(gIGRSumGPU[i], &(as->gGOSumGR[cpyStartInd]), cpySize * sizeof(float), cudaMemcpyHostToDevice);
+		cudaMemcpy(apBufGRGPU[i], &(as->apBufGR[cpyStartInd]), cpySize * sizeof(uint32_t),
+		cudaMemcpy(threshGRGPU[i], &(as->threshGR[cpyStartInd]), cpySize * sizeof(float),
+		cudaMemcpy(historyGRGPU[i], &(as->historyGR[cpyStartInd]),
+		cudaMemcpy(vGOGPU[i], as->vGO.get() + cpyStartInd,
+		cudaMemcpy(threshGOGPU[i], as->threshCurGO.get() + cpyStartInd,
+		cudaMemcpy(synWScalerGOGOGPU[i], as->synWscalerGOtoGO.get() + cpyStartInd,
+		cudaMemcpy(synWScalerGRGOGPU[i], as->synWscalerGRtoGO.get() + cpyStartInd,
+			pfSynWeightPCLinear[i * num_p_pc_from_gr_to_pc + j] = as->pfSynWeightPC[i * num_p_pc_from_gr_to_pc + j];
+		as->inputSumPFPC[i] = inputSumPFPCMZH[i];
+			as->pfSynWeightPC[i * num_p_pc_from_gr_to_pc + j] = pfSynWeightPCLinear[i * num_p_pc_from_gr_to_pc + j];
+	as->errDrive = errDriveRelative * maxExtIncVIO;
+		as->gPFPC[i] += inputSumPFPCMZH[i] * gIncGRtoPC;
+		as->gPFPC[i] *= gDecGRtoPC;
+		as->gBCPC[i] += as->inputBCPC[i] * gIncBCtoPC;
+		as->gBCPC[i] *= gDecBCtoPC;
+		as->gSCPC[i] += as->inputSCPC[i] * gIncSCtoPC;
+		as->gSCPC[i] *= gDecSCtoPC;
+		as->vPC[i] += gLeakPC * (eLeakPC - as->vPC[i])
+					- as->gPFPC[i] * as->vPC[i]
+					+ as->gBCPC[i] * (eBCtoPC - as->vPC[i])
+					+ as->gSCPC[i] * (eSCtoPC - as->vPC[i]);
+		as->threshPC[i] += threshDecPC * (threshRestPC - as->threshPC[i]);
+		as->apPC[i]    = as->vPC[i] > as->threshPC[i];
+		as->apBufPC[i] = (as->apBufPC[i] << 1) | (as->apPC[i] * 0x00000001);
+		as->threshPC[i] = as->apPC[i] * threshMaxPC + (1-as->apPC[i]) * as->threshPC[i];
+		as->pcPopAct   += as->apPC[i]; 
+		as->gPFSC[i] += inputSumPFSCH[i] * gIncGRtoSC;
+		as->gPFSC[i] *= gDecGRtoSC;
+		as->vSC[i] += gLeakSC * (eLeakSC - as->vSC[i]) - as->gPFSC[i] * as->vSC[i];
+		as->threshSC[i] += threshDecSC * (threshRestSC - as->threshSC[i]);
+		as->apSC[i] = as->vSC[i] > as->threshSC[i];
+		as->apBufSC[i] = (as->apBufSC[i] << 1) | (as->apSC[i] * 0x00000001);
+		as->threshSC[i] = as->apSC[i] * threshMaxSC + (1-as->apSC[i]) * as->threshSC[i];
+		as->gPFBC[i] += inputSumPFBCH[i] * gIncGRtoBC;
+		as->gPFBC[i] *= gDecGRtoBC;
+		as->gPCBC[i] += as->inputPCBC[i] * gIncPCtoBC;
+		as->gPCBC[i] *= gDecPCtoBC;
+		as->vBC[i] = as->vBC[i] +
+				(gLeakBC * (eLeakBC - as->vBC[i])) -
+				(as->gPFBC[i] * as->vBC[i]) +
+				(as->gPCBC[i] * (ePCtoBC - as->vBC[i]));
+		as->threshBC[i] += threshDecBC * (threshRestBC - as->threshBC[i]);
+		as->apBC[i] = as->vBC[i] > as->threshBC[i];
+		as->apBufBC[i] = (as->apBufBC[i] << 1) | (as->apBC[i] * 0x00000001);
+		as->threshBC[i] = as->apBC[i] * threshMaxBC + (1-as->apBC[i]) * as->threshBC[i];
+			as->gNCIO[i * num_p_io_from_nc_to_io + j] = as->gNCIO[i * num_p_io_from_nc_to_io + j]
+				(-gDecTSofNCtoIO * exp(-as->gNCIO[i * num_p_io_from_nc_to_io + j] / gDecTTofNCtoIO)
+			as->gNCIO[i * num_p_io_from_nc_to_io + j] = as->gNCIO[i * num_p_io_from_nc_to_io + j]
+			   + as->inputNCIO[i * num_p_io_from_nc_to_io + j]
+			   * gIncNCtoIO * exp(-as->gNCIO[i * num_p_io_from_nc_to_io + j] / gIncTauNCtoIO);
+			gNCSum += as->gNCIO[i * num_p_io_from_nc_to_io + j];
+			as->inputNCIO[i * num_p_io_from_nc_to_io + j] = 0;
+		as->vIO[i] += gLeakIO * (eLeakIO - as->vIO[i]) +
+				gNCSum * (eNCtoIO - as->vIO[i]) + as->vCoupleIO[i] +
+				as->errDrive + gNoise;
+		as->threshIO[i] += threshDecIO * (threshRestIO - as->threshIO[i]);
+		as->apIO[i] = as->vIO[i] > as->threshIO[i];
+		as->apBufIO[i] = (as->apBufIO[i] << 1) | (as->apIO[i] * 0x00000001);
+		as->threshIO[i] = as->apIO[i] * threshMaxIO + (1-as->apIO[i]) * as->threshIO[i];
+	as->errDrive = 0;
+			inputMFNCSum += as->inputMFNC[i * num_p_nc_from_mf_to_nc + j]; /* dont use */
+			as->gMFAMPANC[i * num_p_nc_from_mf_to_nc + j] = as->gMFAMPANC[i * num_p_nc_from_mf_to_nc + j]
+			   * gDecay + (gAMPAIncMFtoNC * as->inputMFNC[i * num_p_nc_from_mf_to_nc + j]
+				 * as->mfSynWeightNC[i * num_p_nc_from_mf_to_nc + j]);
+			gMFAMPASum += as->gMFAMPANC[i * num_p_nc_from_mf_to_nc + j];
+		gMFNMDASum *= -as->vNC[i] / 80.0; 
+			inputPCNCSum += as->inputPCNC[i * num_p_nc_from_pc_to_nc + j];
+			as->gPCNC[i * num_p_nc_from_pc_to_nc + j] = as->gPCNC[i * num_p_nc_from_pc_to_nc + j] * gDecPCtoNC + 
+				as->inputPCNC[i * num_p_nc_from_pc_to_nc + j] * gIncAvgPCtoNC
+				* (1 - as->gPCNC[i * num_p_nc_from_pc_to_nc + j]);
+			gPCNCSum += as->gPCNC[i * num_p_nc_from_pc_to_nc + j];
+		as->vNC[i] += gLeakNC * (eLeakNC - as->vNC[i])
+				   - (gMFNMDASum + gMFAMPASum) * as->vNC[i]
+				   + gPCNCSum * (ePCtoNC - as->vNC[i]);
+		as->threshNC[i] += threshDecNC * (threshRestNC - as->threshNC[i]);
+		as->apNC[i] = as->vNC[i] > as->threshNC[i];
+		as->apBufNC[i] = (as->apBufNC[i] << 1) | (as->apNC[i] * 0x00000001);
+		as->threshNC[i] = as->apNC[i] * threshMaxNC + (1-as->apNC[i]) * as->threshNC[i];
+	for (int i = 0; i < num_bc; i++) as->inputPCBC[i] = 0;
+			as->inputPCBC[cs->pPCfromPCtoBC[i][j]] += as->apPC[i];
+			as->inputPCNC[i * num_p_nc_from_pc_to_nc + j] = as->apPC[cs->pNCfromPCtoNC[i][j]];
+	for (int i = 0; i < num_pc; i++) as->inputBCPC[i] = 0;
+		if (as->apBC[i]) 
+				as->inputBCPC[cs->pBCfromBCtoPC[i][j]]++;
+	for (int i = 0; i < num_pc; i++) as->inputSCPC[i] = 0;
+		if (as->apSC[i])
+				as->inputSCPC[cs->pSCfromSCtoPC[i][j]]++;
+		as->pfPCPlastTimerIO[i] = (1 - as->apIO[i]) * (as->pfPCPlastTimerIO[i] + 1) + as->apIO[i] * tsLTPEndAPIO;
+		as->vCoupleIO[i] = 0;
+			as->vCoupleIO[i] += coupleRiRjRatioIO * (as->vIO[cs->pIOInIOIO[i][j]] - as->vIO[i]);
+		as->synIOPReleaseNC[i] *= exp(-msPerTimeStep / 
+				(relPDecTSofNCtoIO * exp(-as->synIOPReleaseNC[i] / relPDecTTofNCtoIO) +
+		as->synIOPReleaseNC[i] += as->apNC[i] * relPIncNCtoIO *
+				exp(-as->synIOPReleaseNC[i] / relPIncTauNCtoIO);
+			as->inputNCIO[i * num_p_io_from_nc_to_io + j] = (randGen->Random() < as->synIOPReleaseNC[cs->pIOfromNCtoIO[i][j]]);
+			as->inputMFNC[i * num_p_nc_from_mf_to_nc + j] = apMFInput[cs->pNCfromMFtoNC[i][j]];
+	as->histPCPopActSum -= (as->histPCPopAct[as->histPCPopActCurBinN]) + (as->pcPopAct);
+	as->histPCPopAct[as->histPCPopActCurBinN] = as->pcPopAct;
+	as->pcPopAct = 0;
+	as->histPCPopActCurBinN++;
+	as->histPCPopActCurBinN %= (uint32_t)numPopHistBinsPC;
+	float avgAllAPPC = ((float)as->histPCPopActSum) / numPopHistBinsPC;
+	if (avgAllAPPC >= synLTDPCPopActThreshMFtoNC && !as->noLTDMFNC)
+		as->noLTDMFNC = true;
+		as->noLTDMFNC = false;
+	if (avgAllAPPC <= synLTPPCPopActThreshMFtoNC && !as->noLTPMFNC)
+		as->noLTPMFNC = true;
+		as->noLTPMFNC = false;
+			as->mfSynWeightNC[i * num_p_nc_from_mf_to_nc + j] += synWDelta;
+			as->mfSynWeightNC[i * num_p_nc_from_mf_to_nc + j] *= as->mfSynWeightNC[i * num_p_nc_from_mf_to_nc + j] > 0;
+			as->mfSynWeightNC[i * num_p_nc_from_mf_to_nc + j] *= as->mfSynWeightNC[i * num_p_nc_from_mf_to_nc + j] <= 1; 
+			as->mfSynWeightNC[i * num_p_nc_from_mf_to_nc + j] += as->mfSynWeightNC[i * num_p_nc_from_mf_to_nc + j] > 1;
+			as->mfSynWeightNC[i * num_p_nc_from_mf_to_nc + j] *= isTrueMF[cs->pNCfromMFtoNC[i][j]];
+			if (as->pfPCPlastTimerIO[i] < (tsLTDstartAPIO + (int)tsLTDDurationIO) &&
+					as->pfPCPlastTimerIO[i] >= tsLTDstartAPIO)
+			else if (as->pfPCPlastTimerIO[i] >= tsLTPstartAPIO ||
+					as->pfPCPlastTimerIO[i] < tsLTPEndAPIO)
+	return (const float *)as->mfSynWeightNC.get(); 
+	rawBytesRW((char *)as->mfSynWeightNC.get(), num_nc * num_p_nc_from_mf_to_nc * sizeof(float), true, in_file_buf);
+	return (const uint8_t *)as->apNC.get();
+	return (const uint8_t *)as->apSC.get();
+	return (const uint8_t *)as->apBC.get();
+	return (const uint8_t *)as->apPC.get();
+	return (const uint8_t *)as->apIO.get();
+	return (const float *)as->gBCPC.get();
+	return (const float *)as->gPFPC.get();
+	return (const float *)as->vBC.get();
+	return (const float *)as->vPC.get();
+	return (const float *)as->vNC.get();
+	return (const float *)as->vIO.get();
+	return (const unsigned int *)as->apBufBC.get();
+	return (const uint32_t *)as->apBufPC.get();
+	return (const uint8_t *)as->apBufIO.get();
+	return (const uint32_t *)as->apBufNC.get();

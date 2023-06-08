@@ -490,7 +490,6 @@ __global__ void updatePFPCOutGPU(uint32_t *apBuf, uint32_t *delay,
 
 //TODO: compute beforehand:
 //      a. inputGRGO sum -> taken care of by sumGRGOOutGPU
-//      c. inputGOGO sum -> move updateGOtoGOOut to GPU Kernel
 //
 //      compute afterward:
 //      a. dynamicGOGR, depAmpGOGR, -> move updateGOtoGROutParameters to GPU Kernel
