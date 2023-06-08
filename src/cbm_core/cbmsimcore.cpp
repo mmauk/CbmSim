@@ -146,6 +146,10 @@ void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum
 
 	inputNet->runGRActivitiesCUDA(streams, 0);
 
+	// TODO: add in following functionality
+	//       1) cpApGRDeviceToHost numGRPerGPU -> num_gr
+	//       2) cpApGRHostToDevice num_gpus cps of apGR
+
 	inputNet->runUpdateGRHistoryCUDA(streams, 4, curTime);
 
 	inputNet->runUpdateGROutGOCUDA(streams, 7);
@@ -157,6 +161,11 @@ void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum
 
 	inputNet->runUpdateGOInGOCUDA(streams, 4);
 	inputNet->runUpdateGOCoupInGOCUDA(streams, 5);
+
+	// TODO: add in following functionality
+	//       1) cpApGODeviceToHost numGOPerGPU -> num_go
+	//       3) cpApGOHostToDevice num_gpus cps of apGO
+
 	inputNet->runUpdateGOOutGRDynamicSpillCUDA(streams, 1, spillFrac);
 
 	//inputNet->cpyDepAmpGOGRHosttoGPUCUDA(streams, 2); // NOTE: currently does nothing (08/11/2022)
