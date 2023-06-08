@@ -1023,8 +1023,8 @@ void MZone::runPFPCSTPCuda(cudaStream_t **sts, int streamN, uint32_t use_cs, uin
 	{
 		cudaSetDevice(i+gpuIndStart);
 		callPFPCSTPKernel(sts[i][streamN], updatePFPCSynWNumBlocks, updatePFPCSynWNumGRPerB, use_cs, use_us,
-			grEligBase, grEligMax, grEligExpScale, grEligDecay, grStpDecay, grStpInc, grEligGPU[i], pfpcSTPsGPU[i],
-			apBufGRGPU[i], delayMaskGRGPU[i]);
+			grEligBase, grEligMax, grEligExpScale, grEligDecay, grStpMax, grStpDecay, grStpInc, grEligGPU[i],
+			pfpcSTPsGPU[i], apBufGRGPU[i], delayMaskGRGPU[i]);
 	}
 }
 

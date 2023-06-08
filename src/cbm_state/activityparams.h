@@ -91,6 +91,7 @@ extern float grEligMax;
 extern float grEligExpScale;
 extern float grEligDecayTau;
 extern float grEligDecay;
+extern float grStpMax;
 extern float grStpDecayTau;
 extern float grStpDecay;
 extern float grStpInc;

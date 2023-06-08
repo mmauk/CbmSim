@@ -667,8 +667,8 @@ __global__ void updatePFPCGradedSynWeightKernel(float *synWPFPC, float *stpPFPC,
 }
 
 __global__ void updatePFPCSTPKernel(uint32_t use_cs, uint32_t use_us, float grEligBase, float grEligMax,
-	float grEligExpScale, float grEligDecay, float grStpDecay, float grStpInc, float *grEligGPU, float *pfpcSTPsGPU,
-	uint32_t *apBufGPU, uint32_t *delayMaskGPU)
+	float grEligExpScale, float grEligDecay, float grStpMax, float grStpDecay, float grStpInc, float *grEligGPU,
+	float *pfpcSTPsGPU, uint32_t *apBufGPU, uint32_t *delayMaskGPU)
 {
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 	uint32_t apGR = (apBufGPU[index] & delayMaskGPU[index]) > 0;
@@ -683,6 +683,9 @@ __global__ void updatePFPCSTPKernel(uint32_t use_cs, uint32_t use_us, float grEl
 	if (grEligGPU[index] > grEligMax)
 	{
 		pfpcSTPsGPU[index] += grStpInc;
+		// ensure stp variable is less than grStpMax
+		pfpcSTPsGPU[index] = (pfpcSTPsGPU[index] > grStpMax) * grStpMax
+						   + (pfpcSTPsGPU[index] <= grStpMax) * pfpcSTPsGPU[index];
 		grEligGPU[index] = grEligBase;
 	}
 
@@ -1067,11 +1070,11 @@ void callPFPCGradedPlastKernel(cudaStream_t &st, unsigned int numBlocks, unsigne
 }
 
 void callPFPCSTPKernel(cudaStream_t &st, uint32_t numBlocks, uint32_t numGRPerBlock, uint32_t use_cs, uint32_t use_us,
-	float grEligBase, float grEligMax, float grEligExpScale, float grEligDecay, float grStpDecay, float grStpInc,
-	float *grEligGPU, float *pfpcSTPsGPU, uint32_t *apBufGPU, uint32_t *delayMaskGPU)
+	float grEligBase, float grEligMax, float grEligExpScale, float grEligDecay, float grStpMax, float grStpDecay,
+	float grStpInc, float *grEligGPU, float *pfpcSTPsGPU, uint32_t *apBufGPU, uint32_t *delayMaskGPU)
 {
 	updatePFPCSTPKernel<<<numBlocks, numGRPerBlock, 0, st>>>(use_cs, use_cs, grEligBase, grEligMax,
-		  grEligExpScale, grEligDecay, grStpDecay, grStpInc, grEligGPU, pfpcSTPsGPU, apBufGPU, delayMaskGPU);
+		  grEligExpScale, grEligDecay, grStpMax, grStpDecay, grStpInc, grEligGPU, pfpcSTPsGPU, apBufGPU, delayMaskGPU);
 }
 //**---------------end kernel calls------------**
 
