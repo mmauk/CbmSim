@@ -230,6 +230,7 @@ InNet::~InNet()
 	}
 
 	delete[] grInputGOSumH;
+	delete[] grInputGOSumHost;
 	delete[] apGOH;
 
 	// new vars
@@ -774,18 +775,38 @@ void InNet::runUpdateGROutGOCUDA(cudaStream_t **sts, int streamN)
 
 void InNet::cpyGRGOSumGPUtoHostCUDA(cudaStream_t **sts, int streamN)
 {
-	cpyGRGOSumGPUtoHostCUDA(sts, streamN, grInputGOSumH);
-}
-
-void InNet::cpyGRGOSumGPUtoHostCUDA(cudaStream_t **sts, int streamN, uint32_t **grInputGOSumHost)
-{
 	cudaError_t error;
 	for(int i=0; i<numGPUs; i++)
 	{
 		error=cudaSetDevice(i+gpuIndStart);
 
-		error=cudaMemcpyAsync(grInputGOSumHost[i], grInputGOSumGPU[i], num_go * sizeof(uint32_t),
+		error=cudaMemcpyAsync(grInputGOSumH[i], grInputGOSumGPU[i], num_go * sizeof(uint32_t),
 				cudaMemcpyDeviceToHost, sts[i][streamN]);
+	}
+}
+
+void InNet::runSumReductionGRGOInputHost()
+{
+	for (int i = 0; i < numGPUs; i++)
+	{
+		//TODO: this is where openMP comes in
+		for (int j = 0; j < num_go; j++)
+		{
+			grInputGOSumHost[j] += grInputGOSumH[i][j];
+		}
+	}
+}
+
+void InNet::cpyGRGOSumHosttoGPUCUDA(cudaStream_t **sts, int streamN)
+{
+	cudaError_t error;
+	for(int i = 0; i < numGPUs; i++)
+	{
+		int cpyStartInd = numGOPerGPU * i;
+		int cpySize     = numGOPerGPU;
+		error=cudaSetDevice(i+gpuIndStart);
+		error=cudaMemcpyAsync(inputGRGOGPU[i], grInputGOSumHost + cpyStartInd, cpySize * sizeof(uint32_t),
+				cudaMemcpyHostToDevice, sts[i][streamN]);
 	}
 }
 
@@ -1170,6 +1191,9 @@ void InNet::initGOCUDA()
 	// end new vars
 
 	grInputGOSumH   = new uint32_t*[numGPUs];
+	grInputGOSumHost = new uint32_t[num_go];
+	memset(grInputGOSumHost, 0, num_go * sizeof(uint32_t));
+
 	apGOH		    = new uint32_t*[numGPUs];
 	apGOGPU		    = new uint32_t*[numGPUs];
 	grInputGOGPU    = new uint32_t*[numGPUs];
@@ -1190,10 +1214,10 @@ void InNet::initGOCUDA()
 	for (int i = 0; i < numGPUs; i++)
 	{
 		cudaSetDevice(i + gpuIndStart);
-		cudaMallocHost((void **)&grInputGOSumH[i], numGOPerGPU*sizeof(uint32_t));
-		cudaMallocHost((void **)&apGOH[i], numGOPerGPU*sizeof(uint32_t));
-		cudaMallocHost((void **)&depAmpGOH[i], numGOPerGPU*sizeof(float));
-		cudaMallocHost((void **)&dynamicAmpGOH[i], numGOPerGPU*sizeof(float));
+		cudaMallocHost((void **)&grInputGOSumH[i], num_go * sizeof(uint32_t));
+		cudaMallocHost((void **)&apGOH[i], num_go * sizeof(uint32_t));
+		cudaMallocHost((void **)&depAmpGOH[i], num_go * sizeof(float));
+		cudaMallocHost((void **)&dynamicAmpGOH[i], num_go * sizeof(float));
 
 		// new vars
 

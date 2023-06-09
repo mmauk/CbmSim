@@ -616,6 +616,7 @@ __global__ void calcActivityGOGPU(float *vGO, float *vCoupleGOGO, float *threshG
 
   apGO[i] = tempAPGO;
   vGO[i] = tempVGO;
+  threshGO[i] = tempThreshGO;
 }
 
 //**---------------end GO Kernels-------------------**
@@ -835,7 +836,7 @@ void callUpdateMFInGOOPKernel(cudaStream_t &st, uint32_t numBlocks, uint32_t num
 
 void callUpdateGOInGOOPKernel(cudaStream_t &st, uint32_t numBlocks, uint32_t numGOPerBlock,
 		uint32_t numInCells, uint32_t *apInGPU, uint32_t *conInGOGPU, size_t conInGOGPUP,
-		int32_t *numInPerGOGPU, uint32_t *inputGOGOGPU /* TODO: add in the coupling coef here as a mutable output arg (bad practice idgaf*/)
+		int32_t *numInPerGOGPU, uint32_t *inputGOGOGPU)
 {
 	updateGOInGOGOOPGPU<<<numBlocks, numGOPerBlock, numInCells*sizeof(uint32_t), st>>>
 			(numInCells/numGOPerBlock, apInGPU, conInGOGPU, conInGOGPUP, numInPerGOGPU, inputGOGOGPU);

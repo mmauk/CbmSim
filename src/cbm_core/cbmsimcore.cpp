@@ -156,6 +156,9 @@ void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum
 	inputNet->runSumGRGOOutCUDA(streams, 4);
 	inputNet->cpyGRGOSumGPUtoHostCUDA(streams, 3);
 
+	inputNet->runSumReductionGRGOInputHost();
+	inputNet->cpyGRGOSumHosttoGPUCUDA(streams, 0); 
+
 	inputNet->runUpdateMFInGOCUDA(streams, 6);
 	inputNet->runGOActivitiesCUDA(streams, 5);
 

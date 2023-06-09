@@ -54,7 +54,6 @@ public:
 	void resetMFHist(uint32_t t);
 
 	void runGRActivitiesCUDA(cudaStream_t **sts, int streamN);
-	void runSumGRGOOutCUDA(cudaStream_t **sts, int streamN);
 	void cpyDepAmpMFHosttoGPUCUDA(cudaStream_t **sts, int streamN);
 	void cpyAPMFHosttoGPUCUDA(cudaStream_t **sts, int streamN);
 	
@@ -77,13 +76,13 @@ public:
 	
 	void runUpdateGOInGRCUDA(cudaStream_t **sts, int streamN);
 	void runUpdateGOInGRDynamicSpillCUDA(cudaStream_t **sts, int streamN);
-	
-	void runUpdateGROutGOCUDA(cudaStream_t **sts, int streamN);
-	
-	void cpyGRGOSumGPUtoHostCUDA(cudaStream_t **sts, int streamN);
-	void cpyGRGOSumGPUtoHostCUDA(cudaStream_t **sts, int streamN,
-		uint32_t **grInputGOSumHost);
+
 	void runUpdateGRHistoryCUDA(cudaStream_t **sts, int streamN, uint32_t t);
+	void runUpdateGROutGOCUDA(cudaStream_t **sts, int streamN);
+	void runSumGRGOOutCUDA(cudaStream_t **sts, int streamN);
+	void cpyGRGOSumGPUtoHostCUDA(cudaStream_t **sts, int streamN);
+	void runSumReductionGRGOInputHost();
+	void cpyGRGOSumHosttoGPUCUDA(cudaStream_t **sts, int streamN);
 
 protected:
 
@@ -184,7 +183,8 @@ protected:
 	//gpu related variables
 
 	uint32_t **apGOH;
-	uint32_t **grInputGOSumH;
+	uint32_t **grInputGOSumH; // per GPU sum
+	uint32_t *grInputGOSumHost; // collected sum on host across gpus
 
 	float **depAmpGOH;
 	float **dynamicAmpGOH;
