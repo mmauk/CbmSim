@@ -49,6 +49,11 @@ public:
 
 	void updateMFActivties(const uint8_t *actInMF);
 	void runGOActivitiesCUDA(cudaStream_t **sts, int streamN);
+	void cpyApGODevicetoHostCUDA(cudaStream_t **sts, int streamN);
+	void cpyApGOHosttoDeviceCUDA(cudaStream_t **sts, int streamN);
+	void cpyVGODevicetoHostCUDA(cudaStream_t **sts, int streamN);
+	void cpyVGOHosttoDeviceCUDA(cudaStream_t **sts, int streamN);
+
 
 	void updateMFtoGROut();
 	void resetMFHist(uint32_t t);
@@ -60,22 +65,20 @@ public:
 	//void cpyDepAmpUBCHosttoGPUCUDA(cudaStream_t **sts, int streamN);
 	//void cpyAPUBCHosttoGPUCUDA(cudaStream_t **sts, int streamN);
 	
-	//void cpyDepAmpGOGRHosttoGPUCUDA(cudaStream_t **sts, int streamN);
-	//void cpyDynamicAmpGOGRHosttoGPUCUDA(cudaStream_t **sts, int streamN);
-	//void cpyAPGOHosttoGPUCUDA(cudaStream_t **sts, int streamN);
-
 	void runUpdateMFInGRCUDA(cudaStream_t **sts, int streamN);
 	void runUpdateMFInGRDepressionCUDA(cudaStream_t **sts, int streamN);
 	void runUpdateMFInGOCUDA(cudaStream_t **sts, int streamN);
 	void runUpdateGOInGOCUDA(cudaStream_t **sts, int streamN);
 	void runUpdateGOCoupInGOCUDA(cudaStream_t **sts, int streamN);
 	void runUpdateGOOutGRDynamicSpillCUDA(cudaStream_t **sts, int streamN, float spillFrac);
+	void cpyGOGRDynamicSpillGPUtoHostCUDA(cudaStream_t **sts, int streamN);
 
 	//void runUpdateUBCInGRDepressionCUDA(cudaStream_t **sts, int streamN);
 	//void runUpdateUBCInGRCUDA(cudaStream_t **sts, int streamN);
-	
-	void runUpdateGOInGRCUDA(cudaStream_t **sts, int streamN);
+
+	void cpyGOGRDynamicSpillHosttoGPUCUDA(cudaStream_t **sts, int streamN);
 	void runUpdateGOInGRDynamicSpillCUDA(cudaStream_t **sts, int streamN);
+	void runUpdateGOInGRCUDA(cudaStream_t **sts, int streamN);
 
 	void runUpdateGRHistoryCUDA(cudaStream_t **sts, int streamN, uint32_t t);
 	void runUpdateGROutGOCUDA(cudaStream_t **sts, int streamN);
@@ -182,18 +185,17 @@ protected:
 	//golgi cell variables
 	//gpu related variables
 
-	uint32_t **apGOH;
+	uint32_t *apGOH;
+	float *vGOH;
+	float *dynamicAmpGOH;
 	uint32_t **grInputGOSumH; // per GPU sum
 	uint32_t *grInputGOSumHost; // collected sum on host across gpus
-
-	float **depAmpGOH;
-	float **dynamicAmpGOH;
-
 	// new vars
 
 	uint32_t **goIsiCounterGPU;
 
-	float **vGOGPU;
+	float **vGOOutGPU;
+	float **vGOInGPU;
 	float **vCoupleGOGOGPU;
 	float **threshGOGPU;
 	uint32_t **apBufGOGPU;
@@ -211,14 +213,15 @@ protected:
 
 	// end new vars
 
-	uint32_t **apGOGPU;
+	uint32_t **apGOOutGPU; // output spikes from GO. dims (numGOPerGPU, 1)
+	uint32_t **apGOInGPU; // input to each GR (and other GO). dims (num_go, 1)
 	uint32_t **grInputGOGPU;
 	size_t *grInputGOGPUP;
 	uint32_t **grInputGOSumGPU;
 
 	float **depAmpGOGRGPU;
-	float **depAmpGOGPU;
-	float **dynamicAmpGOGPU;
+	float **dynamicAmpGOOutGPU; // output from each GO. dims (numGOPerGPU, 1)
+	float **dynamicAmpGOInGPU; // input to each GR from GO. dims (num_go, 1)
 	float **dynamicAmpGOGRGPU;
 	//end gpu variables
 

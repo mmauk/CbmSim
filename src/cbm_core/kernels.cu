@@ -11,6 +11,7 @@ extern __shared__ uint32_t sharedIOBufGR[];
 extern __shared__ float  sharedIOBufGRfloat[];
 
 extern __shared__ uint32_t sharedIOBufGO[];
+extern __shared__ float sharedIOBufGOfloat[];
 
 __global__ void testKernel(float *a, float *b, float *c)
  {
@@ -382,22 +383,29 @@ __global__ void updateGOInGOGOOPGPU(uint32_t inNLoads, uint32_t *apIn, uint32_t 
 	inputGOGOGPU[index] = tempApInSum;
 }
 
-__global__ void updateGOCoupInGOGOOPGPU(float *vGO, uint32_t *conFromIn,
+__global__ void updateGOCoupInGOGOOPGPU(uint32_t inNLoads, float *vGO, uint32_t *conFromIn,
 		size_t conFromInPitch, int32_t *numInCoupPerGO, float coupleRiRjRatioGO,
 		float *coupIn, size_t coupInPitch, float *vCoupleGO)
 {
+	int tid = threadIdx.x;
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 	uint32_t *conRow;
 	float * coupCoefRow;
 	int tempNGJ = numInCoupPerGO[index];
 	float localVGO = vGO[index];
 
+	for (int i = 0; i < inNLoads; i++)
+	{
+		sharedIOBufGOfloat[tid + i * blockDim.x] = vGO[tid + i * blockDim.x];
+	}
+	__syncthreads();
+
 	// could be a source of slow-down as 0 <= tempNGJ < 81
 	for (int i = 0; i < tempNGJ; i++)
 	{
 		conRow = (uint32_t *)((char *)conFromIn + i * conFromInPitch);
 		coupCoefRow = (float *)((char *)coupIn + i * coupInPitch);
-		vCoupleGO[index] += coupleRiRjRatioGO * coupCoefRow[index] * (vGO[conRow[index]] - localVGO);
+		vCoupleGO[index] += coupleRiRjRatioGO * coupCoefRow[index] * (sharedIOBufGOfloat[conRow[index]] - localVGO);
 	}
 }
 
@@ -843,11 +851,11 @@ void callUpdateGOInGOOPKernel(cudaStream_t &st, uint32_t numBlocks, uint32_t num
 }
 
 void callUpdateGOCoupInGOOPKernel(cudaStream_t &st, uint32_t numBlocks, uint32_t numGOPerBlock,
-		float *vGO, uint32_t *conFromIn, size_t conFromInPitch, int32_t *numInCoupPerGO,
+		uint32_t numInCells, float *vGO, uint32_t *conFromIn, size_t conFromInPitch, int32_t *numInCoupPerGO,
 		float coupleRiRjRatioGO, float *coupIn, size_t coupInPitch, float *vCoupleGO)
 {
-	updateGOCoupInGOGOOPGPU<<<numBlocks, numGOPerBlock, 0, st>>>(vGO, conFromIn, conFromInPitch, 
-			numInCoupPerGO, coupleRiRjRatioGO, coupIn, coupInPitch, vCoupleGO);
+	updateGOCoupInGOGOOPGPU<<<numBlocks, numGOPerBlock, numInCells * sizeof(float), st>>>(numInCells / numGOPerBlock,
+			vGO, conFromIn, conFromInPitch, numInCoupPerGO, coupleRiRjRatioGO, coupIn, coupInPitch, vCoupleGO);
 }
 
 void callUpdateGOInGRDepressionOPKernel(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
@@ -871,7 +879,7 @@ void callUpdateGOInGRDynamicSpillOPKernel(cudaStream_t &st, unsigned int numBloc
 		uint32_t *conInGRGPU, size_t conInGRGPUP,
 		int32_t *numInPerGRGPU, float *dynamicAmpGOGRGPU)
 {
-	updateGOGRDynamicSpillInOPGPU<<<numBlocks, numGRPerBlock, numInCells*sizeof(uint32_t), st>>>
+	updateGOGRDynamicSpillInOPGPU<<<numBlocks, numGRPerBlock, numInCells*sizeof(float), st>>>
 			(numInCells/numGRPerBlock, dynamicAmpGPU, conInGRGPU, conInGRGPUP, numInPerGRGPU, dynamicAmpGOGRGPU);
 }
 

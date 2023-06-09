@@ -146,10 +146,6 @@ void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum
 
 	inputNet->runGRActivitiesCUDA(streams, 0);
 
-	// TODO: add in following functionality
-	//       1) cpApGRDeviceToHost numGRPerGPU -> num_gr
-	//       2) cpApGRHostToDevice num_gpus cps of apGR
-
 	inputNet->runUpdateGRHistoryCUDA(streams, 4, curTime);
 
 	inputNet->runUpdateGROutGOCUDA(streams, 7);
@@ -161,20 +157,19 @@ void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum
 
 	inputNet->runUpdateMFInGOCUDA(streams, 6);
 	inputNet->runGOActivitiesCUDA(streams, 5);
-
+	inputNet->runUpdateGOOutGRDynamicSpillCUDA(streams, 1, spillFrac);
+	// make num_go / numGPUs apGO on each GPU available to every GPU
+	inputNet->cpyApGODevicetoHostCUDA(streams, 2);
+	inputNet->cpyApGOHosttoDeviceCUDA(streams, 3);
 	inputNet->runUpdateGOInGOCUDA(streams, 4);
+
+	// make num_go / numGPUs vGO on each GPU available to every GPU
+	inputNet->cpyVGODevicetoHostCUDA(streams, 7);
+	inputNet->cpyVGOHosttoDeviceCUDA(streams, 4);
 	inputNet->runUpdateGOCoupInGOCUDA(streams, 5);
 
-	// TODO: add in following functionality
-	//       1) cpApGODeviceToHost numGOPerGPU -> num_go
-	//       3) cpApGOHostToDevice num_gpus cps of apGO
-
-	inputNet->runUpdateGOOutGRDynamicSpillCUDA(streams, 1, spillFrac);
-
-	//inputNet->cpyDepAmpGOGRHosttoGPUCUDA(streams, 2); // NOTE: currently does nothing (08/11/2022)
-	//inputNet->cpyDynamicAmpGOGRHosttoGPUCUDA(streams, 3);
-	//inputNet->cpyAPGOHosttoGPUCUDA(streams, 7);
-
+	inputNet->cpyGOGRDynamicSpillGPUtoHostCUDA(streams, 3);
+	inputNet->cpyGOGRDynamicSpillHosttoGPUCUDA(streams, 0);
 	inputNet->runUpdateGOInGRDynamicSpillCUDA(streams, 4);
 	inputNet->runUpdateGOInGRCUDA(streams, 1);
 
