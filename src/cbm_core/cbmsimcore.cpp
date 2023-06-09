@@ -164,8 +164,8 @@ void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum
 	inputNet->runUpdateGOInGOCUDA(streams, 4);
 
 	// make num_go / numGPUs vGO on each GPU available to every GPU
-	inputNet->cpyVGODevicetoHostCUDA(streams, 7);
-	inputNet->cpyVGOHosttoDeviceCUDA(streams, 4);
+	inputNet->cpyVGODevicetoHostCUDA(streams, 2);
+	inputNet->cpyVGOHosttoDeviceCUDA(streams, 3);
 	inputNet->runUpdateGOCoupInGOCUDA(streams, 5);
 
 	inputNet->cpyGOGRDynamicSpillGPUtoHostCUDA(streams, 3);
