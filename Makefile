@@ -19,8 +19,8 @@ INC_DIRS  := $(shell find $(SRC_DIR) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
 ifeq (Ubuntu, $(findstring Ubuntu, $(shell uname -rv)))
-	CUDA_PKG_NAME   := cuda-11.8
-	CUDART_PKG_NAME := cudart-11.8
+	CUDA_PKG_NAME   := cuda-12.0
+	CUDART_PKG_NAME := cudart-12.0
 else
 	CUDA_PKG_NAME   := cuda
 	CUDART_PKG_NAME := cudart

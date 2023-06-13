@@ -824,6 +824,7 @@ void InNet::cpyGRGOSumGPUtoHostCUDA(cudaStream_t **sts, int streamN)
 
 void InNet::runSumReductionGRGOInputHost()
 {
+	memset(grInputGOSumHost, 0, num_go * sizeof(uint32_t));
 	for (int i = 0; i < numGPUs; i++)
 	{
 		for (int j = 0; j < num_go; j++)
