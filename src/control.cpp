@@ -669,8 +669,7 @@ void Control::runSession(struct gui *gui)
 			}
 			else
 			{
-				mfAP = mfs->calcPoissActivity(mfFreq->getMFBG(),
-					  simCore->getMZoneList());
+				mfAP = mfs->calcPoissActivity(mfFreq->getMFBG(), simCore->getMZoneList());
 			}
 			
 			bool *isTrueMF = mfs->calcTrueMFs(mfFreq->getMFBG()); /* only used for mfdcn plasticity */

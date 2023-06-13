@@ -320,7 +320,7 @@ protected:
 
 private:
 	template<typename Type>
-	cudaError_t getGRGPUData(Type **gpuData, Type *hostData);
+	cudaError_t getGPUData(Type **gpuData, Type *hostData);
 };
 
 #endif /* INNET_H_ */

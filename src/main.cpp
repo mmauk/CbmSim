@@ -36,7 +36,7 @@ int main(int argc, char **argv)
 	Control *control = new Control(p_cl);
 	int exit_status = 0;
 
-	omp_set_num_threads(4); /* for 4 gpus, 8 is the sweet spot. Unsure for 2. */
+	omp_set_num_threads(1); /* for 4 gpus, 8 is the sweet spot. Unsure for 2. */
 
 	if (p_cl.vis_mode == "TUI")
 	{

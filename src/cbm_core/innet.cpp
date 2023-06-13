@@ -31,7 +31,6 @@ InNet::InNet(InNetConnectivityState *cs,
 	this->gpuIndStart = gpuIndStart;
 	this->numGPUs     = numGPUs;
 
-	// why do we allocate these here???
 	gGOGRT = allocate2DArray<float>(max_num_p_gr_from_go_to_gr, num_gr);
 	gMFGRT = allocate2DArray<float>(max_num_p_gr_from_mf_to_gr, num_gr);
 
@@ -289,15 +288,15 @@ void InNet::writeToState()
 	// WARNING THIS IS A HORRIBLE IDEA. IF YOU GET BUGS CONSIDER THIS!
 	// Reason: the apGR is a unique_ptr. it should only be modifed in the scope
 	// that it is defined in.
-	getGRGPUData<uint8_t>(outputGRGPU, as->apGR.get());
-	getGRGPUData<uint32_t>(apBufGRGPU, as->apBufGR.get());
-	getGRGPUData<float>(gEGRSumGPU, as->gMFSumGR.get());
-	getGRGPUData<float>(gIGRSumGPU, as->gGOSumGR.get());
+	getGPUData<uint8_t>(outputGRGPU, as->apGR.get());
+	getGPUData<uint32_t>(apBufGRGPU, as->apBufGR.get());
+	getGPUData<float>(gEGRSumGPU, as->gMFSumGR.get());
+	getGPUData<float>(gIGRSumGPU, as->gGOSumGR.get());
 
-	getGRGPUData<float>(threshGRGPU, as->threshGR.get());
-	getGRGPUData<float>(vGRGPU, as->vGR.get());
-	getGRGPUData<float>(gKCaGRGPU, as->gKCaGR.get());
-	getGRGPUData<uint64_t>(historyGRGPU, as->historyGR.get());
+	getGPUData<float>(threshGRGPU, as->threshGR.get());
+	getGPUData<float>(vGRGPU, as->vGR.get());
+	getGPUData<float>(gKCaGRGPU, as->gKCaGR.get());
+	getGPUData<uint64_t>(historyGRGPU, as->historyGR.get());
 	for (int i = 0; i < numGPUs; i++)
 	{
 		int cpyStartInd;
@@ -344,8 +343,8 @@ void InNet::writeToState()
 //	// might be a useless operation. would the state of these arrays
 //	// on cpu be the same as on gpu at the time we modify the segment below?
 //	// if so, no need to get gpu data. if not, need to get gpu data
-//	getGRGPUData<uint8_t>(outputGRGPU, as->apGR.get());
-//	getGRGPUData<uint32_t>(apBufGRGPU, as->apBufGR.get());
+//	getGPUData<uint8_t>(outputGRGPU, as->apGR.get());
+//	getGPUData<uint32_t>(apBufGRGPU, as->apBufGR.get());
 //	for (int j = startGRStim; j <= startGRStim + numGRStim; j++)
 //	{
 //		/* as-> apBufGR[j] |= 1u; // try this to see if we get the same result */
@@ -371,7 +370,7 @@ void InNet::writeToState()
 
 const uint8_t* InNet::exportAPGO()
 {
-	return (const uint8_t *)as->apGO.get();
+	return (const uint8_t *)apGOH; // keep in mind this is an explicit downcast
 }
 
 const uint8_t* InNet::exportAPMF()
@@ -386,7 +385,7 @@ const uint8_t* InNet::exportHistMF()
 
 const uint8_t* InNet::exportAPGR()
 {
-	cudaError_t error = getGRGPUData<uint8_t>(outputGRGPU, outputGRH);
+	cudaError_t error = getGPUData<uint8_t>(outputGRGPU, outputGRH);
 	return (const uint8_t *)outputGRH;
 }
 
@@ -419,13 +418,13 @@ uint32_t** InNet::getGRInputGOSumHPointer()
 
 const float* InNet::exportGESumGR()
 {
-	getGRGPUData<float>(gEGRSumGPU, as->gMFSumGR.get());
+	getGPUData<float>(gEGRSumGPU, as->gMFSumGR.get());
 	return (const float *)as->gMFSumGR.get();
 }
 
 const float* InNet::exportGISumGR()
 {
-	getGRGPUData<float>(gIGRSumGPU, as->gGOSumGR.get());
+	getGPUData<float>(gIGRSumGPU, as->gGOSumGR.get());
 	return (const float *)as->gGOSumGR.get();
 }
 
@@ -827,7 +826,6 @@ void InNet::runSumReductionGRGOInputHost()
 {
 	for (int i = 0; i < numGPUs; i++)
 	{
-		//TODO: this is where openMP comes in
 		for (int j = 0; j < num_go; j++)
 		{
 			grInputGOSumHost[j] += grInputGOSumH[i][j];
@@ -1433,7 +1431,7 @@ void InNet::initGOCUDA()
 /* =========================== PRIVATE FUNCTIONS ============================= */
 
 template<typename Type>
-cudaError_t InNet::getGRGPUData(Type **gpuData, Type *hostData)
+cudaError_t InNet::getGPUData(Type **gpuData, Type *hostData)
 {
 	for (int i = 0; i < numGPUs; i++)
 	{
