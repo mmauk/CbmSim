@@ -418,7 +418,7 @@ __global__ void updateGOGRDynamicSpillOutGPU(float spillFrac, float gIncFracSpil
 	float steepness = 20.0;
 	float baselvl = spillFrac * gogrW;
 
-	dynamicAmpGOOut[index] = baselvl + scalerGOGR * (1 / 1 + my_expf((isiCounter[index] - halfShift) / steepness));
+	dynamicAmpGOOut[index] = baselvl + scalerGOGR * (1 / (1 + my_expf((isiCounter[index] - halfShift) / steepness)));
 	isiCounter[index] = (1 - apGO[index]) * isiCounter[index] + 1;
 }
 
@@ -437,21 +437,18 @@ __global__ void updateGOGRDynamicSpillInOPGPU(unsigned int inNLoads, float *dyna
 	float tempDynamicAmpSum=0;
 	for(int i=0; i<inNLoads; i++)
 	{
-		sharedIOBufGRfloat[tid+i*blockDim.x]=dynamicAmp[tid+i*blockDim.x];
+		sharedIOBufGOfloat[tid+i*blockDim.x]=dynamicAmp[tid+i*blockDim.x];
 	}
 	__syncthreads();
 	
-
 	for(int i=0; i<tempNSyn; i++)
 	{
 		conRow=(unsigned int *)((char *)conFromIn+i*conFromInPitch);
-		tempDynamicAmpSum+=sharedIOBufGRfloat[conRow[index]];	
+		tempDynamicAmpSum += sharedIOBufGOfloat[conRow[index]];
 	}
 
-	dynamicAmpGOGRGPU[index] = tempDynamicAmpSum/3;
+	dynamicAmpGOGRGPU[index] = tempDynamicAmpSum / 3;
 }
-
-
 
 __global__ void updateUBCGRInOPGPU(unsigned int inNLoads, uint32_t *apIn, float *depAmp,
 		float *g, size_t gPitch,
@@ -572,11 +569,6 @@ __global__ void updatePFPCOutGPU(uint32_t *apBuf, uint32_t *delay,
 
 //**---------------GO Kernels-------------------**
 
-//TODO: compute beforehand:
-//      a. inputGRGO sum -> taken care of by sumGRGOOutGPU
-//
-//      compute afterward:
-//      a. dynamicGOGR, depAmpGOGR, -> move updateGOtoGROutParameters to GPU Kernel
 __global__ void calcActivityGOGPU(float *vGO, float *vCoupleGOGO, float *threshGO, uint32_t *apBufGO,
   uint32_t *apGO, uint32_t *inputMFGO, uint32_t *inputGOGO, uint32_t *inputGRGO, float *gSum_MFGO, float *gSum_GOGO,
   float *synWScalerGOtoGO, float *synWScalerGRtoGO, float NMDA_AMPARatioMFGO, float *gNMDAMFGO, 
@@ -611,6 +603,7 @@ __global__ void calcActivityGOGPU(float *vGO, float *vCoupleGOGO, float *threshG
 
 	tempThreshGO += (threshRestGO - tempThreshGO) * threshDecGO;
 
+	// the balance of excitatory MF and GR input to inhibitory GO input is wayyy off.
 	tempVGO += gLeakGO * (eLeakGO - tempVGO) + gSum_GOGO[i] * (eGABAGO - tempVGO)
 				- (gSum_MFGO[i] + gGRGO[i] + gNMDAMFGO[i] + gGRGO_NMDA[i]) * tempVGO
 				- vCoupleGOGO[i] * tempVGO;
