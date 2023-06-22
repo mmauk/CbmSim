@@ -204,9 +204,9 @@ class Control
 		void write_sess_info(std::fstream &out_buf);
 		void save_info_to_file();
 
-		void save_pfpc_weights_to_file(int32_t trial = -1);
+		void save_pfpc_weights_to_file();
 		void load_pfpc_weights_from_file(std::string in_pfpc_file);
-		void save_mfdcn_weights_to_file(int32_t trial = -1);
+		void save_mfdcn_weights_to_file();
 		void load_mfdcn_weights_from_file(std::string in_mfdcn_file);
 
 		void create_out_sim_filename();

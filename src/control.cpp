@@ -385,16 +385,10 @@ void Control::save_info_to_file()
 	out_if_data_buf.close();
 }
 
-void Control::save_pfpc_weights_to_file(int32_t trial)
+void Control::save_pfpc_weights_to_file()
 {
 	if (pfpc_weights_filenames_created)
 	{
-		std::string curr_pfpc_weights_filename = pfpc_weights_file;
-		if (trial != -1) // nonnegative indicates we want to append the trial to the file basename
-		{
-			curr_pfpc_weights_filename = data_out_path + "/" + get_file_basename(pfpc_weights_file)
-									   + "_TRIAL_" + std::to_string(trial) + BIN_EXT;
-		}
 		LOG_DEBUG("Saving granule to purkinje weights to file...");
 		if (!simCore)
 		{
@@ -403,7 +397,7 @@ void Control::save_pfpc_weights_to_file(int32_t trial)
 			return;
 		}
 		const float *pfpc_weights = simCore->getMZoneList()[0]->exportPFPCWeights();
-		std::fstream outPFPCFileBuffer(curr_pfpc_weights_filename.c_str(), std::ios::out | std::ios::binary);
+		std::fstream outPFPCFileBuffer(pfpc_weights_file.c_str(), std::ios::out | std::ios::binary);
 		rawBytesRW((char *)pfpc_weights, num_gr * sizeof(float), false, outPFPCFileBuffer);
 		outPFPCFileBuffer.close();
 	}
@@ -422,16 +416,10 @@ void Control::load_pfpc_weights_from_file(std::string in_pfpc_file)
 	inPFPCFileBuffer.close();
 } 
 
-void Control::save_mfdcn_weights_to_file(int32_t trial)
+void Control::save_mfdcn_weights_to_file()
 {
 	if (mfnc_weights_filenames_created)
 	{
-		std::string curr_mfnc_weights_filename = mfnc_weights_file;
-		if (trial != -1) // nonnegative indicates we want to append the trial to the file basename
-		{
-			curr_mfnc_weights_filename = data_out_path + "/" + get_file_basename(curr_mfnc_weights_filename)
-									   + "_TRIAL_" + std::to_string(trial) + BIN_EXT;
-		}
 		LOG_DEBUG("Saving mossy fiber to deep nucleus weigths to file...");
 		if (!simCore)
 		{
@@ -439,9 +427,8 @@ void Control::save_mfdcn_weights_to_file(int32_t trial)
 			LOG_ERROR("(Hint: Try initializing a sim or loading the weights first.)");
 			return;
 		}
-		// TODO: make a export function for mfdcn weights
 		const float *mfdcn_weights = simCore->getMZoneList()[0]->exportMFDCNWeights();
-		std::fstream outMFDCNFileBuffer(curr_mfnc_weights_filename.c_str(), std::ios::out | std::ios::binary);
+		std::fstream outMFDCNFileBuffer(mfnc_weights_file.c_str(), std::ios::out | std::ios::binary);
 		rawBytesRW((char *)mfdcn_weights, num_nc * num_p_nc_from_mf_to_nc * sizeof(const float), false, outMFDCNFileBuffer);
 		outMFDCNFileBuffer.close();
 	}
@@ -739,9 +726,7 @@ void Control::runSession(struct gui *gui)
 			reset_spike_sums();
 		}
 		// save gr rasters into new file every trial 
-		//save_gr_raster();
-		//save_pfpc_weights_to_file(trial);
-		//save_mfdcn_weights_to_file(trial);
+		save_gr_raster();
 		trial++;
 	}
 	trial--; // setting so that is valid for drawing go rasters after a sim
@@ -754,6 +739,8 @@ void Control::runSession(struct gui *gui)
 	{
 		save_rasters();
 		save_psths();
+		save_pfpc_weights_to_file();
+		save_mfdcn_weights_to_file();
 		save_sim_to_file();
 		save_info_to_file();
 	}
