@@ -45,7 +45,7 @@ public:
 	void runPFPCOutCUDA(cudaStream_t **sts, int streamN);
 	void runPFPCSumCUDA(cudaStream_t **sts, int streamN);
 	void cpyPFPCSumCUDA(cudaStream_t **sts, int streamN);
-	void runPFPCPlastCUDA(cudaStream_t **sts, int streamN, uint32_t t);
+	void runPFPCPlastCUDA(cudaStream_t **sts, int streamN, uint32_t t, bool mask = false);
 
 	void runSumPFSCCUDA(cudaStream_t **sts, int streamN);
 	void cpyPFSCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN);
@@ -74,6 +74,7 @@ public:
 	const float* exportMFDCNWeights();
 
 	void load_pfpc_weights_from_file(std::fstream &in_file_buf);
+	void load_pfpc_weight_mask_from_file(std::fstream &in_file_buf);
 	void load_mfdcn_weights_from_file(std::fstream &in_file_buf);
 
 	const uint32_t* exportAPBufBC();
@@ -139,6 +140,8 @@ private:
 	//purkinje cell variables
 	float **pfSynWeightPCGPU;
 	float *pfSynWeightPCLinear;
+	uint8_t *pfpc_weight_mask_h;
+	uint8_t **pfpc_weight_mask_d;
 	float **inputPFPCGPU;
 	size_t *inputPFPCGPUPitch;
 	float **inputSumPFPCMZGPU;

@@ -424,6 +424,17 @@ __global__ void updatePFPCSynIO(float *synWPFPC, uint64_t *historyGR, uint64_t p
 	synWPFPC[i]=(synWPFPC[i]>1)+(synWPFPC[i]<=1)*synWPFPC[i];
 }
 
+__global__ void updatePFPCSynIOWithMask(float *synWPFPC, uint64_t *historyGR, uint64_t plastCheckMask,
+		unsigned int offset, float plastStep, uint8_t *plast_mask)
+{
+	int i=blockIdx.x*blockDim.x+threadIdx.x+offset;
+	synWPFPC[i]=synWPFPC[i]+((historyGR[i]&plastCheckMask)>0)*plastStep;
+
+	synWPFPC[i]=(synWPFPC[i]>0)*synWPFPC[i];
+	synWPFPC[i]=(synWPFPC[i]>1)+(synWPFPC[i]<=1)*synWPFPC[i];
+	synWPFPC[i] *= plast_mask[i];
+}
+
 //**---------------end IO kernels-------------**
 
 
@@ -712,6 +723,14 @@ void callUpdatePFPCPlasticityIOKernel(cudaStream_t &st, unsigned int numBlocks, 
 				mask, offSet, pfPCPlastStep);
 }
 
+void callUpdatePFPCPlasticityIOKernelWithMask(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
+		float *synWeightGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck, int offSet, float pfPCPlastStep,
+		uint8_t *plast_mask)
+{
+	uint64_t mask = ((uint64_t)1)<<(pastBinNToCheck-1);
+		updatePFPCSynIOWithMask<<<numBlocks, numGRPerBlock, 0, st>>>(synWeightGPU, historyGPU,
+				mask, offSet, pfPCPlastStep, plast_mask);
+}
 //**---------------end kernel calls------------**
 
 // template initializations

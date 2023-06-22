@@ -94,6 +94,8 @@ class Control
 		bool pfpc_weights_filenames_created = false;
 		bool mfnc_weights_filenames_created = false;
 
+		bool use_pfpc_weight_mask = false;
+
 		enum sim_run_state run_state = NOT_IN_RUN; 
 
 		// params that I do not know how to categorize
@@ -102,7 +104,7 @@ class Control
 		float inputStrength = 0.0;
 
 		// sim params -> TODO: place in simcore
-		uint32_t gpuIndex = 2;
+		uint32_t gpuIndex = 0;
 		uint32_t gpuP2    = 2;
 
 		uint32_t trial;
@@ -205,7 +207,9 @@ class Control
 		void save_info_to_file();
 
 		void save_pfpc_weights_to_file();
+		void save_pfpc_weights_at_trial_to_file(uint32_t trial);
 		void load_pfpc_weights_from_file(std::string in_pfpc_file);
+		void load_pfpc_weight_mask_from_file(std::string weight_mask_file);
 		void save_mfdcn_weights_to_file();
 		void load_mfdcn_weights_from_file(std::string in_mfdcn_file);
 
