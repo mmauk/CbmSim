@@ -12,7 +12,7 @@ LOG_DIR        := $(ROOT)logs/
 DATA_DIR       := $(ROOT)data/
 DATA_IN_DIR    := $(DATA_DIR)inputs
 DATA_OUT_DIR   := $(DATA_DIR)outputs
-RELEASE_TARGET := $(BUILD_DIR)cbm_sim
+RELEASE_TARGET := $(BUILD_DIR)cbm_sim_gpu_2
 DEBUG_TARGET   := $(DEBUG_DIR)cbm_sim
 
 INC_DIRS  := $(shell find $(SRC_DIR) -type d)

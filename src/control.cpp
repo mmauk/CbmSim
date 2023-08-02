@@ -674,7 +674,7 @@ void Control::runSession(struct gui *gui)
 {
 	set_info_file_str_props(BEFORE_RUN, if_data);
 	double start, end;
-	int goSpkCounter[num_go];
+	//int goSpkCounter[num_go];
 	if (!use_gui) run_state = IN_RUN_NO_PAUSE;
 	trial = 0;
 	raster_counter = 0;
@@ -700,7 +700,7 @@ void Control::runSession(struct gui *gui)
 		float gGRGO_sum = 0;
 		float gMFGO_sum = 0;
 
-		memset(goSpkCounter, 0, num_go * sizeof(int));
+		//memset(goSpkCounter, 0, num_go * sizeof(int));
 
 		LOG_INFO("Trial number: %d", trial + 1);
 		start = omp_get_wtime();

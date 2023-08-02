@@ -28,7 +28,7 @@ int main(int argc, char **argv)
 #ifdef DEBUG
 	logger_setLevel(LogLevel_DEBUG);
 #else
-	logger_setLevel(LogLevel_INFO);
+	logger_setLevel(LogLevel_DEBUG);
 #endif
 	parsed_commandline p_cl = {};
 	parse_and_validate_parsed_commandline(&argc, &argv, p_cl);

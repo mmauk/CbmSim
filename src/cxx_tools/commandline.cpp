@@ -441,6 +441,7 @@ void validate_commandline(parsed_commandline &p_cl)
 							  p_cl.altered_weights_file.c_str());
 					exit(11);
 				}
+				p_cl.altered_weights_file = altered_weights_fullpath;
 			}
 			if (!p_cl.weight_mask_file.empty())
 			{

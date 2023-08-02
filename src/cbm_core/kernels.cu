@@ -428,11 +428,15 @@ __global__ void updatePFPCSynIOWithMask(float *synWPFPC, uint64_t *historyGR, ui
 		unsigned int offset, float plastStep, uint8_t *plast_mask)
 {
 	int i=blockIdx.x*blockDim.x+threadIdx.x+offset;
+	float tempSynW = synWPFPC[i];
 	synWPFPC[i]=synWPFPC[i]+((historyGR[i]&plastCheckMask)>0)*plastStep;
 
 	synWPFPC[i]=(synWPFPC[i]>0)*synWPFPC[i];
 	synWPFPC[i]=(synWPFPC[i]>1)+(synWPFPC[i]<=1)*synWPFPC[i];
-	synWPFPC[i] *= plast_mask[i];
+	// if not frozen weight, keep the updated syn weight else reset syn weight to val
+	// prior to updating
+	// '0' in mask means freeze weight, '1' means update weight
+	synWPFPC[i] = synWPFPC[i] * plast_mask[i] + tempSynW * (1 - plast_mask[i]);
 }
 
 //**---------------end IO kernels-------------**
@@ -727,6 +731,8 @@ void callUpdatePFPCPlasticityIOKernelWithMask(cudaStream_t &st, unsigned int num
 		float *synWeightGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck, int offSet, float pfPCPlastStep,
 		uint8_t *plast_mask)
 {
+	// this mask is for looking back in time at received spikes from pastBinNToCheck * tsPerBin
+	// to determine granule eligibility
 	uint64_t mask = ((uint64_t)1)<<(pastBinNToCheck-1);
 		updatePFPCSynIOWithMask<<<numBlocks, numGRPerBlock, 0, st>>>(synWeightGPU, historyGPU,
 				mask, offSet, pfPCPlastStep, plast_mask);
