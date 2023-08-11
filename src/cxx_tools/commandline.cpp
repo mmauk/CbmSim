@@ -453,6 +453,7 @@ void validate_commandline(parsed_commandline &p_cl)
 							  p_cl.weight_mask_file.c_str());
 					exit(11);
 				}
+				p_cl.weight_mask_file = weight_mask_fullpath;
 			}
 			if (p_cl.output_basename.empty())
 			{
