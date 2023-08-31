@@ -147,8 +147,6 @@ private:
 
 	//IO cell variables
 	float *pfPCPlastStepIO;
-	float tempGRPCLTDStep;
-	float tempGRPCLTPStep;
 
 	void initCUDA();
 	void initBCCUDA();

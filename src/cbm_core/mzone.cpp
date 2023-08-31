@@ -41,9 +41,6 @@ MZone::MZone(MZoneConnectivityState *cs, MZoneActivityState *as, int randSeed, u
 	pfSynWeightPCLinear = new float[num_gr];
 	pfPCPlastStepIO     = new float[num_io];
 
-	tempGRPCLTDStep = synLTDStepSizeGRtoPC;
-	tempGRPCLTPStep = synLTPStepSizeGRtoPC;
-
 	this->numGPUs     = numGPUs;
 	this->gpuIndStart = gpuIndStart;
 
@@ -711,12 +708,12 @@ void MZone::runPFPCPlastCUDA(cudaStream_t **sts, int streamN, uint32_t t)
 			if (as->pfPCPlastTimerIO[i] < (tsLTDstartAPIO + (int)tsLTDDurationIO) &&
 					as->pfPCPlastTimerIO[i] >= tsLTDstartAPIO)
 			{
-				pfPCPlastStepIO[i] = tempGRPCLTDStep;
+				pfPCPlastStepIO[i] = synLTDStepSizeGRtoPC;
 			}
 			else if (as->pfPCPlastTimerIO[i] >= tsLTPstartAPIO ||
 					as->pfPCPlastTimerIO[i] < tsLTPEndAPIO)
 			{
-				pfPCPlastStepIO[i] = tempGRPCLTPStep;
+				pfPCPlastStepIO[i] = synLTPStepSizeGRtoPC;
 			}
 			else
 			{
