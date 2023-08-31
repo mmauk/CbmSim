@@ -807,18 +807,6 @@ void MZone::cpyPFBCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN)
 	}
 }
 
-void MZone::setGRPCPlastSteps(float ltdStep, float ltpStep)
-{
-	tempGRPCLTDStep = ltdStep;
-	tempGRPCLTPStep = ltpStep;
-}
-
-void MZone::resetGRPCPlastSteps()
-{
-	tempGRPCLTDStep = synLTDStepSizeGRtoPC;
-	tempGRPCLTPStep = synLTPStepSizeGRtoPC;
-}
-
 const float* MZone::exportPFPCWeights()
 {
 	cpyPFPCSynWCUDA();

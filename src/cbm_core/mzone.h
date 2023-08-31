@@ -55,9 +55,6 @@ public:
 	void runSumPFBCCUDA(cudaStream_t **sts, int streamN);
 	void cpyPFBCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN);
 
-	void setGRPCPlastSteps(float ltdStep, float ltpStep);
-	void resetGRPCPlastSteps();
-
 	const uint8_t* exportAPNC();
 	const uint8_t* exportAPSC();
 	const uint8_t* exportAPBC();
