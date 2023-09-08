@@ -8,75 +8,75 @@
 #ifndef CBMSIMCORE_H_
 #define CBMSIMCORE_H_
 
+#include <cstdint>
 #include <cuda.h>
 #include <cuda_runtime.h>
-#include <vector>
 #include <fstream>
 #include <iostream>
-#include <string>
 #include <limits.h>
+#include <string>
 #include <time.h>
-#include <cstdint>
+#include <vector>
 
 #include "cbmstate.h"
-#include "sfmt.h"
-#include "mzone.h"
 #include "innet.h"
+#include "mzone.h"
+#include "sfmt.h"
 
-enum plasticity {OFF, GRADED, BINARY, CASCADE};
+enum plasticity { OFF, GRADED, BINARY, CASCADE };
 
-/* TODO: consider altering this code so that CBMSimCore does not keep local copies
- *       of the state classes. Consider whether transferring data between classes
- *       by using classes as arguments would be just as fast as we have things now.
- *       The advantage would be that we would use less memory and it would simplify the code.
+/* TODO: consider altering this code so that CBMSimCore does not keep local
+ * copies of the state classes. Consider whether transferring data between
+ * classes by using classes as arguments would be just as fast as we have things
+ * now. The advantage would be that we would use less memory and it would
+ * simplify the code.
  */
 
-class CBMSimCore
-{
+class CBMSimCore {
 public:
-	CBMSimCore();
-	CBMSimCore(CBMState *state, int gpuIndStart = -1, int numGPUP2 = -1);
-	~CBMSimCore();
+  CBMSimCore();
+  CBMSimCore(CBMState *state, int gpuIndStart = -1, int numGPUP2 = -1);
+  ~CBMSimCore();
 
-	void calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum plasticity mf_nc_plast);
-	void updateMFInput(const uint8_t *mfIn);
-	void updateTrueMFs(bool *isTrueMF);
-	void updateGRStim(int startGRStim, int numGRStim);
-	void updateErrDrive(unsigned int zoneN, float errDriveRelative);
+  void calcActivity(float spillFrac, enum plasticity pf_pc_plast,
+                    enum plasticity mf_nc_plast);
+  void updateMFInput(const uint8_t *mfIn);
+  void updateTrueMFs(bool *isTrueMF);
+  void updateGRStim(int startGRStim, int numGRStim);
+  void updateErrDrive(unsigned int zoneN, float errDriveRelative);
 
-	void writeToState();
-	void writeState(std::fstream& outfile);
+  void writeToState();
+  void writeState(std::fstream &outfile);
 
-	InNet* getInputNet();
-	MZone** getMZoneList();
+  InNet *getInputNet();
+  MZone **getMZoneList();
 
 protected:
-	void initCUDAStreams();
-	void initAuxVars();
+  void initCUDAStreams();
+  void initAuxVars();
 
-	void syncCUDA(std::string title);
+  void syncCUDA(std::string title);
 
-	CBMState *simState;
+  CBMState *simState;
 
-	uint32_t numZones;
+  uint32_t numZones;
 
-	InNet *inputNet;
-	MZone **zones;
+  InNet *inputNet;
+  MZone **zones;
 
-	cudaStream_t **streams;
-	int gpuIndStart;
-	int numGPUs;
+  cudaStream_t **streams;
+  int gpuIndStart;
+  int numGPUs;
 
 private:
-	bool isGRStim    =  false;
-	int numGRStim    =  0;
-	int startGRStim  =  0;
+  bool isGRStim = false;
+  int numGRStim = 0;
+  int startGRStim = 0;
 
-	uint32_t curTime;
+  uint32_t curTime;
 
-	void construct(CBMState *state, int *mzoneRSeed,
-		int gpuIndStart, int numGPUP2);
+  void construct(CBMState *state, int *mzoneRSeed, int gpuIndStart,
+                 int numGPUP2);
 };
 
 #endif /* CBMSIMCORE_H_ */
-

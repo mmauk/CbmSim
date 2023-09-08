@@ -8,252 +8,249 @@
 #ifndef INNET_H_
 #define INNET_H_
 
-#include <omp.h>
 #include <cuda.h>
+#include <omp.h>
 
-#include <cstdint>
-#include "innetconnectivitystate.h"
 #include "innetactivitystate.h"
+#include "innetconnectivitystate.h"
 #include "kernels.h"
+#include <cstdint>
 
-class InNet
-{
+class InNet {
 public:
-	InNet();
-	InNet(InNetConnectivityState *cs, InNetActivityState *as, int gpuIndStart, int numGPUs);
-	~InNet();
+  InNet();
+  InNet(InNetConnectivityState *cs, InNetActivityState *as, int gpuIndStart,
+        int numGPUs);
+  ~InNet();
 
-	void writeToState();
+  void writeToState();
 
-	const uint8_t* exportAPGO();
-	const uint8_t* exportAPMF();
-	const uint8_t* exportHistMF();
-	const uint8_t* exportAPGR();
+  const uint8_t *exportAPGO();
+  const uint8_t *exportAPMF();
+  const uint8_t *exportHistMF();
+  const uint8_t *exportAPGR();
 
-	const uint32_t* exportSumGRInputGO();
-	const float* exportSumGOInputGO();
+  const uint32_t *exportSumGRInputGO();
+  const float *exportSumGOInputGO();
 
-	// used when initializing mzone
-	uint32_t** getApBufGRGPUPointer();
-	uint64_t** getHistGRGPUPointer();
+  // used when initializing mzone
+  uint32_t **getApBufGRGPUPointer();
+  uint64_t **getHistGRGPUPointer();
 
-	uint32_t** getGRInputGOSumHPointer();
+  uint32_t **getGRInputGOSumHPointer();
 
-	const float* exportGESumGR();
-	const float* exportGISumGR();
-	const float* exportgSum_MFGO();
-	const float* exportgSum_GRGO();
+  const float *exportGESumGR();
+  const float *exportGISumGR();
+  const float *exportgSum_MFGO();
+  const float *exportgSum_GRGO();
 
-	void updateMFActivties(const uint8_t *actInMF);
-	void calcGOActivities();
+  void updateMFActivties(const uint8_t *actInMF);
+  void calcGOActivities();
 
-	void updateMFtoGROut();
-	void updateMFtoGOOut();
-	void updateGOtoGROutParameters(float spillFrac);
-	void updateGOtoGOOut();
-	void resetMFHist(uint32_t t);
+  void updateMFtoGROut();
+  void updateMFtoGOOut();
+  void updateGOtoGROutParameters(float spillFrac);
+  void updateGOtoGOOut();
+  void resetMFHist(uint32_t t);
 
-	void runGRActivitiesCUDA(cudaStream_t **sts, int streamN);
-	void runSumGRGOOutCUDA(cudaStream_t **sts, int streamN);
-	void cpyDepAmpMFHosttoGPUCUDA(cudaStream_t **sts, int streamN);
-	void cpyAPMFHosttoGPUCUDA(cudaStream_t **sts, int streamN);
-	
-	void cpyDepAmpUBCHosttoGPUCUDA(cudaStream_t **sts, int streamN);
-	void cpyAPUBCHosttoGPUCUDA(cudaStream_t **sts, int streamN);
-	
-	void cpyDepAmpGOGRHosttoGPUCUDA(cudaStream_t **sts, int streamN);
-	void cpyDynamicAmpGOGRHosttoGPUCUDA(cudaStream_t **sts, int streamN);
-	void cpyAPGOHosttoGPUCUDA(cudaStream_t **sts, int streamN);
-	void runUpdateMFInGRCUDA(cudaStream_t **sts, int streamN);
-	void runUpdateMFInGRDepressionCUDA(cudaStream_t **sts, int streamN);
-	
-	void runUpdateUBCInGRDepressionCUDA(cudaStream_t **sts, int streamN);
-	void runUpdateUBCInGRCUDA(cudaStream_t **sts, int streamN);
-	
-	void runUpdateGOInGRCUDA(cudaStream_t **sts, int streamN);
-	void runUpdateGOInGRDepressionCUDA(cudaStream_t **sts, int streamN);
-	void runUpdateGOInGRDynamicSpillCUDA(cudaStream_t **sts, int streamN);
-	
-	void runUpdateGROutGOCUDA(cudaStream_t **sts, int streamN);
-	
-	void cpyGRGOSumGPUtoHostCUDA(cudaStream_t **sts, int streamN);
-	void cpyGRGOSumGPUtoHostCUDA(cudaStream_t **sts, int streamN,
-		uint32_t **grInputGOSumHost);
-	void runUpdateGRHistoryCUDA(cudaStream_t **sts, int streamN, uint32_t t);
+  void runGRActivitiesCUDA(cudaStream_t **sts, int streamN);
+  void runSumGRGOOutCUDA(cudaStream_t **sts, int streamN);
+  void cpyDepAmpMFHosttoGPUCUDA(cudaStream_t **sts, int streamN);
+  void cpyAPMFHosttoGPUCUDA(cudaStream_t **sts, int streamN);
+
+  void cpyDepAmpUBCHosttoGPUCUDA(cudaStream_t **sts, int streamN);
+  void cpyAPUBCHosttoGPUCUDA(cudaStream_t **sts, int streamN);
+
+  void cpyDepAmpGOGRHosttoGPUCUDA(cudaStream_t **sts, int streamN);
+  void cpyDynamicAmpGOGRHosttoGPUCUDA(cudaStream_t **sts, int streamN);
+  void cpyAPGOHosttoGPUCUDA(cudaStream_t **sts, int streamN);
+  void runUpdateMFInGRCUDA(cudaStream_t **sts, int streamN);
+  void runUpdateMFInGRDepressionCUDA(cudaStream_t **sts, int streamN);
+
+  void runUpdateUBCInGRDepressionCUDA(cudaStream_t **sts, int streamN);
+  void runUpdateUBCInGRCUDA(cudaStream_t **sts, int streamN);
+
+  void runUpdateGOInGRCUDA(cudaStream_t **sts, int streamN);
+  void runUpdateGOInGRDepressionCUDA(cudaStream_t **sts, int streamN);
+  void runUpdateGOInGRDynamicSpillCUDA(cudaStream_t **sts, int streamN);
+
+  void runUpdateGROutGOCUDA(cudaStream_t **sts, int streamN);
+
+  void cpyGRGOSumGPUtoHostCUDA(cudaStream_t **sts, int streamN);
+  void cpyGRGOSumGPUtoHostCUDA(cudaStream_t **sts, int streamN,
+                               uint32_t **grInputGOSumHost);
+  void runUpdateGRHistoryCUDA(cudaStream_t **sts, int streamN, uint32_t t);
 
 protected:
+  InNetConnectivityState *cs;
+  InNetActivityState *as;
 
-	InNetConnectivityState *cs;
-	InNetActivityState *as;
+  int gpuIndStart;
+  int numGPUs;
+  int numGRPerGPU;
 
-	int gpuIndStart;
-	int numGPUs;
-	int numGRPerGPU;
+  unsigned int calcGRActNumGRPerB;
+  unsigned int calcGRActNumBlocks;
 
-	unsigned int calcGRActNumGRPerB;
-	unsigned int calcGRActNumBlocks;
+  unsigned int updateGRGOOutNumGRPerR;
+  unsigned int updateGRGOOutNumGRRows;
 
-	unsigned int updateGRGOOutNumGRPerR;
-	unsigned int updateGRGOOutNumGRRows;
+  unsigned int sumGRGOOutNumGOPerB;
+  unsigned int sumGRGOOutNumBlocks;
 
-	unsigned int sumGRGOOutNumGOPerB;
-	unsigned int sumGRGOOutNumBlocks;
-	
-	unsigned int updateMFInGRNumGRPerB;
-	unsigned int updateMFInGRNumBlocks;
-	
-	unsigned int updateUBCInGRNumGRPerB;
-	unsigned int updateUBCInGRNumBlocks;
+  unsigned int updateMFInGRNumGRPerB;
+  unsigned int updateMFInGRNumBlocks;
 
-	unsigned int updateGOInGRNumGRPerB;
-	unsigned int updateGOInGRNumBlocks;
-	
-	unsigned int updateGRHistNumGRPerB;
-	unsigned int updateGRHistNumBlocks;
+  unsigned int updateUBCInGRNumGRPerB;
+  unsigned int updateUBCInGRNumBlocks;
 
-	//UBC
-	uint32_t **apUBCH;
-	uint32_t **apUBCGPU;
+  unsigned int updateGOInGRNumGRPerB;
+  unsigned int updateGOInGRNumBlocks;
 
-	float **depAmpUBCH;
-	float **depAmpUBCGPU;
-	float **depAmpUBCGRGPU;
+  unsigned int updateGRHistNumGRPerB;
+  unsigned int updateGRHistNumBlocks;
 
-	//mossy fibers
-	const uint8_t *apMFOut;
+  // UBC
+  uint32_t **apUBCH;
+  uint32_t **apUBCGPU;
 
-	//gpu related variables
-	uint32_t **apMFH;
-	uint32_t **apMFGPU;
+  float **depAmpUBCH;
+  float **depAmpUBCGPU;
+  float **depAmpUBCGRGPU;
 
-	float **depAmpMFH;
-	float **depAmpMFGPU;
-	float **depAmpMFGRGPU;
+  // mossy fibers
+  const uint8_t *apMFOut;
 
-	int **numMFperGR;
-	int **numUBCperGR;
-	//end gpu related variables
+  // gpu related variables
+  uint32_t **apMFH;
+  uint32_t **apMFGPU;
 
-	//golgi cell variables
-	//gpu related variables
+  float **depAmpMFH;
+  float **depAmpMFGPU;
+  float **depAmpMFGRGPU;
 
-	uint32_t **apGOH;
-	uint32_t **grInputGOSumH;
+  int **numMFperGR;
+  int **numUBCperGR;
+  // end gpu related variables
 
-	float **depAmpGOH;
-	float **dynamicAmpGOH;
+  // golgi cell variables
+  // gpu related variables
 
-	int *counter;
+  uint32_t **apGOH;
+  uint32_t **grInputGOSumH;
 
-	uint32_t **apGOGPU;
-	uint32_t **grInputGOGPU;
-	uint32_t **grInputGOSumGPU;
+  float **depAmpGOH;
+  float **dynamicAmpGOH;
 
-	size_t *grInputGOGPUP;
+  int *counter;
 
-	float **depAmpGOGRGPU;
-	float **depAmpGOGPU;
-	float **dynamicAmpGOGPU;
-	float **dynamicAmpGOGRGPU;
-	//end gpu variables
+  uint32_t **apGOGPU;
+  uint32_t **grInputGOGPU;
+  uint32_t **grInputGOSumGPU;
 
-	uint32_t *sumGRInputGO;
+  size_t *grInputGOGPUP;
 
-	float *sumInputGOGABASynDepGO;
-	float tempGIncGRtoGO;
-	//end golgi cell variables
+  float **depAmpGOGRGPU;
+  float **depAmpGOGPU;
+  float **dynamicAmpGOGPU;
+  float **dynamicAmpGOGRGPU;
+  // end gpu variables
 
-	//granule cell variables
-	float **gMFGRT;
-	float **gUBCGRT;
-	float **gGOGRT;
+  uint32_t *sumGRInputGO;
 
-	uint32_t **pGRDelayfromGRtoGOT;
-	uint32_t **pGRfromMFtoGRT;
-	uint32_t **pGRfromUBCtoGRT;
-	uint32_t **pGRfromGOtoGRT;
-	uint32_t **pGRfromGRtoGOT;
+  float *sumInputGOGABASynDepGO;
+  float tempGIncGRtoGO;
+  // end golgi cell variables
 
-	uint32_t apBufGRHistMask;
-	//gpu related variables
-	//host variables
-	uint8_t *outputGRH;
-	//end host variables
+  // granule cell variables
+  float **gMFGRT;
+  float **gUBCGRT;
+  float **gGOGRT;
 
-	float **gEGRGPU;
-	size_t *gEGRGPUP;
-	float **gEGRSumGPU;
-	float **gEDirectGPU;
-	float **gESpilloverGPU;
-	float **gIDirectGPU;
-	float **gISpilloverGPU;
-	int   **apMFtoGRGPU;
-	int   **apUBCtoGRGPU;
-	float **gUBC_EGRGPU;
-	size_t *gUBC_EGRGPUP;
-	float **gUBC_EGRSumGPU;
-	float **gUBC_EDirectGPU;
-	float **gUBC_ESpilloverGPU;
+  uint32_t **pGRDelayfromGRtoGOT;
+  uint32_t **pGRfromMFtoGRT;
+  uint32_t **pGRfromUBCtoGRT;
+  uint32_t **pGRfromGOtoGRT;
+  uint32_t **pGRfromGRtoGOT;
 
-	float **gIGRGPU;
-	size_t *gIGRGPUP;
-	float **gIGRSumGPU;
+  uint32_t apBufGRHistMask;
+  // gpu related variables
+  // host variables
+  uint8_t *outputGRH;
+  // end host variables
 
-	uint32_t **apBufGRGPU;
-	uint8_t  **outputGRGPU;
-	uint32_t **apGRGPU;
+  float **gEGRGPU;
+  size_t *gEGRGPUP;
+  float **gEGRSumGPU;
+  float **gEDirectGPU;
+  float **gESpilloverGPU;
+  float **gIDirectGPU;
+  float **gISpilloverGPU;
+  int **apMFtoGRGPU;
+  int **apUBCtoGRGPU;
+  float **gUBC_EGRGPU;
+  size_t *gUBC_EGRGPUP;
+  float **gUBC_EGRSumGPU;
+  float **gUBC_EDirectGPU;
+  float **gUBC_ESpilloverGPU;
 
-	float **threshGRGPU;
-	float **vGRGPU;
-	float **gLeakGRGPU;
-	float **gNMDAGRGPU;
-	float **gNMDAIncGRGPU;
-	float **gKCaGRGPU;
-	uint64_t **historyGRGPU;
+  float **gIGRGPU;
+  size_t *gIGRGPUP;
+  float **gIGRSumGPU;
 
-	//conduction delays
-	uint32_t **delayGOMasksGRGPU;
-	size_t *delayGOMasksGRGPUP;
+  uint32_t **apBufGRGPU;
+  uint8_t **outputGRGPU;
+  uint32_t **apGRGPU;
 
-	//connectivity
-	int contVar       = 1;
-	int contVarOther  = 1;
-	float sumGOFR     = 0;
-	float sumExScaler = 0;
-	int slowCounter   = 0;
-	int timeStepPOne;
-	int thingCounter  = 0;
+  float **threshGRGPU;
+  float **vGRGPU;
+  float **gLeakGRGPU;
+  float **gNMDAGRGPU;
+  float **gNMDAIncGRGPU;
+  float **gKCaGRGPU;
+  uint64_t **historyGRGPU;
 
-	int32_t  **numGOOutPerGRGPU;
-	uint32_t **grConGROutGOGPU;
-	size_t *grConGROutGOGPUP;
-	
-	int32_t  **numGOInPerGRGPU;
-	uint32_t **grConGOOutGRGPU;
-	size_t *grConGOOutGRGPUP;
+  // conduction delays
+  uint32_t **delayGOMasksGRGPU;
+  size_t *delayGOMasksGRGPUP;
 
-	int32_t  **numMFInPerGRGPU;
-	uint32_t **grConMFOutGRGPU;
-	size_t *grConMFOutGRGPUP;
-	
-	
-	int32_t **numUBCInPerGRGPU;
-	uint32_t **grConUBCOutGRGPU;
-	size_t *grConUBCOutGRGPUP;
-	
-	//end gpu variables
-	//end granule cell variables
+  // connectivity
+  int contVar = 1;
+  int contVarOther = 1;
+  float sumGOFR = 0;
+  float sumExScaler = 0;
+  int slowCounter = 0;
+  int timeStepPOne;
+  int thingCounter = 0;
 
-	void initCUDA();
-	void initMFCUDA();
-	void initGRCUDA();
-	void initGOCUDA();
-	void initSCCUDA();
+  int32_t **numGOOutPerGRGPU;
+  uint32_t **grConGROutGOGPU;
+  size_t *grConGROutGOGPUP;
+
+  int32_t **numGOInPerGRGPU;
+  uint32_t **grConGOOutGRGPU;
+  size_t *grConGOOutGRGPUP;
+
+  int32_t **numMFInPerGRGPU;
+  uint32_t **grConMFOutGRGPU;
+  size_t *grConMFOutGRGPUP;
+
+  int32_t **numUBCInPerGRGPU;
+  uint32_t **grConUBCOutGRGPU;
+  size_t *grConUBCOutGRGPUP;
+
+  // end gpu variables
+  // end granule cell variables
+
+  void initCUDA();
+  void initMFCUDA();
+  void initGRCUDA();
+  void initGOCUDA();
+  void initSCCUDA();
 
 private:
-	template<typename Type>
-	cudaError_t getGRGPUData(Type **gpuData, Type *hostData);
+  template <typename Type>
+  cudaError_t getGRGPUData(Type **gpuData, Type *hostData);
 };
 
 #endif /* INNET_H_ */
-

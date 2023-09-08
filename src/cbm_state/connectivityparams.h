@@ -11,11 +11,11 @@
 #ifndef CONNECTIVITYPARAMS_H_
 #define CONNECTIVITYPARAMS_H_
 
-#include <iostream>
-#include <fstream>
-#include <string>
 #include "file_parse.h"
 #include <cstdint>
+#include <fstream>
+#include <iostream>
+#include <string>
 
 #define NUM_CON_PARAMS 107
 
@@ -123,7 +123,7 @@ extern int num_p_io_in_io_to_io;
 extern int num_p_io_out_io_to_io;
 
 extern float msPerTimeStep;
-extern float numPopHistBinsPC; /* used for updating MFNC syn plasticity */ 
+extern float numPopHistBinsPC; /* used for updating MFNC syn plasticity */
 
 extern float ampl_go_to_go;
 extern float std_dev_go_to_go;
@@ -135,7 +135,7 @@ extern float std_dev_go_to_gl_s;
 
 extern float eLeakGO;
 extern float threshRestGO;
-extern float eLeakGR; 
+extern float eLeakGR;
 extern float threshRestGR;
 
 extern float eLeakSC;
@@ -156,4 +156,3 @@ void read_con_params(std::fstream &in_param_buf);
 void write_con_params(std::fstream &out_param_buf);
 
 #endif /* CONNECTIVITYPARAMS_H_ */
-
