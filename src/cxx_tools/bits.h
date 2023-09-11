@@ -1,3 +1,13 @@
+/*
+ * file: bits.h
+ *
+ * This file and the associated implementation were intended for bit packing
+ * of large data arrays, such as granule arrays. There was a small problem
+ * with the implementation that I think had to do with having extra bytes
+ * at the end of every trial's collection period, which would need to be
+ * fixed for a proper implementation.
+ *
+ */
 #ifndef BITS_H_
 #define BITS_H_
 
