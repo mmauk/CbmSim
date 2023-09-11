@@ -12,6 +12,7 @@
 Control::Control(parsed_commandline &p_cl) {
   use_gui = (p_cl.vis_mode == "GUI") ? true : false;
   if (!p_cl.build_file.empty()) {
+    /* initialize temporary objects for parsing build file */
     tokenized_file t_file;
     lexed_file l_file;
     parsed_build_file pb_file;
@@ -22,6 +23,9 @@ Control::Control(parsed_commandline &p_cl) {
       populate_con_params(pb_file);
     data_out_path = OUTPUT_DATA_PATH + p_cl.output_basename;
     data_out_base_name = p_cl.output_basename;
+    /* Next few lines create the output directory.
+     * TODO: This requires a refactor. A utility function should do this.
+     */
     int status = mkdir(data_out_path.c_str(), 0775);
     if (status == -1) {
       LOG_FATAL("Could not create directory '%s'. Maybe it already exists. "
@@ -30,9 +34,10 @@ Control::Control(parsed_commandline &p_cl) {
       exit(10);
     }
     data_out_dir_created = true;
-    create_out_sim_filename(); // default
+    create_out_sim_filename();
   } else if (!p_cl.session_file.empty()) {
     initialize_session(p_cl.session_file);
+    // cp session info to info file obj
     cp_to_info_file_data(p_cl, s_file, if_data);
     set_plasticity_modes(p_cl.pfpc_plasticity, p_cl.mfnc_plasticity);
     // assume that validated commandline opts includes 1) input file 2) session
@@ -49,15 +54,14 @@ Control::Control(parsed_commandline &p_cl) {
       exit(10);
     }
     data_out_dir_created = true;
+    // create various output filenames once session is initialized
     create_out_sim_filename();                    // default
     create_out_info_filename();                   // default
     create_raster_filenames(p_cl.raster_files);   // optional
     create_psth_filenames(p_cl.psth_files);       // optional
     create_weights_filenames(p_cl.weights_files); // optional
     init_sim(p_cl.input_sim_file);
-  } else // user ran executable with no args FIXME: find out how to initialize
-         // with gui, couple similar parts of code
-  {
+  } else { // user ran program with no args
     set_plasticity_modes("graded", "graded");
   }
 }
@@ -116,13 +120,17 @@ void Control::set_plasticity_modes(std::string pfpc_plasticity,
 
 void Control::initialize_session(std::string sess_file) {
   LOG_DEBUG("Initializing session...");
+  // create temporary objects for parsing session file
   tokenized_file t_file;
   lexed_file l_file;
   tokenize_file(sess_file, t_file);
   lex_tokenized_file(t_file, l_file);
   parse_lexed_sess_file(l_file, s_file);
+  // this function is required to turn object of objects into object of arrays
+  // (performance benefit)
   translate_parsed_trials(s_file, td);
 
+  // for now, manually use string to int for these parameters. clunky.
   trialTime = std::stoi(
       s_file.parsed_var_sections["trial_spec"].param_map["trialTime"]);
   msPreCS =
@@ -135,6 +143,14 @@ void Control::initialize_session(std::string sess_file) {
   LOG_DEBUG("Session initialized.");
 }
 
+/**
+ *  @details The order of what we read and when matters: connectivity params,
+ *  activity params, then the simulation state are written to file in that
+ *  order.
+ *
+ *  TODO: admittedly, initialize data output objects could be in a diff
+ *  function.
+ */
 void Control::init_sim(std::string in_sim_filename) {
   LOG_DEBUG("Initializing simulation...");
   std::fstream sim_file_buf(in_sim_filename.c_str(),
@@ -162,19 +178,21 @@ void Control::init_sim(std::string in_sim_filename) {
   LOG_DEBUG("Simulation initialized.");
 }
 
+/**
+ *  @details This function has not been finished: still need to reset
+ *  the sim_core, mfFreq, and mfs.
+ */
 void Control::reset_sim(std::string in_sim_filename) {
   std::fstream sim_file_buf(in_sim_filename.c_str(),
                             std::ios::in | std::ios::binary);
   read_con_params(sim_file_buf);
   // read_act_params(sim_file_buf);
   simState->readState(sim_file_buf);
-  // TODO: simCore, mfFreq, mfs
 
   reset_rasters();
   reset_psths();
   reset_spike_sums();
   sim_file_buf.close();
-  // TODO: more things to reset?
 }
 
 void Control::save_sim_to_file() {
@@ -191,6 +209,11 @@ void Control::save_sim_to_file() {
   }
 }
 
+/**
+ *  @details This function is messy, but it's what I came up with. This and
+ *  other related info file writing functions are rather rigid in terms of
+ *  how the output info file is formatted.
+ */
 void Control::write_header_info(std::fstream &out_buf) {
   uint32_t col_1_remaining = HEADER_COL_1_WIDTH - RUN_START_DATE_LBL.length();
   out_buf << "########################### BEGIN SESSION RECORD "
@@ -576,8 +599,8 @@ void Control::initialize_rast_cell_nums() {
 
 void Control::initialize_cell_spikes() {
   cell_spikes[MF] = mfs->getAPs();
-  /* NOTE: incurs a call to cudaMemcpy from device to host, but initializing so
-   * is not repeatedly called */
+  // NOTE: incurs a call to cudaMemcpy from device to host, but initializing so
+  // is not repeatedly called.
   cell_spikes[GR] = simCore->getInputNet()->exportAPGR();
   cell_spikes[GO] = simCore->getInputNet()->exportAPGO();
   cell_spikes[BC] = simCore->getMZoneList()[0]->exportAPBC();
@@ -599,11 +622,15 @@ void Control::initialize_spike_sums() {
   spike_sums_initialized = true;
 }
 
+/**
+ *  @details The rasters, conceptually, are all 2D arrays of dims
+ *  (msMeasure * num_trials, num_cells) EXCEPT for the GR,
+ *  which has dims (msMeasure, num_cells) due to sheer number
+ *  of GR cells.
+ */
 void Control::initialize_rasters() {
   for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
     if (!rf_names[i].empty() || use_gui) {
-      /* granules are saved every trial, so their raster size is msMeasure  x
-       * num_gr */
       uint32_t row_size =
           (CELL_IDS[i] == "GR") ? msMeasure : msMeasure * td.num_trials;
       rasters[i] = allocate2DArray<uint8_t>(row_size, rast_cell_nums[i]);
@@ -611,7 +638,6 @@ void Control::initialize_rasters() {
   }
 
   if (use_gui) {
-    // TODO: find a way to initialize only within gui mode
     pc_vm_raster = allocate2DArray<float>(msMeasure, num_pc);
     nc_vm_raster = allocate2DArray<float>(msMeasure, num_nc);
     io_vm_raster = allocate2DArray<float>(msMeasure, num_io);
@@ -664,6 +690,7 @@ void Control::runSession(struct gui *gui) {
     run_state = IN_RUN_NO_PAUSE;
   trial = 0;
   raster_counter = 0;
+  // trial loop
   while (trial < td.num_trials && run_state != NOT_IN_RUN) {
     std::string trialName = td.trial_names[trial];
 
@@ -682,17 +709,19 @@ void Control::runSession(struct gui *gui) {
 
     LOG_INFO("Trial number: %d", trial + 1);
     start = omp_get_wtime();
+    // ts of trial loop
     for (uint32_t ts = 0; ts < trialTime; ts++) {
-      if (useUS == 1 && ts == onsetUS) /* deliver the US */
+      if (useUS == 1 && ts == onsetUS) // deliver the US
       {
         simCore->updateErrDrive(0, 0.3);
       }
+      // deliver cs if specified at cmdline
       if (ts >= onsetCS && ts < onsetCS + csLength) {
         mfAP = (useCS == 1) ? mfs->calcPoissActivity(mfFreq->getMFInCSTonicA(),
                                                      simCore->getMZoneList())
                             : mfs->calcPoissActivity(mfFreq->getMFBG(),
                                                      simCore->getMZoneList());
-      } else {
+      } else { // background mf activity
         mfAP =
             mfs->calcPoissActivity(mfFreq->getMFBG(), simCore->getMZoneList());
       }
@@ -701,8 +730,10 @@ void Control::runSession(struct gui *gui) {
           mfFreq->getMFBG()); /* only used for mfdcn plasticity */
       simCore->updateTrueMFs(isTrueMF);
       simCore->updateMFInput(mfAP);
+      // this is the main simCore function which computes all cell pops' spikes
       simCore->calcActivity(spillFrac, pf_pc_plast, mf_nc_plast);
 
+      /* collect conductances used to check tuning */
       if (ts >= onsetCS && ts < onsetCS + csLength) {
         mfgoG = simCore->getInputNet()->exportgSum_MFGO();
         grgoG = simCore->getInputNet()->exportgSum_GRGO();
@@ -715,7 +746,7 @@ void Control::runSession(struct gui *gui) {
         }
       }
 
-      /* upon offset of CS, report what we got*/
+      /* upon offset of CS, report averages of above collected conductances */
       if (ts == onsetCS + csLength) {
         countGOSpikes(goSpkCounter);
         LOG_DEBUG("Mean gGRGO   = %0.4f", gGRGO_sum / (num_go * csLength));
@@ -733,6 +764,7 @@ void Control::runSession(struct gui *gui) {
 
       if (use_gui) {
         update_spike_sums(ts, onsetCS, onsetCS + csLength);
+        // Update gui main loop if any events are pending.
         if (gtk_events_pending())
           gtk_main_iteration();
       }
@@ -769,7 +801,7 @@ void Control::runSession(struct gui *gui) {
   run_state = NOT_IN_RUN;
   set_info_file_str_props(AFTER_RUN, if_data);
 
-  if (!use_gui) {
+  if (!use_gui) { // go ahead and save everything if we're not in the gui.
     save_rasters();
     save_psths();
     save_pfpc_weights_to_file();
@@ -806,20 +838,6 @@ void Control::reset_psths() {
     if (!pf_names[i].empty()) {
       memset(psths[i][0], '\000',
              rast_cell_nums[i] * msMeasure * sizeof(uint8_t));
-    }
-  }
-}
-
-void gen_gr_sample(int gr_indices[], int sample_size, int data_size) {
-  CRandomSFMT0 randGen(0); // replace seed later
-  bool chosen[data_size] = {false};
-  int counter = 0;
-  while (counter < sample_size) {
-    int index = randGen.IRandom(0, data_size - 1);
-    if (!chosen[index]) {
-      gr_indices[counter] = index;
-      chosen[index] = true;
-      counter++;
     }
   }
 }
@@ -930,7 +948,7 @@ void Control::fill_rasters(uint32_t raster_counter, uint32_t psth_counter) {
     }
   }
 
-  if (use_gui) {
+  if (use_gui) { // update the voltage rasters for the PC Window
     const float *vm_pc = simCore->getMZoneList()[0]->exportVmPC();
     for (int i = 0; i < num_pc; i++) {
       pc_vm_raster[psth_counter][i] = vm_pc[i];
