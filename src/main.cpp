@@ -1,13 +1,13 @@
-/*
- * File: main.cpp
- * Author: Sean Gallogly
- * Created on: circa 07/21/2022
+/** @file main.cpp
+ *  @brief this is the main entry point to the program.
  *
- * Description:
- *     this is the main entry point to the program. It calls functions from
- * commandline.h in order to parse arguments and from control.h in order to run
- * the simulation in one of several user-specified modes.
+ *  It parses commandline arguments using functions from commandline.h,
+ *  and it either builds a simulation or runs trials by calling methods
+ *  from control.h.
+ *
+ *  @author Sean Gallogly (sean.gallo@austin.utexas.edu)
  */
+
 #include <fstream>
 #include <iomanip>
 #include <iostream>
