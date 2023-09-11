@@ -3,6 +3,10 @@
  *
  *  Created on: Dec 5, 2012
  *      Author: consciousness
+ *
+ *  Holds pointers to innet/mzone connectivity and activity objects.
+ *  The mzone con/act states are double pointers to support multiple
+ *  mzones, like in the Stone paper.
  */
 
 #ifndef CBMSTATE_H_
@@ -25,9 +29,7 @@ class CBMState {
 public:
   CBMState();
   CBMState(unsigned int nZones);
-  // TODO: make a choice which of two below constructors want to keep
   CBMState(unsigned int nZones, std::fstream &sim_file_buf);
-  // CBMState(unsigned int nZones, std::string inFile);
   ~CBMState();
 
   void readState(std::fstream &infile);

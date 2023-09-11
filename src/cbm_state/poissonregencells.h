@@ -3,6 +3,9 @@
  *
  *  Created on: Dec 13, 2012
  *      Author: consciousness
+ *
+ *  Generates poisson activity from frequency populations of mf cells
+ *  which are created in ecmfpopulation object.
  */
 
 #ifndef POISSONREGENCELLS_H_

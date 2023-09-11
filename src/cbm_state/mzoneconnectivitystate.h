@@ -3,6 +3,23 @@
  *
  *  Created on: Nov 21, 2012
  *      Author: consciousness
+ *
+ *  provides functions for making connections between:
+ *
+ *    gr -> pc
+ *    gr -> bc
+ *    gr -> sc
+ *    bc -> pc
+ *    pc -> bc
+ *    pc -> nc
+ *    mf -> nc
+ *    nc -> io
+ *    io -> io
+ *    io -> nc
+ *
+ *   nc collaterals connectivity to the granule cell layer
+ *   neurons is provided in ecmfpopulation and poissonregencells
+ *   classes.
  */
 
 #ifndef MZONECONNECTIVITYSTATE_H_
