@@ -463,24 +463,41 @@ void InNetConnectivityState::connectMFGL_noUBC() {
   LOG_DEBUG("Correct number: %d", num_gl);
 }
 
+/**
+ *  @details The naming here is legacy from I'm not sure when so it is
+ *  a little confusing. 'src' refers to the post-synaptic cell while
+ *  'dest' refers to the presynaptic cell.
+ *
+ *  The main idea is that we go over the postsynaptic cells, attempting
+ *  to make connections back to the presynaptic cells until either we're
+ *  out of attempts or we've made a successful connection.
+ *
+ *  The unique part of the code is wrt to the postsynaptic granule cells:
+ *  It ensures that each granule cell does not receive more than one
+ *  connection from a given presynaptic glomerulus.
+ *
+ */
 void InNetConnectivityState::connectGLGR(CRandomSFMT &randGen) {
   float gridXScaleStoD = (float)gr_x / (float)gl_x;
   float gridYScaleStoD = (float)gr_y / (float)gl_y; /* unused :/ */
 
   bool srcConnected[num_gr] = {false};
 
+  // for number of possible gr connections from gl
   for (int i = 0; i < max_num_p_gr_from_gl_to_gr; i++) {
     int srcNumConnected = 0;
     memset(srcConnected, false, num_gr * sizeof(bool));
 
+    // loop over all possible gr
     while (srcNumConnected < num_gr) {
+      // grab a random gr
       int srcIndex = randGen.IRandom(0, num_gr - 1);
       if (!srcConnected[srcIndex]) {
         int srcPosX = srcIndex % gr_x;
         int srcPosY = (int)(srcIndex / gr_x);
 
         int tempDestNumConLim = low_num_p_gl_from_gl_to_gr;
-
+        // attempt to make a given connection
         for (int attempts = 0; attempts < max_gl_to_gr_attempts; attempts++) {
           if (attempts == low_gl_to_gr_attempts)
             tempDestNumConLim = max_num_p_gl_from_gl_to_gr;
@@ -495,6 +512,7 @@ void InNetConnectivityState::connectGLGR(CRandomSFMT &randGen) {
           destPosX = (destPosX % gl_x + gl_x) % gl_x;
           destPosY = (destPosY % gl_y + gl_y) % gl_y;
 
+          // chose the final gl index
           int destIndex = destPosY * gl_x + destPosX;
 
           // for gl -> gr, we set needUnique to true
@@ -505,7 +523,8 @@ void InNetConnectivityState::connectGLGR(CRandomSFMT &randGen) {
               break;
             }
           }
-
+          // only if we havent connected to this gl yet and this gl
+          // hasnt made its maximum number of connections do we connect
           if (unique && numpGLfromGLtoGR[destIndex] < tempDestNumConLim) {
             pGLfromGLtoGR[destIndex][numpGLfromGLtoGR[destIndex]] = srcIndex;
             numpGLfromGLtoGR[destIndex]++;
@@ -535,7 +554,9 @@ void InNetConnectivityState::connectGRGO() {
   int xCoorsPFGO[num_p_pf_to_go] = {0};
   int yCoorsPFGO[num_p_pf_to_go] = {0};
 
-  // PARALLEL FIBER TO GOLGI
+  /* parallel fiber to golgi */
+
+  // comput spans
   for (int i = 0; i < span_pf_to_go_x + 1; i++) {
     spanArrayPFtoGOX[i] = i - (span_pf_to_go_x / 2);
   }
@@ -562,7 +583,9 @@ void InNetConnectivityState::connectGRGO() {
   int destPosY;
   int destIndex;
 
+  // for certain number of pf to go attempts
   for (int attempts = 0; attempts < max_pf_to_go_attempts; attempts++) {
+    // for each go
     for (int i = 0; i < num_go; i++) {
       srcPosX = i % go_x;
       srcPosY = i / go_x;
@@ -577,9 +600,10 @@ void InNetConnectivityState::connectGRGO() {
 
         destPosX = (destPosX % gr_x + gr_x) % gr_x;
         destPosY = (destPosY % gr_y + gr_y) % gr_y;
-
+        // select a gr
         destIndex = destPosY * gr_x + destPosX;
-
+        // only make a connection if this go has less than
+        // its maximum input
         if (numpGOfromGRtoGO[i] < max_pf_to_go_input) {
           pGOfromGRtoGO[i][numpGOfromGRtoGO[i]] = destIndex;
           numpGOfromGRtoGO[i]++;
@@ -591,6 +615,9 @@ void InNetConnectivityState::connectGRGO() {
     }
   }
 
+  /* ascending axon to golgi */
+
+  // span geometry set-up
   int maxAAtoGOAttempts = max_aa_to_go_attempts;
   int maxAAtoGOInput = max_aa_to_go_input;
 
@@ -616,13 +643,15 @@ void InNetConnectivityState::connectGRGO() {
   for (int i = 0; i < num_p_aa_to_go; i++)
     rAASpanInd[i] = i;
 
+  // similar alg: for certain number of attempts
   for (int attempts = 0; attempts < max_aa_to_go_attempts; attempts++) {
+    // for each golgi
     for (int i = 0; i < num_go; i++) {
       srcPosX = i % go_x;
       srcPosY = i / go_x;
 
       std::random_shuffle(rAASpanInd, rAASpanInd + num_p_aa_to_go);
-
+      // for maximum possible input from ascending axon
       for (int j = 0; j < max_aa_to_go_input; j++) {
         destPosX = xCoorsAAGO[rAASpanInd[j]];
         destPosY = yCoorsAAGO[rAASpanInd[j]];
@@ -633,8 +662,11 @@ void InNetConnectivityState::connectGRGO() {
         destPosX = (destPosX % gr_x + gr_x) % gr_x;
         destPosY = (destPosY % gr_y + gr_y) % gr_y;
 
+        // choose destination (here gr) cell
         destIndex = destPosY * gr_x + destPosX;
 
+        // ensure total input so far is less than max input from
+        // both ascending axon and parallel fiber
         if (numpGOfromGRtoGO[i] < max_aa_to_go_input + max_pf_to_go_input) {
           pGOfromGRtoGO[i][numpGOfromGRtoGO[i]] = destIndex;
           numpGOfromGRtoGO[i]++;
@@ -646,6 +678,7 @@ void InNetConnectivityState::connectGRGO() {
     }
   }
 
+  // recording convergence and divergence
   int gr_go_input_sum = 0;
 
   for (int i = 0; i < num_go; i++) {
@@ -889,7 +922,8 @@ void InNetConnectivityState::connectGOGODecayP(CRandomSFMT &randGen) {
 
         int destIndex = destPosY * go_x + destPosX;
 
-        // Normal One
+        // include recip cons, do not reduce base prob of recip con
+        // and include spatial drop off in prob of connection (default)
         if ((bool)go_go_recip_cons && !(bool)reduce_base_recip_go_go &&
             randGen.Random() >= 1 - Pcon[rGOGOSpanInd[j]] &&
             !conGOGOBoolOut[i][destIndex] &&
@@ -917,6 +951,8 @@ void InNetConnectivityState::connectGOGODecayP(CRandomSFMT &randGen) {
           }
         }
 
+        // include reducing base prob of connection
+        // in addition to spatial drop off of conn in span
         if ((bool)go_go_recip_cons && (bool)reduce_base_recip_go_go &&
             randGen.Random() >= 1 - Pcon[rGOGOSpanInd[j]] &&
             !conGOGOBoolOut[i][destIndex] &&
@@ -933,6 +969,8 @@ void InNetConnectivityState::connectGOGODecayP(CRandomSFMT &randGen) {
           conGOGOBoolOut[i][destIndex] = true;
         }
 
+        // no reciprocal connections, no lowering of base recip prob (timing
+        // is likely worse)
         if (!(bool)go_go_recip_cons && !(bool)reduce_base_recip_go_go &&
             randGen.Random() >= 1 - Pcon[rGOGOSpanInd[j]] &&
             (!conGOGOBoolOut[i][destIndex]) && !conGOGOBoolOut[destIndex][i] &&
@@ -978,6 +1016,7 @@ void InNetConnectivityState::connectGOGODecayP(CRandomSFMT &randGen) {
   delete2DArray<bool>(conGOGOBoolOut);
 }
 
+/* connect go <-> go gap junctions */
 void InNetConnectivityState::connectGOGO_GJ(CRandomSFMT &randGen) {
   int spanArrayGOtoGOgjX[span_go_to_go_gj_x + 1] = {0};
   int spanArrayGOtoGOgjY[span_go_to_go_gj_y + 1] = {0};
@@ -1003,7 +1042,7 @@ void InNetConnectivityState::connectGOGO_GJ(CRandomSFMT &randGen) {
     yCoorsGOGOgj[i] = spanArrayGOtoGOgjY[i / (span_go_to_go_gj_y + 1)];
   }
 
-  // "In Vivo additions"
+  // "In Vivo additions" -> I gotta see the paper these eqns are from
   for (int i = 0; i < span_go_to_go_gj_x; i++) {
     float gjPConX = exp(((abs(xCoorsGOGOgj[i]) * 36.0) - 267.0) / 39.0);
     float gjPConY = exp(((abs(yCoorsGOGOgj[i]) * 36.0) - 267.0) / 39.0);
@@ -1028,41 +1067,54 @@ void InNetConnectivityState::connectGOGO_GJ(CRandomSFMT &randGen) {
   int destPosY;
   int destIndex;
 
+  // for each golgi cell
   for (int i = 0; i < num_go; i++) {
     srcPosX = i % go_x;
     srcPosY = i / go_x;
 
-    for (int j = 0; j < num_p_go_to_go_gj; j++) {
-      destPosX = srcPosX + xCoorsGOGOgj[j];
-      destPosY = srcPosY + yCoorsGOGOgj[j];
+    for each
+      possible connection for (int j = 0; j < num_p_go_to_go_gj; j++) {
+        destPosX = srcPosX + xCoorsGOGOgj[j];
+        destPosY = srcPosY + yCoorsGOGOgj[j];
 
-      destPosX = (destPosX % go_x + go_x) % go_x;
-      destPosY = (destPosY % go_y + go_y) % go_y;
+        destPosX = (destPosX % go_x + go_x) % go_x;
+        destPosY = (destPosY % go_y + go_y) % go_y;
 
-      destIndex = destPosY * go_x + destPosX;
+        // choose dest cell (ie presynpatic cell)
+        destIndex = destPosY * go_x + destPosX;
 
-      if ((randGen.Random() >= 1 - gjPCon[j]) && !gjConBool[i][destIndex] &&
-          !gjConBool[destIndex][i]) {
-        pGOCoupInGOGO[destIndex][numpGOCoupInGOGO[destIndex]] = i;
-        pGOCoupInGOGOCCoeff[destIndex][numpGOCoupInGOGO[destIndex]] = gjCC[j];
-        numpGOCoupInGOGO[destIndex]++;
+        /* only make connection if:
+         *  1. probabilistically wrt distance (need paper for above eqn)
+         *  2. if we haven't made a connection between these two cells yet
+         *     (need to check both diagonals in gj connectivity bool matrix)
+         */
+        if ((randGen.Random() >= 1 - gjPCon[j]) && !gjConBool[i][destIndex] &&
+            !gjConBool[destIndex][i]) {
+          pGOCoupInGOGO[destIndex][numpGOCoupInGOGO[destIndex]] = i;
+          pGOCoupInGOGOCCoeff[destIndex][numpGOCoupInGOGO[destIndex]] = gjCC[j];
+          numpGOCoupInGOGO[destIndex]++;
 
-        pGOCoupInGOGO[i][numpGOCoupInGOGO[i]] = destIndex;
-        pGOCoupInGOGOCCoeff[i][numpGOCoupInGOGO[i]] = gjCC[j];
-        numpGOCoupInGOGO[i]++;
+          pGOCoupInGOGO[i][numpGOCoupInGOGO[i]] = destIndex;
+          pGOCoupInGOGOCCoeff[i][numpGOCoupInGOGO[i]] = gjCC[j];
+          numpGOCoupInGOGO[i]++;
 
-        gjConBool[i][destIndex] = true;
+          gjConBool[i][destIndex] = true;
+        }
       }
-    }
   }
   delete2DArray<bool>(gjConBool);
 }
 
+/**
+ * @details translates mf -> gl connections
+ * to mf -> gr and mf -> go connections
+ */
 void InNetConnectivityState::translateMFGL() {
   // Mossy fiber to Granule
   for (int i = 0; i < num_gr; i++) {
     for (int j = 0; j < numpGRfromGLtoGR[i]; j++) {
       int glIndex = pGRfromGLtoGR[i][j];
+      // only translate this gl if it is connected to a mf
       if (haspGLfromMFtoGL[glIndex]) {
         int mfIndex = pGLfromMFtoGL[glIndex];
 
@@ -1093,7 +1145,7 @@ void InNetConnectivityState::translateMFGL() {
   for (int i = 0; i < num_go; i++) {
     for (int j = 0; j < numpGOfromGLtoGO[i]; j++) {
       int glIndex = pGOfromGLtoGO[i][j];
-
+      // only translate if this gl is connected to a mf
       if (haspGLfromMFtoGL[glIndex]) {
         int mfIndex = pGLfromMFtoGL[glIndex];
 
@@ -1119,6 +1171,10 @@ void InNetConnectivityState::translateMFGL() {
             goMFOutputCounter / (float)num_mf);
 }
 
+/**
+ *  @details propagate go -> gl connection to
+ *  gl -> gr connection: ie create go -> gr connection
+ */
 void InNetConnectivityState::translateGOGL() {
   for (int i = 0; i < num_gr; i++) {
     for (int j = 0; j < max_num_p_gr_from_go_to_gr; j++) {
@@ -1149,6 +1205,14 @@ void InNetConnectivityState::translateGOGL() {
             goGROutputCounter / (float)num_go);
 }
 
+/**
+ *  @details creates time delays from gr to go for
+ *  each gr -> go connection based off of how far
+ *  along the gr -> go span the post-synaptic go cell
+ *  is as well as two velocity variables for how
+ *  quickly a spike travels along the ascending axon and
+ *  parallel fiber of a granule cell.
+ */
 void InNetConnectivityState::assignGRDelays() {
   for (int i = 0; i < num_gr; i++) {
     // calculate x coordinate of GR position
