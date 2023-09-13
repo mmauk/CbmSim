@@ -3,6 +3,9 @@
  *
  *  Created on: Dec 14, 2011
  *      Author: consciousness
+ *
+ * This file pulls together innet and mzone classes and performs the
+ * heavy-lifting of calculating cell spiking activity every time step
  */
 
 #ifndef CBMSIMCORE_H_
@@ -24,13 +27,6 @@
 #include "sfmt.h"
 
 enum plasticity { OFF, GRADED, BINARY, CASCADE };
-
-/* TODO: consider altering this code so that CBMSimCore does not keep local
- * copies of the state classes. Consider whether transferring data between
- * classes by using classes as arguments would be just as fast as we have things
- * now. The advantage would be that we would use less memory and it would
- * simplify the code.
- */
 
 class CBMSimCore {
 public:
