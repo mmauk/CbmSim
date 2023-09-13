@@ -3,6 +3,12 @@
  *
  *  Created on: Jun 21, 2011
  *      Author: consciousness
+ *
+ *  InNet class is used to update spiking activity within the input network
+ *  of the simulation, which includes mf, gr, and go cells. mf spikes are
+ *  poisson generated separately and are copied in to this class. connectivity
+ *  arrays are used to relay information originating from mf to go and gr, and
+ *  from gr to go
  */
 
 #ifndef INNET_H_
@@ -25,6 +31,8 @@ public:
 
   void writeToState();
 
+  // silly little functions used to send a const (immutable) pointer to the
+  // caller to read this data
   const uint8_t *exportAPGO();
   const uint8_t *exportAPMF();
   const uint8_t *exportHistMF();
@@ -82,6 +90,7 @@ public:
   void runUpdateGRHistoryCUDA(cudaStream_t **sts, int streamN, uint32_t t);
 
 protected:
+  // following two pointers are copied in during construction of the class
   InNetConnectivityState *cs;
   InNetActivityState *as;
 
@@ -89,6 +98,7 @@ protected:
   int numGPUs;
   int numGRPerGPU;
 
+  // cuda related variables. some are redundant
   unsigned int calcGRActNumGRPerB;
   unsigned int calcGRActNumBlocks;
 
