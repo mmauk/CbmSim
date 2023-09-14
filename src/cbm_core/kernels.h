@@ -3,6 +3,10 @@
  *
  *  Created on: Jun 6, 2011
  *      Author: consciousness
+ *
+ *  this file is a collection of all of the wrapper functions that
+ *  call our cuda kernels. the wrappers contain kernel launch params,
+ *  including how many blocks per grid and threads per block to use.
  */
 
 #ifndef KERNELS_H_

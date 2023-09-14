@@ -7,6 +7,7 @@
 
 #include "kernels.h"
 
+// global arrays used for sum reduction kernels
 extern __shared__ uint32_t sharedIOBufGR[];
 extern __shared__ float sharedIOBufGRfloat[];
 
@@ -26,35 +27,45 @@ __global__ void calcActivityGRGPU(float *vm, float *gKCa, float *gLeak,
                                   float threshMax, float threshDecay) {
   float tempThresh;
   unsigned int tempAP;
-
+  // get the thread id of this thread
   int i = blockIdx.x * blockDim.x + threadIdx.x;
 
   float tempGKCa = gKCa[i];
   float tempV = vm[i];
 
+  // update leak conductance: was actually sigmoidal, faster to run as poly
   gLeak[i] = 0.0000001021370733 * tempV * tempV * tempV * tempV +
              0.00001636462 * tempV * tempV * tempV +
              0.00113971219 * tempV * tempV + 0.038772 * tempV + 0.6234929;
 
+  // similar for NMDA conductance increment var (why only the increment var?)
   gNMDAInc[i] = 0.00000011969 * tempV * tempV * tempV +
                 0.000089369 * tempV * tempV + 0.0151 * tempV + 0.7713;
 
+  // nmda conductance update
   gNMDA[i] = gNMDAInc[i] * gAMPAInc * apMFtoGR[i] + gNMDA[i] * 0.9672;
 
+  // use conductances to update voltage
   tempV = tempV + gLeak[i] * (eLeak - tempV) - gESum[i] * tempV -
           gNMDA[i] * tempV + gISum[i] * (eGOIn - tempV);
-
+  // reset voltage to thresh if larger
   if (tempV > threshMax)
     tempV = threshMax;
 
+  // update thresh
   tempThresh = thresh[i] + (threshBase - thresh[i]) * threshDecay;
+  // decide if we spiked or not
   tempAP = tempV > tempThresh;
+  // reset thresh if above max
   thresh[i] = tempAP * threshMax + (!tempAP) * tempThresh;
 
+  // these were experimental K and Ca conductances, should be deprecated
   tempGKCa = tempGKCa * 0.9999f;
   gKCa[i] = tempAP * (tempGKCa + 0.000f) + (!tempAP) * tempGKCa;
 
+  // update spike buf
   apBuf[i] = (apBuf[i] << 1) | tempAP;
+  // send local vars to global pointers
   apOutGR[i] = tempAP;
   apGR[i] = tempAP;
   vm[i] = tempV;
@@ -65,43 +76,57 @@ __global__ void updateGRGOOutGPU(uint32_t *apBuf, uint32_t *goOut,
                                  size_t delayPitch, uint32_t *con,
                                  size_t conPitch, int32_t *numSyn,
                                  int nWrites) {
+  // tid is thread identity within the block
   int tid = threadIdx.x;
+  // block is the 'global' thread id
   int index = blockIdx.x * blockDim.x + threadIdx.x;
-  unsigned int *conRow;
-  unsigned int *delayRow;
-  unsigned int *goRow =
+  unsigned int *conRow; // single row in con matrix
+  unsigned int *delayRow; // single row in delay matrix
+  unsigned int *goRow = // select go row via pitch
       (unsigned int *)((char *)goOut + blockIdx.x * goOutPitch);
 
   int tempNS = numSyn[index];
   unsigned int tempOut;
 
+  // reset shared buffer for later writes
   for (int i = 0; i < nWrites; i++) {
     sharedIOBufGR[tid + i * blockDim.x] = 0;
   }
 
+  // sync threads before we do atomic adds
   __syncthreads();
+  //for each synapse...
   for (int i = 0; i < tempNS; i++) {
+    // grab this con matrix row
     conRow = (uint32_t *)((char *)con + i * conPitch);
+    // grab this delay matrix row
     delayRow = (uint32_t *)((char *)delay + i * delayPitch);
 
+    // out at conRow[index] gets whether there was a spike at this delay
     tempOut = (apBuf[index] & delayRow[index]) > 0;
 
+    // do the atomic add if there was a spike for this delay
     if (tempOut > 0) {
       atomicAdd(&sharedIOBufGR[conRow[index]], 1);
     }
   }
+  // sync threads after atomic add to avoid race conditions
   __syncthreads();
+  // perform the go row update for nWrites
   for (int i = 0; i < nWrites; i++) {
     goRow[tid + i * blockDim.x] = sharedIOBufGR[tid + i * blockDim.x];
   }
 }
 
+/*
+ * nearly identical implementation as updateGRGOOutGPU
+ */
 __global__ void updateGRBCOutGPU(uint32_t *apBuf, uint32_t *bcOut,
                                  size_t bcOutPitch, uint32_t *delay,
                                  size_t delayPitch, uint32_t *con,
                                  size_t conPitch, int32_t *numSyn,
                                  int nWrites) {
-  int tid = threadIdx.x;
+  int tid = threadIdx.x; 
   int index = blockIdx.x * blockDim.x + threadIdx.x;
   unsigned int *conRow;
   unsigned int *delayRow;
@@ -138,6 +163,7 @@ __global__ void sumGRGOOutGPU(unsigned int nRows, uint32_t *goOut,
   int index = blockIdx.x * blockDim.x + threadIdx.x;
   unsigned int tempSum;
 
+  // collect the sum across the rows
   tempSum = 0;
   for (int i = 0; i < nRows; i++) {
     goOutRow = (unsigned int *)((char *)goOut + i * goOutPitch);
@@ -182,20 +208,26 @@ __global__ void updateGRInOPGPU(unsigned int inNLoads, uint32_t *apIn,
 
   int tempApInSum = 0;
 
+  // assign these striated memory locations to apIn at same striations
   for (int i = 0; i < inNLoads; i++) {
     sharedIOBufGR[tid + i * blockDim.x] = apIn[tid + i * blockDim.x];
   }
   __syncthreads();
 
+  // for number of input synapses, get spikes from global mem buffery
+  // using this con row
   for (int i = 0; i < tempNSyn; i++) {
     conRow = (unsigned int *)((char *)conFromIn + i * conFromInPitch);
     tempApInSum += sharedIOBufGR[conRow[index]];
   }
 
+  // compute the direct component
   gDirect[index] = gDirect[index] * gDecayD + gIncD * tempApInSum;
+  // compute the spillover component
   gSpillover[index] =
       gSpillover[index] * 0.99 + dynamicSpillAmp[index] * tempApInSum;
 
+  // combine direct and spillover conductances
   gSum[index] = gDirect[index] + gSpillover[index];
 }
 
@@ -216,11 +248,12 @@ __global__ void updateGOGRDepressionInOPGPU(unsigned int inNLoads,
     sharedIOBufGRfloat[tid + i * blockDim.x] = depAmp[tid + i * blockDim.x];
   }
   __syncthreads();
-
+  // compute dep amp sum over input synapses using con row
   for (int i = 0; i < tempNSyn; i++) {
     conRow = (unsigned int *)((char *)conFromIn + i * conFromInPitch);
     tempDepAmpSum += sharedIOBufGRfloat[conRow[index]];
   }
+  // not sure why we divide by three. know there are around 3 gr inputs from go...
   depAmpGOGRGPU[index] = tempDepAmpSum / 3;
 }
 
@@ -242,11 +275,12 @@ __global__ void updateMFGRDepressionInOPGPU(unsigned int inNLoads,
     sharedIOBufGRfloat[tid + i * blockDim.x] = depAmp[tid + i * blockDim.x];
   }
   __syncthreads();
-
+  // compute dep amp sum by indexing global float array with con array
   for (int i = 0; i < tempNSyn; i++) {
     conRow = (unsigned int *)((char *)conFromIn + i * conFromInPitch);
     tempDepAmpSum += sharedIOBufGRfloat[conRow[index]];
   }
+  // similar computation as in updateGOGRDepressionInOPGPU: an avg'ing, but why?
   depAmpMFGRGPU[index] = tempDepAmpSum / numMFperGR[index];
 }
 
@@ -267,12 +301,12 @@ updateGOGRDynamicSpillInOPGPU(unsigned int inNLoads, float *dynamicAmp,
     sharedIOBufGRfloat[tid + i * blockDim.x] = dynamicAmp[tid + i * blockDim.x];
   }
   __syncthreads();
-
+  // update the dynamic amp sum using global array and con array
   for (int i = 0; i < tempNSyn; i++) {
     conRow = (unsigned int *)((char *)conFromIn + i * conFromInPitch);
     tempDynamicAmpSum += sharedIOBufGRfloat[conRow[index]];
   }
-
+  // again, hardcoded number of connections ig
   dynamicAmpGOGRGPU[index] = tempDynamicAmpSum / 3;
 }
 
@@ -320,6 +354,9 @@ updateUBCGRInOPGPU(unsigned int inNLoads, uint32_t *apIn, float *depAmp,
   gSum[index] = gDirect[index] + gSpillover[index];
 }
 
+/*
+ * similar implementation to above update in op kernels
+ */
 __global__ void updateMFGRInOPGPU(unsigned int inNLoads, uint32_t *apIn,
                                   float *depAmp, float *g, size_t gPitch,
                                   uint32_t *conFromIn, size_t conFromInPitch,
@@ -356,8 +393,10 @@ __global__ void updateMFGRInOPGPU(unsigned int inNLoads, uint32_t *apIn,
 
 __global__ void updateGRHistory(uint32_t *apBuf, uint64_t *apHist,
                                 uint32_t bufTestMask) {
-  int i = blockIdx.x * blockDim.x + threadIdx.x;
-  uint64_t tempHist = apHist[i] << 1;
+  int i = blockIdx.x * blockDim.x + threadIdx.x; // get global id
+  uint64_t tempHist = apHist[i] << 1; // not sure why we bit shift by 1...
+  // combine prev hist bits with result of apbuf and buf mask. I think
+  // extra multiplication is unecessary
   apHist[i] = tempHist | ((apBuf[i] & bufTestMask) > 0) * 0x00000001;
 }
 
@@ -369,13 +408,15 @@ __global__ void updatePFBCSCOutGPU(uint32_t *apBuf, uint32_t *delay,
                                    unsigned int numPFInPerSCP2) {
   int index = blockIdx.x * blockDim.x + threadIdx.x;
   uint32_t tempOut;
+  // clever way to get the right row in each connectivity array
   unsigned int *pfBCRow =
       (uint32_t *)((char *)pfBC + (index >> numPFInPerBCP2) * pfBCPitch);
   unsigned int *pfSCRow =
       (uint32_t *)((char *)pfSC + (index >> numPFInPerSCP2) * pfSCPitch);
-
+  // output spike if ap buf has a spike at the correct delay
   tempOut = (apBuf[index] & delay[index]) > 0;
 
+  // some more bit trickery to index the ap output correctly
   pfBCRow[index & (numPFInPerBC - 1)] = tempOut;
   pfSCRow[index & (numPFInPerSC - 1)] = tempOut;
 }
