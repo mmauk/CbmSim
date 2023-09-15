@@ -19,7 +19,6 @@
 #include "info_file.h"
 #include "innetactivitystate.h"
 #include "innetconnectivitystate.h"
-#include "poissonregencells.h"
 
 // TODO: place in a common place, as gui uses a constant like this too
 #define NUM_CELL_TYPES 8
