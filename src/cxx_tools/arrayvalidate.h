@@ -14,21 +14,17 @@
 #include <math.h>
 #endif
 
-template <typename Type>
-bool validateArray(Type *array, unsigned int numElem)
-{
-	bool valid = true;
-	for (size_t i = 0; i < numElem; i++)
-	{
-		// expected types are int and float, so int arr elems get type casted implicitly
-		if (isnanf(array[i]) || isinff(array[i]))
-		{
-			valid = false;
-			break;
-		}
-	}
-	return valid;
+template <typename Type> bool validateArray(Type *array, unsigned int numElem) {
+  bool valid = true;
+  for (size_t i = 0; i < numElem; i++) {
+    // expected types are int and float, so int arr elems get type casted
+    // implicitly
+    if (isnanf(array[i]) || isinff(array[i])) {
+      valid = false;
+      break;
+    }
+  }
+  return valid;
 }
 
 #endif /* ARRAYVALIDATE_H_ */
-
