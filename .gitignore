@@ -1,5 +1,6 @@
 .git
-scripts/**
+scripts/*.log
+scripts/forgetting/*.log
 build/**
 data/outputs/**
 data/inputs/**
