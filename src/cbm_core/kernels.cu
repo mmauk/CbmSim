@@ -435,8 +435,8 @@ __global__ void updatePFPCSynIOWithMask(float *synWPFPC, uint64_t *historyGR, ui
 	synWPFPC[i]=(synWPFPC[i]>1)+(synWPFPC[i]<=1)*synWPFPC[i];
 	// if not frozen weight, keep the updated syn weight else reset syn weight to val
 	// prior to updating
-	// '0' in mask means freeze weight, '1' means update weight
-	synWPFPC[i] = synWPFPC[i] * plast_mask[i] + tempSynW * (1 - plast_mask[i]);
+	// '1' in mask means freeze weight, '0' means update weight
+	synWPFPC[i] = synWPFPC[i] * (1 -  plast_mask[i]) + tempSynW * plast_mask[i];
 }
 
 //**---------------end IO kernels-------------**
