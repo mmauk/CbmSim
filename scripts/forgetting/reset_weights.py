@@ -16,7 +16,7 @@ def get_weights_from_file(w_file):
             raw_data = np.fromfile(w_fd, np.single)
             w_fd.close()
     except FileNotFoundError:
-        print(f"[ERROR] '{weights_file_name}' could not be opened.")
+        print(f"[ERROR] '{w_file}' could not be opened.")
         print('[ERROR]: Exiting...')
         sys.exit(1)
     return raw_data
