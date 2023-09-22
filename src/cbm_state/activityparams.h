@@ -8,13 +8,13 @@
 #ifndef ACTIVITYPARAMS_H_
 #define ACTIVITYPARAMS_H_
 
+#include "file_parse.h"
+#include "stdint.h"
+#include <fstream>
+#include <iostream>
 #include <math.h>
 #include <stdlib.h>
 #include <string>
-#include <iostream>
-#include <fstream>
-#include "file_parse.h"
-#include "stdint.h"
 
 extern bool act_params_populated;
 
@@ -26,7 +26,7 @@ extern float eGABAGO;
 extern float eGOGR;
 extern float eMFGR;
 extern float eMGluRGO;
-extern float eNCtoIO; 
+extern float eNCtoIO;
 extern float ePCtoBC;
 extern float ePCtoNC;
 extern float eSCtoPC;
@@ -176,7 +176,7 @@ extern float goGABAGOGOSynRec;
 extern float threshDecGO;
 extern float gDirectDecMFtoGR;
 extern float gSpilloverDecMFtoGR;
-extern float gDirectDecGOtoGR; 
+extern float gDirectDecGOtoGR;
 extern float gSpilloverDecGOtoGR;
 extern float threshDecGR;
 extern float tsPerHistBinGR;
@@ -191,15 +191,15 @@ extern float gLeakPC;
 extern float gDecGRtoPC;
 extern float gDecBCtoPC;
 extern float gDecSCtoPC;
-extern float tsPopHistPC; /* used for updating MFNC syn plasticity */
-extern float tsPerPopHistBinPC; /* used for updating MFNC syn plasticity */ 
-// extern float numPopHistBinsPC; /* used for updating MFNC syn plasticity */ 
+extern float tsPopHistPC;       /* used for updating MFNC syn plasticity */
+extern float tsPerPopHistBinPC; /* used for updating MFNC syn plasticity */
+// extern float numPopHistBinsPC; /* used for updating MFNC syn plasticity */
 extern float gLeakIO;
 extern float threshDecIO;
 extern float tsLTDDurationIO;
 extern float tsLTDstartAPIO;
 extern float tsLTPstartAPIO;
-extern float tsLTPEndAPIO; 
+extern float tsLTPEndAPIO;
 extern float grPCHistCheckBinIO; /* used in PFPC syn plasticity */
 extern float gmaxNMDADecMFtoNC;
 extern float gmaxAMPADecMFtoNC;
@@ -217,4 +217,3 @@ void read_act_params(std::fstream &in_param_buf);
 void write_act_params(std::fstream &out_param_buf);
 
 #endif /* ACTIVITYPARAMS_H_ */
-
