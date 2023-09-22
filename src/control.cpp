@@ -687,10 +687,8 @@ void Control::runSession(struct gui *gui) {
       {
         simCore->updateErrDrive(0, 0.3);
       }
-      if (ts >= onsetCS && ts < onsetCS + csLength) {
-        mfAP = (useCS == 1)
-                   ? mfs->calcPoissActivity(TONIC_CS_A, simCore->getMZoneList())
-                   : mfs->calcPoissActivity(BKGD, simCore->getMZoneList());
+      if (useCS && ts >= onsetCS && ts < onsetCS + csLength) {
+        mfAP = mfs->calcPoissActivity(TONIC_CS_A, simCore->getMZoneList());
       } else {
         mfAP = mfs->calcPoissActivity(BKGD, simCore->getMZoneList());
       }
