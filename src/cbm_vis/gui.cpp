@@ -667,9 +667,6 @@ static void draw_pf_pc_plot(GtkWidget *drawing_area, cairo_t *cr,
                             Control *control) {
   const float *pfpc_weights =
       control->simCore->getMZoneList()[0]->exportPFPCWeights();
-  for (int i = 0; i < 4096; i++) {
-    control->sample_pfpc_syn_weights[i] = pfpc_weights[i];
-  }
 
   // background color setup
   cairo_set_source_rgb(cr, 0, 0, 0);
@@ -694,8 +691,7 @@ static void draw_pf_pc_plot(GtkWidget *drawing_area, cairo_t *cr,
 
   // TODO: place scaling in above scale
   for (int i = 0; i < 4096; i++) {
-    cairo_rectangle(
-        cr, i, (int)(da.height * control->sample_pfpc_syn_weights[i]), 2, 2);
+    cairo_rectangle(cr, i, (int)(da.height * pfpc_weights[i]), 2, 2);
     cairo_fill(cr);
   }
 }

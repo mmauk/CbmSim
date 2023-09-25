@@ -1072,35 +1072,35 @@ void InNetConnectivityState::connectGOGO_GJ(CRandomSFMT &randGen) {
     srcPosX = i % go_x;
     srcPosY = i / go_x;
 
-    for each
-      possible connection for (int j = 0; j < num_p_go_to_go_gj; j++) {
-        destPosX = srcPosX + xCoorsGOGOgj[j];
-        destPosY = srcPosY + yCoorsGOGOgj[j];
+    // for each possible connection
+    for (int j = 0; j < num_p_go_to_go_gj; j++) {
+      destPosX = srcPosX + xCoorsGOGOgj[j];
+      destPosY = srcPosY + yCoorsGOGOgj[j];
 
-        destPosX = (destPosX % go_x + go_x) % go_x;
-        destPosY = (destPosY % go_y + go_y) % go_y;
+      destPosX = (destPosX % go_x + go_x) % go_x;
+      destPosY = (destPosY % go_y + go_y) % go_y;
 
-        // choose dest cell (ie presynpatic cell)
-        destIndex = destPosY * go_x + destPosX;
+      // choose dest cell (ie presynpatic cell)
+      destIndex = destPosY * go_x + destPosX;
 
-        /* only make connection if:
-         *  1. probabilistically wrt distance (need paper for above eqn)
-         *  2. if we haven't made a connection between these two cells yet
-         *     (need to check both diagonals in gj connectivity bool matrix)
-         */
-        if ((randGen.Random() >= 1 - gjPCon[j]) && !gjConBool[i][destIndex] &&
-            !gjConBool[destIndex][i]) {
-          pGOCoupInGOGO[destIndex][numpGOCoupInGOGO[destIndex]] = i;
-          pGOCoupInGOGOCCoeff[destIndex][numpGOCoupInGOGO[destIndex]] = gjCC[j];
-          numpGOCoupInGOGO[destIndex]++;
+      /* only make connection if:
+       *  1. probabilistically wrt distance (need paper for above eqn)
+       *  2. if we haven't made a connection between these two cells yet
+       *     (need to check both diagonals in gj connectivity bool matrix)
+       */
+      if ((randGen.Random() >= 1 - gjPCon[j]) && !gjConBool[i][destIndex] &&
+          !gjConBool[destIndex][i]) {
+        pGOCoupInGOGO[destIndex][numpGOCoupInGOGO[destIndex]] = i;
+        pGOCoupInGOGOCCoeff[destIndex][numpGOCoupInGOGO[destIndex]] = gjCC[j];
+        numpGOCoupInGOGO[destIndex]++;
 
-          pGOCoupInGOGO[i][numpGOCoupInGOGO[i]] = destIndex;
-          pGOCoupInGOGOCCoeff[i][numpGOCoupInGOGO[i]] = gjCC[j];
-          numpGOCoupInGOGO[i]++;
+        pGOCoupInGOGO[i][numpGOCoupInGOGO[i]] = destIndex;
+        pGOCoupInGOGOCCoeff[i][numpGOCoupInGOGO[i]] = gjCC[j];
+        numpGOCoupInGOGO[i]++;
 
-          gjConBool[i][destIndex] = true;
-        }
+        gjConBool[i][destIndex] = true;
       }
+    }
   }
   delete2DArray<bool>(gjConBool);
 }

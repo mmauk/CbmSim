@@ -7,7 +7,6 @@
 #include "file_parse.h"
 #include "gui.h" /* tenuous inclide at best :pogO: */
 #include "logger.h"
-#include "tty.h"
 
 Control::Control(parsed_commandline &p_cl) {
   use_gui = (p_cl.vis_mode == "GUI") ? true : false;

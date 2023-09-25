@@ -16,6 +16,7 @@
 #include "kernels.h"
 #include "mzoneactivitystate.h"
 #include "mzoneconnectivitystate.h"
+#include "sfmt.h"
 #include <cstdint>
 
 class MZone {

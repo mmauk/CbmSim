@@ -7,7 +7,6 @@
 #ifndef _DYNAMIC2DARRAY_H
 #define _DYNAMIC2DARRAY_H
 
-#include "arrayvalidate.h"
 #include "file_utility.h"
 #include <cstddef>
 #include <cstdio>
