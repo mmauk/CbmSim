@@ -3,69 +3,84 @@
  *
  *  Created on: Nov 21, 2012
  *      Author: consciousness
+ *
+ *  provides functions for making connections between:
+ *
+ *    gr -> pc
+ *    gr -> bc
+ *    gr -> sc
+ *    bc -> pc
+ *    pc -> bc
+ *    pc -> nc
+ *    mf -> nc
+ *    nc -> io
+ *    io -> io
+ *    io -> nc
+ *
+ *   nc collaterals connectivity to the granule cell layer
+ *   neurons is provided in ecmfpopulation and poissonregencells
+ *   classes.
  */
 
 #ifndef MZONECONNECTIVITYSTATE_H_
 #define MZONECONNECTIVITYSTATE_H_
 
-#include <fstream>
 #include <cstdint>
+#include <fstream>
 
-class MZoneConnectivityState
-{
+class MZoneConnectivityState {
 public:
-	MZoneConnectivityState();
-	MZoneConnectivityState(int randSeed);
-	MZoneConnectivityState(std::fstream &infile);
-	~MZoneConnectivityState();
+  MZoneConnectivityState();
+  MZoneConnectivityState(int randSeed);
+  MZoneConnectivityState(std::fstream &infile);
+  ~MZoneConnectivityState();
 
-	void readState(std::fstream &infile);
-	void writeState(std::fstream &outfile);
+  void readState(std::fstream &infile);
+  void writeState(std::fstream &outfile);
 
-	//granule cells
-	uint32_t *pGRDelayMaskfromGRtoBSP;
+  // granule cells
+  uint32_t *pGRDelayMaskfromGRtoBSP;
 
-	//basket cells
-	uint32_t **pBCfromBCtoPC;
-	uint32_t **pBCfromPCtoBC;
+  // basket cells
+  uint32_t **pBCfromBCtoPC;
+  uint32_t **pBCfromPCtoBC;
 
-	//stellate cells
-	uint32_t **pSCfromSCtoPC;
+  // stellate cells
+  uint32_t **pSCfromSCtoPC;
 
-	//purkinje cells
-	uint32_t **pPCfromBCtoPC;
-	uint32_t **pPCfromPCtoBC;
-	uint32_t **pPCfromSCtoPC;
-	uint32_t **pPCfromPCtoNC;
-	uint32_t *pPCfromIOtoPC;
+  // purkinje cells
+  uint32_t **pPCfromBCtoPC;
+  uint32_t **pPCfromPCtoBC;
+  uint32_t **pPCfromSCtoPC;
+  uint32_t **pPCfromPCtoNC;
+  uint32_t *pPCfromIOtoPC;
 
-	//nucleus cells
-	uint32_t **pNCfromPCtoNC;
-	uint32_t **pNCfromNCtoIO;
-	uint32_t **pNCfromMFtoNC;
+  // nucleus cells
+  uint32_t **pNCfromPCtoNC;
+  uint32_t **pNCfromNCtoIO;
+  uint32_t **pNCfromMFtoNC;
 
-	//inferior olivary cells
-	uint32_t **pIOfromIOtoPC;
-	uint32_t **pIOfromNCtoIO;
-	uint32_t **pIOInIOIO;
-	uint32_t **pIOOutIOIO;
+  // inferior olivary cells
+  uint32_t **pIOfromIOtoPC;
+  uint32_t **pIOfromNCtoIO;
+  uint32_t **pIOInIOIO;
+  uint32_t **pIOOutIOIO;
 
 private:
-	void allocateMemory();
-	void initializeVals();
-	void deallocMemory();
-	void stateRW(bool read, std::fstream &file);
+  void allocateMemory();
+  void initializeVals();
+  void deallocMemory();
+  void stateRW(bool read, std::fstream &file);
 
-	void assignGRDelays();
-	void connectBCtoPC();
-	void connectPCtoBC();
-	void connectSCtoPC();
-	void connectPCtoNC(int randSeed);
-	void connectNCtoIO();
-	void connectMFtoNC();
-	void connectIOtoPC();
-	void connectIOtoIO();
+  void assignGRDelays();
+  void connectBCtoPC();
+  void connectPCtoBC();
+  void connectSCtoPC();
+  void connectPCtoNC(int randSeed);
+  void connectNCtoIO();
+  void connectMFtoNC();
+  void connectIOtoPC();
+  void connectIOtoIO();
 };
 
 #endif /* MZONECONNECTIVITYSTATE_H_ */
-
