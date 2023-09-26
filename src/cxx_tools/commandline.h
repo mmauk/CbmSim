@@ -12,10 +12,10 @@
  */
 #ifndef COMMAND_LINE_H_
 #define COMMAND_LINE_H_
-#include <string>
 
 #include "file_parse.h"
 #include "file_utility.h"
+#include <string>
 
 /*
  * The main data structure for this module. collects all relevant commandline

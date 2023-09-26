@@ -3,6 +3,11 @@
  *
  *  Created on: Jun 13, 2011
  *      Author: consciousness
+ *
+ *  MZone class computes the spiking activity for all 'stripe' or 'microzone'
+ *  cells, including pc, bc, sc cells, in addition to nc and ios. Computes
+ *  the US (see 'setErrDrive' function). Reads in mf spikes from a pointer.
+ *  computes pf->pc and mf->nc synaptic plasticity as well.
  */
 
 #ifndef MZONE_H_

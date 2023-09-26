@@ -30,7 +30,8 @@ InNet::InNet(InNetConnectivityState *cs, InNetActivityState *as,
   this->gpuIndStart = gpuIndStart;
   this->numGPUs = numGPUs;
 
-  // why do we allocate these here???
+  // use transpose arrays as makes for better layout in gpu memory
+  // when copied over to device
   gGOGRT = allocate2DArray<float>(max_num_p_gr_from_go_to_gr, num_gr);
   gMFGRT = allocate2DArray<float>(max_num_p_gr_from_mf_to_gr, num_gr);
 
@@ -267,7 +268,8 @@ void InNet::writeToState() {
 //	for (int j = startGRStim; j <= startGRStim + numGRStim; j++)
 //	{
 //		/* as-> apBufGR[j] |= 1u; // try this to see if we get the same
-//result */ 		as->apBufGR[j] = as->apBufGR[j] | 1u; 		outputGRH[j] = true;
+// result */ 		as->apBufGR[j] = as->apBufGR[j] | 1u;
+// outputGRH[j] = true;
 //	}
 //
 //	for (int i = 0; i < numGPUs; i++)
@@ -344,41 +346,52 @@ void InNet::updateMFActivties(const uint8_t *actInMF) {
 }
 
 void InNet::calcGOActivities() {
-#pragma omp parallel for
+#pragma omp parallel for // an attempt at parallelization using openmp haha
   for (int i = 0; i < num_go; i++) {
+    // gather gr -> go input sums copied from all devices into one host array
     sumGRInputGO[i] = 0;
     for (int j = 0; j < numGPUs; j++) {
       sumGRInputGO[i] += grInputGOSumH[j][i];
     }
-
+    // temp var as faster to access local memory than dereference array over and
+    // over (or so I hear)
     float tempVGO = as->vGO[i];
 
-    // NMDA Low
+    // NMDA Low (voltage-dep step size for nmda conductance update gr -> go)
     float gNMDAIncGRGO = (0.00000082263 * tempVGO * tempVGO * tempVGO) +
                          (0.00021653 * tempVGO * tempVGO) + (0.0195 * tempVGO) +
                          0.6117;
 
-    // NMDA High
+    // NMDA High (voltage-dep step size for nmda conductance update mf -> go)
     as->gNMDAIncMFGO[i] = (0.00000011969 * tempVGO * tempVGO * tempVGO) +
                           (0.000089369 * tempVGO * tempVGO) +
                           (0.0151 * tempVGO) + 0.7713;
 
+    // update total mf -> go input conductance
     as->gSum_MFGO[i] =
         (as->inputMFGO[i] * mfgoW) + as->gSum_MFGO[i] * gDecMFtoGO;
+    // update total go -> go input conductance. (notice the weight gogoW)
     as->gSum_GOGO[i] = (as->inputGOGO[i] * gogoW * as->synWscalerGOtoGO[i]) +
                        as->gSum_GOGO[i] * gGABADecGOtoGO;
+    // update mf -> go nmda conductance. (notice the weight mfgoW and NMDA/AMPA
+    // ratio)
     as->gNMDAMFGO[i] =
         as->inputMFGO[i] * (mfgoW * NMDA_AMPAratioMFGO * as->gNMDAIncMFGO[i]) +
         as->gNMDAMFGO[i] * gDecayMFtoGONMDA;
 
+    // update gr -> go input conductance. (notice the weight grgoW)
     as->gGRGO[i] = (sumGRInputGO[i] * grgoW * as->synWscalerGRtoGO[i]) +
                    as->gGRGO[i] * gDecGRtoGO;
+    // update gr -> go nmda conductance. (also notice the grgoW and syn scale
+    // value) value of 0.6 appears to be a fudge-factor
     as->gGRGO_NMDA[i] = sumGRInputGO[i] * ((grgoW * as->synWscalerGRtoGO[i]) *
                                            0.6 * gNMDAIncGRGO) +
                         as->gGRGO_NMDA[i] * gDecayMFtoGONMDA;
 
+    // update voltage threshold variable
     as->threshCurGO[i] += (threshRestGO - as->threshCurGO[i]) * threshDecGO;
 
+    // use all updated conductances to update the voltage
     tempVGO += (gLeakGO * (eLeakGO - tempVGO)) +
                (as->gSum_GOGO[i] * (eGABAGO - tempVGO)) -
                (as->gSum_MFGO[i] + as->gGRGO[i] + as->gNMDAMFGO[i] +
@@ -386,21 +399,27 @@ void InNet::calcGOActivities() {
                    tempVGO -
                (as->vCoupleGO[i] * tempVGO);
 
-    // tempVGO = threshMaxGO * (tempVGO > threshMaxGO) + tempVGO * (threshMaxGO
-    // > tempVGO); /* TODO: test whether gives same results as branched case */
+    // set voltage to threshold if supersedes it
     if (tempVGO > threshMaxGO)
       tempVGO = threshMaxGO;
 
+    // spike if above threshold
     as->apGO[i] = tempVGO > as->threshCurGO[i];
+    // update the buffer of previous spikes (used in updating history I think)
     as->apBufGO[i] = (as->apBufGO[i] << 1) | (as->apGO[i] * 0x00000001);
 
+    // set the threshold back to max if we spiked
     as->threshCurGO[i] =
         as->apGO[i] * threshMaxGO + (1 - as->apGO[i]) * as->threshCurGO[i];
 
+    // reset inputs
     as->inputMFGO[i] = 0;
     as->inputGOGO[i] = 0;
+    // make final assignment to activity state's voltage array
     as->vGO[i] = tempVGO;
 
+    // copy that activity states voltage array to the 2d buffer which
+    // will be used to copy spikes to devices
     for (int j = 0; j < numGPUs; j++) {
       apGOH[j][i] = as->apGO[i];
     }
@@ -411,11 +430,12 @@ void InNet::updateMFtoGROut() {
   float recoveryRate = 1 / recoveryTauMF;
 
   for (int i = 0; i < num_mf; i++) {
+    // update the mf -> gr depression amplitude
     as->depAmpMFGR[i] =
         apMFH[0][i] * as->depAmpMFGR[i] * fracDepMF +
         (!apMFH[0][i]) *
             (as->depAmpMFGR[i] + recoveryRate * (1 - as->depAmpMFGR[i]));
-
+    // copy result to 2d buffer, used to make repeats on each device
     for (int j = 0; j < numGPUs; j++) {
       depAmpMFH[j][i] = as->depAmpMFGR[i];
     }
@@ -424,6 +444,8 @@ void InNet::updateMFtoGROut() {
 
 void InNet::updateMFtoGOOut() {
   for (int i = 0; i < num_mf; i++) {
+    // if mf spiked, then update the mf -> go input
+    // for all go this mf is connected with
     if (apMFH[0][i]) {
       for (int j = 0; j < cs->numpMFfromMFtoGO[i]; j++) {
         as->inputMFGO[cs->pMFfromMFtoGO[i][j]]++;
@@ -433,7 +455,7 @@ void InNet::updateMFtoGOOut() {
 }
 
 void InNet::updateGOtoGROutParameters(float spillFrac) {
-  // TODO: place these in the build file as well
+  // TODO: place these in the build file as well (one day)
   float scalerGOGR = gogrW * gIncFracSpilloverGOtoGR * 1.4;
   float halfShift = 12.0; // shift;
   float steepness = 20.0; // steep;
@@ -442,8 +464,10 @@ void InNet::updateGOtoGROutParameters(float spillFrac) {
 
 #pragma omp parallel for
   for (int i = 0; i < num_go; i++) {
+    // reset depression amplitudes
     as->depAmpGOGR[i] = 1;
-
+    // update dynamic amplitudes (uses a sigmoid function on how long since go
+    // last spiked)
     as->dynamicAmpGOGR[i] =
         baselvl +
         (scalerGOGR * (1 / (1 + (exp((counter[i] - halfShift) / steepness)))));
@@ -460,6 +484,7 @@ void InNet::updateGOtoGOOut() {
 
 #pragma omp parallel for
   for (int i = 0; i < num_go; i++) {
+    // update all go this go is connected to if this go spiked
     if (as->apGO[i]) {
       for (int j = 0; j < cs->numpGOGABAOutGOGO[i]; j++) {
         as->inputGOGO[cs->pGOGABAOutGOGO[i][j]]++;
@@ -470,6 +495,7 @@ void InNet::updateGOtoGOOut() {
 #pragma omp parallel for
   for (int i = 0; i < num_go; i++) {
     for (int j = 0; j < cs->numpGOCoupInGOGO[i]; j++) {
+      // update the coupling voltage for every go
       as->vCoupleGO[i] += (as->vGO[cs->pGOCoupInGOGO[i][j]] - as->vGO[i]) *
                           coupleRiRjRatioGO * cs->pGOCoupInGOGOCCoeff[i][j];
     }
@@ -477,6 +503,8 @@ void InNet::updateGOtoGOOut() {
 }
 
 void InNet::resetMFHist(uint32_t t) {
+  // for every numTSinMFHist, make the whole histMF array false
+  // (used in mf -> nc plasticity)
   if (t % (uint32_t)numTSinMFHist == 0) {
     for (int i = 0; i < num_mf; i++) {
       as->histMF[i] = false;
@@ -487,6 +515,12 @@ void InNet::resetMFHist(uint32_t t) {
 void InNet::runGRActivitiesCUDA(cudaStream_t **sts, int streamN) {
   cudaError_t error;
 
+  // total ampa conductance increment is the direct plus fraction
+  // that is spillover (feel like this should be:
+  //         (1 - gIncFracSpilloverMFtoGR) * gIncDirectMFtoGR +
+  //          gIncDirectMFtoGR * gIncFracSpilloverMFtoGR
+  //
+  //  but I didn't write this part :-)
   float gAMPAInc =
       gIncDirectMFtoGR + gIncDirectMFtoGR * gIncFracSpilloverMFtoGR;
 
@@ -724,6 +758,9 @@ void InNet::initCUDA() {
   LOG_DEBUG("Lowest CUDA device index: %d", gpuIndStart);
 
   numGRPerGPU = num_gr / numGPUs;
+
+  // fiddle with these limits in just the right way and you slow the sim
+  // down greatly, or speed it up a little bit
   calcGRActNumGRPerB = 512;
   calcGRActNumBlocks = numGRPerGPU / calcGRActNumGRPerB;
 
@@ -748,6 +785,7 @@ void InNet::initCUDA() {
 
   LOG_DEBUG("Initializing per-cell cuda vars...");
 
+  // allocate gpu memory, initialize or copy from host vars
   initMFCUDA();
   LOG_DEBUG("Initialized MF CUDA");
   LOG_DEBUG("Last error: %s", cudaGetErrorString(cudaGetLastError()));

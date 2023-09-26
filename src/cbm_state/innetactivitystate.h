@@ -3,6 +3,15 @@
  *
  *  Created on: Nov 6, 2012
  *      Author: consciousness
+ *
+ *  All of the activity-related arrays for MF, GO, and GR
+ *  cell populations. Is not in charge with updating these
+ *  arrays. That responsibility is in innet class in simcore
+ *
+ *  I played around with unique_ptrs from the standard library
+ *  so that we don't have to manage our own memory. There is
+ *  no significant performance impediment from the benchmarks
+ *  I conducted.
  */
 
 #ifndef INNETACTIVITYSTATE_H_

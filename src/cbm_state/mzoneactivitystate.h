@@ -3,6 +3,15 @@
  *
  *  Created on: Nov 26, 2012
  *      Author: consciousness
+ *
+ *  All of the activity-related arrays for PC, SC, BC, NC,
+ *  and IO cell populations. Is not in charge of updating these
+ *  arrays. That responsibility is in mzone class in simcore
+ *
+ *  I played around with unique_ptrs from the standard library
+ *  so that we don't have to manage our own memory. There is
+ *  no significant performance impediment from the benchmarks
+ *  I conducted.
  */
 
 #ifndef MZONEACTIVITYSTATE_H_

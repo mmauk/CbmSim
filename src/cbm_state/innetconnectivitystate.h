@@ -3,6 +3,20 @@
  *
  *  Created on: Nov 6, 2012
  *      Author: consciousness
+ *
+ *  Provides algorithms for making the following connections:
+ *
+ *    mf -> gl
+ *    gl -> gr
+ *    gl -> go
+ *    go -> gl
+ *
+ *  as well as the translations to the "direct" connections:
+ *
+ *    mf -> gr
+ *    mf -> go
+ *    gr -> go
+ *    go -> gr
  */
 
 #ifndef INNETCONNECTIVITYSTATE_H_
