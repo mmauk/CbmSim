@@ -28,6 +28,8 @@ MZone::MZone(MZoneConnectivityState *cs, MZoneActivityState *as, int randSeed,
   this->cs = cs;
   this->as = as;
 
+  isTrueMF = new bool[num_mf];
+
   // NOTE if we turn these guys into unique ptrs, we'll have to refactor
   // consider ownership: who should own these guys? maybe they should be global
   // to both innet and mzone (so within cbmsimcore) and fed in as const args to
@@ -70,6 +72,8 @@ MZone::~MZone() {
     cudaFree(inputSumPFPCMZGPU[i]);
     cudaDeviceSynchronize();
   }
+
+  delete[] isTrueMF;
 
   delete[] delayMaskGRGPU;
   delete[] pfSynWeightPCGPU;
@@ -325,7 +329,12 @@ void MZone::setErrDrive(float errDriveRelative) {
 
 void MZone::updateMFActivities(const uint8_t *actMF) { apMFInput = actMF; }
 
-void MZone::updateTrueMFs(bool *trueMF) { isTrueMF = trueMF; }
+void MZone::setTrueMFs(bool *isCollateralMF) {
+  for (uint32_t i = 0; i < num_mf; i++) {
+    // TODO: initialize is TrueMF
+    isTrueMF[i] = (isCollateralMF[i]) ? false : true;
+  }
+}
 
 void MZone::calcPCActivities() {
   for (int i = 0; i < num_pc; i++) {
@@ -883,10 +892,6 @@ const uint32_t *MZone::exportAPBufNC() {
   return (const uint32_t *)as->apBufNC.get();
 }
 
-/*
- * I imagine this was a function used to test whether the sum reduction
- * functions worked properly
- */
 void MZone::testReduction() {
   cudaError_t error;
   cudaStream_t *sts = new cudaStream_t[numGPUs];

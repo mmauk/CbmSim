@@ -75,8 +75,6 @@ Control::~Control() {
     delete simState;
   if (simCore)
     delete simCore;
-  if (mfFreq)
-    delete mfFreq;
   if (mfs)
     delete mfs;
 
@@ -159,12 +157,14 @@ void Control::init_sim(std::string in_sim_filename) {
                                // don't have to make s_file class attrib
   simState = new CBMState(numMZones, sim_file_buf);
   simCore = new CBMSimCore(simState, gpuIndex, gpuP2);
-  mfFreq = new ECMFPopulation(
-      num_mf, mfRandSeed, CSTonicMFFrac, CSPhasicMFFrac, contextMFFrac,
-      nucCollFrac, bgFreqMin, csbgFreqMin, contextFreqMin, tonicFreqMin,
-      phasicFreqMin, bgFreqMax, csbgFreqMax, contextFreqMax, tonicFreqMax,
-      phasicFreqMax, collaterals_off, fracImport, secondCS, fracOverlap);
-  mfs = new PoissonRegenCells(mfRandSeed, threshDecayTau, numMZones);
+  mfs = new ECMFPopulation(num_mf, mfRandSeed, CSTonicMFFrac, CSPhasicMFFrac,
+                           contextMFFrac, nucCollFrac, bgFreqMin, csbgFreqMin,
+                           contextFreqMin, tonicFreqMin, phasicFreqMin,
+                           bgFreqMax, csbgFreqMax, contextFreqMax, tonicFreqMax,
+                           phasicFreqMax, collaterals_off, fracImport, secondCS,
+                           fracOverlap, numMZones);
+  // TODO: maybe include this in the simcore constructor
+  simCore->setTrueMFs(mfs->getCollateralIds());
   initialize_rast_cell_nums();
   initialize_cell_spikes();
   initialize_raster_save_funcs();
@@ -187,11 +187,13 @@ void Control::reset_sim(std::string in_sim_filename) {
   read_con_params(sim_file_buf);
   // read_act_params(sim_file_buf);
   simState->readState(sim_file_buf);
+  // TODO: simCore, mfs
 
   reset_rasters();
   reset_psths();
   reset_spike_sums();
   sim_file_buf.close();
+  // TODO: more things to reset?
 }
 
 void Control::save_sim_to_file() {
@@ -637,6 +639,7 @@ void Control::initialize_rasters() {
   }
 
   if (use_gui) {
+    // TODO: find a way to initialize only within gui mode
     pc_vm_raster = allocate2DArray<float>(msMeasure, num_pc);
     nc_vm_raster = allocate2DArray<float>(msMeasure, num_nc);
     io_vm_raster = allocate2DArray<float>(msMeasure, num_io);
@@ -708,26 +711,18 @@ void Control::runSession(struct gui *gui) {
 
     LOG_INFO("Trial number: %d", trial + 1);
     start = omp_get_wtime();
-    // ts of trial loop
     for (uint32_t ts = 0; ts < trialTime; ts++) {
       if (useUS == 1 && ts == onsetUS) // deliver the US
       {
         simCore->updateErrDrive(0, 0.3);
       }
-      // deliver cs if specified at cmdline
-      if (ts >= onsetCS && ts < onsetCS + csLength) {
-        mfAP = (useCS == 1) ? mfs->calcPoissActivity(mfFreq->getMFInCSTonicA(),
-                                                     simCore->getMZoneList())
-                            : mfs->calcPoissActivity(mfFreq->getMFBG(),
-                                                     simCore->getMZoneList());
+      // deliver cs if specified at cmdline and within cs duration
+      if (useCS && ts >= onsetCS && ts < onsetCS + csLength) {
+        mfAP = mfs->calcPoissActivity(TONIC_CS_A, simCore->getMZoneList());
       } else { // background mf activity
-        mfAP =
-            mfs->calcPoissActivity(mfFreq->getMFBG(), simCore->getMZoneList());
+        mfAP = mfs->calcPoissActivity(BKGD, simCore->getMZoneList());
       }
 
-      bool *isTrueMF = mfs->calcTrueMFs(
-          mfFreq->getMFBG()); /* only used for mfdcn plasticity */
-      simCore->updateTrueMFs(isTrueMF);
       simCore->updateMFInput(mfAP);
       // this is the main simCore function which computes all cell pops' spikes
       simCore->calcActivity(spillFrac, pf_pc_plast, mf_nc_plast);

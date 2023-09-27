@@ -15,7 +15,10 @@ ECMFPopulation::ECMFPopulation(
     float fracCollNC, float bgFreqMin, float csBGFreqMin, float ctxtFreqMin,
     float csTFreqMin, float csPFreqMin, float bgFreqMax, float csBGFreqMax,
     float ctxtFreqMax, float csTFreqMax, float csPFreqMax, bool turnOffColls,
-    float fracImportMF, bool secondCS, float fracOverlap) {
+    float fracImportMF, bool secondCS, float fracOverlap, uint32_t numZones,
+    float noiseSigma) {
+
+  /* initialize mf frequency population variables */
   CRandomSFMT0 randGen(randSeed);
 
   int numCSTMF;
@@ -163,6 +166,31 @@ ECMFPopulation::ECMFPopulation(
       randGen.Random();
     }
   }
+
+  /* initializing poisson gen vars */
+
+  this->numZones = numZones;
+  this->noiseSigma = noiseSigma;
+
+  randSeedGen = new CRandomSFMT0(randSeed);
+  randGens = new CRandomSFMT0 *[nThreads];
+
+  for (uint32_t i = 0; i < nThreads; i++) {
+    randGens[i] = new CRandomSFMT0(randSeedGen->IRandom(0, INT_MAX));
+  }
+
+  normDist = new std::normal_distribution<float>(0, this->noiseSigma);
+  noiseRandGen = new std::mt19937(randSeed);
+
+  aps = (uint8_t *)calloc(num_mf, sizeof(uint8_t));
+
+  dnCellIndex = (uint32_t *)calloc(num_mf, sizeof(uint32_t));
+  mZoneIndex = (uint32_t *)calloc(num_mf, sizeof(uint32_t));
+
+  isTrueMF = (bool *)calloc(num_mf, sizeof(bool));
+  memset(isTrueMF, true, num_mf * sizeof(bool));
+  
+  prepCollaterals(randSeedGen->IRandom(0, INT_MAX));
 }
 
 ECMFPopulation::~ECMFPopulation() {
@@ -178,8 +206,126 @@ ECMFPopulation::~ECMFPopulation() {
   delete[] isCollateral;
   delete[] isImport;
   delete[] isAny;
+
+  delete randSeedGen;
+  delete noiseRandGen;
+  for (uint32_t i = 0; i < nThreads; i++) {
+    delete randGens[i];
+  }
+
+  delete[] randGens;
+  delete normDist;
+  free(aps);
+  free(isTrueMF);
+  free(dnCellIndex);
+  free(mZoneIndex);
 }
 
+/* public methods except constructor and destructor */
+void ECMFPopulation::writeToFile(std::fstream &outfile) {
+  outfile.write((char *)&numMF, sizeof(numMF));
+  outfile.write((char *)mfFreqBG, numMF * sizeof(float));
+  outfile.write((char *)mfFreqInCSTonicA, numMF * sizeof(float));
+  outfile.write((char *)mfFreqInCSTonicB, numMF * sizeof(float));
+  outfile.write((char *)mfFreqInCSPhasic, numMF * sizeof(float));
+}
+
+void ECMFPopulation::writeMFLabels(std::string labelFileName) {
+  LOG_DEBUG("Writing MF labels...");
+  std::fstream mflabels(labelFileName.c_str(), std::fstream::out);
+
+  for (int i = 0; i < numMF; i++) {
+    if (isContext[i]) {
+      mflabels << "con ";
+    } else if (isCSPhasic[i]) {
+      mflabels << "pha ";
+    } else if (isCollateral[i] && !turnOffColls) {
+      mflabels << "col ";
+    } else if (isImport[i]) {
+      mflabels << "imp ";
+    } else if (isCSTonicA[i] || isCSTonicB[i]) {
+      mflabels << "ton ";
+    } else {
+      mflabels << "bac ";
+    }
+  }
+  mflabels.close();
+  LOG_DEBUG("MF labels written.");
+}
+
+float *ECMFPopulation::getBGFreq() { return mfFreqBG; }
+
+float *ECMFPopulation::getTonicCSAFreq() { return mfFreqInCSTonicA; }
+
+float *ECMFPopulation::getTonicCSBFreq() { return mfFreqInCSTonicB; }
+
+float *ECMFPopulation::getPhasicCSFreq() { return mfFreqInCSPhasic; }
+
+bool *ECMFPopulation::getTonicCSAIds() { return isCSTonicA; }
+
+bool *ECMFPopulation::getTonicCSBIds() { return isCSTonicB; }
+
+bool *ECMFPopulation::getPhasicCSIds() { return isCSPhasic; }
+
+bool *ECMFPopulation::getContextIds() { return isContext; }
+
+bool *ECMFPopulation::getCollateralIds() { return isCollateral; }
+
+const uint8_t *ECMFPopulation::calcPoissActivity(enum mf_type type,
+                                                 MZone **mZoneList,
+                                                 int ispikei) {
+  float *frequencies = NULL;
+  int countColls = 0;
+  const uint8_t *holdNCs;
+  float noise;
+  spikeTimer++;
+  switch (type) {
+  case BKGD:
+    frequencies = mfFreqBG;
+    break;
+  case TONIC_CS_A:
+    frequencies = mfFreqInCSTonicA;
+    break;
+  case TONIC_CS_B:
+    frequencies = mfFreqInCSTonicB;
+    break;
+  case PHASIC_CS:
+    frequencies = mfFreqInCSPhasic;
+    break;
+  default:
+    break;
+  }
+
+  for (uint32_t i = 0; i < num_mf; i++) {
+    if (frequencies[i] == -1) /* dcn mfs (or collaterals this makes no sense) */
+    {
+      holdNCs = mZoneList[mZoneIndex[countColls]]->exportAPNC();
+      aps[i] = holdNCs[dnCellIndex[countColls]];
+      countColls++;
+    }
+    // below is calculated w isi. why not do so for cs too?
+    else if (frequencies[i] == -2)
+      aps[i] =
+          (spikeTimer == ispikei); /* background or import, whatever that is */
+    else                           /* cs */
+    {
+      int tid = 0;
+      if (noiseSigma == 0)
+        noise = 0.0;
+      else
+        noise = (*normDist)((*noiseRandGen));
+
+      aps[i] = (randGens[tid]->Random() < (frequencies[i] + noise) * sPerTS);
+    }
+  }
+  if (spikeTimer == ispikei)
+    spikeTimer = 0;
+  return (const uint8_t *)aps;
+}
+
+const uint8_t *ECMFPopulation::getAPs() { return (const uint8_t *)aps; }
+
+/* private methods */
 void ECMFPopulation::setMFs(int numTypeMF, int numMF, CRandomSFMT0 &randGen,
                             bool *isAny, bool *isType) {
   for (int i = 0; i < numTypeMF; i++) {
@@ -231,49 +377,26 @@ void ECMFPopulation::setMFsOverlap(int numTypeMF, int numMF,
   }
 }
 
-void ECMFPopulation::writeMFLabels(std::string labelFileName) {
-  LOG_DEBUG("Writing MF labels...");
-  std::fstream mflabels(labelFileName.c_str(), std::fstream::out);
+void ECMFPopulation::prepCollaterals(int rSeed) {
+  uint32_t repeats = num_mf / (numZones * num_nc) + 1;
+  uint32_t *tempNCs = new uint32_t[repeats * numZones * num_nc];
+  uint32_t *tempMZs = new uint32_t[repeats * numZones * num_nc];
 
-  for (int i = 0; i < numMF; i++) {
-    if (isContext[i]) {
-      mflabels << "con ";
-    } else if (isCSPhasic[i]) {
-      mflabels << "pha ";
-    } else if (isCollateral[i] && !turnOffColls) {
-      mflabels << "col ";
-    } else if (isImport[i]) {
-      mflabels << "imp ";
-    } else if (isCSTonicA[i] || isCSTonicB[i]) {
-      mflabels << "ton ";
-    } else {
-      mflabels << "bac ";
+  for (uint32_t i = 0; i < repeats; i++) {
+    for (uint32_t j = 0; j < numZones; j++) {
+      for (uint32_t k = 0; k < num_nc; k++) {
+        tempNCs[k + num_nc * j + num_nc * numZones * i] = k;
+        tempMZs[k + num_nc * j + num_nc * numZones * i] = j;
+      }
     }
   }
-  mflabels.close();
-  LOG_DEBUG("MF labels written.");
+  std::srand(rSeed);
+  std::random_shuffle(tempNCs, tempNCs + repeats * numZones * num_nc);
+  std::srand(rSeed);
+  std::random_shuffle(tempMZs, tempMZs + repeats * numZones * num_nc);
+  std::copy(tempNCs, tempNCs + num_mf, dnCellIndex);
+  std::copy(tempMZs, tempMZs + num_mf, mZoneIndex);
+
+  delete[] tempNCs;
+  delete[] tempMZs;
 }
-
-void ECMFPopulation::writeToFile(std::fstream &outfile) {
-  outfile.write((char *)&numMF, sizeof(numMF));
-  outfile.write((char *)mfFreqBG, numMF * sizeof(float));
-  outfile.write((char *)mfFreqInCSTonicA, numMF * sizeof(float));
-  outfile.write((char *)mfFreqInCSTonicB, numMF * sizeof(float));
-  outfile.write((char *)mfFreqInCSPhasic, numMF * sizeof(float));
-}
-
-bool *ECMFPopulation::getContextMFInd() { return isContext; }
-
-bool *ECMFPopulation::getTonicMFInd() { return isCSTonicA; }
-
-bool *ECMFPopulation::getTonicMFIndOverlap() { return isCSTonicB; }
-
-bool *ECMFPopulation::getPhasicMFInd() { return isCSPhasic; }
-
-float *ECMFPopulation::getMFBG() { return mfFreqBG; }
-
-float *ECMFPopulation::getMFInCSTonicA() { return mfFreqInCSTonicA; }
-
-float *ECMFPopulation::getMFInCSTonicB() { return mfFreqInCSTonicB; }
-
-float *ECMFPopulation::getMFFreqInCSPhasic() { return mfFreqInCSPhasic; }

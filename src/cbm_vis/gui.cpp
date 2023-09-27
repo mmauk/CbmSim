@@ -557,8 +557,7 @@ static void on_tuning_window(GtkWidget *widget, struct gui *gui) {
 }
 
 static void on_toggle_run(GtkWidget *widget, struct gui *gui) {
-  if (gui->ctrl_ptr->simState && gui->ctrl_ptr->simCore &&
-      gui->ctrl_ptr->mfFreq && gui->ctrl_ptr->mfs) {
+  if (gui->ctrl_ptr->simState && gui->ctrl_ptr->simCore && gui->ctrl_ptr->mfs) {
     switch (gui->ctrl_ptr->run_state) {
     case NOT_IN_RUN:
       // TODO: start sim in a new thread

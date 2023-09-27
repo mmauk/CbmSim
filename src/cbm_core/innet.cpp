@@ -258,7 +258,6 @@ void InNet::writeToState() {
   }
 }
 
-// this function should be deprecated
 // void InNet::grStim(int startGRStim, int numGRStim)
 //{
 //	// might be a useless operation. would the state of these arrays
@@ -284,8 +283,9 @@ void InNet::writeToState() {
 //
 //		cudaMemcpy(apBufGRGPU[i], &(as->apBufGR[cpyStartInd]),
 //				cpySize*sizeof(uint32_t),
-// cudaMemcpyHostToDevice); 		cudaMemcpy(outputGRGPU[i],
-// &outputGRH[cpyStartInd], 				cpySize*sizeof(uint8_t), cudaMemcpyHostToDevice);
+//cudaMemcpyHostToDevice); 		cudaMemcpy(outputGRGPU[i], &outputGRH[cpyStartInd],
+//				cpySize*sizeof(uint8_t),
+//cudaMemcpyHostToDevice);
 //	}
 // }
 

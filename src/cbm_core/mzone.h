@@ -13,11 +13,12 @@
 #ifndef MZONE_H_
 #define MZONE_H_
 
+#include <cstdint>
+
 #include "kernels.h"
 #include "mzoneactivitystate.h"
 #include "mzoneconnectivitystate.h"
 #include "sfmt.h"
-#include <cstdint>
 
 class MZone {
 public:
@@ -32,7 +33,7 @@ public:
 
   void setErrDrive(float errDriveRelative);
   void updateMFActivities(const uint8_t *actMF);
-  void updateTrueMFs(bool *trueMF);
+  void setTrueMFs(bool *isCollateralMF);
 
   void calcPCActivities();
   void calcSCActivities();

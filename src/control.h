@@ -28,7 +28,6 @@
 #include "info_file.h"
 #include "innetactivitystate.h"
 #include "innetconnectivitystate.h"
-#include "poissonregencells.h"
 
 // TODO: place in a common place, as gui uses a constant like this too
 #define NUM_CELL_TYPES 8
@@ -130,8 +129,8 @@ public:
   info_file_data if_data;
   CBMState *simState = NULL;
   CBMSimCore *simCore = NULL;
-  ECMFPopulation *mfFreq = NULL;
-  PoissonRegenCells *mfs = NULL;
+  ECMFPopulation *mfs = NULL;
+  // PoissonRegenCells *mfs = NULL;
 
   /* temporary state check vars */
   bool use_gui = false;
