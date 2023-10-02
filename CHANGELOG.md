@@ -1,4 +1,53 @@
- # 0.1.0 (01-18-2023)
+# 0.1.1 (10-02-2023)
+
+This moderately-sized release includes updates to documentation and refactoring mossy fiber code.
+
+Here is a non-exhaustive summary of the changes made.
+
+Breaking Changes:
+
+- Session and build files now do not include type-specifiers
+  ([be98c65](https://github.com/gawdSim/CbmSim/commit/be98c65))
+- Updated cuda version from 11.8 to 12.2
+  ([f53eb71](https://github.com/gawdSim/CbmSim/commit/f53eb71))
+- Moved mossy fiber poisson generator from poissonregencells class to ecmfpopulation
+  ([04ce23a](https://github.com/gawdSim/CbmSim/commit/04ce23a), [#28](https://github.com/gawdSim/CbmSim/pull/28))
+
+Features:
+
+- Output filenames do not include a date string.
+  ([5f72fb2](https://github.com/gawdSim/CbmSim/commit/5f72fb2), [bdc3842](https://github.com/gawdSim/CbmSim/commit/bdc3842),
+  [567146d](https://github.com/gawdSim/CbmSim/commit/567146d))
+- Output date type is indicated by a file extension
+  ([dd5bab7](https://github.com/gawdSim/CbmSim/commit/dd5bab7))
+
+Bug Fixes:
+
+- gr psth now copying properly from device to host
+  ([debf009](https://github.com/gawdSim/CbmSim/commit/debf009))
+- innetconnectivity connectivity arrays should initialize to UINT_MAX unless is a float array (like gogogj)
+  ([1cbb017](https://github.com/gawdSim/CbmSim/commit/1cbb017))
+- fixed OS type check in makefile for proper cuda package name
+  ([bcbf173](https://github.com/gawdSim/CbmSim/commit/bcbf173))
+
+Deprecations:
+
+There are too many scattered ones to count, but I will note the major ones. For individual ones please see individual commits.
+
+- Removal of arrayvalidate.h, tty.h/.cpp, poissonregencells.h/.cpp
+  ([bf9a643](https://github.com/gawdSim/CbmSim/commit/bf9a643), [793024f](https://github.com/gawdSim/CbmSim/commit/793024f),
+  [ee20315](https://github.com/gawdSim/CbmSim/commit/ee20315))
+
+Internal, Non-Breaking Changes:
+
+- reorganized CbmSimCore::calcActivity to better align with flow of information
+  ([185ec1d](https://github.com/gawdSim/CbmSim/commit/185ec1d))
+- reversion to saving weights at the end of a session
+  ([c2e8bb7](https://github.com/gawdSim/CbmSim/commit/c2e8bb7))
+- replaced MZone class plasticity step size variables with globals
+  ([7aabac2](https://github.com/gawdSim/CbmSim/commit/7aabac2))
+
+# 0.1.0 (01-18-2023)
 
 This is a moderately-sized release with changes mainly targeting the automation of output file production,
 saving granule rasters and weights every trial, and more.
@@ -55,7 +104,7 @@ Bug-Fixes:
   [2fdb100](https://github.com/gawdSim/CbmSim/commit/2fdb100), [effeb16](https://github.com/gawdSim/CbmSim/commit/effeb16))
 - integer overflow fix when creating very large 2d arrays ([644204e](https://github.com/gawdSim/CbmSim/commit/644204e))
 
-Internal Changes:
+Internal, Non-Breaking Changes:
 
 - bc cell activity is now computed within mzone.cpp ([fc72ef7](https://github.com/gawdSim/CbmSim/commit/fc72ef7),
   [1fd1cb5](https://github.com/gawdSim/CbmSim/commit/1fd1cb5))
