@@ -60,6 +60,24 @@ Control::Control(parsed_commandline &p_cl) {
     create_psth_filenames(p_cl.psth_files);       // optional
     create_weights_filenames(p_cl.weights_files); // optional
     init_sim(p_cl.input_sim_file);
+  } else if (!p_cl.input_sim_file.empty()) {
+    data_out_path = OUTPUT_DATA_PATH + p_cl.output_basename;
+    data_out_base_name = p_cl.output_basename;
+    LOG_DEBUG("Using '%s' as the output directory...", data_out_path.c_str());
+    int status = mkdir(data_out_path.c_str(), 0775);
+    if (status == -1) {
+      LOG_DEBUG("Could not create directory '%s'. Maybe it already exists. "
+                "Exiting...",
+                data_out_path.c_str());
+      exit(10);
+    }
+    data_out_dir_created = true;
+    create_con_arrs_filenames(p_cl.conn_arrs_files);
+    std::fstream sim_file_buf(p_cl.input_sim_file.c_str(),
+                              std::ios::in | std::ios::binary);
+    read_con_params(sim_file_buf);
+    simState = new CBMState(numMZones, sim_file_buf);
+    sim_file_buf.close();
   } else { // user ran program with no args
     set_plasticity_modes("graded", "graded");
   }
@@ -587,6 +605,20 @@ void Control::create_weights_filenames(
   }
 }
 
+void Control::create_con_arrs_filenames(
+    std::map<std::string, bool> &conn_arrs_map) {
+  if (data_out_dir_created) {
+    for (uint32_t i = 0; i < NUM_SYN_CONS; i++) {
+      if (conn_arrs_map[SYN_CONS_IDS[i]] || use_gui) {
+        con_arrs_names[i] =
+            data_out_path + "/" + data_out_base_name + SYN_CONS_EXT[i];
+        LOG_DEBUG("Created filename: %s\n", con_arrs_names[i].c_str());
+      }
+    }
+    con_arrs_filenames_created = true;
+  }
+}
+
 void Control::initialize_rast_cell_nums() {
   rast_cell_nums[MF] = num_mf;
   rast_cell_nums[GR] = num_gr;
@@ -857,6 +889,18 @@ void Control::save_psths() {
   for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
     if (!pf_names[i].empty())
       psth_save_funcs[i]();
+  }
+}
+
+void Control::save_con_arrs() {
+  for (uint32_t i = 0; i < NUM_SYN_CONS; i++) {
+    if (!con_arrs_names[i].empty()) {
+      LOG_DEBUG("Saving %s connectivity array to file...",
+                SYN_CONS_IDS[i].c_str());
+      // write2DArray<uint8_t>(con_arrs_names[i], this->psths[i],
+      // this->msMeasure,
+      //                       this->rast_cell_nums[i]);
+    }
   }
 }
 

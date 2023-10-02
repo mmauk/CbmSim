@@ -33,6 +33,7 @@
 #define NUM_CELL_TYPES 8
 #define NUM_WEIGHTS_TYPES 2
 #define NUM_SAVE_OPTS 19
+#define NUM_SYN_CONS 15
 
 // TODO:  should put these in file_utility.h
 const std::string RAST_EXT[NUM_CELL_TYPES] = {".mfr", ".grr", ".gor", ".bcr",
@@ -40,6 +41,9 @@ const std::string RAST_EXT[NUM_CELL_TYPES] = {".mfr", ".grr", ".gor", ".bcr",
 const std::string PSTH_EXT[NUM_CELL_TYPES] = {".mfp", ".grp", ".gop", ".bcp",
                                               ".scp", ".pcp", ".iop", ".ncp"};
 const std::string WEIGHTS_EXT[NUM_WEIGHTS_TYPES] = {".pfpcw", ".mfncw"};
+const std::string SYN_CONS_EXT[NUM_SYN_CONS] = {
+    ".mfgr", ".grgo", ".mfgo", ".gogo", ".gogr", ".grpc", ".grbc", ".grsc",
+    ".bcpc", ".scpc", ".pcbc", ".pcnc", ".ioio", ".ncio", ".mfnc"};
 
 /* convenience enum for indexing output data type */
 enum save_opts {
@@ -74,6 +78,11 @@ enum cell_id { MF, GR, GO, BC, SC, PC, IO, NC };
  */
 const std::string CELL_IDS[NUM_CELL_TYPES] = {"MF", "GR", "GO", "BC",
                                               "SC", "PC", "IO", "NC"};
+// TODO this same entity exists in different translation unit. create
+// common one for love of god
+const std::string SYN_CONS_IDS[NUM_SYN_CONS] = {
+    "MFGR", "GRGO", "MFGO", "GOGO", "GOGR", "GRPC", "GRBC", "GRSC",
+    "BCPC", "SCPC", "PCBC", "PCNC", "IOIO", "NCIO", "MFNC"};
 
 /*
  * sums and counters used to support cell population firing rate calculation
@@ -150,6 +159,8 @@ public:
   bool pfpc_weights_filenames_created = false;
   bool mfnc_weights_filenames_created = false;
 
+  bool con_arrs_filenames_created = false;
+
   enum sim_run_state run_state = NOT_IN_RUN;
 
   /* params that I do not know how to categorize */
@@ -222,6 +233,8 @@ public:
 
   std::string pfpc_weights_file = "";
   std::string mfnc_weights_file = "";
+
+  std::string con_arrs_names[NUM_SYN_CONS];
 
   /* instantiation of above structs for firing rate calculations in gui */
   struct cell_spike_sums spike_sums[NUM_CELL_TYPES];
@@ -365,6 +378,13 @@ public:
    */
   void create_weights_filenames(std::map<std::string, bool> &weights_map);
 
+  /**
+   *  @brief Create the full-path filenames of cmdline-specified con arrs
+   *  @param conn_arrs_map Reference to map of synapse type to bool which
+   *  encodes whether the synpatic connection was specified at the cmdline
+   */
+  void create_con_arrs_filenames(std::map<std::string, bool> &conn_arrs_map);
+
   /* initialization functions for in-run data collection */
   void initialize_rast_cell_nums();
   void initialize_cell_spikes();
@@ -422,6 +442,7 @@ public:
   void save_gr_raster();
   void save_rasters();
   void save_psths();
+  void save_con_arrs();
 
   /* delete data objects from memory. Only run in destructor */
   void delete_rasters();

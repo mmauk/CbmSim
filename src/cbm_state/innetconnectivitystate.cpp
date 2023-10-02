@@ -447,6 +447,7 @@ void InNetConnectivityState::connectMFGL_noUBC() {
           pMFfromMFtoGL[rMFInd[i]][numpMFfromMFtoGL[rMFInd[i]]] = destIndex;
           numpMFfromMFtoGL[rMFInd[i]]++;
 
+          // used in translating mf -> gr
           pGLfromMFtoGL[destIndex] = rMFInd[i];
           haspGLfromMFtoGL[destIndex] = true;
         }

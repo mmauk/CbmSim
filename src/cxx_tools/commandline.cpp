@@ -22,19 +22,25 @@
 // duplicates across translation units now
 const int NUM_CELL_TYPES = 8;
 const int NUM_WEIGHTS_TYPES = 2;
+const int NUM_SYN_CONS = 15;
 const std::string CELL_IDS[NUM_CELL_TYPES] = {"MF", "GR", "GO", "BC",
                                               "SC", "PC", "IO", "NC"};
 const std::string WEIGHTS_IDS[NUM_WEIGHTS_TYPES] = {"PFPC", "MFNC"};
+const std::string SYN_CONS_IDS[NUM_SYN_CONS] = {
+    "MFGR", "GRGO", "MFGO", "GOGO", "GOGR", "GRPC", "GRBC", "GRSC",
+    "BCPC", "SCPC", "PCBC", "PCNC", "IOIO", "NCIO", "MFNC"
+};
 
 /*
  * available commandline flags which take no argument
  */
-const std::vector<std::string> command_line_single_opts{
-    "--pfpc-off",
-    "--mfnc-off",
-    "--binary",
-    "--cascade",
-};
+const std::vector<std::string>
+    command_line_single_opts{
+        "--pfpc-off",
+        "--mfnc-off",
+        "--binary",
+        "--cascade",
+    };
 
 /*
  * available commandline flags which take an argument. Each pair consists of the
@@ -56,8 +62,10 @@ const std::vector<std::pair<std::string, std::string>> command_line_pair_opts{
                         // information for during a run
     {"-p", "--psth"},   // used to specify what cell types to collect psth
                         // information for during a run
-    {"-w", "--weights"} // used to specify what synaptic weights to collect
-                        // during a run
+    {"-w", "--weights"}, // used to specify what synaptic weights to collect
+                         // during a run
+    {"-c", "--con-arrs"} // used to specify what synaptic connectivity arrays
+                         // to collect
 };
 
 /*
@@ -125,6 +133,14 @@ void test_for_valid_id(std::string &opt, std::string &id) {
       LOG_FATAL("Invalid weights id '%s' found for option '%s'. Exiting...",
                 id.c_str(), opt.c_str());
       exit(10);
+    }
+  } else if (opt[1] == 'c' || opt[2] == 'c') {
+    if (std::find(SYN_CONS_IDS, SYN_CONS_IDS + NUM_SYN_CONS, id) ==
+        SYN_CONS_IDS + NUM_SYN_CONS) {
+      LOG_FATAL(
+          "Invalid connectivity id '%s' found for option '%s'. Exiting...",
+          id.c_str(), opt.c_str());
+      exit(11);
     }
   }
 }
@@ -354,6 +370,8 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl) {
       case 'w':
         fill_opt_map(p_cl.weights_files, this_opt, this_param);
         break;
+      case 'c':
+        fill_opt_map(p_cl.conn_arrs_files, this_opt, this_param);
       }
       break;
     case 0:
@@ -371,7 +389,8 @@ bool p_cmdline_is_empty(parsed_commandline &p_cl) {
          p_cl.input_sim_file.empty() && p_cl.output_sim_file.empty() &&
          p_cl.output_basename.empty() && p_cl.pfpc_plasticity.empty() &&
          p_cl.mfnc_plasticity.empty() && p_cl.raster_files.empty() &&
-         p_cl.psth_files.empty() && p_cl.weights_files.empty();
+         p_cl.psth_files.empty() && p_cl.weights_files.empty() &&
+         p_cl.conn_arrs_files.empty();
 }
 
 /*
@@ -475,9 +494,30 @@ void validate_commandline(parsed_commandline &p_cl) {
         p_cl.vis_mode = "TUI";
       }
       p_cl.session_file = INPUT_DATA_PATH + p_cl.session_file;
+    } else if (!p_cl.input_sim_file.empty()) {
+      if (p_cl.conn_arrs_files.empty()) {
+        LOG_FATAL("You must specify at least one connectivity array to save. "
+                  "Exiting...");
+        exit(8);
+      }
+      std::string input_sim_file_fullpath;
+      // verify whether the input simulation file can be found recursively
+      // from {PROJECT_ROOT}data/outputs/
+      if (!file_exists(OUTPUT_DATA_PATH, p_cl.input_sim_file,
+                       input_sim_file_fullpath)) {
+        LOG_FATAL("Could not find input simulation file '%s'. Exiting...",
+                  p_cl.input_sim_file.c_str());
+        exit(11);
+      }
+      p_cl.input_sim_file = input_sim_file_fullpath;
+      if (p_cl.output_basename.empty()) {
+        p_cl.output_sim_file = get_file_basename(p_cl.input_sim_file);
+        p_cl.output_basename = p_cl.output_sim_file;
+      }
     } else {
-      LOG_FATAL("Run mode not specified. You must provide either {-b|--build} "
-                "or {-s|--session} arguments. Exiting...");
+      LOG_FATAL("Run mode not specified. You must provide either {-b|--build}, "
+                "{-s|--session}, or {-i|--input + -c|--conn-arrs} arguments. "
+                "Exiting...");
       exit(7);
     }
   }
@@ -509,6 +549,7 @@ void cp_parsed_commandline(parsed_commandline &from_p_cl,
   to_p_cl.raster_files = from_p_cl.raster_files;
   to_p_cl.psth_files = from_p_cl.psth_files;
   to_p_cl.weights_files = from_p_cl.weights_files;
+  to_p_cl.conn_arrs_files = from_p_cl.conn_arrs_files;
 }
 
 std::string parsed_commandline_to_str(parsed_commandline &p_cl) {
@@ -534,6 +575,11 @@ std::string parsed_commandline_to_str(parsed_commandline &p_cl) {
   p_cl_buf << "}\n";
   p_cl_buf << "{ 'weights_files' :\n";
   for (auto pair : p_cl.weights_files) {
+    p_cl_buf << "{ '" << pair.first << "', '" << pair.second << "' }\n";
+  }
+  p_cl_buf << "}\n";
+  p_cl_buf << "{ 'conn_arrs_files' :\n";
+  for (auto pair : p_cl.conn_arrs_files) {
     p_cl_buf << "{ '" << pair.first << "', '" << pair.second << "' }\n";
   }
   p_cl_buf << "}\n";
