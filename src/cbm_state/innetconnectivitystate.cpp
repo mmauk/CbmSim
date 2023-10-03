@@ -62,40 +62,126 @@ void InNetConnectivityState::writeState(std::fstream &outfile) {
   stateRW(false, outfile);
 }
 
-void InNetConnectivityState::NumPMFfromMFtoGRRW(std::fstream &infile) {}
-void InNetConnectivityState::PMFfromMFtoGRRW(std::fstream &infile) {}
+void InNetConnectivityState::numPMFfromMFtoGRRW(std::fstream &file, bool read) {
+  rawBytesRW((char *)numpMFfromMFtoGR, num_mf * sizeof(int), read, file);
+}
+void InNetConnectivityState::pMFfromMFtoGRRW(std::fstream &file, bool read) {
+  rawBytesRW((char *)pMFfromMFtoGR[0],
+             num_mf * max_num_p_mf_from_mf_to_gr * sizeof(int), read, file);
+}
 
-void InNetConnectivityState::NumPMFfromMFtoGORW(std::fstream &infile) {}
-void InNetConnectivityState::PMFfromMFtoGORW(std::fstream &infile) {}
+void InNetConnectivityState::numPMFfromMFtoGORW(std::fstream &file, bool read) {
+  rawBytesRW((char *)numpMFfromMFtoGO, num_mf * sizeof(int), read, file);
+}
+void InNetConnectivityState::pMFfromMFtoGORW(std::fstream &file, bool read) {
+  rawBytesRW((char *)pMFfromMFtoGO[0],
+             num_mf * max_num_p_mf_from_mf_to_go * sizeof(int), read, file);
+}
 
-void InNetConnectivityState::NumPGOfromMFtoGORW(std::fstream &infile) {}
-void InNetConnectivityState::PGOfromMFtoGORW(std::fstream &infile) {}
+void InNetConnectivityState::numPGOfromMFtoGORW(std::fstream &file, bool read) {
+  rawBytesRW((char *)numpGOfromMFtoGO, num_go * sizeof(int), read, file);
+}
+void InNetConnectivityState::pGOfromMFtoGORW(std::fstream &file, bool read) {
+  rawBytesRW((char *)pGOfromMFtoGO[0],
+             num_go * max_num_p_go_from_mf_to_go * sizeof(int), read, file);
+}
 
-void InNetConnectivityState::NumPGOfromGOtoGRRW(std::fstream &infile) {}
-void InNetConnectivityState::PGOfromGOtoGRRW(std::fstream &infile) {}
+void InNetConnectivityState::numPGOfromGOtoGRRW(std::fstream &file, bool read) {
+  rawBytesRW((char *)numpGOfromGOtoGR, num_go * sizeof(int), read, file);
+}
+void InNetConnectivityState::pGOfromGOtoGRRW(std::fstream &file, bool read) {
+  rawBytesRW((char *)pGOfromGOtoGR[0],
+             num_go * max_num_p_go_from_go_to_gr * sizeof(int), read, file);
+}
 
-void InNetConnectivityState::NumPGOfromGRtoGORW(std::fstream &infile) {}
-void InNetConnectivityState::PGOfromGRtoGORW(std::fstream &infile) {}
+void InNetConnectivityState::numPGOfromGRtoGORW(std::fstream &file, bool read) {
+  rawBytesRW((char *)numpGOfromGRtoGO, num_go * sizeof(int), read, file);
+}
 
-void InNetConnectivityState::NumPGOInfromGOtoGORW(std::fstream &infile) {}
-void InNetConnectivityState::PGOInfromGOtoGORW(std::fstream &infile) {}
+void InNetConnectivityState::pGOfromGRtoGORW(std::fstream &file, bool read) {
+  rawBytesRW((char *)pGOfromGRtoGO[0],
+             num_go * max_num_p_go_from_gr_to_go * sizeof(int), read, file);
+}
 
-void InNetConnectivityState::NumPGOOutfromGOtoGORW(std::fstream &infile) {}
-void InNetConnectivityState::PGOOutfromGOtoGORW(std::fstream &infile) {}
+void InNetConnectivityState::numPGOInfromGOtoGORW(std::fstream &file,
+                                                  bool read) {
+  rawBytesRW((char *)numpGOGABAInGOGO, num_go * sizeof(int), read, file);
+}
+void InNetConnectivityState::pGOInfromGOtoGORW(std::fstream &file, bool read) {
+  rawBytesRW((char *)pGOGABAInGOGO[0], num_go * num_con_go_to_go * sizeof(int),
+             read, file);
+}
 
-void InNetConnectivityState::NumPGOCoupInfromGOtoGORW(std::fstream &infile) {}
-void InNetConnectivityState::PGOCoupInfromGOtoGORW(std::fstream &infile) {}
+void InNetConnectivityState::numPGOOutfromGOtoGORW(std::fstream &file,
+                                                   bool read) {
+  rawBytesRW((char *)numpGOGABAOutGOGO, num_go * sizeof(int), read, file);
+}
 
-void InNetConnectivityState::NumPGOCoupOutfromGOtoGORW(std::fstream &infile) {}
-void InNetConnectivityState::PGOCoupOutfromGOtoGORW(std::fstream &infile) {}
+void InNetConnectivityState::pGOOutfromGOtoGORW(std::fstream &file, bool read) {
+  rawBytesRW((char *)pGOGABAOutGOGO[0], num_go * num_con_go_to_go * sizeof(int),
+             read, file);
+}
 
-void InNetConnectivityState::PGOCoupOutGOGOCCoeffRW(std::fstream &infile) {}
+void InNetConnectivityState::numPGOCoupInfromGOtoGORW(std::fstream &file,
+                                                      bool read) {
+  rawBytesRW((char *)numpGOCoupInGOGO, num_go * sizeof(int), read, file);
+}
 
-void InNetConnectivityState::PGOCoupInGOGOCCoeffRW(std::fstream &infile) {}
+void InNetConnectivityState::pGOCoupInfromGOtoGORW(std::fstream &file,
+                                                   bool read) {
+  rawBytesRW((char *)pGOCoupInGOGO[0], num_go * num_p_go_to_go_gj * sizeof(int),
+             read, file);
+}
 
-void InNetConnectivityState::NumPGRfromGRtoGORW(std::fstream &infile) {}
-void InNetConnectivityState::PGRfromGOtoGRRW(std::fstream &infile) {}
-void InNetConnectivityState::PGRfromMFtoGRRW(std::fstream &infile) {}
+void InNetConnectivityState::numPGOCoupOutfromGOtoGORW(std::fstream &file,
+                                                       bool read) {
+  rawBytesRW((char *)numpGOCoupOutGOGO, num_go * sizeof(int), read, file);
+}
+
+void InNetConnectivityState::pGOCoupOutfromGOtoGORW(std::fstream &file,
+                                                    bool read) {
+  rawBytesRW((char *)pGOCoupOutGOGO[0],
+             num_go * num_p_go_to_go_gj * sizeof(int), read, file);
+}
+
+void InNetConnectivityState::pGOCoupOutGOGOCCoeffRW(std::fstream &file,
+                                                    bool read) {
+  rawBytesRW((char *)pGOCoupOutGOGOCCoeff[0],
+             num_go * num_p_go_to_go_gj * sizeof(float), read, file);
+}
+
+void InNetConnectivityState::pGOCoupInGOGOCCoeffRW(std::fstream &file,
+                                                   bool read) {
+  rawBytesRW((char *)pGOCoupInGOGOCCoeff[0],
+             num_go * num_p_go_to_go_gj * sizeof(float), read, file);
+}
+
+void InNetConnectivityState::numPGRfromGRtoGORW(std::fstream &file, bool read) {
+  rawBytesRW((char *)numpGRfromGRtoGO, num_gr * sizeof(int), read, file);
+}
+
+void InNetConnectivityState::pGRfromGRtoGORW(std::fstream &file, bool read) {
+  rawBytesRW((char *)pGRfromGRtoGO[0],
+             num_gr * max_num_p_gr_from_gr_to_go * sizeof(int), read, file);
+}
+
+void InNetConnectivityState::numPGRfromGOtoGRRW(std::fstream &file, bool read) {
+  rawBytesRW((char *)numpGRfromGOtoGR, num_gr * sizeof(int), read, file);
+}
+
+void InNetConnectivityState::pGRfromGOtoGRRW(std::fstream &file, bool read) {
+  rawBytesRW((char *)pGRfromGOtoGR[0],
+             num_gr * max_num_p_gr_from_go_to_gr * sizeof(int), read, file);
+}
+
+void InNetConnectivityState::numPGRfromMFtoGRRW(std::fstream &file, bool read) {
+  rawBytesRW((char *)numpGRfromMFtoGR, num_gr * sizeof(int), read, file);
+}
+
+void InNetConnectivityState::pGRfromMFtoGRRW(std::fstream &file, bool read) {
+  rawBytesRW((char *)pGRfromMFtoGR[0],
+             num_gr * max_num_p_gr_from_mf_to_gr * sizeof(int), read, file);
+}
 
 void InNetConnectivityState::allocateMemory() {
   haspGLfromMFtoGL = new bool[num_gl];
