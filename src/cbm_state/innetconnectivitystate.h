@@ -45,6 +45,52 @@ public:
   void readState(std::fstream &infile);
   void writeState(std::fstream &outfile);
 
+  // file IO arrays
+
+  // who the MFs connect to...
+  void NumPMFfromMFtoGRRW(std::fstream &infile);
+  void PMFfromMFtoGRRW(std::fstream &infile);
+
+  void NumPMFfromMFtoGORW(std::fstream &infile);
+  void PMFfromMFtoGORW(std::fstream &infile);
+
+  // who the GOs connect to...
+  void NumPGOfromMFtoGORW(std::fstream &infile);
+  void PGOfromMFtoGORW(std::fstream &infile);
+
+  void NumPGOfromGOtoGRRW(std::fstream &infile);
+  void PGOfromGOtoGRRW(std::fstream &infile);
+
+  void NumPGOfromGRtoGORW(std::fstream &infile);
+  void PGOfromGRtoGORW(std::fstream &infile);
+
+  // receiving GOs ...
+  void NumPGOInfromGOtoGORW(std::fstream &infile);
+  void PGOInfromGOtoGORW(std::fstream &infile);
+
+  // outgoing GOs...
+  void NumPGOOutfromGOtoGORW(std::fstream &infile);
+  void PGOOutfromGOtoGORW(std::fstream &infile);
+
+  // receiving GO coupling...
+  void NumPGOCoupInfromGOtoGORW(std::fstream &infile);
+  void PGOCoupInfromGOtoGORW(std::fstream &infile);
+
+  // outgoing GO coupling...
+  void NumPGOCoupOutfromGOtoGORW(std::fstream &infile);
+  void PGOCoupOutfromGOtoGORW(std::fstream &infile);
+
+  // receiving GO coupling *coefficients*...
+  void PGOCoupOutGOGOCCoeffRW(std::fstream &infile);
+
+  // outgoing GO coupling *coefficients*...
+  void PGOCoupInGOGOCCoeffRW(std::fstream &infile);
+
+  // who the GRs connect to...
+  void NumPGRfromGRtoGORW(std::fstream &infile);
+  void PGRfromGOtoGRRW(std::fstream &infile);
+  void PGRfromMFtoGRRW(std::fstream &infile);
+
   // glomerulus
   bool *haspGLfromMFtoGL;
   int *numpGLfromGLtoGO;

@@ -62,6 +62,41 @@ void InNetConnectivityState::writeState(std::fstream &outfile) {
   stateRW(false, outfile);
 }
 
+void InNetConnectivityState::NumPMFfromMFtoGRRW(std::fstream &infile) {}
+void InNetConnectivityState::PMFfromMFtoGRRW(std::fstream &infile) {}
+
+void InNetConnectivityState::NumPMFfromMFtoGORW(std::fstream &infile) {}
+void InNetConnectivityState::PMFfromMFtoGORW(std::fstream &infile) {}
+
+void InNetConnectivityState::NumPGOfromMFtoGORW(std::fstream &infile) {}
+void InNetConnectivityState::PGOfromMFtoGORW(std::fstream &infile) {}
+
+void InNetConnectivityState::NumPGOfromGOtoGRRW(std::fstream &infile) {}
+void InNetConnectivityState::PGOfromGOtoGRRW(std::fstream &infile) {}
+
+void InNetConnectivityState::NumPGOfromGRtoGORW(std::fstream &infile) {}
+void InNetConnectivityState::PGOfromGRtoGORW(std::fstream &infile) {}
+
+void InNetConnectivityState::NumPGOInfromGOtoGORW(std::fstream &infile) {}
+void InNetConnectivityState::PGOInfromGOtoGORW(std::fstream &infile) {}
+
+void InNetConnectivityState::NumPGOOutfromGOtoGORW(std::fstream &infile) {}
+void InNetConnectivityState::PGOOutfromGOtoGORW(std::fstream &infile) {}
+
+void InNetConnectivityState::NumPGOCoupInfromGOtoGORW(std::fstream &infile) {}
+void InNetConnectivityState::PGOCoupInfromGOtoGORW(std::fstream &infile) {}
+
+void InNetConnectivityState::NumPGOCoupOutfromGOtoGORW(std::fstream &infile) {}
+void InNetConnectivityState::PGOCoupOutfromGOtoGORW(std::fstream &infile) {}
+
+void InNetConnectivityState::PGOCoupOutGOGOCCoeffRW(std::fstream &infile) {}
+
+void InNetConnectivityState::PGOCoupInGOGOCCoeffRW(std::fstream &infile) {}
+
+void InNetConnectivityState::NumPGRfromGRtoGORW(std::fstream &infile) {}
+void InNetConnectivityState::PGRfromGOtoGRRW(std::fstream &infile) {}
+void InNetConnectivityState::PGRfromMFtoGRRW(std::fstream &infile) {}
+
 void InNetConnectivityState::allocateMemory() {
   haspGLfromMFtoGL = new bool[num_gl];
 
