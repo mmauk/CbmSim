@@ -495,6 +495,15 @@ void validate_commandline(parsed_commandline &p_cl) {
       }
       p_cl.session_file = INPUT_DATA_PATH + p_cl.session_file;
     } else if (!p_cl.input_sim_file.empty()) {
+      if (p_cl.vis_mode.empty()) {
+        LOG_DEBUG(
+            "Visual mode not specified. Setting to default value of 'TUI'...");
+        p_cl.vis_mode = "TUI";
+      } else if (p_cl.vis_mode == "GUI") {
+        LOG_FATAL("Cannot specify visual mode 'GUI' in connectivity collect "
+                  "mode. Exiting...");
+        exit(7);
+      }
       if (p_cl.conn_arrs_files.empty()) {
         LOG_FATAL("You must specify at least one connectivity array to save. "
                   "Exiting...");

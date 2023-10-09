@@ -234,7 +234,8 @@ public:
   std::string pfpc_weights_file = "";
   std::string mfnc_weights_file = "";
 
-  std::string con_arrs_names[NUM_SYN_CONS];
+  std::string pre_con_arrs_names[NUM_SYN_CONS];
+  std::string post_con_arrs_names[NUM_SYN_CONS];
 
   /* instantiation of above structs for firing rate calculations in gui */
   struct cell_spike_sums spike_sums[NUM_CELL_TYPES];
@@ -442,6 +443,7 @@ public:
   void save_gr_raster();
   void save_rasters();
   void save_psths();
+  /* NOTE: for now, saving 2d arrays, only from pre-synaptic side */
   void save_con_arrs();
 
   /* delete data objects from memory. Only run in destructor */
