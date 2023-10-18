@@ -332,6 +332,13 @@ public:
   void save_pfpc_weights_to_file();
 
   /**
+   *  @brief Save the parallel fiber purkinje cell weights to binary file at
+   *  given trial.
+   *  @param trial the trial to save the weights at.
+   */
+  void save_pfpc_weights_at_trial_to_file(uint32_t trial);
+
+  /**
    *  @brief load the parallel fiber purkinje cell weights from binary file.
    *  @param in_pfpc_file input binary file of pfpc weights
    */
@@ -440,7 +447,7 @@ public:
 
   /* save data objects to file functions */
   void save_weights();
-  void save_gr_raster();
+  void save_gr_rasters_at_trial_to_file(uint32_t trial);
   void save_rasters();
   void save_psths();
   /* NOTE: for now, saving 2d arrays, only from pre-synaptic side */

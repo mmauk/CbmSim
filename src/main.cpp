@@ -20,7 +20,7 @@
 #include "gui.h"
 #include "logger.h"
 
-int main(int argc, char **argv) {
+int main2(int argc, char **argv) {
   logger_initConsoleLogger(stderr);
   logger_setLevel(LogLevel_DEBUG);
   parsed_commandline p_cl = {};
@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
   return 0;
 }
 
-int main2(int argc, char **argv) {
+int main(int argc, char **argv) {
   logger_initConsoleLogger(stderr);
 // for now, set the log level dependent on whether
 // we are compiling for debug target or release target

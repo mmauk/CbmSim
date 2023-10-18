@@ -509,6 +509,26 @@ void Control::save_pfpc_weights_to_file() {
   }
 }
 
+void Control::save_pfpc_weights_at_trial_to_file(uint32_t trial) {
+  if (pfpc_weights_filenames_created) {
+    LOG_DEBUG("Saving granule to purkinje weights to file...");
+    if (!simCore) {
+      LOG_ERROR("Trying to write uninitialized weights to file.");
+      LOG_ERROR("(Hint: Try initializing a sim or loading the weights first.)");
+      return;
+    }
+    std::string curr_trial_weight_name =
+        data_out_path + "/" + get_file_basename(pfpc_weights_file) + "_TRIAL_" +
+        std::to_string(trial) + WEIGHTS_EXT[0];
+    const float *pfpc_weights = simCore->getMZoneList()[0]->exportPFPCWeights();
+    std::fstream outPFPCFileBuffer(curr_trial_weight_name.c_str(),
+                                   std::ios::out | std::ios::binary);
+    rawBytesRW((char *)pfpc_weights, num_gr * sizeof(float), false,
+               outPFPCFileBuffer);
+    outPFPCFileBuffer.close();
+  }
+}
+
 void Control::load_pfpc_weights_from_file(std::string in_pfpc_file) {
   if (!simCore) {
     LOG_ERROR("Trying to read weights to uninitialized simulation.");
@@ -819,7 +839,8 @@ void Control::runSession(struct gui *gui) {
       reset_spike_sums();
     }
     // save gr rasters into new file every trial
-    save_gr_raster();
+    save_gr_rasters_at_trial_to_file(trial);
+    save_pfpc_weights_at_trial_to_file(trial);
     trial++;
   }
   trial--; // setting so that is valid for drawing go rasters after a sim
@@ -871,11 +892,11 @@ void Control::reset_psths() {
   }
 }
 
-void Control::save_gr_raster() {
+void Control::save_gr_rasters_at_trial_to_file(uint32_t trial) {
   if (!rf_names[GR].empty()) {
     std::string trial_raster_name = data_out_path + "/" +
                                     get_file_basename(rf_names[GR]) +
-                                    "_trial_" + std::to_string(trial) + BIN_EXT;
+                                    "_TRIAL_" + std::to_string(trial) + BIN_EXT;
     LOG_DEBUG("Saving granule raster to file...");
     write2DArray<uint8_t>(trial_raster_name, rasters[GR], num_gr, msMeasure);
   }
