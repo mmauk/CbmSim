@@ -924,8 +924,12 @@ void Control::save_con_arrs() {
       if (!pre_con_arrs_names[i].empty() && !post_con_arrs_names[i].empty()) {
         LOG_DEBUG("Saving %s connectivity array(s) to file...",
                   SYN_CONS_IDS[i].c_str());
-        std::fstream pre_con_arrs_file_buf(pre_con_arrs_names[i].c_str(),
-                                           std::ios::out | std::ios::binary);
+        // annoyingly, the only synapse with no pre-synaptic con arr
+        std::fstream pre_con_arrs_file_buf;
+        if (SYN_CONS_IDS[i] != "MFNC") {
+          pre_con_arrs_file_buf.open(pre_con_arrs_names[i].c_str(),
+                                     std::ios::out | std::ios::binary);
+        }
         std::fstream post_con_arrs_file_buf(post_con_arrs_names[i].c_str(),
                                             std::ios::out | std::ios::binary);
         if (SYN_CONS_IDS[i] == "MFGR") {
@@ -953,27 +957,46 @@ void Control::save_con_arrs() {
               pre_con_arrs_file_buf, false);
           simState->getInnetConStateInternal()->pGRfromGOtoGRRW(
               post_con_arrs_file_buf, false);
-        } else if (SYN_CONS_IDS[i] == "GRPC") {
-
-        } else if (SYN_CONS_IDS[i] == "GRBC") {
-
-        } else if (SYN_CONS_IDS[i] == "GRSC") {
-
         } else if (SYN_CONS_IDS[i] == "BCPC") {
-
+          simState->getMZoneConStateInternal(0)->pBCfromBCtoPCRW(
+              pre_con_arrs_file_buf, false);
+          simState->getMZoneConStateInternal(0)->pPCfromBCtoPCRW(
+              post_con_arrs_file_buf, false);
         } else if (SYN_CONS_IDS[i] == "SCPC") {
-
+          simState->getMZoneConStateInternal(0)->pSCfromSCtoPCRW(
+              pre_con_arrs_file_buf, false);
+          simState->getMZoneConStateInternal(0)->pPCfromSCtoPCRW(
+              post_con_arrs_file_buf, false);
         } else if (SYN_CONS_IDS[i] == "PCBC") {
-
+          simState->getMZoneConStateInternal(0)->pPCfromPCtoBCRW(
+              pre_con_arrs_file_buf, false);
+          simState->getMZoneConStateInternal(0)->pBCfromPCtoBCRW(
+              post_con_arrs_file_buf, false);
         } else if (SYN_CONS_IDS[i] == "PCNC") {
-
+          simState->getMZoneConStateInternal(0)->pPCfromPCtoNCRW(
+              pre_con_arrs_file_buf, false);
+          simState->getMZoneConStateInternal(0)->pNCfromPCtoNCRW(
+              post_con_arrs_file_buf, false);
         } else if (SYN_CONS_IDS[i] == "IOIO") {
-
+          simState->getMZoneConStateInternal(0)->pIOOutIOIORW(
+              pre_con_arrs_file_buf, false);
+          simState->getMZoneConStateInternal(0)->pIOInIOIORW(
+              post_con_arrs_file_buf, false);
         } else if (SYN_CONS_IDS[i] == "NCIO") {
-
+          simState->getMZoneConStateInternal(0)->pNCfromNCtoIORW(
+              pre_con_arrs_file_buf, false);
+          simState->getMZoneConStateInternal(0)->pIOfromNCtoIORW(
+              post_con_arrs_file_buf, false);
         } else if (SYN_CONS_IDS[i] == "MFNC") {
+          // just doesn't exist ig
+          // simState->getMZoneConStateInternal(0)->pMFfromMFtoNCRW(
+          //    pre_con_arrs_file_buf, false);
+          simState->getMZoneConStateInternal(0)->pNCfromMFtoNCRW(
+              post_con_arrs_file_buf, false);
         }
-        pre_con_arrs_file_buf.close();
+        if (SYN_CONS_IDS[i] != "MFNC") {
+          pre_con_arrs_file_buf.close();
+        }
         post_con_arrs_file_buf.close();
       }
     }

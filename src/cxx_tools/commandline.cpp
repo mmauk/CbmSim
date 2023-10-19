@@ -22,14 +22,13 @@
 // duplicates across translation units now
 const int NUM_CELL_TYPES = 8;
 const int NUM_WEIGHTS_TYPES = 2;
-const int NUM_SYN_CONS = 15;
+const int NUM_SYN_CONS = 12;
 const std::string CELL_IDS[NUM_CELL_TYPES] = {"MF", "GR", "GO", "BC",
                                               "SC", "PC", "IO", "NC"};
 const std::string WEIGHTS_IDS[NUM_WEIGHTS_TYPES] = {"PFPC", "MFNC"};
-const std::string SYN_CONS_IDS[NUM_SYN_CONS] = {
-    "MFGR", "GRGO", "MFGO", "GOGO", "GOGR", "GRPC", "GRBC", "GRSC",
-    "BCPC", "SCPC", "PCBC", "PCNC", "IOIO", "NCIO", "MFNC"
-};
+const std::string SYN_CONS_IDS[NUM_SYN_CONS] = {"MFGR", "GRGO", "MFGO", "GOGO",
+                                                "GOGR", "BCPC", "SCPC", "PCBC",
+                                                "PCNC", "IOIO", "NCIO", "MFNC"};
 
 /*
  * available commandline flags which take no argument

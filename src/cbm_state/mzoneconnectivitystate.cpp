@@ -57,6 +57,80 @@ void MZoneConnectivityState::writeState(std::fstream &outfile) {
   stateRW(false, outfile);
 }
 
+void MZoneConnectivityState::pPCfromPCtoBCRW(std::fstream &file, bool read) {
+  rawBytesRW((char *)pPCfromPCtoBC[0],
+             num_pc * num_p_pc_from_pc_to_bc * sizeof(uint32_t), read, file);
+}
+
+void MZoneConnectivityState::pPCfromBCtoPCRW(std::fstream &file, bool read) {
+  rawBytesRW((char *)pPCfromBCtoPC[0],
+             num_pc * num_p_pc_from_bc_to_pc * sizeof(uint32_t), read, file);
+}
+
+void MZoneConnectivityState::pPCfromSCtoPCRW(std::fstream &file, bool read) {
+  rawBytesRW((char *)pPCfromSCtoPC[0],
+             num_pc * num_p_pc_from_sc_to_pc * sizeof(uint32_t), read, file);
+}
+
+void MZoneConnectivityState::pPCfromPCtoNCRW(std::fstream &file, bool read) {
+  rawBytesRW((char *)pPCfromPCtoNC[0],
+             num_pc * num_p_pc_from_pc_to_nc * sizeof(uint32_t), read, file);
+}
+
+void MZoneConnectivityState::pPCfromIOtoPCRW(std::fstream &file, bool read) {
+  rawBytesRW((char *)pPCfromIOtoPC, num_pc * sizeof(uint32_t), read, file);
+}
+
+void MZoneConnectivityState::pBCfromBCtoPCRW(std::fstream &file, bool read) {
+  rawBytesRW((char *)pBCfromBCtoPC[0],
+             num_bc * num_p_bc_from_bc_to_pc * sizeof(uint32_t), read, file);
+}
+
+void MZoneConnectivityState::pBCfromPCtoBCRW(std::fstream &file, bool read) {
+  rawBytesRW((char *)pBCfromPCtoBC[0],
+             num_bc * num_p_bc_from_pc_to_bc * sizeof(uint32_t), read, file);
+}
+
+void MZoneConnectivityState::pSCfromSCtoPCRW(std::fstream &file, bool read) {
+  rawBytesRW((char *)pSCfromSCtoPC[0],
+             num_sc * num_p_sc_from_sc_to_pc * sizeof(uint32_t), read, file);
+}
+
+void MZoneConnectivityState::pNCfromPCtoNCRW(std::fstream &file, bool read) {
+  rawBytesRW((char *)pNCfromPCtoNC[0],
+             num_nc * num_p_nc_from_pc_to_nc * sizeof(uint32_t), read, file);
+}
+
+void MZoneConnectivityState::pNCfromNCtoIORW(std::fstream &file, bool read) {
+  rawBytesRW((char *)pNCfromNCtoIO[0],
+             num_nc * num_p_nc_from_nc_to_io * sizeof(uint32_t), read, file);
+}
+
+void MZoneConnectivityState::pNCfromMFtoNCRW(std::fstream &file, bool read) {
+  rawBytesRW((char *)pNCfromMFtoNC[0],
+             num_nc * num_p_nc_from_mf_to_nc * sizeof(uint32_t), read, file);
+}
+
+void MZoneConnectivityState::pIOfromIOtoPCRW(std::fstream &file, bool read) {
+  rawBytesRW((char *)pIOfromIOtoPC[0],
+             num_io * num_p_io_from_io_to_pc * sizeof(uint32_t), read, file);
+}
+
+void MZoneConnectivityState::pIOfromNCtoIORW(std::fstream &file, bool read) {
+  rawBytesRW((char *)pIOfromNCtoIO[0],
+             num_io * num_p_io_from_nc_to_io * sizeof(uint32_t), read, file);
+}
+
+void MZoneConnectivityState::pIOInIOIORW(std::fstream &file, bool read) {
+  rawBytesRW((char *)pIOInIOIO[0],
+             num_io * num_p_io_in_io_to_io * sizeof(uint32_t), read, file);
+}
+
+void MZoneConnectivityState::pIOOutIOIORW(std::fstream &file, bool read) {
+  rawBytesRW((char *)pIOOutIOIO[0],
+             num_io * num_p_io_out_io_to_io * sizeof(uint32_t), read, file);
+}
+
 void MZoneConnectivityState::allocateMemory() {
   // granule cells
   pGRDelayMaskfromGRtoBSP = new uint32_t[num_gr];

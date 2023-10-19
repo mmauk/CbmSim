@@ -33,7 +33,7 @@
 #define NUM_CELL_TYPES 8
 #define NUM_WEIGHTS_TYPES 2
 #define NUM_SAVE_OPTS 19
-#define NUM_SYN_CONS 15
+#define NUM_SYN_CONS 12
 
 // TODO:  should put these in file_utility.h
 const std::string RAST_EXT[NUM_CELL_TYPES] = {".mfr", ".grr", ".gor", ".bcr",
@@ -42,8 +42,8 @@ const std::string PSTH_EXT[NUM_CELL_TYPES] = {".mfp", ".grp", ".gop", ".bcp",
                                               ".scp", ".pcp", ".iop", ".ncp"};
 const std::string WEIGHTS_EXT[NUM_WEIGHTS_TYPES] = {".pfpcw", ".mfncw"};
 const std::string SYN_CONS_EXT[NUM_SYN_CONS] = {
-    ".mfgr", ".grgo", ".mfgo", ".gogo", ".gogr", ".grpc", ".grbc", ".grsc",
-    ".bcpc", ".scpc", ".pcbc", ".pcnc", ".ioio", ".ncio", ".mfnc"};
+    ".mfgr", ".grgo", ".mfgo", ".gogo", ".gogr", ".bcpc",
+    ".scpc", ".pcbc", ".pcnc", ".ioio", ".ncio", ".mfnc"};
 
 /* convenience enum for indexing output data type */
 enum save_opts {
@@ -80,9 +80,9 @@ const std::string CELL_IDS[NUM_CELL_TYPES] = {"MF", "GR", "GO", "BC",
                                               "SC", "PC", "IO", "NC"};
 // TODO this same entity exists in different translation unit. create
 // common one for love of god
-const std::string SYN_CONS_IDS[NUM_SYN_CONS] = {
-    "MFGR", "GRGO", "MFGO", "GOGO", "GOGR", "GRPC", "GRBC", "GRSC",
-    "BCPC", "SCPC", "PCBC", "PCNC", "IOIO", "NCIO", "MFNC"};
+const std::string SYN_CONS_IDS[NUM_SYN_CONS] = {"MFGR", "GRGO", "MFGO", "GOGO",
+                                                "GOGR", "BCPC", "SCPC", "PCBC",
+                                                "PCNC", "IOIO", "NCIO", "MFNC"};
 
 /*
  * sums and counters used to support cell population firing rate calculation
