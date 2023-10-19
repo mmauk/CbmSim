@@ -509,6 +509,10 @@ void validate_commandline(parsed_commandline &p_cl) {
                   "Exiting...");
         exit(8);
       }
+      if (p_cl.output_basename.empty()) {
+        LOG_FATAL("You must specify an output basename. Exiting...");
+        exit(9);
+      }
       std::string input_sim_file_fullpath;
       // verify whether the input simulation file can be found recursively
       // from {PROJECT_ROOT}data/outputs/
@@ -519,10 +523,6 @@ void validate_commandline(parsed_commandline &p_cl) {
         exit(11);
       }
       p_cl.input_sim_file = input_sim_file_fullpath;
-      if (p_cl.output_basename.empty()) {
-        p_cl.output_sim_file = get_file_basename(p_cl.input_sim_file);
-        p_cl.output_basename = p_cl.output_sim_file;
-      }
     } else {
       LOG_FATAL("Run mode not specified. You must provide either {-b|--build}, "
                 "{-s|--session}, or {-i|--input + -c|--conn-arrs} arguments. "

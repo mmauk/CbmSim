@@ -60,6 +60,7 @@ Control::Control(parsed_commandline &p_cl) {
     create_raster_filenames(p_cl.raster_files);   // optional
     create_psth_filenames(p_cl.psth_files);       // optional
     create_weights_filenames(p_cl.weights_files); // optional
+    create_con_arrs_filenames(p_cl.conn_arrs_files); // optional
     init_sim(p_cl.input_sim_file);
   } else if (!p_cl.input_sim_file.empty()) {
     data_out_path = OUTPUT_DATA_PATH + p_cl.output_basename;
