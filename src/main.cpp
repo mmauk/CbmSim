@@ -20,16 +20,6 @@
 #include "gui.h"
 #include "logger.h"
 
-int main2(int argc, char **argv) {
-  logger_initConsoleLogger(stderr);
-  logger_setLevel(LogLevel_DEBUG);
-  parsed_commandline p_cl = {};
-  parse_and_validate_parsed_commandline(&argc, &argv, p_cl);
-  Control *control = new Control(p_cl);
-  delete control;
-  return 0;
-}
-
 int main(int argc, char **argv) {
   logger_initConsoleLogger(stderr);
 // for now, set the log level dependent on whether
@@ -51,10 +41,13 @@ int main(int argc, char **argv) {
     if (!p_cl.build_file.empty()) {
       control->build_sim();
       control->save_sim_to_file();
+      control->save_con_arrs();
     } else if (!p_cl.session_file.empty()) {
       control->runSession(NULL); // saving is done at the end of runSession.
                                  // might consider moving to own function and
                                  // calling from here
+    } else if (!p_cl.input_sim_file.empty()) {
+      control->save_con_arrs();
     }
   } else if (p_cl.vis_mode == "GUI") {
     exit_status = gui_init_and_run(&argc, &argv, control);

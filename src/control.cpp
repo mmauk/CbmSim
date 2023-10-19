@@ -34,6 +34,7 @@ Control::Control(parsed_commandline &p_cl) {
     }
     data_out_dir_created = true;
     create_out_sim_filename();
+    create_con_arrs_filenames(p_cl.conn_arrs_files);
   } else if (!p_cl.session_file.empty()) {
     initialize_session(p_cl.session_file);
     // cp session info to info file obj
@@ -917,61 +918,63 @@ void Control::save_psths() {
 }
 
 void Control::save_con_arrs() {
-  for (uint32_t i = 0; i < NUM_SYN_CONS; i++) {
-    if (!pre_con_arrs_names[i].empty() && !post_con_arrs_names[i].empty()) {
-      LOG_DEBUG("Saving %s connectivity array(s) to file...",
-                SYN_CONS_IDS[i].c_str());
-      std::fstream pre_con_arrs_file_buf(pre_con_arrs_names[i].c_str(),
-                                         std::ios::out | std::ios::binary);
-      std::fstream post_con_arrs_file_buf(post_con_arrs_names[i].c_str(),
-                                          std::ios::out | std::ios::binary);
-      if (SYN_CONS_IDS[i] == "MFGR") {
-        simState->getInnetConStateInternal()->pMFfromMFtoGRRW(
-            pre_con_arrs_file_buf, false);
-        simState->getInnetConStateInternal()->pGRfromMFtoGRRW(
-            post_con_arrs_file_buf, false);
-      } else if (SYN_CONS_IDS[i] == "GRGO") {
-        simState->getInnetConStateInternal()->pGRfromGRtoGORW(
-            pre_con_arrs_file_buf, false);
-        simState->getInnetConStateInternal()->pGOfromGRtoGORW(
-            post_con_arrs_file_buf, false);
-      } else if (SYN_CONS_IDS[i] == "MFGO") {
-        simState->getInnetConStateInternal()->pMFfromMFtoGORW(
-            pre_con_arrs_file_buf, false);
-        simState->getInnetConStateInternal()->pGOfromMFtoGORW(
-            post_con_arrs_file_buf, false);
-      } else if (SYN_CONS_IDS[i] == "GOGO") {
-        simState->getInnetConStateInternal()->pGOOutfromGOtoGORW(
-            pre_con_arrs_file_buf, false);
-        simState->getInnetConStateInternal()->pGOInfromGOtoGORW(
-            post_con_arrs_file_buf, false);
-      } else if (SYN_CONS_IDS[i] == "GOGR") {
-        simState->getInnetConStateInternal()->pGOfromGOtoGRRW(
-            pre_con_arrs_file_buf, false);
-        simState->getInnetConStateInternal()->pGRfromGOtoGRRW(
-            post_con_arrs_file_buf, false);
-      } else if (SYN_CONS_IDS[i] == "GRPC") {
+  if (con_arrs_filenames_created) {
+    for (uint32_t i = 0; i < NUM_SYN_CONS; i++) {
+      if (!pre_con_arrs_names[i].empty() && !post_con_arrs_names[i].empty()) {
+        LOG_DEBUG("Saving %s connectivity array(s) to file...",
+                  SYN_CONS_IDS[i].c_str());
+        std::fstream pre_con_arrs_file_buf(pre_con_arrs_names[i].c_str(),
+                                           std::ios::out | std::ios::binary);
+        std::fstream post_con_arrs_file_buf(post_con_arrs_names[i].c_str(),
+                                            std::ios::out | std::ios::binary);
+        if (SYN_CONS_IDS[i] == "MFGR") {
+          simState->getInnetConStateInternal()->pMFfromMFtoGRRW(
+              pre_con_arrs_file_buf, false);
+          simState->getInnetConStateInternal()->pGRfromMFtoGRRW(
+              post_con_arrs_file_buf, false);
+        } else if (SYN_CONS_IDS[i] == "GRGO") {
+          simState->getInnetConStateInternal()->pGRfromGRtoGORW(
+              pre_con_arrs_file_buf, false);
+          simState->getInnetConStateInternal()->pGOfromGRtoGORW(
+              post_con_arrs_file_buf, false);
+        } else if (SYN_CONS_IDS[i] == "MFGO") {
+          simState->getInnetConStateInternal()->pMFfromMFtoGORW(
+              pre_con_arrs_file_buf, false);
+          simState->getInnetConStateInternal()->pGOfromMFtoGORW(
+              post_con_arrs_file_buf, false);
+        } else if (SYN_CONS_IDS[i] == "GOGO") {
+          simState->getInnetConStateInternal()->pGOOutfromGOtoGORW(
+              pre_con_arrs_file_buf, false);
+          simState->getInnetConStateInternal()->pGOInfromGOtoGORW(
+              post_con_arrs_file_buf, false);
+        } else if (SYN_CONS_IDS[i] == "GOGR") {
+          simState->getInnetConStateInternal()->pGOfromGOtoGRRW(
+              pre_con_arrs_file_buf, false);
+          simState->getInnetConStateInternal()->pGRfromGOtoGRRW(
+              post_con_arrs_file_buf, false);
+        } else if (SYN_CONS_IDS[i] == "GRPC") {
 
-      } else if (SYN_CONS_IDS[i] == "GRBC") {
+        } else if (SYN_CONS_IDS[i] == "GRBC") {
 
-      } else if (SYN_CONS_IDS[i] == "GRSC") {
+        } else if (SYN_CONS_IDS[i] == "GRSC") {
 
-      } else if (SYN_CONS_IDS[i] == "BCPC") {
+        } else if (SYN_CONS_IDS[i] == "BCPC") {
 
-      } else if (SYN_CONS_IDS[i] == "SCPC") {
+        } else if (SYN_CONS_IDS[i] == "SCPC") {
 
-      } else if (SYN_CONS_IDS[i] == "PCBC") {
+        } else if (SYN_CONS_IDS[i] == "PCBC") {
 
-      } else if (SYN_CONS_IDS[i] == "PCNC") {
+        } else if (SYN_CONS_IDS[i] == "PCNC") {
 
-      } else if (SYN_CONS_IDS[i] == "IOIO") {
+        } else if (SYN_CONS_IDS[i] == "IOIO") {
 
-      } else if (SYN_CONS_IDS[i] == "NCIO") {
+        } else if (SYN_CONS_IDS[i] == "NCIO") {
 
-      } else if (SYN_CONS_IDS[i] == "MFNC") {
+        } else if (SYN_CONS_IDS[i] == "MFNC") {
+        }
+        pre_con_arrs_file_buf.close();
+        post_con_arrs_file_buf.close();
       }
-      pre_con_arrs_file_buf.close();
-      post_con_arrs_file_buf.close();
     }
   }
 }

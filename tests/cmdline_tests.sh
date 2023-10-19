@@ -6,7 +6,7 @@ data_in_dir="${root_dir}data/inputs/"
 data_out_dir="${root_dir}data/outputs/"
 build_dir="${root_dir}build/"
 debug_dir="${build_dir}debug/"
-scripts_dir="${root_dir}scripts/"
+tests_dir="${root_dir}tests/"
 
 build_file="build_file_template.bld"
 sess_file="TESTS.sess"
@@ -37,12 +37,15 @@ elif [ $# -eq 1 ]; then
 		num_tests=10
 	elif [ "$1" == "run" ]; then
 		printf "Running only run-mode tests...\n"
-	num_tests=40
+		num_tests=40
+	elif [ "$1" == "connect" ]; then
+		printf "Running only connectivity-mode tests...\n"
+		num_tests=4
 	fi
 fi
 
 # workflow 0 test cases: building a simulation
-if [ $# -eq 0 ] || [ $# -eq 1 ] && [ "$1" == "build" ]; then
+if [[ $# -eq 0 || ( $# -eq 1 && "$1" == "build" ) ]]; then
 	## valid test cases
 	
 	if ! $binary -b $build_file -o TEST_CASE_1
@@ -168,7 +171,7 @@ if [ $# -eq 0 ] || [ $# -eq 1 ] && [ "$1" == "build" ]; then
 	fi
 fi
 
-if [ $# -eq 0 ] || [ $# -eq 1 ] && [ "$1" == "run" ]; then
+if [[ $# -eq 0 || ( $# -eq 1 && "$1" == "run" ) ]]; then
 	# workflow 1 test cases: building a simulation
 	
 	workflow_1_basename="WORKFLOW_1_INPUT"
@@ -264,7 +267,6 @@ if [ $# -eq 0 ] || [ $# -eq 1 ] && [ "$1" == "run" ]; then
 		then
 			printf "TEST CASE 14 FAILED\n"
 			printf "\tREASON: Output simulation 'TEST_CASE_14.sim' and info file 'TEST_CASE_14.txt' were not produced\n"
-
 		elif ! [ -e "${data_out_dir}TEST_CASE_14/TEST_CASE_14${rast_exts[mf]}" ] && \
 			 ! [ -e "${data_out_dir}TEST_CASE_14/TEST_CASE_14${rast_exts[go]}" ]
 		then
@@ -697,6 +699,100 @@ if [ $# -eq 0 ] || [ $# -eq 1 ] && [ "$1" == "run" ]; then
 	fi
 fi
 
+if [[ $# -eq 0 || ( $# -eq 1 && "$1" == "connect" ) ]]; then
+	# workflow 2 test cases: collecting connectivity arrays
+	## valid test cases
+	if ! $binary -b $build_file -o TEST_CASE_51 -c MFGR
+	then
+		printf "TEST CASE 51 FAILED\n"
+		printf "\tREASON: the command returned non-zero exit status\n"
+	else
+		if ! [ -d "${data_out_dir}TEST_CASE_51" ]
+		then
+			printf "TEST CASE 51 FAILED\n"
+			printf "\tREASON: Output folder 'TEST_CASE_51' was not produced\n"
+		elif ! [ -e "${data_out_dir}TEST_CASE_51/TEST_CASE_51_PRE.mfgr" ] && \
+		     ! [ -e "${data_out_dir}TEST_CASE_51/TEST_CASE_51_POST.mfgr" ]
+		then
+			printf "TEST CASE 51 FAILED\n"
+			printf "\tREASON: Pre/Post Output files with base and extension 'TEST_CASE_51.mfgr' were not produced\n"
+		else
+			printf "TEST CASE 51 PASSED\n"
+			(( passed_tests++ ))
+		fi
+	fi
+	if ! $binary -b $build_file -o TEST_CASE_52 -c MFGR,MFGO
+	then
+		printf "TEST CASE 52 FAILED\n"
+		printf "\tREASON: the command returned non-zero exit status\n"
+	else
+		if ! [ -d "${data_out_dir}TEST_CASE_52" ]
+		then
+			printf "TEST CASE 52 FAILED\n"
+			printf "\tREASON: Output folder 'TEST_CASE_52' was not produced\n"
+		elif ! [ -e "${data_out_dir}TEST_CASE_52/TEST_CASE_52_PRE.mfgr" ] && \
+		     ! [ -e "${data_out_dir}TEST_CASE_52/TEST_CASE_52_POST.mfgr" ] && \
+		     ! [ -e "${data_out_dir}TEST_CASE_52/TEST_CASE_52_PRE.mfgo" ] && \
+		     ! [ -e "${data_out_dir}TEST_CASE_52/TEST_CASE_52_POST.mfgo" ]
+		then
+			printf "TEST CASE 52 FAILED\n"
+			printf "\tREASON: Pre/Post Output files with base and extension 'TEST_CASE_52.mfgr' and 'TEST_CASE_52.mfgo' were not produced\n"
+		else
+			printf "TEST CASE 52 PASSED\n"
+			(( passed_tests++ ))
+		fi
+	fi
+	# generating input file for later test cases for workflow 2
+	workflow_2_basename="WORKFLOW_2_INPUT"
+	workflow_2_input="${workflow_2_basename}.sim"
+	if [ -e "${data_out_dir}${workflow_2_basename}/${workflow_2_input}" ]; then
+		printf "workflow 2 input sim found. No need to generate a new one...\n"
+	else
+		printf "Generating simulation for workflow 2 test cases...\n"
+		$binary -b $build_file -o $workflow_2_basename
+	fi
+	if ! $( $binary -i $workflow_2_input -o TEST_CASE_53 -c MFGR > /dev/null 2>&1 )
+	then
+		printf "TEST CASE 53 FAILED\n"
+		printf "\tREASON: the command returned non-zero exit status\n"
+	else
+		if ! [ -d "${data_out_dir}TEST_CASE_53" ]
+		then
+			printf "TEST CASE 53 FAILED\n"
+			printf "\tREASON: Output folder 'TEST_CASE_53' was not produced\n"
+		elif ! [ -e "${data_out_dir}TEST_CASE_53/TEST_CASE_53_PRE.mfgr" ] && \
+		     ! [ -e "${data_out_dir}TEST_CASE_53/TEST_CASE_53_POST.mfgr" ]
+		then
+			printf "TEST CASE 53 FAILED\n"
+			printf "\tREASON: Pre/Post Output files with base and extension 'TEST_CASE_53.mfgr' were not produced\n"
+		else
+			printf "TEST CASE 53 PASSED\n"
+			(( passed_tests++ ))
+		fi
+	fi
+	if ! $( $binary -i $workflow_2_input -o TEST_CASE_54 -c MFGR,MFGO > /dev/null 2>&1 )
+	then
+		printf "TEST CASE 54 FAILED\n"
+		printf "\tREASON: the command returned non-zero exit status\n"
+	else
+		if ! [ -d "${data_out_dir}TEST_CASE_54" ]
+		then
+			printf "TEST CASE 54 FAILED\n"
+			printf "\tREASON: Output folder 'TEST_CASE_54' was not produced\n"
+		elif ! [ -e "${data_out_dir}TEST_CASE_54/TEST_CASE_54_PRE.mfgr" ] && \
+		     ! [ -e "${data_out_dir}TEST_CASE_54/TEST_CASE_54_POST.mfgr" ] && \
+		     ! [ -e "${data_out_dir}TEST_CASE_54/TEST_CASE_54_PRE.mfgo" ] && \
+		     ! [ -e "${data_out_dir}TEST_CASE_54/TEST_CASE_54_POST.mfgo" ]
+		then
+			printf "TEST CASE 54 FAILED\n"
+			printf "\tREASON: Pre/Post Output files with base and extension 'TEST_CASE_54.mfgr' and 'TEST_CASE_54.mfgo' were not produced\n"
+		else
+			printf "TEST CASE 54 PASSED\n"
+			(( passed_tests++ ))
+		fi
+	fi
+fi
+
 if [ $# -eq 0 ]; then
 	printf "All tests finished.\n"
 elif [ $# -eq 1 ];then
@@ -704,6 +800,8 @@ elif [ $# -eq 1 ];then
 		printf "Build-mode tests finished.\n"
 	elif [ "$1" == "run" ]; then
 		printf "Run-mode tests finished.\n"
+	elif [ "$1" == "connect" ]; then
+		printf "Connectivity-mode tests finished.\n"
 	fi
 fi
 
@@ -711,4 +809,4 @@ printf "${passed_tests}/${num_tests} passed.\n"
 cd $data_out_dir
 rm -rf TEST_CASE_*
 # rm -rf "${workflow_1_basename}"
-cd $scripts_dir
+cd $tests_dir
