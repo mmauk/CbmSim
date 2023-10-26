@@ -38,6 +38,31 @@ public:
   void readState(std::fstream &infile);
   void writeState(std::fstream &outfile);
 
+  // who the PCs connect to...
+  void pPCfromPCtoBCRW(std::fstream &file, bool read);
+  void pPCfromBCtoPCRW(std::fstream &file, bool read);
+  void pPCfromSCtoPCRW(std::fstream &file, bool read);
+  void pPCfromPCtoNCRW(std::fstream &file, bool read);
+  void pPCfromIOtoPCRW(std::fstream &file, bool read);
+
+  // who the baskets connect to...
+  void pBCfromBCtoPCRW(std::fstream &file, bool read);
+  void pBCfromPCtoBCRW(std::fstream &file, bool read);
+
+  // who the stellates connect to...
+  void pSCfromSCtoPCRW(std::fstream &file, bool read);
+
+  // who the nucleus cells connect to...
+  void pNCfromPCtoNCRW(std::fstream &file, bool read);
+  void pNCfromNCtoIORW(std::fstream &file, bool read);
+  void pNCfromMFtoNCRW(std::fstream &file, bool read);
+
+  // who the inferior olives connect to...
+  void pIOfromIOtoPCRW(std::fstream &file, bool read);
+  void pIOfromNCtoIORW(std::fstream &file, bool read);
+  void pIOInIOIORW(std::fstream &file, bool read);
+  void pIOOutIOIORW(std::fstream &file, bool read);
+
   // granule cells
   uint32_t *pGRDelayMaskfromGRtoBSP;
 

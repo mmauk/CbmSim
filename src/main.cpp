@@ -43,9 +43,8 @@ int main(int argc, char **argv) {
       control->save_sim_to_file();
     } else if (!p_cl.session_file.empty()) {
       control->runSession(NULL); // saving is done at the end of runSession.
-                                 // might consider moving to own function and
-                                 // calling from here
     }
+    control->save_con_arrs(); // save conn arrs regardless route took
   } else if (p_cl.vis_mode == "GUI") {
     exit_status = gui_init_and_run(&argc, &argv, control);
   }

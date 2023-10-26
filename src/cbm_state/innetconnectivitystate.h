@@ -45,6 +45,55 @@ public:
   void readState(std::fstream &infile);
   void writeState(std::fstream &outfile);
 
+  // file IO arrays
+
+  // who the MFs connect to...
+  void numPMFfromMFtoGRRW(std::fstream &file, bool read);
+  void pMFfromMFtoGRRW(std::fstream &file, bool read);
+
+  void numPMFfromMFtoGORW(std::fstream &file, bool read);
+  void pMFfromMFtoGORW(std::fstream &file, bool read);
+
+  // who the GOs connect to...
+  void numPGOfromMFtoGORW(std::fstream &file, bool read);
+  void pGOfromMFtoGORW(std::fstream &file, bool read);
+
+  void numPGOfromGOtoGRRW(std::fstream &file, bool read);
+  void pGOfromGOtoGRRW(std::fstream &file, bool read);
+
+  void numPGOfromGRtoGORW(std::fstream &file, bool read);
+  void pGOfromGRtoGORW(std::fstream &file, bool read);
+
+  // receiving GOs ...
+  void numPGOInfromGOtoGORW(std::fstream &file, bool read);
+  void pGOInfromGOtoGORW(std::fstream &file, bool read);
+
+  // outgoing GOs...
+  void numPGOOutfromGOtoGORW(std::fstream &file, bool read);
+  void pGOOutfromGOtoGORW(std::fstream &file, bool read);
+
+  // receiving GO coupling...
+  void numPGOCoupInfromGOtoGORW(std::fstream &file, bool read);
+  void pGOCoupInfromGOtoGORW(std::fstream &file, bool read);
+
+  // outgoing GO coupling...
+  void numPGOCoupOutfromGOtoGORW(std::fstream &file, bool read);
+  void pGOCoupOutfromGOtoGORW(std::fstream &file, bool read);
+
+  // receiving GO coupling *coefficients*...
+  void pGOCoupOutGOGOCCoeffRW(std::fstream &file, bool read);
+
+  // outgoing GO coupling *coefficients*...
+  void pGOCoupInGOGOCCoeffRW(std::fstream &file, bool read);
+
+  // who the GRs connect to...
+  void numPGRfromGRtoGORW(std::fstream &file, bool read);
+  void pGRfromGRtoGORW(std::fstream &file, bool read);
+  void numPGRfromGOtoGRRW(std::fstream &file, bool read);
+  void pGRfromGOtoGRRW(std::fstream &file, bool read);
+  void numPGRfromMFtoGRRW(std::fstream &file, bool read);
+  void pGRfromMFtoGRRW(std::fstream &file, bool read);
+
   // glomerulus
   bool *haspGLfromMFtoGL;
   int *numpGLfromGLtoGO;

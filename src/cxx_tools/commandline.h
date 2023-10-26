@@ -39,6 +39,7 @@ typedef struct {
   std::map<std::string, bool> raster_files;
   std::map<std::string, bool> psth_files;
   std::map<std::string, bool> weights_files;
+  std::map<std::string, bool> conn_arrs_files;
 } parsed_commandline;
 
 /*

@@ -34,6 +34,7 @@ Control::Control(parsed_commandline &p_cl) {
     }
     data_out_dir_created = true;
     create_out_sim_filename();
+    create_con_arrs_filenames(p_cl.conn_arrs_files);
   } else if (!p_cl.session_file.empty()) {
     initialize_session(p_cl.session_file);
     // cp session info to info file obj
@@ -59,7 +60,26 @@ Control::Control(parsed_commandline &p_cl) {
     create_raster_filenames(p_cl.raster_files);   // optional
     create_psth_filenames(p_cl.psth_files);       // optional
     create_weights_filenames(p_cl.weights_files); // optional
+    create_con_arrs_filenames(p_cl.conn_arrs_files); // optional
     init_sim(p_cl.input_sim_file);
+  } else if (!p_cl.conn_arrs_files.empty()) {
+    data_out_path = OUTPUT_DATA_PATH + p_cl.output_basename;
+    data_out_base_name = p_cl.output_basename;
+    LOG_DEBUG("Using '%s' as the output directory...", data_out_path.c_str());
+    int status = mkdir(data_out_path.c_str(), 0775);
+    if (status == -1) {
+      LOG_DEBUG("Could not create directory '%s'. Maybe it already exists. "
+                "Exiting...",
+                data_out_path.c_str());
+      exit(10);
+    }
+    data_out_dir_created = true;
+    create_con_arrs_filenames(p_cl.conn_arrs_files);
+    std::fstream sim_file_buf(p_cl.input_sim_file.c_str(),
+                              std::ios::in | std::ios::binary);
+    read_con_params(sim_file_buf);
+    simState = new CBMState(numMZones, sim_file_buf);
+    sim_file_buf.close();
   } else { // user ran program with no args
     set_plasticity_modes("graded", "graded");
   }
@@ -491,6 +511,26 @@ void Control::save_pfpc_weights_to_file() {
   }
 }
 
+void Control::save_pfpc_weights_at_trial_to_file(uint32_t trial) {
+  if (pfpc_weights_filenames_created) {
+    LOG_DEBUG("Saving granule to purkinje weights to file...");
+    if (!simCore) {
+      LOG_ERROR("Trying to write uninitialized weights to file.");
+      LOG_ERROR("(Hint: Try initializing a sim or loading the weights first.)");
+      return;
+    }
+    std::string curr_trial_weight_name =
+        data_out_path + "/" + get_file_basename(pfpc_weights_file) + "_TRIAL_" +
+        std::to_string(trial) + WEIGHTS_EXT[0];
+    const float *pfpc_weights = simCore->getMZoneList()[0]->exportPFPCWeights();
+    std::fstream outPFPCFileBuffer(curr_trial_weight_name.c_str(),
+                                   std::ios::out | std::ios::binary);
+    rawBytesRW((char *)pfpc_weights, num_gr * sizeof(float), false,
+               outPFPCFileBuffer);
+    outPFPCFileBuffer.close();
+  }
+}
+
 void Control::load_pfpc_weights_from_file(std::string in_pfpc_file) {
   if (!simCore) {
     LOG_ERROR("Trying to read weights to uninitialized simulation.");
@@ -584,6 +624,23 @@ void Control::create_weights_filenames(
           data_out_path + "/" + data_out_base_name + WEIGHTS_EXT[1];
       mfnc_weights_filenames_created = true; // only useful so far for gui...
     }
+  }
+}
+
+void Control::create_con_arrs_filenames(
+    std::map<std::string, bool> &conn_arrs_map) {
+  if (data_out_dir_created) {
+    for (uint32_t i = 0; i < NUM_SYN_CONS; i++) {
+      if (conn_arrs_map[SYN_CONS_IDS[i]] || use_gui) {
+        pre_con_arrs_names[i] =
+            data_out_path + "/" + data_out_base_name + "_PRE" + SYN_CONS_EXT[i];
+        post_con_arrs_names[i] = data_out_path + "/" + data_out_base_name +
+                                 "_POST" + SYN_CONS_EXT[i];
+        LOG_DEBUG("Created filename: %s\n", pre_con_arrs_names[i].c_str());
+        LOG_DEBUG("Created filename: %s\n", post_con_arrs_names[i].c_str());
+      }
+    }
+    con_arrs_filenames_created = true;
   }
 }
 
@@ -784,7 +841,8 @@ void Control::runSession(struct gui *gui) {
       reset_spike_sums();
     }
     // save gr rasters into new file every trial
-    save_gr_raster();
+    save_gr_rasters_at_trial_to_file(trial);
+    save_pfpc_weights_at_trial_to_file(trial);
     trial++;
   }
   trial--; // setting so that is valid for drawing go rasters after a sim
@@ -836,11 +894,11 @@ void Control::reset_psths() {
   }
 }
 
-void Control::save_gr_raster() {
+void Control::save_gr_rasters_at_trial_to_file(uint32_t trial) {
   if (!rf_names[GR].empty()) {
     std::string trial_raster_name = data_out_path + "/" +
                                     get_file_basename(rf_names[GR]) +
-                                    "_trial_" + std::to_string(trial) + BIN_EXT;
+                                    "_TRIAL_" + std::to_string(trial) + BIN_EXT;
     LOG_DEBUG("Saving granule raster to file...");
     write2DArray<uint8_t>(trial_raster_name, rasters[GR], num_gr, msMeasure);
   }
@@ -857,6 +915,91 @@ void Control::save_psths() {
   for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
     if (!pf_names[i].empty())
       psth_save_funcs[i]();
+  }
+}
+
+void Control::save_con_arrs() {
+  if (con_arrs_filenames_created) {
+    for (uint32_t i = 0; i < NUM_SYN_CONS; i++) {
+      if (!pre_con_arrs_names[i].empty() && !post_con_arrs_names[i].empty()) {
+        LOG_DEBUG("Saving %s connectivity array(s) to file...",
+                  SYN_CONS_IDS[i].c_str());
+        // annoyingly, the only synapse with no pre-synaptic con arr
+        std::fstream pre_con_arrs_file_buf;
+        if (SYN_CONS_IDS[i] != "MFNC") {
+          pre_con_arrs_file_buf.open(pre_con_arrs_names[i].c_str(),
+                                     std::ios::out | std::ios::binary);
+        }
+        std::fstream post_con_arrs_file_buf(post_con_arrs_names[i].c_str(),
+                                            std::ios::out | std::ios::binary);
+        if (SYN_CONS_IDS[i] == "MFGR") {
+          simState->getInnetConStateInternal()->pMFfromMFtoGRRW(
+              pre_con_arrs_file_buf, false);
+          simState->getInnetConStateInternal()->pGRfromMFtoGRRW(
+              post_con_arrs_file_buf, false);
+        } else if (SYN_CONS_IDS[i] == "GRGO") {
+          simState->getInnetConStateInternal()->pGRfromGRtoGORW(
+              pre_con_arrs_file_buf, false);
+          simState->getInnetConStateInternal()->pGOfromGRtoGORW(
+              post_con_arrs_file_buf, false);
+        } else if (SYN_CONS_IDS[i] == "MFGO") {
+          simState->getInnetConStateInternal()->pMFfromMFtoGORW(
+              pre_con_arrs_file_buf, false);
+          simState->getInnetConStateInternal()->pGOfromMFtoGORW(
+              post_con_arrs_file_buf, false);
+        } else if (SYN_CONS_IDS[i] == "GOGO") {
+          simState->getInnetConStateInternal()->pGOOutfromGOtoGORW(
+              pre_con_arrs_file_buf, false);
+          simState->getInnetConStateInternal()->pGOInfromGOtoGORW(
+              post_con_arrs_file_buf, false);
+        } else if (SYN_CONS_IDS[i] == "GOGR") {
+          simState->getInnetConStateInternal()->pGOfromGOtoGRRW(
+              pre_con_arrs_file_buf, false);
+          simState->getInnetConStateInternal()->pGRfromGOtoGRRW(
+              post_con_arrs_file_buf, false);
+        } else if (SYN_CONS_IDS[i] == "BCPC") {
+          simState->getMZoneConStateInternal(0)->pBCfromBCtoPCRW(
+              pre_con_arrs_file_buf, false);
+          simState->getMZoneConStateInternal(0)->pPCfromBCtoPCRW(
+              post_con_arrs_file_buf, false);
+        } else if (SYN_CONS_IDS[i] == "SCPC") {
+          simState->getMZoneConStateInternal(0)->pSCfromSCtoPCRW(
+              pre_con_arrs_file_buf, false);
+          simState->getMZoneConStateInternal(0)->pPCfromSCtoPCRW(
+              post_con_arrs_file_buf, false);
+        } else if (SYN_CONS_IDS[i] == "PCBC") {
+          simState->getMZoneConStateInternal(0)->pPCfromPCtoBCRW(
+              pre_con_arrs_file_buf, false);
+          simState->getMZoneConStateInternal(0)->pBCfromPCtoBCRW(
+              post_con_arrs_file_buf, false);
+        } else if (SYN_CONS_IDS[i] == "PCNC") {
+          simState->getMZoneConStateInternal(0)->pPCfromPCtoNCRW(
+              pre_con_arrs_file_buf, false);
+          simState->getMZoneConStateInternal(0)->pNCfromPCtoNCRW(
+              post_con_arrs_file_buf, false);
+        } else if (SYN_CONS_IDS[i] == "IOIO") {
+          simState->getMZoneConStateInternal(0)->pIOOutIOIORW(
+              pre_con_arrs_file_buf, false);
+          simState->getMZoneConStateInternal(0)->pIOInIOIORW(
+              post_con_arrs_file_buf, false);
+        } else if (SYN_CONS_IDS[i] == "NCIO") {
+          simState->getMZoneConStateInternal(0)->pNCfromNCtoIORW(
+              pre_con_arrs_file_buf, false);
+          simState->getMZoneConStateInternal(0)->pIOfromNCtoIORW(
+              post_con_arrs_file_buf, false);
+        } else if (SYN_CONS_IDS[i] == "MFNC") {
+          // just doesn't exist ig
+          // simState->getMZoneConStateInternal(0)->pMFfromMFtoNCRW(
+          //    pre_con_arrs_file_buf, false);
+          simState->getMZoneConStateInternal(0)->pNCfromMFtoNCRW(
+              post_con_arrs_file_buf, false);
+        }
+        if (SYN_CONS_IDS[i] != "MFNC") {
+          pre_con_arrs_file_buf.close();
+        }
+        post_con_arrs_file_buf.close();
+      }
+    }
   }
 }
 
