@@ -812,6 +812,13 @@ void Control::runSession(struct gui *gui)
 	{
 		save_rasters();
 		save_psths();
+		if (data_out_dir_created) {
+			std::string weight_steps_fname = data_out_path + "/" + data_out_base_name + ".pfpcpe";
+			LOG_DEBUG("Saving pfpc plasticity events array to file...");
+			std::fstream out_weight_steps_buf(weight_steps_fname.c_str(), std::ios::out | std::ios::binary);
+			simCore->getMZoneList()[0]->save_weight_steps_to_file(out_weight_steps_buf);
+			out_weight_steps_buf.close();
+		}
 		save_pfpc_weights_at_trial_to_file(trial);
 		//save_mfdcn_weights_to_file();
 		save_sim_to_file();
