@@ -597,17 +597,12 @@ void Control::initialize_spike_sums()
 
 void Control::initialize_rasters()
 {
-	uint32_t num_probe_trials = 0;
-	for (uint32_t i = 0; i < td.num_trials; i++)
-	{
-		if (td.trial_names[i] == "probe_trial") num_probe_trials++;
-	}
 	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
 		if (!rf_names[i].empty() || use_gui)
 		{
 			/* granules are saved every trial, so their raster size is msMeasure  x num_gr */
-			uint32_t row_size = (CELL_IDS[i] == "GR") ? msMeasure : msMeasure * num_probe_trials;
+			uint32_t row_size = (CELL_IDS[i] == "GR") ? msMeasure : msMeasure * td.num_trials;
 			rasters[i] = allocate2DArray<uint8_t>(row_size, rast_cell_nums[i]);
 		}
 	}
@@ -640,18 +635,13 @@ void Control::initialize_psth_save_funcs()
 
 void Control::initialize_raster_save_funcs()
 {
-	uint32_t num_probe_trials = 0;
-	for (uint32_t i = 0; i < td.num_trials; i++)
-	{
-		if (td.trial_names[i] == "probe_trial") num_probe_trials++;
-	}
 	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
-		rast_save_funcs[i] = [this, i, num_probe_trials]()
+		rast_save_funcs[i] = [this, i]()
 		{
 			if (!rf_names[i].empty() && CELL_IDS[i] != "GR")
 			{
-				uint32_t row_size = (CELL_IDS[i] == "GR") ? this->msMeasure : this->msMeasure * num_probe_trials;
+				uint32_t row_size = (CELL_IDS[i] == "GR") ? this->msMeasure : this->msMeasure * this->td.num_trials;
 				LOG_DEBUG("Saving %s raster to file...", CELL_IDS[i].c_str());
 				write2DArray<uint8_t>(rf_names[i], this->rasters[i], row_size, this->rast_cell_nums[i]);
 			}
@@ -678,7 +668,6 @@ void Control::runSession(struct gui *gui)
 	if (!use_gui) run_state = IN_RUN_NO_PAUSE;
 	trial = 0;
 	raster_counter = 0;
-	enum plasticity initial_pfpc_plast = pf_pc_plast;
 	while (trial < td.num_trials && run_state != NOT_IN_RUN)
 	{
 		std::string currTrialName = td.trial_names[trial];
@@ -689,12 +678,6 @@ void Control::runSession(struct gui *gui)
 		//uint32_t percentCS    = td.cs_percents[trial]; // unused for now
 		uint32_t useUS        = td.use_uss[trial];
 		uint32_t onsetUS      = pre_collection_ts + td.us_onsets[trial];
-
-		// dumb, stupid, idiotic, moronic, and SHORT-SIGHTED bullshit
-		// for changing plasticity to off only for probe trials, else set to
-		// initial requested value
-		if (currTrialName == "probe_trial") pf_pc_plast = OFF;
-		else if (pf_pc_plast != initial_pfpc_plast) pf_pc_plast = initial_pfpc_plast;
 
 		int PSTHCounter = 0;
 		float gGRGO_sum = 0;
@@ -753,13 +736,10 @@ void Control::runSession(struct gui *gui)
 			/* data collection */
 			if (ts >= onsetCS - msPreCS && ts < onsetCS + csLength + msPostCS)
 			{
-				if (currTrialName == "probe_trial")
-				{
-					fill_rasters(raster_counter, PSTHCounter);
-					raster_counter++;
-				}
+				fill_rasters(raster_counter, PSTHCounter);
 				fill_psths(PSTHCounter);
 				PSTHCounter++;
+				raster_counter++;
 			}
 
 			if (use_gui)
@@ -792,14 +772,7 @@ void Control::runSession(struct gui *gui)
 		}
 		// save gr rasters into new file every trial 
 		save_gr_raster();
-		if (!nextTrialName.empty()) {
-			// below means we've reached the last probe_trial within a set of probe trials,
-			// and there are more non-probe trials to come
-			if (currTrialName == "probe_trial" && nextTrialName != "probe_trial")
-			{
-				save_pfpc_weights_at_trial_to_file(trial);
-			}
-		}
+		save_pfpc_weights_at_trial_to_file(trial);
 		trial++;
 	}
 	trial--; // setting so that is valid for drawing go rasters after a sim
@@ -819,7 +792,7 @@ void Control::runSession(struct gui *gui)
 			simCore->getMZoneList()[0]->save_weight_steps_to_file(out_weight_steps_buf);
 			out_weight_steps_buf.close();
 		}
-		save_pfpc_weights_at_trial_to_file(trial);
+		//save_pfpc_weights_at_trial_to_file(trial);
 		//save_mfdcn_weights_to_file();
 		save_sim_to_file();
 		save_info_to_file();
@@ -839,16 +812,11 @@ void Control::reset_spike_sums()
 
 void Control::reset_rasters()
 {
-	uint32_t num_probe_trials = 0;
-	for (uint32_t i = 0; i < td.num_trials; i++)
-	{
-		if (td.trial_names[i] == "probe_trial") num_probe_trials++;
-	}
 	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
 		if (!rf_names[i].empty() || use_gui)
 		{
-			uint32_t row_size = (CELL_IDS[i] == "GR") ? msMeasure : msMeasure * num_probe_trials;
+			uint32_t row_size = (CELL_IDS[i] == "GR") ? msMeasure : msMeasure * td.num_trials;
 			memset(rasters[i][0], '\000', row_size * rast_cell_nums[i] * sizeof(uint8_t));
 		}
 	}
