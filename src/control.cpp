@@ -772,10 +772,24 @@ void Control::runSession(struct gui *gui)
 		}
 		// save gr rasters into new file every trial 
 		save_gr_raster();
-		save_pfpc_weights_at_trial_to_file(trial);
+		//save_pfpc_weights_at_trial_to_file(trial);
+		//if (data_out_dir_created && trial % 500 == 0) {
+		//	std::string weight_steps_ltp_fname = data_out_path + "/" + data_out_base_name + "_TRIAL_" + std::to_string(trial) + "_LTP.pfpcpe";
+		//	LOG_DEBUG("Saving pfpc ltp plasticity events array to file at trial %d...", trial);
+		//	std::fstream out_weight_steps_ltp_buf(weight_steps_ltp_fname.c_str(), std::ios::out | std::ios::binary);
+		//	simCore->getMZoneList()[0]->save_weight_steps_ltp_to_file(out_weight_steps_ltp_buf);
+		//	out_weight_steps_ltp_buf.close();
+		//	simCore->getMZoneList()[0]->reset_weight_steps_ltp();
+
+		//	std::string weight_steps_ltd_fname = data_out_path + "/" + data_out_base_name + "_TRIAL_" + std::to_string(trial) + "_LTD.pfpcpe";
+		//	LOG_DEBUG("Saving pfpc ltd plasticity events array to file at trial %d...", trial);
+		//	std::fstream out_weight_steps_ltd_buf(weight_steps_ltd_fname.c_str(), std::ios::out | std::ios::binary);
+		//	simCore->getMZoneList()[0]->save_weight_steps_ltd_to_file(out_weight_steps_ltd_buf);
+		//	out_weight_steps_ltd_buf.close();
+		//	simCore->getMZoneList()[0]->reset_weight_steps_ltd();
+		//}
 		trial++;
 	}
-	trial--; // setting so that is valid for drawing go rasters after a sim
 	if (run_state == NOT_IN_RUN) LOG_INFO("Simulation terminated.");
 	else if (run_state == IN_RUN_NO_PAUSE) LOG_INFO("Simulation Completed.");
 	run_state = NOT_IN_RUN;
@@ -785,18 +799,25 @@ void Control::runSession(struct gui *gui)
 	{
 		save_rasters();
 		save_psths();
-		if (data_out_dir_created) {
-			std::string weight_steps_fname = data_out_path + "/" + data_out_base_name + ".pfpcpe";
-			LOG_DEBUG("Saving pfpc plasticity events array to file...");
-			std::fstream out_weight_steps_buf(weight_steps_fname.c_str(), std::ios::out | std::ios::binary);
-			simCore->getMZoneList()[0]->save_weight_steps_to_file(out_weight_steps_buf);
-			out_weight_steps_buf.close();
-		}
+		//if (data_out_dir_created) {
+		//	std::string weight_steps_ltp_fname = data_out_path + "/" + data_out_base_name + "_TRIAL_" + std::to_string(trial) + "_LTP.pfpcpe";
+		//	LOG_DEBUG("Saving pfpc ltp plasticity events array to file at trial %d...", trial);
+		//	std::fstream out_weight_steps_ltp_buf(weight_steps_ltp_fname.c_str(), std::ios::out | std::ios::binary);
+		//	simCore->getMZoneList()[0]->save_weight_steps_ltp_to_file(out_weight_steps_ltp_buf);
+		//	out_weight_steps_ltp_buf.close();
+
+		//	std::string weight_steps_ltd_fname = data_out_path + "/" + data_out_base_name + "_TRIAL_" + std::to_string(trial) + "_LTD.pfpcpe";
+		//	LOG_DEBUG("Saving pfpc ltd plasticity events array to file at trial %d...", trial);
+		//	std::fstream out_weight_steps_ltd_buf(weight_steps_ltd_fname.c_str(), std::ios::out | std::ios::binary);
+		//	simCore->getMZoneList()[0]->save_weight_steps_ltd_to_file(out_weight_steps_ltd_buf);
+		//	out_weight_steps_ltd_buf.close();
+		//}
 		//save_pfpc_weights_at_trial_to_file(trial);
 		//save_mfdcn_weights_to_file();
 		save_sim_to_file();
 		save_info_to_file();
 	}
+	trial--; // setting so that is valid for drawing go rasters after a sim
 }
 
 void Control::reset_spike_sums()

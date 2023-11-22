@@ -13,6 +13,8 @@
 #include "mzoneactivitystate.h"
 #include "kernels.h"
 
+enum ltp_type {LTP, LTD, NO_STEP};
+
 class MZone
 {
 public:
@@ -73,10 +75,14 @@ public:
 	const float* exportPFPCWeights();
 	const float* exportMFDCNWeights();
 
+	void reset_weight_steps_ltp();
+	void reset_weight_steps_ltd();
+
 	void load_pfpc_weights_from_file(std::fstream &in_file_buf);
 	void load_pfpc_weight_mask_from_file(std::fstream &in_file_buf);
 	void load_mfdcn_weights_from_file(std::fstream &in_file_buf);
-	void save_weight_steps_to_file(std::fstream &out_file_buf);
+	void save_weight_steps_ltp_to_file(std::fstream &out_file_buf);
+	void save_weight_steps_ltd_to_file(std::fstream &out_file_buf);
 
 	const uint32_t* exportAPBufBC();
 	const uint32_t* exportAPBufPC();
@@ -143,8 +149,10 @@ private:
 	float *pfSynWeightPCLinear;
 	uint8_t *pfpc_weight_mask_h;
 	uint8_t **pfpc_weight_mask_d;
-	uint32_t *weight_steps_h;
-	uint32_t **weight_steps_d;
+	uint32_t *weight_steps_ltp_h;
+	uint32_t **weight_steps_ltp_d;
+	uint32_t *weight_steps_ltd_h;
+	uint32_t **weight_steps_ltd_d;
 	float **inputPFPCGPU;
 	size_t *inputPFPCGPUPitch;
 	float **inputSumPFPCMZGPU;
@@ -155,6 +163,7 @@ private:
 	uint64_t **histGRGPU;
 
 	//IO cell variables
+    enum ltp_type *io_step_type;
 	float *pfPCPlastStepIO;
 	float tempGRPCLTDStep;
 	float tempGRPCLTPStep;
