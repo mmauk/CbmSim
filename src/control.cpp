@@ -660,6 +660,55 @@ void Control::initialize_psths()
 	psth_arrays_initialized = true;
 }
 
+void Control::runSessionPoissGR()
+{
+	set_info_file_str_props(BEFORE_RUN, if_data);
+	double start, end;
+	trial = 0;
+	raster_counter = 0;
+	while (trial < td.num_trials)
+	{
+		std::string trialName = td.trial_names[trial];
+
+		uint32_t useUS        = td.use_uss[trial];
+		uint32_t onsetUS      = pre_collection_ts + td.us_onsets[trial];
+
+		LOG_INFO("Trial number: %d", trial + 1);
+		start = omp_get_wtime();
+		for (uint32_t ts = 0; ts < trialTime; ts++)
+		{
+			if (useUS == 1 && ts == onsetUS) /* deliver the US */
+			{
+				simCore->updateErrDrive(0, 0.3);
+			}
+			simCore->calcActivityGRPoiss(pf_pc_plast, ts);
+		}
+		trial_end = omp_get_wtime();
+		LOG_INFO("'%s' took %0.2fs", trialName.c_str(), trial_end - trial_start);
+		trial++;
+	}
+	LOG_INFO("Simulation Completed.");
+	set_info_file_str_props(AFTER_RUN, if_data);
+	if (data_out_dir_created) {
+		std::string weight_steps_ltp_fname = data_out_path + "/" + data_out_base_name 
+											 + "_TRIAL_" + std::to_string(trial) + "_LTP.pfpcpe";
+		LOG_DEBUG("Saving pfpc ltp plasticity events array to file at trial %d...", trial);
+		std::fstream out_weight_steps_ltp_buf(weight_steps_ltp_fname.c_str(), std::ios::out | std::ios::binary);
+		simCore->getMZoneList()[0]->save_weight_steps_ltp_to_file(out_weight_steps_ltp_buf);
+		out_weight_steps_ltp_buf.close();
+
+		std::string weight_steps_ltd_fname = data_out_path + "/" + data_out_base_name + "_TRIAL_"
+											 + std::to_string(trial) + "_LTD.pfpcpe";
+		LOG_DEBUG("Saving pfpc ltd plasticity events array to file at trial %d...", trial);
+		std::fstream out_weight_steps_ltd_buf(weight_steps_ltd_fname.c_str(), std::ios::out | std::ios::binary);
+		simCore->getMZoneList()[0]->save_weight_steps_ltd_to_file(out_weight_steps_ltd_buf);
+		out_weight_steps_ltd_buf.close();
+	}
+	save_pfpc_weights_at_trial_to_file(trial);
+	save_sim_to_file();
+	save_info_to_file();
+}
+
 void Control::runSession(struct gui *gui)
 {
 	set_info_file_str_props(BEFORE_RUN, if_data);

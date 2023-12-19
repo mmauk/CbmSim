@@ -104,7 +104,7 @@ class Control
 		float inputStrength = 0.0;
 
 		// sim params -> TODO: place in simcore
-		uint32_t gpuIndex = 2;
+		uint32_t gpuIndex = 0;
 		uint32_t gpuP2    = 2;
 
 		uint32_t trial;
@@ -227,6 +227,7 @@ class Control
 
 		void initialize_psths();
 
+		void runSessionPoissGR();
 		void runSession(struct gui *gui);
 
 		void reset_spike_sums();
