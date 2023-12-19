@@ -43,10 +43,14 @@ MZone::MZone(MZoneConnectivityState *cs, MZoneActivityState *as, int randSeed, u
 	pfpc_weight_mask_d = new uint8_t*[numGPUs];
 	weight_steps_ltp_h = new uint32_t[num_gr];
 	weight_steps_ltp_d = new uint32_t*[numGPUs];
+	weight_mis_steps_ltp_h = new uint32_t[num_gr];
+	weight_mis_steps_ltp_d = new uint32_t*[numGPUs];
 	weight_steps_ltd_h = new uint32_t[num_gr];
 	weight_steps_ltd_d = new uint32_t*[numGPUs];
+	weight_mis_steps_ltd_h = new uint32_t[num_gr];
+	weight_mis_steps_ltd_d = new uint32_t*[numGPUs];
 
-
+	ioRandGen = new CRandomSFMT0(0);
 	io_step_type        = new enum ltp_type[num_io];
 	pfPCPlastStepIO     = new float[num_io];
 
@@ -71,7 +75,10 @@ MZone::~MZone()
 	delete[] pfpc_weight_mask_h;
 
 	delete[] weight_steps_ltp_h;
+	delete[] weight_mis_steps_ltp_h;
 	delete[] weight_steps_ltd_h;
+	delete[] weight_mis_steps_ltd_h;
+	delete ioRandGen;
     delete[] io_step_type;
 	delete[] pfPCPlastStepIO;
 
@@ -88,7 +95,9 @@ MZone::~MZone()
 		cudaFree(pfSynWeightPCGPU[i]);
 		cudaFree(pfpc_weight_mask_d[i]);
 		cudaFree(weight_steps_ltp_d[i]);
+		cudaFree(weight_mis_steps_ltp_d[i]);
 		cudaFree(weight_steps_ltd_d[i]);
+		cudaFree(weight_mis_steps_ltd_d[i]);
 		cudaFree(inputPFPCGPU[i]);
 		cudaFree(inputSumPFPCMZGPU[i]);
 		cudaDeviceSynchronize();
@@ -98,7 +107,9 @@ MZone::~MZone()
 	delete[] pfSynWeightPCGPU;
 	delete[] pfpc_weight_mask_d;
 	delete[] weight_steps_ltp_d;
+	delete[] weight_mis_steps_ltp_d;
 	delete[] weight_steps_ltd_d;
+	delete[] weight_mis_steps_ltd_d;
 	delete[] inputPFPCGPU;
 	delete[] inputPFPCGPUPitch;
 	delete[] inputSumPFPCMZGPU;
@@ -192,7 +203,9 @@ void MZone::initCUDA()
 
 	memset(pfpc_weight_mask_h, 0, num_gr * sizeof(uint8_t));
 	memset(weight_steps_ltp_h, 0, num_gr * sizeof(uint32_t));
+	memset(weight_mis_steps_ltp_h, 0, num_gr * sizeof(uint32_t));
 	memset(weight_steps_ltd_h, 0, num_gr * sizeof(uint32_t));
+	memset(weight_mis_steps_ltd_h, 0, num_gr * sizeof(uint32_t));
 
 	pfSynWeightPCGPU = new float*[numGPUs];
 	inputPFPCGPU = new float*[numGPUs];
@@ -217,7 +230,9 @@ void MZone::initCUDA()
 				num_p_pc_from_gr_to_pc * sizeof(float), num_pc / numGPUs);
 		cudaMalloc((void **)&pfpc_weight_mask_d[i], numGRPerGPU * sizeof(uint8_t));
 		cudaMalloc((void **)&weight_steps_ltp_d[i], numGRPerGPU * sizeof(uint32_t));
+		cudaMalloc((void **)&weight_mis_steps_ltp_d[i], numGRPerGPU * sizeof(uint32_t));
 		cudaMalloc((void **)&weight_steps_ltd_d[i], numGRPerGPU * sizeof(uint32_t));
+		cudaMalloc((void **)&weight_mis_steps_ltd_d[i], numGRPerGPU * sizeof(uint32_t));
 		cudaMalloc((void **)&inputSumPFPCMZGPU[i], num_pc / numGPUs * sizeof(float));
 
 		cudaDeviceSynchronize();
@@ -226,7 +241,9 @@ void MZone::initCUDA()
 				numGRPerGPU*sizeof(float), cudaMemcpyHostToDevice);
 		cudaMemset(pfpc_weight_mask_d[i], 0, numGRPerGPU * sizeof(uint8_t));
 		cudaMemset(weight_steps_ltp_d[i], 0, numGRPerGPU * sizeof(uint32_t));
+		cudaMemset(weight_mis_steps_ltp_d[i], 0, numGRPerGPU * sizeof(uint32_t));
 		cudaMemset(weight_steps_ltd_d[i], 0, numGRPerGPU * sizeof(uint32_t));
+		cudaMemset(weight_mis_steps_ltd_d[i], 0, numGRPerGPU * sizeof(uint32_t));
 
 		for (int j = 0; j < num_pc/numGPUs; j++)
 		{
@@ -598,7 +615,7 @@ void MZone::updateIOOut()
 {
 	for (int i = 0; i < num_io; i++)
 	{
-		as->pfPCPlastTimerIO[i] = (1 - as->apIO[i]) * (as->pfPCPlastTimerIO[i] + 1) + as->apIO[i] * tsLTPEndAPIO;
+		as->pfPCPlastTimerIO[i] = (1 - as->apIO[i]) * (as->pfPCPlastTimerIO[i] + 1) + as->apIO[i] * tsLTDstartAPIO;
 		as->vCoupleIO[i] = 0;
 		for (int j = 0; j < num_p_io_in_io_to_io; j++)
 		{
@@ -746,7 +763,7 @@ void MZone::runPFPCPlastCUDA(cudaStream_t **sts, int streamN, uint32_t t, bool m
 				pfPCPlastStepIO[i] = tempGRPCLTDStep;
 			}
 			else if (as->pfPCPlastTimerIO[i] >= tsLTPstartAPIO ||
-					as->pfPCPlastTimerIO[i] < tsLTPEndAPIO)
+					as->pfPCPlastTimerIO[i] < tsLTDstartAPIO)
 			{
 				io_step_type[i] = LTP;
 				pfPCPlastStepIO[i] = tempGRPCLTPStep;
@@ -784,12 +801,12 @@ void MZone::runPFPCPlastCUDA(cudaStream_t **sts, int streamN, uint32_t t, bool m
 					callUpdatePFPCPlasticityIOKernelWithNumSteps(sts[curGPUInd][streamN + curIOInd],
 							updatePFPCSynWNumBlocks, updatePFPCSynWNumGRPerB, pfSynWeightPCGPU[curGPUInd],
 							histGRGPU[curGPUInd], grPCHistCheckBinIO, curGROffset, pfPCPlastStepIO[curIOInd],
-							weight_steps_ltp_d[curGPUInd]);
+							weight_steps_ltp_d[curGPUInd], weight_mis_steps_ltp_d[curGPUInd]);
 				} else if (io_step_type[curIOInd] == LTD) {
 					callUpdatePFPCPlasticityIOKernelWithNumSteps(sts[curGPUInd][streamN + curIOInd],
 							updatePFPCSynWNumBlocks, updatePFPCSynWNumGRPerB, pfSynWeightPCGPU[curGPUInd],
 							histGRGPU[curGPUInd], grPCHistCheckBinIO, curGROffset, pfPCPlastStepIO[curIOInd],
-							weight_steps_ltd_d[curGPUInd]);
+							weight_steps_ltd_d[curGPUInd], weight_mis_steps_ltd_d[curGPUInd]);
 				}
 			}
 			curGROffset += num_p_pc_from_gr_to_pc;
@@ -916,16 +933,20 @@ void MZone::reset_weight_steps_ltp() {
 	{
 		cudaSetDevice(i + gpuIndStart);
 		cudaMemset(weight_steps_ltp_d[i], 0, numGRPerGPU * sizeof(uint32_t));
+		cudaMemset(weight_mis_steps_ltp_d[i], 0, numGRPerGPU * sizeof(uint32_t));
 	}
 	memset(weight_steps_ltp_h, 0, num_gr * sizeof(uint32_t));
+	memset(weight_mis_steps_ltp_h, 0, num_gr * sizeof(uint32_t));
 } 
 void MZone::reset_weight_steps_ltd() {
 	for (int i = 0; i < numGPUs; i++)
 	{
 		cudaSetDevice(i + gpuIndStart);
 		cudaMemset(weight_steps_ltd_d[i], 0, numGRPerGPU * sizeof(uint32_t));
+		cudaMemset(weight_mis_steps_ltd_d[i], 0, numGRPerGPU * sizeof(uint32_t));
 	}
 	memset(weight_steps_ltd_h, 0, num_gr * sizeof(uint32_t));
+	memset(weight_mis_steps_ltd_h, 0, num_gr * sizeof(uint32_t));
 }
 
 void MZone::save_weight_steps_ltp_to_file(std::fstream &out_file_buf) {
@@ -954,6 +975,31 @@ void MZone::save_weight_steps_ltd_to_file(std::fstream &out_file_buf) {
 	rawBytesRW((char *)weight_steps_ltd_h, num_gr * sizeof(uint32_t), false, out_file_buf);
 }
 
+void MZone::save_weight_mis_steps_ltp_to_file(std::fstream &out_file_buf) {
+    // grab them shits from the devices and place em in host memory.
+	for (int i = 0; i < numGPUs; i++)
+	{
+		cudaSetDevice(i + gpuIndStart);
+		int cpyStartInd = i * numGRPerGPU;
+		cudaMemcpy(&weight_mis_steps_ltp_h[cpyStartInd], weight_mis_steps_ltp_d[i], 
+				numGRPerGPU * sizeof(uint32_t), cudaMemcpyDeviceToHost);
+	}
+	// save them host shits to memory
+	rawBytesRW((char *)weight_mis_steps_ltp_h, num_gr * sizeof(uint32_t), false, out_file_buf);
+}
+
+void MZone::save_weight_mis_steps_ltd_to_file(std::fstream &out_file_buf) {
+    // grab them shits from the devices and place em in host memory.
+	for (int i = 0; i < numGPUs; i++)
+	{
+		cudaSetDevice(i + gpuIndStart);
+		int cpyStartInd = i * numGRPerGPU;
+		cudaMemcpy(&weight_mis_steps_ltd_h[cpyStartInd], weight_mis_steps_ltd_d[i], 
+				numGRPerGPU * sizeof(uint32_t), cudaMemcpyDeviceToHost);
+	}
+	// save them host shits to memory
+	rawBytesRW((char *)weight_mis_steps_ltd_h, num_gr * sizeof(uint32_t), false, out_file_buf);
+}
 
 // Why not write one export function which takes in the thing you want to export?
 const uint8_t* MZone::exportAPNC()

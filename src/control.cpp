@@ -122,7 +122,7 @@ void Control::initialize_session(std::string sess_file)
 	trialTime   = std::stoi(s_file.parsed_var_sections["trial_spec"].param_map["trialTime"]);
 	msPreCS     = std::stoi(s_file.parsed_var_sections["trial_spec"].param_map["msPreCS"]);
 	msPostCS    = std::stoi(s_file.parsed_var_sections["trial_spec"].param_map["msPostCS"]);
-	msMeasure = msPreCS + td.cs_lens[0] + msPostCS;
+	msMeasure   = msPreCS + td.cs_lens[0] + msPostCS;
 
 	trials_data_initialized = true;
 	LOG_DEBUG("Session initialized.");
@@ -734,6 +734,7 @@ void Control::runSession(struct gui *gui)
 			//}
 			
 			/* data collection */
+			// comment out for when collect every time step
 			if (ts >= onsetCS - msPreCS && ts < onsetCS + csLength + msPostCS)
 			{
 				fill_rasters(raster_counter, PSTHCounter);
@@ -771,22 +772,36 @@ void Control::runSession(struct gui *gui)
 			reset_spike_sums();
 		}
 		// save gr rasters into new file every trial 
-		save_gr_raster();
-		//save_pfpc_weights_at_trial_to_file(trial);
+		//save_gr_raster();
 		//if (data_out_dir_created && trial % 500 == 0) {
-		//	std::string weight_steps_ltp_fname = data_out_path + "/" + data_out_base_name + "_TRIAL_" + std::to_string(trial) + "_LTP.pfpcpe";
+		//	save_pfpc_weights_at_trial_to_file(trial);
+		//	std::string weight_steps_ltp_fname = data_out_path + "/" + data_out_base_name 
+		//										 + "_TRIAL_" + std::to_string(trial) + "_LTP.pfpcpe";
 		//	LOG_DEBUG("Saving pfpc ltp plasticity events array to file at trial %d...", trial);
 		//	std::fstream out_weight_steps_ltp_buf(weight_steps_ltp_fname.c_str(), std::ios::out | std::ios::binary);
 		//	simCore->getMZoneList()[0]->save_weight_steps_ltp_to_file(out_weight_steps_ltp_buf);
 		//	out_weight_steps_ltp_buf.close();
-		//	simCore->getMZoneList()[0]->reset_weight_steps_ltp();
 
-		//	std::string weight_steps_ltd_fname = data_out_path + "/" + data_out_base_name + "_TRIAL_" + std::to_string(trial) + "_LTD.pfpcpe";
+		//	std::string weight_mis_steps_ltp_fname = data_out_path + "/" + data_out_base_name 
+		//										 + "_TRIAL_" + std::to_string(trial) + "_LTP_MISS.pfpcpe";
+		//	LOG_DEBUG("Saving pfpc ltp plasticity mis events array to file at trial %d...", trial);
+		//	std::fstream out_weight_mis_steps_ltp_buf(weight_mis_steps_ltp_fname.c_str(), std::ios::out | std::ios::binary);
+		//	simCore->getMZoneList()[0]->save_weight_mis_steps_ltp_to_file(out_weight_mis_steps_ltp_buf);
+		//	out_weight_mis_steps_ltp_buf.close();
+
+		//	std::string weight_steps_ltd_fname = data_out_path + "/" + data_out_base_name + "_TRIAL_"
+		//										 + std::to_string(trial) + "_LTD.pfpcpe";
 		//	LOG_DEBUG("Saving pfpc ltd plasticity events array to file at trial %d...", trial);
 		//	std::fstream out_weight_steps_ltd_buf(weight_steps_ltd_fname.c_str(), std::ios::out | std::ios::binary);
 		//	simCore->getMZoneList()[0]->save_weight_steps_ltd_to_file(out_weight_steps_ltd_buf);
 		//	out_weight_steps_ltd_buf.close();
-		//	simCore->getMZoneList()[0]->reset_weight_steps_ltd();
+
+		//	std::string weight_mis_steps_ltd_fname = data_out_path + "/" + data_out_base_name 
+		//										 + "_TRIAL_" + std::to_string(trial) + "_LTD_MISS.pfpcpe";
+		//	LOG_DEBUG("Saving pfpc ltd plasticity mis events array to file at trial %d...", trial);
+		//	std::fstream out_weight_mis_steps_ltd_buf(weight_mis_steps_ltd_fname.c_str(), std::ios::out | std::ios::binary);
+		//	simCore->getMZoneList()[0]->save_weight_mis_steps_ltd_to_file(out_weight_mis_steps_ltd_buf);
+		//	out_weight_mis_steps_ltd_buf.close();
 		//}
 		trial++;
 	}
@@ -799,21 +814,37 @@ void Control::runSession(struct gui *gui)
 	{
 		save_rasters();
 		save_psths();
-		//if (data_out_dir_created) {
-		//	std::string weight_steps_ltp_fname = data_out_path + "/" + data_out_base_name + "_TRIAL_" + std::to_string(trial) + "_LTP.pfpcpe";
-		//	LOG_DEBUG("Saving pfpc ltp plasticity events array to file at trial %d...", trial);
-		//	std::fstream out_weight_steps_ltp_buf(weight_steps_ltp_fname.c_str(), std::ios::out | std::ios::binary);
-		//	simCore->getMZoneList()[0]->save_weight_steps_ltp_to_file(out_weight_steps_ltp_buf);
-		//	out_weight_steps_ltp_buf.close();
+		if (data_out_dir_created) {
+			std::string weight_steps_ltp_fname = data_out_path + "/" + data_out_base_name 
+												 + "_TRIAL_" + std::to_string(trial) + "_LTP.pfpcpe";
+			LOG_DEBUG("Saving pfpc ltp plasticity events array to file at trial %d...", trial);
+			std::fstream out_weight_steps_ltp_buf(weight_steps_ltp_fname.c_str(), std::ios::out | std::ios::binary);
+			simCore->getMZoneList()[0]->save_weight_steps_ltp_to_file(out_weight_steps_ltp_buf);
+			out_weight_steps_ltp_buf.close();
 
-		//	std::string weight_steps_ltd_fname = data_out_path + "/" + data_out_base_name + "_TRIAL_" + std::to_string(trial) + "_LTD.pfpcpe";
-		//	LOG_DEBUG("Saving pfpc ltd plasticity events array to file at trial %d...", trial);
-		//	std::fstream out_weight_steps_ltd_buf(weight_steps_ltd_fname.c_str(), std::ios::out | std::ios::binary);
-		//	simCore->getMZoneList()[0]->save_weight_steps_ltd_to_file(out_weight_steps_ltd_buf);
-		//	out_weight_steps_ltd_buf.close();
-		//}
-		//save_pfpc_weights_at_trial_to_file(trial);
-		//save_mfdcn_weights_to_file();
+			//std::string weight_mis_steps_ltp_fname = data_out_path + "/" + data_out_base_name 
+			//									 + "_TRIAL_" + std::to_string(trial) + "_LTP_MISS.pfpcpe";
+			//LOG_DEBUG("Saving pfpc ltp plasticity mis events array to file at trial %d...", trial);
+			//std::fstream out_weight_mis_steps_ltp_buf(weight_mis_steps_ltp_fname.c_str(), std::ios::out | std::ios::binary);
+			//simCore->getMZoneList()[0]->save_weight_mis_steps_ltp_to_file(out_weight_mis_steps_ltp_buf);
+			//out_weight_mis_steps_ltp_buf.close();
+
+			std::string weight_steps_ltd_fname = data_out_path + "/" + data_out_base_name + "_TRIAL_"
+												 + std::to_string(trial) + "_LTD.pfpcpe";
+			LOG_DEBUG("Saving pfpc ltd plasticity events array to file at trial %d...", trial);
+			std::fstream out_weight_steps_ltd_buf(weight_steps_ltd_fname.c_str(), std::ios::out | std::ios::binary);
+			simCore->getMZoneList()[0]->save_weight_steps_ltd_to_file(out_weight_steps_ltd_buf);
+			out_weight_steps_ltd_buf.close();
+
+			//std::string weight_mis_steps_ltd_fname = data_out_path + "/" + data_out_base_name 
+			//									 + "_TRIAL_" + std::to_string(trial) + "_LTD_MISS.pfpcpe";
+			//LOG_DEBUG("Saving pfpc ltd plasticity mis events array to file at trial %d...", trial);
+			//std::fstream out_weight_mis_steps_ltd_buf(weight_mis_steps_ltd_fname.c_str(), std::ios::out | std::ios::binary);
+			//simCore->getMZoneList()[0]->save_weight_mis_steps_ltd_to_file(out_weight_mis_steps_ltd_buf);
+			//out_weight_mis_steps_ltd_buf.close();
+		}
+		save_pfpc_weights_at_trial_to_file(trial);
+		save_mfdcn_weights_to_file();
 		save_sim_to_file();
 		save_info_to_file();
 	}

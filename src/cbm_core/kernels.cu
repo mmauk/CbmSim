@@ -439,13 +439,15 @@ __global__ void updatePFPCSynIOWithMask(float *synWPFPC, uint64_t *historyGR, ui
 	synWPFPC[i] = synWPFPC[i] * (1 -  plast_mask[i]) + tempSynW * plast_mask[i];
 }
 
-__global__ void updatePFPCSynIOWithNumSteps(uint32_t *numWeightSteps, float *synWPFPC, uint64_t *historyGR, uint64_t plastCheckMask,
+__global__ void updatePFPCSynIOWithNumSteps(uint32_t *misStep, uint32_t *numWeightSteps, float *synWPFPC, uint64_t *historyGR, uint64_t plastCheckMask,
 		unsigned int offset, float plastStep)
 {
 	int i=blockIdx.x*blockDim.x+threadIdx.x+offset;
     float step_question_mark = (historyGR[i] & plastCheckMask) > 0;
 	synWPFPC[i] += step_question_mark * plastStep;
     numWeightSteps[i] += (uint32_t)step_question_mark;
+	misStep[i] += (synWPFPC[i] <= 0); // should only add a misstep if ltd
+	misStep[i] += (synWPFPC[i] > 1); // should only add a misstep if ltp
 	synWPFPC[i]=(synWPFPC[i]>0)*synWPFPC[i];
 	synWPFPC[i]=(synWPFPC[i]>1)+(synWPFPC[i]<=1)*synWPFPC[i];
 }
@@ -751,12 +753,12 @@ void callUpdatePFPCPlasticityIOKernelWithMask(cudaStream_t &st, unsigned int num
 
 void callUpdatePFPCPlasticityIOKernelWithNumSteps(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
 		float *synWeightGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck, int offSet, float pfPCPlastStep,
-		uint32_t *num_weight_steps)
+		uint32_t *num_weight_steps, uint32_t *mis_step)
 {
 	// this mask is for looking back in time at received spikes from pastBinNToCheck * tsPerBin
 	// to determine granule eligibility
-	uint64_t mask = ((uint64_t)1)<<(pastBinNToCheck-1);
-	updatePFPCSynIOWithNumSteps<<<numBlocks, numGRPerBlock, 0, st>>>(num_weight_steps, synWeightGPU, historyGPU,
+	uint64_t mask = 1<<(pastBinNToCheck-1);
+	updatePFPCSynIOWithNumSteps<<<numBlocks, numGRPerBlock, 0, st>>>(mis_step, num_weight_steps, synWeightGPU, historyGPU,
 			mask, offSet, pfPCPlastStep);
 }
 

@@ -83,6 +83,8 @@ public:
 	void load_mfdcn_weights_from_file(std::fstream &in_file_buf);
 	void save_weight_steps_ltp_to_file(std::fstream &out_file_buf);
 	void save_weight_steps_ltd_to_file(std::fstream &out_file_buf);
+	void save_weight_mis_steps_ltp_to_file(std::fstream &out_file_buf);
+	void save_weight_mis_steps_ltd_to_file(std::fstream &out_file_buf);
 
 	const uint32_t* exportAPBufBC();
 	const uint32_t* exportAPBufPC();
@@ -151,8 +153,12 @@ private:
 	uint8_t **pfpc_weight_mask_d;
 	uint32_t *weight_steps_ltp_h;
 	uint32_t **weight_steps_ltp_d;
+	uint32_t *weight_mis_steps_ltp_h;
+	uint32_t **weight_mis_steps_ltp_d;
 	uint32_t *weight_steps_ltd_h;
 	uint32_t **weight_steps_ltd_d;
+	uint32_t *weight_mis_steps_ltd_h;
+	uint32_t **weight_mis_steps_ltd_d;
 	float **inputPFPCGPU;
 	size_t *inputPFPCGPUPitch;
 	float **inputSumPFPCMZGPU;
@@ -163,6 +169,8 @@ private:
 	uint64_t **histGRGPU;
 
 	//IO cell variables
+	CRandomSFMT0 *ioRandGen;
+
     enum ltp_type *io_step_type;
 	float *pfPCPlastStepIO;
 	float tempGRPCLTDStep;
