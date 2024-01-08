@@ -22,8 +22,8 @@
 
 int main(int argc, char **argv) {
   logger_initConsoleLogger(stderr);
-// for now, set the log level dependent on whether
-// we are compiling for debug target or release target
+  // for now, set the log level dependent on whether
+  // we are compiling for debug target or release target
 #ifdef DEBUG
   logger_setLevel(LogLevel_DEBUG);
 #else
@@ -32,22 +32,22 @@ int main(int argc, char **argv) {
   parsed_commandline p_cl = {};
   parse_and_validate_parsed_commandline(&argc, &argv, p_cl);
 
-  Control *control = new Control(p_cl);
+  Control control(p_cl);
   int exit_status = 0;
 
   omp_set_num_threads(1); /* for 4 gpus, 8 is the sweet spot. Unsure for 2. */
 
   if (p_cl.vis_mode == "TUI") {
     if (!p_cl.build_file.empty()) {
-      control->build_sim();
-      control->save_sim_to_file();
+      control.build_sim();
+      control.save_sim_to_file();
     } else if (!p_cl.session_file.empty()) {
-      control->runSession(NULL); // saving is done at the end of runSession.
+      control.runSession(NULL); // saving is done at the end of runSession.
     }
-    control->save_con_arrs(); // save conn arrs regardless route took
+    control.save_con_arrs(); // save conn arrs regardless route took
   } else if (p_cl.vis_mode == "GUI") {
-    exit_status = gui_init_and_run(&argc, &argv, control);
+    exit_status = gui_init_and_run(&argc, &argv, &control);
   }
-  delete control;
+  // delete control;
   return exit_status;
 }
