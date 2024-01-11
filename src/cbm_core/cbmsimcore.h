@@ -18,6 +18,7 @@
 #include <time.h>
 #include <cstdint>
 
+#include "templatepoissoncells.h" // gr poisson cells
 #include "cbmstate.h"
 #include "sfmt.h"
 #include "mzone.h"
@@ -38,6 +39,8 @@ public:
 	CBMSimCore(CBMState *state, int gpuIndStart = -1, int numGPUP2 = -1);
 	~CBMSimCore();
 
+	void calcActivityGRPoiss(enum plasticity pf_pc_plast, uint32_t ts);
+
 	void calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum plasticity mf_nc_plast,
 		  bool use_weight_mask = false);
 	void updateMFInput(const uint8_t *mfIn);
@@ -57,6 +60,7 @@ protected:
 
 	void syncCUDA(std::string title);
 
+	TemplatePoissonCells *grs = NULL;
 	CBMState *simState;
 
 	uint32_t numZones;

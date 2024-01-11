@@ -627,7 +627,7 @@ void Control::initialize_psth_save_funcs()
 			if (!pf_names[i].empty())
 			{
 				LOG_DEBUG("Saving %s psth to file...", CELL_IDS[i].c_str());
-				write2DArray<uint8_t>(pf_names[i], this->psths[i], this->msMeasure, this->rast_cell_nums[i]);
+				write2DArray<uint32_t>(pf_names[i], this->psths[i], this->msMeasure, this->rast_cell_nums[i]);
 			}
 		};
 	}
@@ -654,8 +654,7 @@ void Control::initialize_psths()
 	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
 		if (!pf_names[i].empty() || use_gui)
-			// TODO: make data type bigger for psth
-			psths[i] = allocate2DArray<uint8_t>(msMeasure, rast_cell_nums[i]);
+			psths[i] = allocate2DArray<uint32_t>(msMeasure, rast_cell_nums[i]);
 	}
 	psth_arrays_initialized = true;
 }
@@ -663,18 +662,19 @@ void Control::initialize_psths()
 void Control::runSessionPoissGR()
 {
 	set_info_file_str_props(BEFORE_RUN, if_data);
-	double start, end;
+	double trial_start, trial_end;
 	trial = 0;
 	raster_counter = 0;
 	while (trial < td.num_trials)
 	{
+		uint32_t psth_counter = 0;
 		std::string trialName = td.trial_names[trial];
 
 		uint32_t useUS        = td.use_uss[trial];
 		uint32_t onsetUS      = pre_collection_ts + td.us_onsets[trial];
 
 		LOG_INFO("Trial number: %d", trial + 1);
-		start = omp_get_wtime();
+		trial_start = omp_get_wtime();
 		for (uint32_t ts = 0; ts < trialTime; ts++)
 		{
 			if (useUS == 1 && ts == onsetUS) /* deliver the US */
@@ -682,6 +682,12 @@ void Control::runSessionPoissGR()
 				simCore->updateErrDrive(0, 0.3);
 			}
 			simCore->calcActivityGRPoiss(pf_pc_plast, ts);
+			/* data collection */
+			// for now collect every ts
+			fill_rasters(raster_counter, psth_counter);
+			fill_psths(psth_counter);
+			psth_counter++;
+			raster_counter++;
 		}
 		trial_end = omp_get_wtime();
 		LOG_INFO("'%s' took %0.2fs", trialName.c_str(), trial_end - trial_start);
@@ -929,7 +935,7 @@ void Control::reset_psths()
 	{
 		if (!pf_names[i].empty())
 		{
-			memset(psths[i][0], '\000', rast_cell_nums[i] * msMeasure * sizeof(uint8_t));
+			memset(psths[i][0], '\000', rast_cell_nums[i] * msMeasure * sizeof(uint32_t));
 		}
 	}
 }
@@ -1138,7 +1144,7 @@ void Control::delete_psths()
 {
 	for (uint32_t i = 0; i < NUM_CELL_TYPES; i++)
 	{
-		if (!pf_names[i].empty()) delete2DArray<uint8_t>(psths[i]);
+		if (!pf_names[i].empty()) delete2DArray<uint32_t>(psths[i]);
 	}
 }
 

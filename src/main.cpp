@@ -33,10 +33,9 @@ int main(int argc, char **argv)
 	parsed_commandline p_cl = {};
 	parse_and_validate_parsed_commandline(&argc, &argv, p_cl);
 
+	omp_set_num_threads(4); /* for 4 gpus, 8 is the sweet spot. Unsure for 2. */
 	Control *control = new Control(p_cl);
 	int exit_status = 0;
-
-	omp_set_num_threads(1); /* for 4 gpus, 8 is the sweet spot. Unsure for 2. */
 
 	if (p_cl.vis_mode == "TUI")
 	{
@@ -47,7 +46,8 @@ int main(int argc, char **argv)
 		}
 		else if (!p_cl.session_file.empty())
 		{
-			control->runSession(NULL); // saving is done at the end of runSession.
+			control->runSessionPoissGR();
+			//control->runSession(NULL); // saving is done at the end of runSession.
 									   // might consider moving to own function and calling
 									   // from here
 		}

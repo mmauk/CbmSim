@@ -182,7 +182,7 @@ class Control
 		const uint8_t *cell_spikes[NUM_CELL_TYPES];
 		uint32_t rast_cell_nums[NUM_CELL_TYPES];
 		uint8_t **rasters[NUM_CELL_TYPES];
-		uint8_t **psths[NUM_CELL_TYPES];
+		uint32_t **psths[NUM_CELL_TYPES];
 
 		uint32_t rast_sizes[NUM_CELL_TYPES]; 
 		std::function<void()> psth_save_funcs[NUM_CELL_TYPES];

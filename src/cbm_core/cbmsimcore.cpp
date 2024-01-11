@@ -31,6 +31,7 @@ CBMSimCore::CBMSimCore(CBMState *state,
 
 CBMSimCore::~CBMSimCore()
 {
+	if (grs) delete grs;
 	for (int i = 0; i < numZones; i++)
 	{
 		delete zones[i];
@@ -130,6 +131,45 @@ void CBMSimCore::syncCUDA(std::string title)
 		LOG_TRACE("%s", cudaGetErrorString(error));
 #endif
 	}
+}
+
+void CBMSimCore::calcActivityGRPoiss(enum plasticity pf_pc_plast, uint32_t ts)
+{
+	syncCUDA("1");
+	grs->calcGRPoissActivity(ts, streams, 5);
+	if (pf_pc_plast == GRADED)
+	{
+		for (int i = 0; i < numZones; i++)
+		{
+			zones[i]->runPFPCPlastCUDA(streams, 1, ts);
+		}
+	}
+
+	for (int i = 0; i < numZones; i++)
+	{
+		zones[i]->runPFPCOutCUDA(streams, i + 2);
+		zones[i]->runPFPCSumCUDA(streams, 1);
+		zones[i]->cpyPFPCSumCUDA(streams, i + 2);
+
+		zones[i]->runUpdatePFBCSCOutCUDA(streams, i + 4); // adding i might break things in future
+		zones[i]->cpyPFBCSumGPUtoHostCUDA(streams, 5);
+		zones[i]->cpyPFSCSumGPUtoHostCUDA(streams, 3);
+		zones[i]->runSumPFBCCUDA(streams, 2);
+		zones[i]->runSumPFSCCUDA(streams, 3);
+
+		zones[i]->calcSCActivities();
+		zones[i]->calcBCActivities();
+		zones[i]->updateBCPCOut();
+		zones[i]->updateSCPCOut();
+
+		zones[i]->calcPCActivities();
+		zones[i]->updatePCOut();
+
+		zones[i]->calcIOActivities();
+		zones[i]->updateIOOut();
+
+		// no nc bcuz no MF :crying_emoji:
+  }
 }
 
 void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast, enum plasticity mf_nc_plast,
@@ -299,6 +339,14 @@ void CBMSimCore::construct(CBMState *state,
 	initCUDAStreams();
 	LOG_DEBUG("Finished initialzing cuda streams.");
 
+	LOG_DEBUG("Initializing granule cells ...");
+	// omegalul hardcode moment
+	std::string in_psth_filename = OUTPUT_DATA_PATH + "forget_gr_psth_collect_test_20k_trial/forget_gr_psth_collect_test_20k_trial.grp";
+	std::fstream psth_file_buf(in_psth_filename.c_str(), std::ios::in | std::ios::binary);
+	grs = new TemplatePoissonCells(numGPUs, psth_file_buf, streams);
+	psth_file_buf.close();
+	LOG_DEBUG("granule cells initialized.");
+
 	// NOTE: inputNet has internal cp, no need to pass to constructor
 	inputNet = new InNet(state->getInnetConStateInternal(),
 		state->getInnetActStateInternal(), this->gpuIndStart, numGPUs);
@@ -307,10 +355,14 @@ void CBMSimCore::construct(CBMState *state,
 
 	for (int i = 0; i < numZones; i++)
 	{
-		// same thing for zones as with innet
+		// hard-coding in zones initialized w/ poisson grs :yikes:
 		zones[i] = new MZone(state->getMZoneConStateInternal(i),
-			state->getMZoneActStateInternal(i), mzoneRSeed[i], inputNet->getApBufGRGPUPointer(),
-			inputNet->getHistGRGPUPointer(), this->gpuIndStart, numGPUs);
+			state->getMZoneActStateInternal(i), mzoneRSeed[i], grs->get_ap_buf_gr_gpu(),
+			grs->get_ap_hist_gr_gpu(), this->gpuIndStart, numGPUs);
+		// same thing for zones as with innet
+		//zones[i] = new MZone(state->getMZoneConStateInternal(i),
+		//	state->getMZoneActStateInternal(i), mzoneRSeed[i], inputNet->getApBufGRGPUPointer(),
+		//	inputNet->getHistGRGPUPointer(), this->gpuIndStart, numGPUs);
 	}
 	LOG_DEBUG("Mzone construction complete");
 	initAuxVars();

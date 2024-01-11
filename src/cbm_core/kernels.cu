@@ -16,6 +16,44 @@ __global__ void testKernel(float *a, float *b, float *c)
  	c[i] = a[i] + b[i];
  }
 
+template <typename randState>
+__global__ void curandSetupKernel(randState *state, uint32_t seed)
+{
+	int id = threadIdx.x + blockIdx.x * blockDim.x;
+	/* every thread gets same seed, different sequence number,
+	   no offset */
+	curand_init(seed, id, 0, &state[id]);
+}
+
+template <typename randState>
+__global__ void curandGenerateUniformsKernel(randState *state, float *randoms, uint32_t rand_offset)
+{
+	int i = blockIdx.x * blockDim.x + threadIdx.x;
+	curandStateMRG32k3a localState = state[i];
+	randoms[i + rand_offset] = curand_uniform(&localState);
+	state[i] = localState;
+}
+
+template <typename randState, typename blockDims, typename threadDims>
+void callCurandSetupKernel(cudaStream_t &st, randState *state, uint32_t seed,
+						   blockDims &block_dim, threadDims &thread_dim)
+{
+	curandSetupKernel<randState><<<block_dim, thread_dim, 0, st>>>(state, seed);
+}
+
+template <typename randState>
+void callCurandGenerateUniformKernel(cudaStream_t &st, randState *state, uint32_t block_dim,
+	  uint32_t thread_dim, float *randoms, size_t rand_offset)
+{
+	curandGenerateUniformsKernel<randState><<<block_dim, thread_dim, 0, st>>>(state, randoms, rand_offset);
+}
+
+template void callCurandSetupKernel<curandStateMRG32k3a, dim3, dim3>
+(cudaStream_t &st, curandStateMRG32k3a *state, uint32_t seed, dim3 &block_dim, dim3 &thread_dim);
+
+template void callCurandGenerateUniformKernel<curandStateMRG32k3a>(cudaStream_t &st, curandStateMRG32k3a *state,
+		uint32_t block_dim, uint32_t thread_dim, float *randoms, size_t rand_offset);
+
 
 //**-----------------GR Kernels------------------**
 
@@ -761,6 +799,41 @@ void callUpdatePFPCPlasticityIOKernelWithNumSteps(cudaStream_t &st, unsigned int
 	updatePFPCSynIOWithNumSteps<<<numBlocks, numGRPerBlock, 0, st>>>(mis_step, num_weight_steps, synWeightGPU, historyGPU,
 			mask, offSet, pfPCPlastStep);
 }
+
+/* for forgetting: calc poisson gr */
+__global__ void calcPoissActivityGRGPU(float *threshGPU, uint8_t *apGPU, uint32_t *apBufGPU, float *randoms,
+	  float *gr_templateGPU, size_t gr_template_pitchGPU, size_t num_gr_old, size_t ts, float s_per_ts,
+	  float threshBase, float threshMax, float threshInc)
+{
+	int tix = blockIdx.x * blockDim.x + threadIdx.x;
+	float *gr_template_row = (float *)((char *)gr_templateGPU + ts * gr_template_pitchGPU);
+	//threshGPU[tix] += (threshMax - threshGPU[tix]) * threshInc;
+	apGPU[tix] = randoms[tix] < (gr_template_row[tix % num_gr_old] * s_per_ts); // * threshGPU[tix]);
+	apBufGPU[tix] = (apBufGPU[tix] << 1) | apGPU[tix];
+	//apHistGPU[tix] <<= 1;
+	//apHistGPU[tix] |= ((apBufGPU[tix] & ap_buf_hist_mask) > 0) * 0x00000001;
+
+	//threshGPU[tix] = apGPU[tix] * threshBase + (apGPU[tix] - 1) * threshGPU[tix];
+}
+
+void callGRPoissActKernel(cudaStream_t &st, uint32_t numBlocks, uint32_t numGRPerBlock,
+    float *threshGPU, uint8_t *apGPU, uint32_t *apBufGPU, uint64_t *apHistGPU, float *randoms, float *gr_templateGPU,
+	size_t gr_template_pitchGPU, size_t num_gr_old, size_t ts, float s_per_ts, size_t pre_cs_ms, size_t isi,
+	size_t num_out_ts, uint32_t ap_buf_hist_mask, float threshBase, float threshMax, float threshInc)
+{
+	// simplest model: ie me being lazy and not creating separate gr template array
+	// containing 1d array of mean firing rates of all grs
+	size_t kernel_ts = 0;
+	//if (ts < pre_cs_ms) { kernel_ts = 0; }
+	//else if (ts < pre_cs_ms + isi) { kernel_ts = ts - pre_cs_ms + 1; }
+	//else { kernel_ts = num_out_ts - 1; }
+	calcPoissActivityGRGPU<<<numBlocks, numGRPerBlock, 0, st>>>(threshGPU, apGPU, apBufGPU, randoms, gr_templateGPU,
+      gr_template_pitchGPU, num_gr_old, kernel_ts, s_per_ts, threshBase, threshMax, threshInc);
+	if (ts % 5 == 0) { // tsPerHistBinGR == 5
+		updateGRHistory<<<numBlocks, numGRPerBlock, 0, st>>>(apBufGPU, apHistGPU, ap_buf_hist_mask);
+	}
+}
+
 
 //**---------------end kernel calls------------**
 
