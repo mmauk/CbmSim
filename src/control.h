@@ -79,7 +79,7 @@ enum cell_id { MF, GR, GO, BC, SC, PC, IO, NC };
 const std::string CELL_IDS[NUM_CELL_TYPES] = {"MF", "GR", "GO", "BC",
                                               "SC", "PC", "IO", "NC"};
 // TODO this same entity exists in different translation unit. create
-// common one for love of god
+// common one
 const std::string SYN_CONS_IDS[NUM_SYN_CONS] = {"MFGR", "GRGO", "MFGO", "GOGO",
                                                 "GOGR", "BCPC", "SCPC", "PCBC",
                                                 "PCNC", "IOIO", "NCIO", "MFNC"};
@@ -411,7 +411,7 @@ public:
 
   /* reset functions for data collected during a session */
   void reset_spike_sums();
-  void reset_rasters(); // TODO: seems like should be deprecated
+  void reset_rasters();
   void reset_psths();
 
   /* 'legacy' function to keep running count of go spikes. Mainly used for

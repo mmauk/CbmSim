@@ -23,7 +23,7 @@ Control::Control(parsed_commandline &p_cl) {
     data_out_path = OUTPUT_DATA_PATH + p_cl.output_basename;
     data_out_base_name = p_cl.output_basename;
     /* Next few lines create the output directory.
-     * TODO: This requires a refactor. A utility function should do this.
+     * TODO: This might need refactoring. A utility function should do this.
      */
     int status = mkdir(data_out_path.c_str(), 0775);
     if (status == -1) {
@@ -108,8 +108,6 @@ Control::~Control() {
 }
 
 void Control::build_sim() {
-  // TODO: create a separate function to create the state,
-  // have the constructor allocate memory and initialize values
   if (!simState)
     simState = new CBMState(numMZones);
 }
@@ -164,17 +162,13 @@ void Control::initialize_session(std::string sess_file) {
  *  @details The order of what we read and when matters: connectivity params,
  *  activity params, then the simulation state are written to file in that
  *  order.
- *
- *  TODO: admittedly, initialize data output objects could be in a diff
- *  function.
  */
 void Control::init_sim(std::string in_sim_filename) {
   LOG_DEBUG("Initializing simulation...");
   std::fstream sim_file_buf(in_sim_filename.c_str(),
                             std::ios::in | std::ios::binary);
   read_con_params(sim_file_buf);
-  populate_act_params(s_file); // FIXME: place act params in separate file so we
-                               // don't have to make s_file class attrib
+  populate_act_params(s_file); 
   simState = new CBMState(numMZones, sim_file_buf);
   simCore = new CBMSimCore(simState, gpuIndex, gpuP2);
   mfs = new ECMFPopulation(num_mf, mfRandSeed, CSTonicMFFrac, CSPhasicMFFrac,
@@ -183,7 +177,6 @@ void Control::init_sim(std::string in_sim_filename) {
                            bgFreqMax, csbgFreqMax, contextFreqMax, tonicFreqMax,
                            phasicFreqMax, collaterals_off, fracImport, secondCS,
                            fracOverlap, numMZones);
-  // TODO: maybe include this in the simcore constructor
   simCore->setTrueMFs(mfs->getCollateralIds());
   initialize_rast_cell_nums();
   initialize_cell_spikes();
@@ -588,7 +581,6 @@ void Control::create_out_info_filename() {
   }
 }
 
-// TODO: combine two below funcs into one for generality
 void Control::create_raster_filenames(std::map<std::string, bool> &rast_map) {
   if (data_out_dir_created) {
     for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
@@ -696,7 +688,6 @@ void Control::initialize_rasters() {
   }
 
   if (use_gui) {
-    // TODO: find a way to initialize only within gui mode
     pc_vm_raster = allocate2DArray<float>(msMeasure, num_pc);
     nc_vm_raster = allocate2DArray<float>(msMeasure, num_nc);
     io_vm_raster = allocate2DArray<float>(msMeasure, num_io);
