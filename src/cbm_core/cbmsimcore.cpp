@@ -65,7 +65,6 @@ void CBMSimCore::initCUDAStreams() {
   cudaError_t error;
 
   int maxNumGPUs;
-  // TODO: use assert, try, and catch for these types of errors
   error = cudaGetDeviceCount(&maxNumGPUs);
 
   LOG_DEBUG("CUDA max num devices: %d", maxNumGPUs);
@@ -161,8 +160,6 @@ void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast,
   // copy go spikes to device
   inputNet->cpyAPGOHosttoGPUCUDA(streams, 7);
 
-  // TODO: put in macro def for num_gpus so we don't run this line if running on
-  // one GPU
   // syncCUDA("2");
   // run update input function go -> gr synapse
   inputNet->runUpdateGOInGRCUDA(streams, 1);
