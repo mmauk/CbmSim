@@ -113,7 +113,8 @@ void CBMSimCore::syncCUDA(std::string title) {
 }
 
 void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast,
-                              enum plasticity mf_nc_plast) {
+                              enum plasticity mf_nc_plast,
+                              bool use_weight_mask) {
   syncCUDA("1");
 
   curTime++;
@@ -171,7 +172,7 @@ void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast,
   // perform pf -> pc plasticity
   if (pf_pc_plast == GRADED) {
     for (int i = 0; i < numZones; i++) {
-      zones[i]->runPFPCPlastCUDA(streams, 1, curTime);
+      zones[i]->runPFPCPlastCUDA(streams, 1, curTime, use_weight_mask);
     }
   }
 

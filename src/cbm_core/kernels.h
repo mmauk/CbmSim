@@ -126,4 +126,14 @@ void callUpdatePFPCPlasticityIOKernel(cudaStream_t &st, unsigned int numBlocks,
                                       unsigned int pastBinNToCheck, int offSet,
                                       float pfPCPlastStep);
 
+void callUpdatePFPCPlasticityIOKernelWithMask(
+    cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
+    float *synWeightGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck,
+    int offSet, float pfPCPlastStep, uint8_t *plast_mask);
+
+void callUpdatePFPCPlasticityIOKernelWithNumSteps(
+    cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
+    float *synWeightGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck,
+    int offSet, float pfPCPlastStep, uint32_t *num_weight_steps);
+
 #endif /* KERNELS_H_ */

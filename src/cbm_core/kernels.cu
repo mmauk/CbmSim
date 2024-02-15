@@ -449,6 +449,31 @@ __global__ void updatePFPCSynIO(float *synWPFPC, uint64_t *historyGR,
   synWPFPC[i] = (synWPFPC[i] > 1) + (synWPFPC[i] <= 1) * synWPFPC[i];
 }
 
+__global__ void updatePFPCSynIOWithMask(float *synWPFPC,
+      uint64_t *historyGR, uint64_t plastCheckMask, unsigned int offset,
+      float plastStep, uint8_t *plast_mask) {
+   int i=blockIdx.x*blockDim.x+threadIdx.x+offset;
+   float tempSynW = synWPFPC[i];
+   synWPFPC[i]=synWPFPC[i]+((historyGR[i]&plastCheckMask)>0)*plastStep;
+   
+   synWPFPC[i]=(synWPFPC[i]>0)*synWPFPC[i];
+   synWPFPC[i]=(synWPFPC[i]>1)+(synWPFPC[i]<=1)*synWPFPC[i];
+   // if not frozen weight, keep the updated syn weight else reset syn weight to val
+   // prior to updating
+   // '1' in mask means freeze weight, '0' means update weight
+   synWPFPC[i] = synWPFPC[i] * (1 -  plast_mask[i]) + tempSynW * plast_mask[i];
+}
+
+__global__ void updatePFPCSynIOWithNumSteps(
+      uint32_t *numWeightSteps, float *synWPFPC, uint64_t *historyGR,
+      uint64_t plastCheckMask, unsigned int offset, float plastStep){
+   int i=blockIdx.x*blockDim.x+threadIdx.x+offset;
+   float step_question_mark = (historyGR[i] & plastCheckMask) > 0;
+   synWPFPC[i] += step_question_mark * plastStep;
+   numWeightSteps[i] += (uint32_t)step_question_mark;
+   synWPFPC[i]=(synWPFPC[i]>0)*synWPFPC[i];
+   synWPFPC[i]=(synWPFPC[i]>1)+(synWPFPC[i]<=1)*synWPFPC[i];
+}
 //**---------------end IO kernels-------------**
 
 //**---------------common kernels-------------**
@@ -738,6 +763,25 @@ void callUpdatePFPCPlasticityIOKernel(cudaStream_t &st, unsigned int numBlocks,
       synWeightGPU, historyGPU, mask, offSet, pfPCPlastStep);
 }
 
+void callUpdatePFPCPlasticityIOKernelWithMask(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
+      float *synWeightGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck, int offSet, float pfPCPlastStep,
+      uint8_t *plast_mask) {
+   // this mask is for looking back in time at received spikes from pastBinNToCheck * tsPerBin
+   // to determine granule eligibility
+   uint64_t mask = ((uint64_t)1)<<(pastBinNToCheck-1);
+   updatePFPCSynIOWithMask<<<numBlocks, numGRPerBlock, 0, st>>>(synWeightGPU, historyGPU,
+      mask, offSet, pfPCPlastStep, plast_mask);
+}
+
+void callUpdatePFPCPlasticityIOKernelWithNumSteps(cudaStream_t &st, unsigned int numBlocks, unsigned int numGRPerBlock,
+      float *synWeightGPU, uint64_t *historyGPU, unsigned int pastBinNToCheck, int offSet, float pfPCPlastStep,
+      uint32_t *num_weight_steps) {
+   // this mask is for looking back in time at received spikes from pastBinNToCheck * tsPerBin
+   // to determine granule eligibility
+   uint64_t mask = 1<<(pastBinNToCheck-1);
+   updatePFPCSynIOWithNumSteps<<<numBlocks, numGRPerBlock, 0, st>>>(num_weight_steps, synWeightGPU, historyGPU,
+      mask, offSet, pfPCPlastStep);
+}
 //**---------------end kernel calls------------**
 
 // template initializations
