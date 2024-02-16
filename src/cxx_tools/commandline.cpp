@@ -63,6 +63,9 @@ const std::vector<std::pair<std::string, std::string>> command_line_pair_opts{
                         // information for during a run
     {"-w", "--weights"}, // used to specify what synaptic weights to collect
                          // during a run
+    {"-a", "--altered-weights"}, // used to specify what file to use to
+                                 // overwrite weights
+    {"-m", "--weight-mask"},     // array of length num_gr with entries 0 or 1
     {"-c", "--con-arrs"} // used to specify what synaptic connectivity arrays
                          // to collect
 };
@@ -369,6 +372,10 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl) {
       case 'w':
         fill_opt_map(p_cl.weights_files, this_opt, this_param);
         break;
+      case 'a':
+        p_cl.altered_weights_file = this_param;
+      case 'm':
+        p_cl.weight_mask_file = this_param;
       case 'c':
         fill_opt_map(p_cl.conn_arrs_files, this_opt, this_param);
       }
@@ -465,6 +472,30 @@ void validate_commandline(parsed_commandline &p_cl) {
       } else {
         LOG_FATAL("no input simulation specified in run mode. exiting...");
         exit(8);
+      }
+      if (!p_cl.altered_weights_file.empty()) {
+        std::string altered_weights_fullpath;
+        // NOTE: for now, assume that altered weights file will be in the
+        // data/outputs folder
+        if (!file_exists(OUTPUT_DATA_PATH, p_cl.altered_weights_file,
+                         altered_weights_fullpath)) {
+          LOG_FATAL("Could not find input weights file '%s'. Exiting...",
+                    p_cl.altered_weights_file.c_str());
+          exit(11);
+        }
+        p_cl.altered_weights_file = altered_weights_fullpath;
+      }
+      if (!p_cl.weight_mask_file.empty()) {
+        std::string weight_mask_fullpath;
+        // NOTE: for now, assume that weights mask file will be in the
+        // data/outputs folder
+        if (!file_exists(OUTPUT_DATA_PATH, p_cl.weight_mask_file,
+                         weight_mask_fullpath)) {
+          LOG_FATAL("Could not find input weights mask file '%s'. Exiting...",
+                    p_cl.weight_mask_file.c_str());
+          exit(11);
+        }
+        p_cl.weight_mask_file = weight_mask_fullpath;
       }
       if (p_cl.output_basename.empty()) {
         LOG_FATAL("You must specify an output basename. Exiting...");

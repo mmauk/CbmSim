@@ -62,6 +62,13 @@ Control::Control(parsed_commandline &p_cl) {
     create_weights_filenames(p_cl.weights_files); // optional
     create_con_arrs_filenames(p_cl.conn_arrs_files); // optional
     init_sim(p_cl.input_sim_file);
+    if (!p_cl.altered_weights_file.empty()) {
+      load_pfpc_weights_from_file(p_cl.altered_weights_file); // optional
+    }
+    if (!p_cl.weight_mask_file.empty()) {
+      load_pfpc_weight_mask_from_file(p_cl.weight_mask_file);
+      use_pfpc_weight_mask = true;
+    }
   } else if (!p_cl.conn_arrs_files.empty()) {
     data_out_path = OUTPUT_DATA_PATH + p_cl.output_basename;
     data_out_base_name = p_cl.output_basename;
@@ -536,6 +543,18 @@ void Control::load_pfpc_weights_from_file(std::string in_pfpc_file) {
   inPFPCFileBuffer.close();
 }
 
+void Control::load_pfpc_weight_mask_from_file(std::string weight_mask_file) {
+  if (!simCore) {
+    LOG_ERROR("Trying to read weights to uninitialized simulation.");
+    LOG_ERROR("(Hint: Try initializing a sim first.)");
+    return;
+  }
+  std::fstream inMaskBuffer(weight_mask_file.c_str(),
+                            std::ios::in | std::ios::binary);
+  simCore->getMZoneList()[0]->load_pfpc_weight_mask_from_file(inMaskBuffer);
+  inMaskBuffer.close();
+}
+
 void Control::save_mfdcn_weights_to_file() {
   if (mfnc_weights_filenames_created) {
     LOG_DEBUG("Saving mossy fiber to deep nucleus weigths to file...");
@@ -679,10 +698,15 @@ void Control::initialize_spike_sums() {
  *  of GR cells.
  */
 void Control::initialize_rasters() {
+  uint32_t num_probe_trials = 0;
+  for (uint32_t i = 0; i < td.num_trials; i++) {
+    if (td.trial_names[i] == "probe_trial")
+      num_probe_trials++;
+  }
   for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
     if (!rf_names[i].empty() || use_gui) {
       uint32_t row_size =
-          (CELL_IDS[i] == "GR") ? msMeasure : msMeasure * td.num_trials;
+          (CELL_IDS[i] == "GR") ? msMeasure : msMeasure * num_probe_trials;
       rasters[i] = allocate2DArray<uint8_t>(row_size, rast_cell_nums[i]);
     }
   }
@@ -709,12 +733,17 @@ void Control::initialize_psth_save_funcs() {
 }
 
 void Control::initialize_raster_save_funcs() {
+  uint32_t num_probe_trials = 0;
+  for (uint32_t i = 0; i < td.num_trials; i++) {
+    if (td.trial_names[i] == "probe_trial")
+      num_probe_trials++;
+  }
   for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
-    rast_save_funcs[i] = [this, i]() {
+    rast_save_funcs[i] = [this, i, num_probe_trials]() {
       if (!rf_names[i].empty() && CELL_IDS[i] != "GR") {
         uint32_t row_size = (CELL_IDS[i] == "GR")
                                 ? this->msMeasure
-                                : this->msMeasure * this->td.num_trials;
+                                : this->msMeasure * num_probe_trials;
         LOG_DEBUG("Saving %s raster to file...", CELL_IDS[i].c_str());
         write2DArray<uint8_t>(rf_names[i], this->rasters[i], row_size,
                               this->rast_cell_nums[i]);
@@ -735,15 +764,17 @@ void Control::initialize_psths() {
 void Control::runSession(struct gui *gui) {
   set_info_file_str_props(BEFORE_RUN, if_data);
   double start, end;
-  int goSpkCounter[num_go];
+  // int goSpkCounter[num_go];
   if (!use_gui)
     run_state = IN_RUN_NO_PAUSE;
   trial = 0;
   raster_counter = 0;
+  enum plasticity initial_pfpc_plast = pf_pc_plast;
   // trial loop
   while (trial < td.num_trials && run_state != NOT_IN_RUN) {
-    std::string trialName = td.trial_names[trial];
-
+    std::string currTrialName = td.trial_names[trial];
+    std::string nextTrialName =
+        (trial + 1 < td.num_trials) ? td.trial_names[trial + 1] : "";
     uint32_t useCS = td.use_css[trial];
     uint32_t onsetCS = pre_collection_ts + td.cs_onsets[trial];
     uint32_t csLength = td.cs_lens[trial];
@@ -752,10 +783,15 @@ void Control::runSession(struct gui *gui) {
     uint32_t onsetUS = pre_collection_ts + td.us_onsets[trial];
 
     int PSTHCounter = 0;
-    float gGRGO_sum = 0;
-    float gMFGO_sum = 0;
+    // float gGRGO_sum = 0;
+    // float gMFGO_sum = 0;
 
-    memset(goSpkCounter, 0, num_go * sizeof(int));
+    if (currTrialName == "probe_trial")
+      pf_pc_plast = OFF;
+    else if (pf_pc_plast != initial_pfpc_plast)
+      pf_pc_plast = initial_pfpc_plast;
+
+    // memset(goSpkCounter, 0, num_go * sizeof(int));
 
     LOG_INFO("Trial number: %d", trial + 1);
     start = omp_get_wtime();
@@ -773,35 +809,39 @@ void Control::runSession(struct gui *gui) {
 
       simCore->updateMFInput(mfAP);
       // this is the main simCore function which computes all cell pops' spikes
-      simCore->calcActivity(spillFrac, pf_pc_plast, mf_nc_plast);
+      simCore->calcActivity(spillFrac, pf_pc_plast, mf_nc_plast,
+                            use_pfpc_weight_mask);
 
       /* collect conductances used to check tuning */
-      if (ts >= onsetCS && ts < onsetCS + csLength) {
-        mfgoG = simCore->getInputNet()->exportgSum_MFGO();
-        grgoG = simCore->getInputNet()->exportgSum_GRGO();
-        goSpks = simCore->getInputNet()->exportAPGO();
+      // if (ts >= onsetCS && ts < onsetCS + csLength) {
+      //   mfgoG = simCore->getInputNet()->exportgSum_MFGO();
+      //   grgoG = simCore->getInputNet()->exportgSum_GRGO();
+      //   goSpks = simCore->getInputNet()->exportAPGO();
 
-        for (int i = 0; i < num_go; i++) {
-          goSpkCounter[i] += goSpks[i];
-          gGRGO_sum += grgoG[i];
-          gMFGO_sum += mfgoG[i];
-        }
-      }
+      //  for (int i = 0; i < num_go; i++) {
+      //    goSpkCounter[i] += goSpks[i];
+      //    gGRGO_sum += grgoG[i];
+      //    gMFGO_sum += mfgoG[i];
+      //  }
+      //}
 
-      /* upon offset of CS, report averages of above collected conductances */
-      if (ts == onsetCS + csLength) {
-        countGOSpikes(goSpkCounter);
-        LOG_DEBUG("Mean gGRGO   = %0.4f", gGRGO_sum / (num_go * csLength));
-        LOG_DEBUG("Mean gMFGO   = %0.5f", gMFGO_sum / (num_go * csLength));
-        LOG_DEBUG("GR:MF ratio  = %0.2f", gGRGO_sum / gMFGO_sum);
-      }
+      ///* upon offset of CS, report averages of above collected conductances */
+      // if (ts == onsetCS + csLength) {
+      //   countGOSpikes(goSpkCounter);
+      //   LOG_DEBUG("Mean gGRGO   = %0.4f", gGRGO_sum / (num_go * csLength));
+      //   LOG_DEBUG("Mean gMFGO   = %0.5f", gMFGO_sum / (num_go * csLength));
+      //   LOG_DEBUG("GR:MF ratio  = %0.2f", gGRGO_sum / gMFGO_sum);
+      // }
 
       /* data collection */
+      // comment out for when collect every time step
       if (ts >= onsetCS - msPreCS && ts < onsetCS + csLength + msPostCS) {
-        fill_rasters(raster_counter, PSTHCounter);
-        fill_psths(PSTHCounter);
-        PSTHCounter++;
-        raster_counter++;
+        if (currTrialName == "probe_trial") {
+          fill_rasters(raster_counter, PSTHCounter);
+          fill_psths(PSTHCounter);
+          PSTHCounter++;
+          raster_counter++;
+        }
       }
 
       if (use_gui) {
@@ -812,7 +852,7 @@ void Control::runSession(struct gui *gui) {
       }
     }
     end = omp_get_wtime();
-    LOG_INFO("'%s' took %0.2fs", trialName.c_str(), end - start);
+    LOG_INFO("'%s' took %0.2fs", currTrialName.c_str(), end - start);
 
     if (use_gui) {
       // for now, compute the mean and median firing rates for all cells if win
@@ -831,12 +871,85 @@ void Control::runSession(struct gui *gui) {
       }
       reset_spike_sums();
     }
+    if (data_out_dir_created) {
+      if (currTrialName != "probe_trial" && nextTrialName == "probe_trial") {
+        std::string weight_steps_ltp_fname =
+            data_out_path + "/" + data_out_base_name + "_TRIAL_" +
+            std::to_string(trial) + "_LTP.pfpcpe";
+        LOG_DEBUG(
+            "Saving pfpc ltp plasticity events array to file at trial %d...",
+            trial);
+        std::fstream out_weight_steps_ltp_buf(weight_steps_ltp_fname.c_str(),
+                                              std::ios::out | std::ios::binary);
+        simCore->getMZoneList()[0]->save_weight_steps_ltp_to_file(
+            out_weight_steps_ltp_buf);
+        out_weight_steps_ltp_buf.close();
+
+        std::string weight_steps_ltd_fname =
+            data_out_path + "/" + data_out_base_name + "_TRIAL_" +
+            std::to_string(trial) + "_LTD.pfpcpe";
+        LOG_DEBUG(
+            "Saving pfpc ltd plasticity events array to file at trial %d...",
+            trial);
+        std::fstream out_weight_steps_ltd_buf(weight_steps_ltd_fname.c_str(),
+                                              std::ios::out | std::ios::binary);
+        simCore->getMZoneList()[0]->save_weight_steps_ltd_to_file(
+            out_weight_steps_ltd_buf);
+        out_weight_steps_ltd_buf.close();
+      }
+      if (currTrialName == "probe_trial" && nextTrialName != "probe_trial") {
+        simCore->getMZoneList()[0]->reset_weight_steps_ltp();
+        LOG_DEBUG("Resetting PFPC synapse LTP steps at %d...", trial);
+        simCore->getMZoneList()[0]->reset_weight_steps_ltd();
+        LOG_DEBUG("Resetting PFPC synapse LTD steps at %d...", trial);
+      }
+    }
     // save gr rasters into new file every trial
-    save_gr_rasters_at_trial_to_file(trial);
-    save_pfpc_weights_at_trial_to_file(trial);
+    // save_gr_raster();
+    // if (data_out_dir_created && trial % 500 == 0) {
+    //	save_pfpc_weights_at_trial_to_file(trial);
+    //	std::string weight_steps_ltp_fname = data_out_path + "/" +
+    //data_out_base_name
+    //										 + "_TRIAL_" + std::to_string(trial) +
+    //"_LTP.pfpcpe"; 	LOG_DEBUG("Saving pfpc ltp plasticity events array to file
+    //at trial %d...", trial); 	std::fstream
+    //out_weight_steps_ltp_buf(weight_steps_ltp_fname.c_str(), std::ios::out |
+    //std::ios::binary);
+    //	simCore->getMZoneList()[0]->save_weight_steps_ltp_to_file(out_weight_steps_ltp_buf);
+    //	out_weight_steps_ltp_buf.close();
+
+    //	std::string weight_mis_steps_ltp_fname = data_out_path + "/" +
+    //data_out_base_name
+    //										 + "_TRIAL_" + std::to_string(trial) +
+    //"_LTP_MISS.pfpcpe"; 	LOG_DEBUG("Saving pfpc ltp plasticity mis events array
+    //to file at trial %d...", trial); 	std::fstream
+    //out_weight_mis_steps_ltp_buf(weight_mis_steps_ltp_fname.c_str(),
+    //std::ios::out | std::ios::binary);
+    //	simCore->getMZoneList()[0]->save_weight_mis_steps_ltp_to_file(out_weight_mis_steps_ltp_buf);
+    //	out_weight_mis_steps_ltp_buf.close();
+
+    //	std::string weight_steps_ltd_fname = data_out_path + "/" +
+    //data_out_base_name + "_TRIAL_"
+    //										 + std::to_string(trial) +
+    //"_LTD.pfpcpe"; 	LOG_DEBUG("Saving pfpc ltd plasticity events array to file
+    //at trial %d...", trial); 	std::fstream
+    //out_weight_steps_ltd_buf(weight_steps_ltd_fname.c_str(), std::ios::out |
+    //std::ios::binary);
+    //	simCore->getMZoneList()[0]->save_weight_steps_ltd_to_file(out_weight_steps_ltd_buf);
+    //	out_weight_steps_ltd_buf.close();
+
+    //	std::string weight_mis_steps_ltd_fname = data_out_path + "/" +
+    //data_out_base_name
+    //										 + "_TRIAL_" + std::to_string(trial) +
+    //"_LTD_MISS.pfpcpe"; 	LOG_DEBUG("Saving pfpc ltd plasticity mis events array
+    //to file at trial %d...", trial); 	std::fstream
+    //out_weight_mis_steps_ltd_buf(weight_mis_steps_ltd_fname.c_str(),
+    //std::ios::out | std::ios::binary);
+    //	simCore->getMZoneList()[0]->save_weight_mis_steps_ltd_to_file(out_weight_mis_steps_ltd_buf);
+    //	out_weight_mis_steps_ltd_buf.close();
+    //}
     trial++;
   }
-  trial--; // setting so that is valid for drawing go rasters after a sim
   if (run_state == NOT_IN_RUN)
     LOG_INFO("Simulation terminated.");
   else if (run_state == IN_RUN_NO_PAUSE)
@@ -847,11 +960,37 @@ void Control::runSession(struct gui *gui) {
   if (!use_gui) { // go ahead and save everything if we're not in the gui.
     save_rasters();
     save_psths();
-    save_pfpc_weights_to_file();
+    if (data_out_dir_created) {
+      std::string weight_steps_ltp_fname =
+          data_out_path + "/" + data_out_base_name + "_TRIAL_" +
+          std::to_string(trial) + "_LTP.pfpcpe";
+      LOG_DEBUG(
+          "Saving pfpc ltp plasticity events array to file at trial %d...",
+          trial);
+      std::fstream out_weight_steps_ltp_buf(weight_steps_ltp_fname.c_str(),
+                                            std::ios::out | std::ios::binary);
+      simCore->getMZoneList()[0]->save_weight_steps_ltp_to_file(
+          out_weight_steps_ltp_buf);
+      out_weight_steps_ltp_buf.close();
+
+      std::string weight_steps_ltd_fname =
+          data_out_path + "/" + data_out_base_name + "_TRIAL_" +
+          std::to_string(trial) + "_LTD.pfpcpe";
+      LOG_DEBUG(
+          "Saving pfpc ltd plasticity events array to file at trial %d...",
+          trial);
+      std::fstream out_weight_steps_ltd_buf(weight_steps_ltd_fname.c_str(),
+                                            std::ios::out | std::ios::binary);
+      simCore->getMZoneList()[0]->save_weight_steps_ltd_to_file(
+          out_weight_steps_ltd_buf);
+      out_weight_steps_ltd_buf.close();
+    }
+    save_pfpc_weights_at_trial_to_file(trial);
     save_mfdcn_weights_to_file();
     save_sim_to_file();
     save_info_to_file();
   }
+  trial--; // setting so that is valid for drawing go rasters after a sim
 }
 
 void Control::reset_spike_sums() {
@@ -866,10 +1005,15 @@ void Control::reset_spike_sums() {
 }
 
 void Control::reset_rasters() {
+  uint32_t num_probe_trials = 0;
+  for (uint32_t i = 0; i < td.num_trials; i++) {
+    if (td.trial_names[i] == "probe_trial")
+      num_probe_trials++;
+  }
   for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
     if (!rf_names[i].empty() || use_gui) {
       uint32_t row_size =
-          (CELL_IDS[i] == "GR") ? msMeasure : msMeasure * td.num_trials;
+          (CELL_IDS[i] == "GR") ? msMeasure : msMeasure * num_probe_trials;
       memset(rasters[i][0], '\000',
              row_size * rast_cell_nums[i] * sizeof(uint8_t));
     }

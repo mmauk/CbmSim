@@ -158,6 +158,7 @@ public:
 
   bool pfpc_weights_filenames_created = false;
   bool mfnc_weights_filenames_created = false;
+  bool use_pfpc_weight_mask = false;
 
   bool con_arrs_filenames_created = false;
 
@@ -343,6 +344,15 @@ public:
    *  @param in_pfpc_file input binary file of pfpc weights
    */
   void load_pfpc_weights_from_file(std::string in_pfpc_file);
+
+  /**
+   *  @brief load the parallel fiber purkinje cell weight mask from binary file.
+   *  @param weight_mask_file input binary file of pfpc weight mask
+   *
+   *  @description this function loads a weight mask into memory. the weight
+   *  mask is used to freeze particular weights during forgetting.
+   */
+  void load_pfpc_weight_mask_from_file(std::string weight_mask_file);
 
   /**
    *  @brief Save the mossy fiber to deep nucleus weights to binary file.
