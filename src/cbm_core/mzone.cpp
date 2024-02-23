@@ -884,20 +884,16 @@ void MZone::reset_weight_steps_ltp() {
   for (int i = 0; i < numGPUs; i++) {
     cudaSetDevice(i + gpuIndStart);
     cudaMemset(weight_steps_ltp_d[i], 0, numGRPerGPU * sizeof(uint32_t));
-    cudaMemset(weight_mis_steps_ltp_d[i], 0, numGRPerGPU * sizeof(uint32_t));
   }
   memset(weight_steps_ltp_h, 0, num_gr * sizeof(uint32_t));
-  memset(weight_mis_steps_ltp_h, 0, num_gr * sizeof(uint32_t));
 }
 
 void MZone::reset_weight_steps_ltd() {
   for (int i = 0; i < numGPUs; i++) {
     cudaSetDevice(i + gpuIndStart);
     cudaMemset(weight_steps_ltd_d[i], 0, numGRPerGPU * sizeof(uint32_t));
-    cudaMemset(weight_mis_steps_ltd_d[i], 0, numGRPerGPU * sizeof(uint32_t));
   }
   memset(weight_steps_ltd_h, 0, num_gr * sizeof(uint32_t));
-  memset(weight_mis_steps_ltd_h, 0, num_gr * sizeof(uint32_t));
 }
 
 void MZone::load_pfpc_weight_mask_from_file(std::fstream &in_file_buf) {

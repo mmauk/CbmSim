@@ -157,12 +157,8 @@ private:
   uint8_t **pfpc_weight_mask_d;
   uint32_t *weight_steps_ltp_h;
   uint32_t **weight_steps_ltp_d;
-  uint32_t *weight_mis_steps_ltp_h;
-  uint32_t **weight_mis_steps_ltp_d;
   uint32_t *weight_steps_ltd_h;
   uint32_t **weight_steps_ltd_d;
-  uint32_t *weight_mis_steps_ltd_h;
-  uint32_t **weight_mis_steps_ltd_d;
   float **inputPFPCGPU;
   size_t *inputPFPCGPUPitch;
   float **inputSumPFPCMZGPU;
