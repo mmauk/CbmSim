@@ -26,8 +26,6 @@
 #include "mzone.h"
 #include "sfmt.h"
 
-enum plasticity { OFF, GRADED, BINARY, CASCADE };
-
 class CBMSimCore {
 public:
   CBMSimCore();
@@ -35,7 +33,8 @@ public:
   ~CBMSimCore();
 
   void calcActivity(float spillFrac, enum plasticity pf_pc_plast,
-                    enum plasticity mf_nc_plast);
+                    enum plasticity mf_nc_plast,
+                    bool use_pc_compartment = false);
   void updateMFInput(const uint8_t *mfIn);
   void setTrueMFs(bool *isCollateralMF);
   void updateGRStim(int startGRStim, int numGRStim);

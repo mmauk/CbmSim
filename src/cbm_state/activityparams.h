@@ -16,8 +16,6 @@
 #include <stdlib.h>
 #include <string>
 
-#define NUM_ACT_PARAMS 174
-
 extern bool act_params_populated;
 
 /* raw params */
@@ -82,6 +80,20 @@ extern float gluDecayGO;
 extern float gluScaleGO;
 extern float goGABAGOGOSynDepF;
 extern float goGABAGOGOSynRecTau;
+
+// experimental long term plasticity params
+extern float fracSynWLow;
+extern float fracLowState;
+extern float cascPlastProbMin;
+extern float cascPlastProbMax;
+extern float cascPlastWeightLow;
+extern float cascPlastWeightHigh;
+extern float binPlastProbMin;
+extern float binPlastProbMax;
+extern float binPlastWeightLow;
+extern float binPlastWeightHigh;
+// experimental long term plasticity params
+
 extern float synLTDStepSizeGRtoPC;
 extern float synLTPStepSizeGRtoPC;
 extern float mGluRDecayGO;

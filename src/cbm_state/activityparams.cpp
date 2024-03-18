@@ -76,6 +76,20 @@ float gluDecayGO = 0.0;
 float gluScaleGO = 0.0;
 float goGABAGOGOSynDepF = 0.0;
 float goGABAGOGOSynRecTau = 0.0;
+
+// experimental long term plasticity params
+float fracSynWLow = 0.0;
+float fracLowState = 0.0;
+float cascPlastProbMin = 0.0;
+float cascPlastProbMax = 0.0;
+float cascPlastWeightLow = 0.0;
+float cascPlastWeightHigh = 0.0;
+float binPlastProbMin = 0.0;
+float binPlastProbMax = 0.0;
+float binPlastWeightLow = 0.0;
+float binPlastWeightHigh = 0.0;
+// experimental long term plasticity params
+
 float synLTDStepSizeGRtoPC = 0.0;
 float synLTPStepSizeGRtoPC = 0.0;
 float mGluRDecayGO = 0.0;
@@ -301,6 +315,28 @@ void populate_act_params(parsed_sess_file &s_file) {
       s_file.parsed_var_sections["activity"].param_map["goGABAGOGOSynDepF"]);
   goGABAGOGOSynRecTau = std::stof(
       s_file.parsed_var_sections["activity"].param_map["goGABAGOGOSynRecTau"]);
+
+  fracSynWLow = std::stof(
+      s_file.parsed_var_sections["activity"].param_map["fracSynWLow"]);
+  fracLowState = std::stof(
+      s_file.parsed_var_sections["activity"].param_map["fracLowState"]);
+  cascPlastProbMin = std::stof(
+      s_file.parsed_var_sections["activity"].param_map["cascPlastProbMin"]);
+  cascPlastProbMax = std::stof(
+      s_file.parsed_var_sections["activity"].param_map["cascPlastProbMax"]);
+  cascPlastWeightLow = std::stof(
+      s_file.parsed_var_sections["activity"].param_map["cascPlastWeightLow"]);
+  cascPlastWeightHigh = std::stof(
+      s_file.parsed_var_sections["activity"].param_map["cascPlastWeightHigh"]);
+  binPlastProbMin = std::stof(
+      s_file.parsed_var_sections["activity"].param_map["binPlastProbMin"]);
+  binPlastProbMax = std::stof(
+      s_file.parsed_var_sections["activity"].param_map["binPlastProbMax"]);
+  binPlastWeightLow = std::stof(
+      s_file.parsed_var_sections["activity"].param_map["binPlastWeightLow"]);
+  binPlastWeightHigh = std::stof(
+      s_file.parsed_var_sections["activity"].param_map["binPlastWeightHigh"]);
+
   synLTDStepSizeGRtoPC = std::stof(
       s_file.parsed_var_sections["activity"].param_map["synLTDStepSizeGRtoPC"]);
   synLTPStepSizeGRtoPC = std::stof(
@@ -526,6 +562,18 @@ void read_act_params(std::fstream &in_param_buf) {
   in_param_buf.read((char *)&gluScaleGO, sizeof(float));
   in_param_buf.read((char *)&goGABAGOGOSynDepF, sizeof(float));
   in_param_buf.read((char *)&goGABAGOGOSynRecTau, sizeof(float));
+
+  in_param_buf.read((char *)&fracSynWLow, sizeof(float));
+  in_param_buf.read((char *)&fracLowState, sizeof(float));
+  in_param_buf.read((char *)&cascPlastProbMin, sizeof(float));
+  in_param_buf.read((char *)&cascPlastProbMax, sizeof(float));
+  in_param_buf.read((char *)&cascPlastWeightLow, sizeof(float));
+  in_param_buf.read((char *)&cascPlastWeightHigh, sizeof(float));
+  in_param_buf.read((char *)&binPlastProbMin, sizeof(float));
+  in_param_buf.read((char *)&binPlastProbMax, sizeof(float));
+  in_param_buf.read((char *)&binPlastWeightLow, sizeof(float));
+  in_param_buf.read((char *)&binPlastWeightHigh, sizeof(float));
+
   in_param_buf.read((char *)&synLTDStepSizeGRtoPC, sizeof(float));
   in_param_buf.read((char *)&synLTPStepSizeGRtoPC, sizeof(float));
   in_param_buf.read((char *)&mGluRDecayGO, sizeof(float));
@@ -693,6 +741,18 @@ void write_act_params(std::fstream &out_param_buf) {
   out_param_buf.write((char *)&gluScaleGO, sizeof(float));
   out_param_buf.write((char *)&goGABAGOGOSynDepF, sizeof(float));
   out_param_buf.write((char *)&goGABAGOGOSynRecTau, sizeof(float));
+
+  out_param_buf.write((char *)&fracSynWLow, sizeof(float));
+  out_param_buf.write((char *)&fracLowState, sizeof(float));
+  out_param_buf.write((char *)&cascPlastProbMin, sizeof(float));
+  out_param_buf.write((char *)&cascPlastProbMax, sizeof(float));
+  out_param_buf.write((char *)&cascPlastWeightLow, sizeof(float));
+  out_param_buf.write((char *)&cascPlastWeightHigh, sizeof(float));
+  out_param_buf.write((char *)&binPlastProbMin, sizeof(float));
+  out_param_buf.write((char *)&binPlastProbMax, sizeof(float));
+  out_param_buf.write((char *)&binPlastWeightLow, sizeof(float));
+  out_param_buf.write((char *)&binPlastWeightHigh, sizeof(float));
+
   out_param_buf.write((char *)&synLTDStepSizeGRtoPC, sizeof(float));
   out_param_buf.write((char *)&synLTPStepSizeGRtoPC, sizeof(float));
   out_param_buf.write((char *)&mGluRDecayGO, sizeof(float));

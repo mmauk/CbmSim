@@ -36,6 +36,7 @@ typedef struct {
   std::string output_basename;
   std::string pfpc_plasticity;
   std::string mfnc_plasticity;
+  bool use_pc_compartment = false;
   std::map<std::string, bool> raster_files;
   std::map<std::string, bool> psth_files;
   std::map<std::string, bool> weights_files;

@@ -62,6 +62,7 @@ public:
   void resetMFHist(uint32_t t);
 
   void runGRActivitiesCUDA(cudaStream_t **sts, int streamN);
+  void cpyGRSpikesGPUtoHostCUDA(cudaStream_t **sts, int streamN);
   void runSumGRGOOutCUDA(cudaStream_t **sts, int streamN);
   void cpyDepAmpMFHosttoGPUCUDA(cudaStream_t **sts, int streamN);
   void cpyAPMFHosttoGPUCUDA(cudaStream_t **sts, int streamN);

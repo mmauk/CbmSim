@@ -33,13 +33,9 @@ const std::string SYN_CONS_IDS[NUM_SYN_CONS] = {"MFGR", "GRGO", "MFGO", "GOGO",
 /*
  * available commandline flags which take no argument
  */
-const std::vector<std::string>
-    command_line_single_opts{
-        "--pfpc-off",
-        "--mfnc-off",
-        "--binary",
-        "--cascade",
-    };
+const std::vector<std::string> command_line_single_opts{
+    "--pfpc-off",       "--mfnc-off",     "--binary",
+    "--abbott-cascade", "--mauk-cascade", "--pc-compart"};
 
 /*
  * available commandline flags which take an argument. Each pair consists of the
@@ -293,9 +289,10 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl) {
     tokens.push_back(std::string(*iter));
   }
 
-  // fill plasticity values, testing for mutually exclusive options
+  // fill single command line opts
   for (auto token : tokens) {
-    if (token == "--pfpc-off" || token == "--binary" || token == "--cascade") {
+    if (token == "--pfpc-off" || token == "--binary" ||
+        token == "--abbott-cascade" || token == "--mauk-cascade") {
       if (!p_cl.pfpc_plasticity.empty()) {
         LOG_FATAL("Mutually exclusive or duplicate pfpc plasticity arguments "
                   "found. Exiting...");
@@ -311,6 +308,8 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl) {
         exit(13);
       }
       p_cl.mfnc_plasticity = token.substr(7, std::string::npos);
+    } else if (token == "--pc-compart") {
+      p_cl.use_pc_compartment = true;
     }
   }
 
@@ -475,10 +474,12 @@ void validate_commandline(parsed_commandline &p_cl) {
         p_cl.pfpc_plasticity = "graded";
       } else {
         // just notify user what we already set above
-        if (p_cl.pfpc_plasticity == "dual")
-          LOG_DEBUG("Turning PFPC plasticity on in 'dual' mode...");
-        else if (p_cl.pfpc_plasticity == "cascade")
-          LOG_DEBUG("Turning PFPC plasticity on in 'cascade' mode...");
+        if (p_cl.pfpc_plasticity == "binary")
+          LOG_DEBUG("Turning PFPC plasticity on in 'binary' mode...");
+        else if (p_cl.pfpc_plasticity == "abbott-cascade")
+          LOG_DEBUG("Turning PFPC plasticity on in 'abbott cascade' mode...");
+        else if (p_cl.pfpc_plasticity == "mauk-cascade")
+          LOG_DEBUG("Turning PFPC plasticity on in 'mauk cascade' mode...");
         else if (p_cl.pfpc_plasticity == "off")
           LOG_DEBUG("Turning PFPC plasticity off..");
       }
@@ -553,6 +554,7 @@ void cp_parsed_commandline(parsed_commandline &from_p_cl,
   to_p_cl.output_basename = from_p_cl.output_basename;
   to_p_cl.pfpc_plasticity = from_p_cl.pfpc_plasticity;
   to_p_cl.mfnc_plasticity = from_p_cl.mfnc_plasticity;
+  to_p_cl.use_pc_compartment = from_p_cl.use_pc_compartment;
 
   to_p_cl.raster_files = from_p_cl.raster_files;
   to_p_cl.psth_files = from_p_cl.psth_files;
@@ -571,6 +573,7 @@ std::string parsed_commandline_to_str(parsed_commandline &p_cl) {
   p_cl_buf << "{ 'output_basename', '" << p_cl.output_basename << "' }\n";
   p_cl_buf << "{ 'pfpc_plasticity', '" << p_cl.pfpc_plasticity << "' }\n";
   p_cl_buf << "{ 'mfnc_plasticity', '" << p_cl.mfnc_plasticity << "' }\n";
+  p_cl_buf << "{ 'use_pc_compartment', '" << p_cl.use_pc_compartment << "' }\n";
   p_cl_buf << "{ 'raster_files' :\n";
   for (auto pair : p_cl.raster_files) {
     p_cl_buf << "{ '" << pair.first << "', '" << pair.second << "' }\n";

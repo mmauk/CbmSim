@@ -113,7 +113,8 @@ void CBMSimCore::syncCUDA(std::string title) {
 }
 
 void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast,
-                              enum plasticity mf_nc_plast) {
+                              enum plasticity mf_nc_plast,
+                              bool use_pc_compartment) {
   syncCUDA("1");
 
   curTime++;
@@ -131,6 +132,10 @@ void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast,
 
   // the gr spiking activity kernel
   inputNet->runGRActivitiesCUDA(streams, 0);
+  // if condition for testing time cost of copy gr data gpu -> cpu
+  if (use_pc_compartment) {
+    inputNet->cpyGRSpikesGPUtoHostCUDA(streams, 6);
+  }
 
   // update gr spike history array
   inputNet->runUpdateGRHistoryCUDA(streams, 4, curTime);
@@ -168,15 +173,19 @@ void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast,
   // run dynamic spillover input go -> gr
   inputNet->runUpdateGOInGRDynamicSpillCUDA(streams, 4);
 
-  // perform pf -> pc plasticity
-  if (pf_pc_plast == GRADED) {
-    for (int i = 0; i < numZones; i++) {
-      zones[i]->runPFPCPlastCUDA(streams, 1, curTime);
-    }
-  }
-
   /* mzone (stripe) computation */
   for (int i = 0; i < numZones; i++) {
+    // perform pf -> pc plasticity
+    if (pf_pc_plast == GRADED) {
+      zones[i]->runPFPCGradedPlastCUDA(streams, 1, curTime);
+    } else if (pf_pc_plast == BINARY) {
+      zones[i]->runPFPCBinaryPlastCUDA(streams, 1, curTime);
+    } else if (pf_pc_plast == ABBOTT_CASCADE) {
+      zones[i]->runPFPCAbbottCascadePlastCUDA(streams, 1, curTime);
+    } else if (pf_pc_plast == MAUK_CASCADE) {
+      zones[i]->runPFPCMaukCascadePlastCUDA(streams, 1, curTime);
+    }
+
     // update pf output on the device
     zones[i]->runPFPCOutCUDA(streams, i + 2);
     // update pfpc sums on device
@@ -302,10 +311,10 @@ void CBMSimCore::construct(CBMState *state, int *mzoneRSeed, int gpuIndStart,
 
   for (int i = 0; i < numZones; i++) {
     // same thing for zones as with innet
-    zones[i] = new MZone(
-        state->getMZoneConStateInternal(i), state->getMZoneActStateInternal(i),
-        mzoneRSeed[i], inputNet->getApBufGRGPUPointer(),
-        inputNet->getHistGRGPUPointer(), this->gpuIndStart, numGPUs);
+    zones[i] = new MZone(streams, state->getMZoneConStateInternal(i),
+        state->getMZoneActStateInternal(i), mzoneRSeed[i],
+        inputNet->getApBufGRGPUPointer(), inputNet->getHistGRGPUPointer(),
+        this->gpuIndStart, numGPUs);
   }
   LOG_DEBUG("Mzone construction complete");
   initAuxVars();

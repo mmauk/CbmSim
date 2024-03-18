@@ -540,6 +540,20 @@ void InNet::runGRActivitiesCUDA(cudaStream_t **sts, int streamN) {
   }
 }
 
+void InNet::cpyGRSpikesGPUtoHostCUDA(cudaStream_t **sts, int streamN) {
+  cudaError_t error;
+  for (int i = 0; i < numGPUs; i++) {
+    error = cudaSetDevice(i + gpuIndStart);
+    error = cudaMemcpyAsync((void *)&outputGRH[i * numGRPerGPU], outputGRGPU[i],
+                            numGRPerGPU * sizeof(uint8_t),
+                            cudaMemcpyDeviceToHost, sts[i][streamN]);
+#ifdef DEBUGOUT
+  cerr << "cpyGRSpikesGPUtoHost: async copy for gpu #" << i << ": "
+       << cudaGetErrorString(error) << endl;
+#endif
+  }
+}
+
 void InNet::runSumGRGOOutCUDA(cudaStream_t **sts, int streamN) {
   cudaError_t error;
   for (int i = 0; i < numGPUs; i++) {

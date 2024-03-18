@@ -159,6 +159,8 @@ public:
   bool pfpc_weights_filenames_created = false;
   bool mfnc_weights_filenames_created = false;
 
+  bool pfpc_weights_states_filenames_created = false;
+
   bool con_arrs_filenames_created = false;
 
   enum sim_run_state run_state = NOT_IN_RUN;
@@ -217,6 +219,9 @@ public:
   uint32_t msPostCS = 0;  // how much time after the cs do we collect data for
   uint32_t msMeasure = 0; // total amount of time data is collected for
 
+  /* specify if use pc compartments for pc activity calculation */
+  bool use_pc_compartment = false;
+
   /* plasticity types */
   enum plasticity pf_pc_plast = GRADED;
   enum plasticity mf_nc_plast = GRADED;
@@ -233,6 +238,8 @@ public:
 
   std::string pfpc_weights_file = "";
   std::string mfnc_weights_file = "";
+
+  std::string pfpc_weights_states_file = "";
 
   std::string pre_con_arrs_names[NUM_SYN_CONS];
   std::string post_con_arrs_names[NUM_SYN_CONS];
@@ -356,6 +363,12 @@ public:
   void load_mfdcn_weights_from_file(std::string in_mfdcn_file);
 
   /**
+   *  @brief save the weight states from binary/cascade plast to file.
+   *  @param trial the trial at which to save the weights states
+   */
+  void save_pfpc_weights_states_to_file(int32_t trial = -1);
+
+  /**
    *  @brief Create the full-path filename of the output simulation file
    */
   void create_out_sim_filename();
@@ -385,6 +398,15 @@ public:
    *  whether the synpatic connection was specified at the cmdline
    */
   void create_weights_filenames(std::map<std::string, bool> &weights_map);
+
+  /**
+   *  @brief create the pfpc weights states file names
+   *  @param weights_map the map indicating whether this option was selected at
+   * cmdline
+   *
+   */
+  void create_pfpc_weights_states_filenames(
+      std::map<std::string, bool> &weights_map);
 
   /**
    *  @brief Create the full-path filenames of cmdline-specified con arrs

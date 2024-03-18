@@ -39,6 +39,10 @@ Control::Control(parsed_commandline &p_cl) {
     initialize_session(p_cl.session_file);
     // cp session info to info file obj
     cp_to_info_file_data(p_cl, s_file, if_data);
+
+    // just grab the compartment flag directly, no need for sep fn
+    use_pc_compartment = p_cl.use_pc_compartment;
+
     set_plasticity_modes(p_cl.pfpc_plasticity, p_cl.mfnc_plasticity);
     // assume that validated commandline opts includes 1) input file 2) session
     // file 3) output directory name
@@ -60,6 +64,8 @@ Control::Control(parsed_commandline &p_cl) {
     create_raster_filenames(p_cl.raster_files);   // optional
     create_psth_filenames(p_cl.psth_files);       // optional
     create_weights_filenames(p_cl.weights_files); // optional
+    create_pfpc_weights_states_filenames(
+        p_cl.weights_files); // only initialized for cascade plast modes
     create_con_arrs_filenames(p_cl.conn_arrs_files); // optional
     init_sim(p_cl.input_sim_file);
   } else if (!p_cl.conn_arrs_files.empty()) {
@@ -78,7 +84,7 @@ Control::Control(parsed_commandline &p_cl) {
     std::fstream sim_file_buf(p_cl.input_sim_file.c_str(),
                               std::ios::in | std::ios::binary);
     read_con_params(sim_file_buf);
-    simState = new CBMState(numMZones, sim_file_buf);
+    simState = new CBMState(numMZones, pf_pc_plast, sim_file_buf);
     sim_file_buf.close();
   } else { // user ran program with no args
     set_plasticity_modes("graded", "graded");
@@ -120,17 +126,19 @@ void Control::set_plasticity_modes(std::string pfpc_plasticity,
     pf_pc_plast = GRADED;
   else if (pfpc_plasticity == "binary")
     pf_pc_plast = BINARY;
-  else if (pfpc_plasticity == "cascade")
-    pf_pc_plast = CASCADE;
+  else if (pfpc_plasticity == "abbott-cascade")
+    pf_pc_plast = ABBOTT_CASCADE;
+  else if (pfpc_plasticity == "mauk-cascade")
+    pf_pc_plast = MAUK_CASCADE;
 
   if (mfnc_plasticity == "off")
     mf_nc_plast = OFF;
   else if (mfnc_plasticity == "graded")
     mf_nc_plast = GRADED;
-  else if (mfnc_plasticity == "binary")
-    mf_nc_plast = BINARY;
-  else if (mfnc_plasticity == "cascade")
-    mf_nc_plast = CASCADE;
+  else if (mfnc_plasticity == "abbott-cascade")
+    mf_nc_plast = ABBOTT_CASCADE;
+  else if (mfnc_plasticity == "mauk-cascade")
+    mf_nc_plast = MAUK_CASCADE;
 }
 
 void Control::initialize_session(std::string sess_file) {
@@ -168,8 +176,8 @@ void Control::init_sim(std::string in_sim_filename) {
   std::fstream sim_file_buf(in_sim_filename.c_str(),
                             std::ios::in | std::ios::binary);
   read_con_params(sim_file_buf);
-  populate_act_params(s_file); 
-  simState = new CBMState(numMZones, sim_file_buf);
+  populate_act_params(s_file);
+  simState = new CBMState(numMZones, pf_pc_plast, sim_file_buf);
   simCore = new CBMSimCore(simState, gpuIndex, gpuP2);
   mfs = new ECMFPopulation(num_mf, mfRandSeed, CSTonicMFFrac, CSPhasicMFFrac,
                            contextMFFrac, nucCollFrac, bgFreqMin, csbgFreqMin,
@@ -567,6 +575,33 @@ void Control::load_mfdcn_weights_from_file(std::string in_mfdcn_file) {
   inMFDCNFileBuffer.close();
 }
 
+void Control::save_pfpc_weights_states_to_file(int32_t trial) {
+  if (pfpc_weights_states_filenames_created) {
+    std::string curr_pfpc_weights_state_filename = pfpc_weights_states_file;
+    if (!simCore) {
+      LOG_ERROR("Trying to write uninitialized weights to file.");
+      LOG_ERROR("(Hint: Try initializing a sim or loading the weights first.)");
+      return;
+    }
+    if (trial != -1) {
+      curr_pfpc_weights_state_filename =
+          data_out_path + "/" +
+          get_file_basename(curr_pfpc_weights_state_filename) + "_TRIAL_" +
+          std::to_string(trial) + BIN_EXT;
+    }
+    LOG_DEBUG(
+        "Saving parallel fiber to purkinje cell weight states to file...");
+    const uint8_t *pfpc_weights_states =
+        simCore->getMZoneList()[0]->exportPFPCWeightStates();
+    std::fstream pfpc_weights_states_file_buf(
+        curr_pfpc_weights_state_filename.c_str(),
+        std::ios::out | std::ios::binary);
+    rawBytesRW((char *)pfpc_weights_states, num_gr * sizeof(const uint8_t),
+               false, pfpc_weights_states_file_buf);
+    pfpc_weights_states_file_buf.close();
+  }
+}
+
 void Control::create_out_sim_filename() {
   if (data_out_dir_created) {
     out_sim_name = data_out_path + "/" + data_out_base_name + SIM_EXT;
@@ -616,6 +651,17 @@ void Control::create_weights_filenames(
           data_out_path + "/" + data_out_base_name + WEIGHTS_EXT[1];
       mfnc_weights_filenames_created = true; // only useful so far for gui...
     }
+  }
+}
+
+// NOTE: this function expects to be called after set_plasticity_modes!
+void Control::create_pfpc_weights_states_filenames(
+    std::map<std::string, bool> &weights_map) {
+  if ((pf_pc_plast == ABBOTT_CASCADE || pf_pc_plast == MAUK_CASCADE) &&
+      (weights_map["PFPC"] || use_gui)) {
+    pfpc_weights_states_file = data_out_path + "/" + data_out_base_name +
+                               "_PFPC_WEIGHTS_STATES" + BIN_EXT;
+    pfpc_weights_states_filenames_created = true; // for gui use ig ig fr fr
   }
 }
 
@@ -773,7 +819,8 @@ void Control::runSession(struct gui *gui) {
 
       simCore->updateMFInput(mfAP);
       // this is the main simCore function which computes all cell pops' spikes
-      simCore->calcActivity(spillFrac, pf_pc_plast, mf_nc_plast);
+      simCore->calcActivity(spillFrac, pf_pc_plast, mf_nc_plast,
+                            use_pc_compartment);
 
       /* collect conductances used to check tuning */
       if (ts >= onsetCS && ts < onsetCS + csLength) {
@@ -834,6 +881,10 @@ void Control::runSession(struct gui *gui) {
     // save gr rasters into new file every trial
     save_gr_rasters_at_trial_to_file(trial);
     save_pfpc_weights_at_trial_to_file(trial);
+    /* feel free to uncomment this to get the weight states per trial */
+    // if (pf_pc_plast == ABBOTT_CASCADE || pf_pc_plast == MAUK_CASCADE) {
+    //   save_pfpc_weights_states_to_file(trial);
+    // }
     trial++;
   }
   trial--; // setting so that is valid for drawing go rasters after a sim
