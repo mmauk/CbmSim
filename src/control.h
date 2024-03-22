@@ -159,7 +159,7 @@ public:
   bool pfpc_weights_filenames_created = false;
   bool mfnc_weights_filenames_created = false;
   bool use_pfpc_weight_mask = false;
-
+  bool use_gr_act_from_poiss = false;
   bool con_arrs_filenames_created = false;
 
   enum sim_run_state run_state = NOT_IN_RUN;
@@ -223,6 +223,7 @@ public:
   enum plasticity mf_nc_plast = GRADED;
 
   /* input and output filenames */
+  std::string in_gr_psth_filename;
   std::string data_out_path = "";
   std::string data_out_base_name = "";
 
@@ -290,7 +291,6 @@ public:
    *  simulation file.
    */
   void init_sim(std::string in_sim_filename);
-
   /**
    *  @brief reset cbm state and cbm core to initial values from
    *  in_sim_filename.

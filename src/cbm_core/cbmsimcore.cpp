@@ -7,13 +7,15 @@
 
 #include "cbmsimcore.h"
 #include "logger.h"
+#include "templatepoissoncells.h"
 
-//#define NO_ASYNC
-//#define DISP_CUDA_ERR
+// #define NO_ASYNC
+// #define DISP_CUDA_ERR
 
 CBMSimCore::CBMSimCore() {}
 
-CBMSimCore::CBMSimCore(CBMState *state, int gpuIndStart, int numGPUP2) {
+CBMSimCore::CBMSimCore(CBMState *state, std::string in_gr_psth_filename,
+                       int gpuIndStart, int numGPUP2) {
   CRandomSFMT0 randGen(time(0));
   int *mzoneRSeed = new int[state->getNumZones()];
 
@@ -21,18 +23,23 @@ CBMSimCore::CBMSimCore(CBMState *state, int gpuIndStart, int numGPUP2) {
     mzoneRSeed[i] = randGen.IRandom(0, INT_MAX);
   }
 
-  construct(state, mzoneRSeed, gpuIndStart, numGPUP2);
+  construct(state, mzoneRSeed, gpuIndStart, numGPUP2, in_gr_psth_filename);
 
   delete[] mzoneRSeed;
 }
 
 CBMSimCore::~CBMSimCore() {
-  for (int i = 0; i < numZones; i++) {
-    delete zones[i];
-  }
 
-  delete[] zones;
-  delete inputNet;
+  if (grs)
+    delete grs;
+  for (int i = 0; i < numZones; i++) {
+    if (zones[i])
+      delete zones[i];
+  }
+  if (zones)
+    delete[] zones;
+  if (inputNet)
+    delete inputNet;
 
   for (int i = 0; i < numGPUs; i++) {
     // How could gpuIndStart ever not be 0,
@@ -44,20 +51,20 @@ CBMSimCore::~CBMSimCore() {
     }
     delete[] streams[i];
   }
-
   delete[] streams;
 }
 
-void CBMSimCore::writeToState() {
-  inputNet->writeToState();
+void CBMSimCore::writeToState(bool use_gr_act_from_poiss) {
+  if (!use_gr_act_from_poiss)
+    inputNet->writeToState();
 
   for (int i = 0; i < numZones; i++) {
     zones[i]->writeToState();
   }
 }
 
-void CBMSimCore::writeState(std::fstream &outfile) {
-  writeToState();
+void CBMSimCore::writeState(std::fstream &outfile, bool use_gr_act_from_poiss) {
+  writeToState(use_gr_act_from_poiss);
   simState->writeState(outfile); // using internal cp
 }
 
@@ -109,6 +116,42 @@ void CBMSimCore::syncCUDA(std::string title) {
     LOG_TRACE("sync point  %s, switching to gpu %d", title.c_str(), i);
     LOG_TRACE("%s", cudaGetErrorString(error));
 #endif
+  }
+}
+
+void CBMSimCore::calcActivityGRPoiss(enum plasticity pf_pc_plast, uint32_t ts) {
+  syncCUDA("1");
+  grs->calcGRPoissActivity(ts, streams, 5);
+  if (pf_pc_plast == GRADED) {
+    for (int i = 0; i < numZones; i++) {
+      zones[i]->runPFPCPlastCUDA(streams, 1, ts);
+    }
+  }
+
+  for (int i = 0; i < numZones; i++) {
+    zones[i]->runPFPCOutCUDA(streams, i + 2);
+    zones[i]->runPFPCSumCUDA(streams, 1);
+    zones[i]->cpyPFPCSumCUDA(streams, i + 2);
+
+    zones[i]->runUpdatePFBCSCOutCUDA(
+        streams, i + 4); // adding i might break things in future
+    zones[i]->cpyPFBCSumGPUtoHostCUDA(streams, 5);
+    zones[i]->cpyPFSCSumGPUtoHostCUDA(streams, 3);
+    zones[i]->runSumPFBCCUDA(streams, 2);
+    zones[i]->runSumPFSCCUDA(streams, 3);
+
+    zones[i]->calcSCActivities();
+    zones[i]->calcBCActivities();
+    zones[i]->updateBCPCOut();
+    zones[i]->updateSCPCOut();
+
+    zones[i]->calcPCActivities();
+    zones[i]->updatePCOut();
+
+    zones[i]->calcIOActivities();
+    zones[i]->updateIOOut();
+
+    // no nc bcuz no MF :crying_emoji:
   }
 }
 
@@ -259,12 +302,16 @@ void CBMSimCore::updateErrDrive(unsigned int zoneN, float errDriveRelative) {
   zones[zoneN]->setErrDrive(errDriveRelative);
 }
 
+TemplatePoissonCells *CBMSimCore::getPoissGrs() {
+  return (TemplatePoissonCells *)grs;
+}
+
 InNet *CBMSimCore::getInputNet() { return (InNet *)inputNet; }
 
 MZone **CBMSimCore::getMZoneList() { return (MZone **)zones; }
 
 void CBMSimCore::construct(CBMState *state, int *mzoneRSeed, int gpuIndStart,
-                           int numGPUP2) {
+                           int numGPUP2, std::string in_gr_psth_filename) {
   int maxNumGPUs;
 
   numZones = state->getNumZones();
@@ -294,19 +341,36 @@ void CBMSimCore::construct(CBMState *state, int *mzoneRSeed, int gpuIndStart,
   initCUDAStreams();
   LOG_DEBUG("Finished initialzing cuda streams.");
 
-  // NOTE: inputNet has internal cp, no need to pass to constructor
-  inputNet =
-      new InNet(state->getInnetConStateInternal(),
-                state->getInnetActStateInternal(), this->gpuIndStart, numGPUs);
+  if (!in_gr_psth_filename.empty()) {
+    LOG_DEBUG("Initializing template grs...");
+    std::fstream gr_psth_file_buf(in_gr_psth_filename.c_str(),
+                                  std::ios::in | std::ios::binary);
+    grs = new TemplatePoissonCells(numGPUs, gr_psth_file_buf, streams);
+    LOG_DEBUG("Finished initialzing template grs.");
+    zones = new MZone *[numZones];
+    for (int i = 0; i < numZones; i++) {
+      zones[i] = new MZone(state->getMZoneConStateInternal(i),
+                           state->getMZoneActStateInternal(i), mzoneRSeed[i],
+                           grs->get_ap_buf_gr_gpu(), grs->get_ap_hist_gr_gpu(),
+                           this->gpuIndStart, numGPUs);
+    }
+    gr_psth_file_buf.close();
+  } else {
+    // NOTE: inputNet has internal cp, no need to pass to constructor
+    inputNet = new InNet(state->getInnetConStateInternal(),
+                         state->getInnetActStateInternal(), this->gpuIndStart,
+                         numGPUs);
 
-  zones = new MZone *[numZones];
+    zones = new MZone *[numZones];
 
-  for (int i = 0; i < numZones; i++) {
-    // same thing for zones as with innet
-    zones[i] = new MZone(
-        state->getMZoneConStateInternal(i), state->getMZoneActStateInternal(i),
-        mzoneRSeed[i], inputNet->getApBufGRGPUPointer(),
-        inputNet->getHistGRGPUPointer(), this->gpuIndStart, numGPUs);
+    for (int i = 0; i < numZones; i++) {
+      // same thing for zones as with innet
+      zones[i] = new MZone(state->getMZoneConStateInternal(i),
+                           state->getMZoneActStateInternal(i), mzoneRSeed[i],
+                           inputNet->getApBufGRGPUPointer(),
+                           inputNet->getHistGRGPUPointer(), this->gpuIndStart,
+                           numGPUs);
+    }
   }
   LOG_DEBUG("Mzone construction complete");
   initAuxVars();

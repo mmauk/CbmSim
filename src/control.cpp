@@ -55,12 +55,16 @@ Control::Control(parsed_commandline &p_cl) {
     }
     data_out_dir_created = true;
     // create various output filenames once session is initialized
-    create_out_sim_filename();                    // default
-    create_out_info_filename();                   // default
-    create_raster_filenames(p_cl.raster_files);   // optional
-    create_psth_filenames(p_cl.psth_files);       // optional
-    create_weights_filenames(p_cl.weights_files); // optional
+    create_out_sim_filename();                       // default
+    create_out_info_filename();                      // default
+    create_raster_filenames(p_cl.raster_files);      // optional
+    create_psth_filenames(p_cl.psth_files);          // optional
+    create_weights_filenames(p_cl.weights_files);    // optional
     create_con_arrs_filenames(p_cl.conn_arrs_files); // optional
+    if (!p_cl.gr_psth_file.empty()) {
+      in_gr_psth_filename = p_cl.gr_psth_file;
+      use_gr_act_from_poiss = true;
+    }
     init_sim(p_cl.input_sim_file);
     if (!p_cl.altered_weights_file.empty()) {
       load_pfpc_weights_from_file(p_cl.altered_weights_file); // optional
@@ -175,16 +179,18 @@ void Control::init_sim(std::string in_sim_filename) {
   std::fstream sim_file_buf(in_sim_filename.c_str(),
                             std::ios::in | std::ios::binary);
   read_con_params(sim_file_buf);
-  populate_act_params(s_file); 
+  populate_act_params(s_file);
   simState = new CBMState(numMZones, sim_file_buf);
-  simCore = new CBMSimCore(simState, gpuIndex, gpuP2);
-  mfs = new ECMFPopulation(num_mf, mfRandSeed, CSTonicMFFrac, CSPhasicMFFrac,
-                           contextMFFrac, nucCollFrac, bgFreqMin, csbgFreqMin,
-                           contextFreqMin, tonicFreqMin, phasicFreqMin,
-                           bgFreqMax, csbgFreqMax, contextFreqMax, tonicFreqMax,
-                           phasicFreqMax, collaterals_off, fracImport, secondCS,
-                           fracOverlap, numMZones);
-  simCore->setTrueMFs(mfs->getCollateralIds());
+  simCore = new CBMSimCore(simState, in_gr_psth_filename, gpuIndex, gpuP2);
+  if (!use_gr_act_from_poiss) {
+    mfs = new ECMFPopulation(num_mf, mfRandSeed, CSTonicMFFrac, CSPhasicMFFrac,
+                             contextMFFrac, nucCollFrac, bgFreqMin, csbgFreqMin,
+                             contextFreqMin, tonicFreqMin, phasicFreqMin,
+                             bgFreqMax, csbgFreqMax, contextFreqMax,
+                             tonicFreqMax, phasicFreqMax, collaterals_off,
+                             fracImport, secondCS, fracOverlap, numMZones);
+    simCore->setTrueMFs(mfs->getCollateralIds());
+  }
   initialize_rast_cell_nums();
   initialize_cell_spikes();
   initialize_raster_save_funcs();
@@ -225,7 +231,7 @@ void Control::save_sim_to_file() {
     if (!simCore)
       simState->writeState(outSimFileBuffer);
     else
-      simCore->writeState(outSimFileBuffer);
+      simCore->writeState(outSimFileBuffer, use_gr_act_from_poiss);
     outSimFileBuffer.close();
   }
 }
@@ -667,11 +673,13 @@ void Control::initialize_rast_cell_nums() {
 }
 
 void Control::initialize_cell_spikes() {
-  cell_spikes[MF] = mfs->getAPs();
-  // NOTE: incurs a call to cudaMemcpy from device to host, but initializing so
-  // is not repeatedly called.
-  cell_spikes[GR] = simCore->getInputNet()->exportAPGR();
-  cell_spikes[GO] = simCore->getInputNet()->exportAPGO();
+  if (use_gr_act_from_poiss) {
+    cell_spikes[GR] = simCore->getPoissGrs()->getGRAPs();
+  } else {
+    cell_spikes[MF] = mfs->getAPs();
+    cell_spikes[GR] = simCore->getInputNet()->exportAPGR();
+    cell_spikes[GO] = simCore->getInputNet()->exportAPGO();
+  }
   cell_spikes[BC] = simCore->getMZoneList()[0]->exportAPBC();
   cell_spikes[SC] = simCore->getMZoneList()[0]->exportAPSC();
   cell_spikes[PC] = simCore->getMZoneList()[0]->exportAPPC();
@@ -772,7 +780,8 @@ void Control::runSession(struct gui *gui) {
   // trial loop
   while (trial < td.num_trials && run_state != NOT_IN_RUN) {
     std::string currTrialName = td.trial_names[trial];
-    std::string nextTrialName = (trial < td.num_trials-1) ? td.trial_names[trial+1] : "";
+    std::string nextTrialName =
+        (trial < td.num_trials - 1) ? td.trial_names[trial + 1] : "";
     uint32_t useCS = td.use_css[trial];
     uint32_t onsetCS = pre_collection_ts + td.cs_onsets[trial];
     uint32_t csLength = td.cs_lens[trial];
@@ -794,22 +803,26 @@ void Control::runSession(struct gui *gui) {
     LOG_INFO("Trial number: %d", trial + 1);
     start = omp_get_wtime();
     for (uint32_t ts = 0; ts < trialTime; ts++) {
-      if (useUS == 1 && ts == onsetUS) // deliver the US
-      {
-        simCore->updateErrDrive(0, 0.3);
-      }
-      // deliver cs if specified at cmdline and within cs duration
-      if (useCS && ts >= onsetCS && ts < onsetCS + csLength) {
-        mfAP = mfs->calcPoissActivity(TONIC_CS_A, simCore->getMZoneList());
-      } else { // background mf activity
-        mfAP = mfs->calcPoissActivity(BKGD, simCore->getMZoneList());
-      }
+      if (use_gr_act_from_poiss) {
+        simCore->calcActivityGRPoiss(pf_pc_plast, ts);
+      } else {
+        if (useUS == 1 && ts == onsetUS) // deliver the US
+        {
+          simCore->updateErrDrive(0, 0.3);
+        }
+        // deliver cs if specified at cmdline and within cs duration
+        if (useCS && ts >= onsetCS && ts < onsetCS + csLength) {
+          mfAP = mfs->calcPoissActivity(TONIC_CS_A, simCore->getMZoneList());
+        } else { // background mf activity
+          mfAP = mfs->calcPoissActivity(BKGD, simCore->getMZoneList());
+        }
 
-      simCore->updateMFInput(mfAP);
-      // this is the main simCore function which computes all cell pops' spikes
-      simCore->calcActivity(spillFrac, pf_pc_plast, mf_nc_plast,
-                            use_pfpc_weight_mask);
-
+        simCore->updateMFInput(mfAP);
+        // this is the main simCore function which computes all cell pops'
+        // spikes
+        simCore->calcActivity(spillFrac, pf_pc_plast, mf_nc_plast,
+                              use_pfpc_weight_mask);
+      }
       /* collect conductances used to check tuning */
       // if (ts >= onsetCS && ts < onsetCS + csLength) {
       //   mfgoG = simCore->getInputNet()->exportgSum_MFGO();
@@ -869,41 +882,40 @@ void Control::runSession(struct gui *gui) {
       }
       reset_spike_sums();
     }
-    if (data_out_dir_created) {
-      if (currTrialName != "probe_trial" && nextTrialName == "probe_trial") {
-        std::string weight_steps_ltp_fname =
-            data_out_path + "/" + data_out_base_name + "_TRIAL_" +
-            std::to_string(trial) + "_LTP.pfpcpe";
-        LOG_DEBUG(
-            "Saving pfpc ltp plasticity events array to file at trial %d...",
-            trial);
-        std::fstream out_weight_steps_ltp_buf(weight_steps_ltp_fname.c_str(),
-                                              std::ios::out | std::ios::binary);
-        simCore->getMZoneList()[0]->save_weight_steps_ltp_to_file(
-            out_weight_steps_ltp_buf);
-        out_weight_steps_ltp_buf.close();
-
-        std::string weight_steps_ltd_fname =
-            data_out_path + "/" + data_out_base_name + "_TRIAL_" +
-            std::to_string(trial) + "_LTD.pfpcpe";
-        LOG_DEBUG(
-            "Saving pfpc ltd plasticity events array to file at trial %d...",
-            trial);
-        std::fstream out_weight_steps_ltd_buf(weight_steps_ltd_fname.c_str(),
-                                              std::ios::out | std::ios::binary);
-        simCore->getMZoneList()[0]->save_weight_steps_ltd_to_file(
-            out_weight_steps_ltd_buf);
-        out_weight_steps_ltd_buf.close();
-      }
-      if (currTrialName == "probe_trial" && nextTrialName != "probe_trial") {
-        simCore->getMZoneList()[0]->reset_weight_steps_ltp();
-        LOG_DEBUG("Resetting PFPC synapse LTP steps at %d...", trial);
-        simCore->getMZoneList()[0]->reset_weight_steps_ltd();
-        LOG_DEBUG("Resetting PFPC synapse LTD steps at %d...", trial);
-      }
-    }
-    // save gr rasters into new file every trial
-    // save_gr_raster();
+    //if (data_out_dir_created) {
+    //  if (currTrialName != "probe_trial" && nextTrialName == "probe_trial") {
+    //    save_pfpc_weights_at_trial_to_file(trial);
+    //    std::string weight_steps_ltp_fname =
+    //        data_out_path + "/" + data_out_base_name + "_TRIAL_" +
+    //        std::to_string(trial) + "_LTP.pfpcpe";
+    //    LOG_DEBUG(
+    //        "Saving pfpc ltp plasticity events array to file at trial %d...",
+    //        trial);
+    //    std::fstream out_weight_steps_ltp_buf(weight_steps_ltp_fname.c_str(),
+    //                                          std::ios::out | std::ios::binary);
+    //    simCore->getMZoneList()[0]->save_weight_steps_ltp_to_file(
+    //        out_weight_steps_ltp_buf);
+    //    out_weight_steps_ltp_buf.close();
+    //
+    //    std::string weight_steps_ltd_fname =
+    //        data_out_path + "/" + data_out_base_name + "_TRIAL_" +
+    //        std::to_string(trial) + "_LTD.pfpcpe";
+    //    LOG_DEBUG(
+    //        "Saving pfpc ltd plasticity events array to file at trial %d...",
+    //        trial);
+    //    std::fstream out_weight_steps_ltd_buf(weight_steps_ltd_fname.c_str(),
+    //                                          std::ios::out | std::ios::binary);
+    //    simCore->getMZoneList()[0]->save_weight_steps_ltd_to_file(
+    //        out_weight_steps_ltd_buf);
+    //    out_weight_steps_ltd_buf.close();
+    //  }
+    //  if (currTrialName == "probe_trial" && nextTrialName != "probe_trial") {
+    //    simCore->getMZoneList()[0]->reset_weight_steps_ltp();
+    //    LOG_DEBUG("Resetting PFPC synapse LTP steps at %d...", trial);
+    //    simCore->getMZoneList()[0]->reset_weight_steps_ltd();
+    //    LOG_DEBUG("Resetting PFPC synapse LTD steps at %d...", trial);
+    //  }
+    //}
     trial++;
   }
   if (run_state == NOT_IN_RUN)
@@ -916,19 +928,19 @@ void Control::runSession(struct gui *gui) {
   if (!use_gui) { // go ahead and save everything if we're not in the gui.
     save_rasters();
     save_psths();
-    //if (data_out_dir_created) {
-    //  std::string weight_steps_ltp_fname =
-    //      data_out_path + "/" + data_out_base_name + "_TRIAL_" +
-    //      std::to_string(trial) + "_LTP.pfpcpe";
-    //  LOG_DEBUG(
-    //      "Saving pfpc ltp plasticity events array to file at trial %d...",
-    //      trial);
-    //  std::fstream out_weight_steps_ltp_buf(weight_steps_ltp_fname.c_str(),
-    //                                        std::ios::out | std::ios::binary);
-    //  simCore->getMZoneList()[0]->save_weight_steps_ltp_to_file(
-    //      out_weight_steps_ltp_buf);
-    //  out_weight_steps_ltp_buf.close();
-
+    // if (data_out_dir_created) {
+    //   std::string weight_steps_ltp_fname =
+    //       data_out_path + "/" + data_out_base_name + "_TRIAL_" +
+    //       std::to_string(trial) + "_LTP.pfpcpe";
+    //   LOG_DEBUG(
+    //       "Saving pfpc ltp plasticity events array to file at trial %d...",
+    //       trial);
+    //   std::fstream out_weight_steps_ltp_buf(weight_steps_ltp_fname.c_str(),
+    //                                         std::ios::out |
+    //                                         std::ios::binary);
+    //   simCore->getMZoneList()[0]->save_weight_steps_ltp_to_file(
+    //       out_weight_steps_ltp_buf);
+    //   out_weight_steps_ltp_buf.close();
     //  std::string weight_steps_ltd_fname =
     //      data_out_path + "/" + data_out_base_name + "_TRIAL_" +
     //      std::to_string(trial) + "_LTD.pfpcpe";
@@ -1098,18 +1110,22 @@ void Control::update_spike_sums(int tts, float onset_cs, float offset_cs) {
   // update cs spikes
   if (tts >= onset_cs && tts < offset_cs) {
     for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
-      for (uint32_t j = 0; j < rast_cell_nums[i]; j++) {
-        spike_sums[i].cs_spike_sum += cell_spikes[i][j];
-        spike_sums[i].cs_spike_counter[j] += cell_spikes[i][j];
+      if (cell_spikes[i]) {
+        for (uint32_t j = 0; j < rast_cell_nums[i]; j++) {
+          spike_sums[i].cs_spike_sum += cell_spikes[i][j];
+          spike_sums[i].cs_spike_counter[j] += cell_spikes[i][j];
+        }
       }
     }
   }
   // update non-cs spikes
   else if (tts < onset_cs) {
     for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
-      for (uint32_t j = 0; j < rast_cell_nums[i]; j++) {
-        spike_sums[i].non_cs_spike_sum += cell_spikes[i][j];
-        spike_sums[i].non_cs_spike_counter[j] += cell_spikes[i][j];
+      if (cell_spikes[i]) {
+        for (uint32_t j = 0; j < rast_cell_nums[i]; j++) {
+          spike_sums[i].non_cs_spike_sum += cell_spikes[i][j];
+          spike_sums[i].non_cs_spike_counter[j] += cell_spikes[i][j];
+        }
       }
     }
   }
@@ -1161,17 +1177,23 @@ void Control::countGOSpikes(int *goSpkCounter) {
 
 void Control::fill_rasters(uint32_t raster_counter, uint32_t psth_counter) {
   for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
-    uint32_t temp_counter = raster_counter;
-    if (!rf_names[i].empty() || use_gui) {
-      /* GR spikes are only spikes not saved on host every time step:
-       * InNet::exportAPGR makes cudaMemcpy call before returning pointer to mem
-       * address */
-      if (CELL_IDS[i] == "GR") {
-        cell_spikes[i] = simCore->getInputNet()->exportAPGR();
-        temp_counter = psth_counter;
-      }
-      for (uint32_t j = 0; j < rast_cell_nums[i]; j++) {
-        rasters[i][temp_counter][j] = cell_spikes[i][j];
+    if (cell_spikes[i]) {
+      uint32_t temp_counter = raster_counter;
+      if (!rf_names[i].empty() || use_gui) {
+        /* GR spikes are only spikes not saved on host every time step:
+         * InNet::exportAPGR makes cudaMemcpy call before returning pointer to
+         * mem address */
+        if (CELL_IDS[i] == "GR") {
+          if (use_gr_act_from_poiss) {
+            cell_spikes[i] = simCore->getPoissGrs()->getGRAPs();
+          } else {
+            cell_spikes[i] = simCore->getInputNet()->exportAPGR();
+          }
+          temp_counter = psth_counter;
+        }
+        for (uint32_t j = 0; j < rast_cell_nums[i]; j++) {
+          rasters[i][temp_counter][j] = cell_spikes[i][j];
+        }
       }
     }
   }
@@ -1194,15 +1216,21 @@ void Control::fill_rasters(uint32_t raster_counter, uint32_t psth_counter) {
 
 void Control::fill_psths(uint32_t psth_counter) {
   for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
-    if (!pf_names[i].empty() || use_gui) {
-      /* GR spikes are only spikes not saved on host every time step:
-       * InNet::exportAPGR makes cudaMemcpy call before returning pointer to mem
-       * address */
-      if (CELL_IDS[i] == "GR") {
-        cell_spikes[i] = simCore->getInputNet()->exportAPGR();
-      }
-      for (uint32_t j = 0; j < rast_cell_nums[i]; j++) {
-        psths[i][psth_counter][j] += cell_spikes[i][j];
+    if (cell_spikes[i]) {
+      if (!pf_names[i].empty() || use_gui) {
+        /* GR spikes are only spikes not saved on host every time step:
+         * InNet::exportAPGR makes cudaMemcpy call before returning pointer to
+         * mem address */
+        if (CELL_IDS[i] == "GR") {
+          if (use_gr_act_from_poiss) {
+            cell_spikes[i] = simCore->getPoissGrs()->getGRAPs();
+          } else {
+            cell_spikes[i] = simCore->getInputNet()->exportAPGR();
+          }
+          for (uint32_t j = 0; j < rast_cell_nums[i]; j++) {
+            psths[i][psth_counter][j] += cell_spikes[i][j];
+          }
+        }
       }
     }
   }

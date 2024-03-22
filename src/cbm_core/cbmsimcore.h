@@ -25,15 +25,18 @@
 #include "innet.h"
 #include "mzone.h"
 #include "sfmt.h"
+#include "templatepoissoncells.h"
 
 enum plasticity { OFF, GRADED, BINARY, CASCADE };
 
 class CBMSimCore {
 public:
   CBMSimCore();
-  CBMSimCore(CBMState *state, int gpuIndStart = -1, int numGPUP2 = -1);
+  CBMSimCore(CBMState *state, std::string in_gr_psth_filename,
+             int gpuIndStart = -1, int numGPUP2 = -1);
   ~CBMSimCore();
 
+  void calcActivityGRPoiss(enum plasticity pf_pc_plast, uint32_t ts);
   void calcActivity(float spillFrac, enum plasticity pf_pc_plast,
                     enum plasticity mf_nc_plast, bool use_weight_mask = false);
   void updateMFInput(const uint8_t *mfIn);
@@ -41,9 +44,10 @@ public:
   void updateGRStim(int startGRStim, int numGRStim);
   void updateErrDrive(unsigned int zoneN, float errDriveRelative);
 
-  void writeToState();
-  void writeState(std::fstream &outfile);
+  void writeToState(bool use_gr_act_from_poiss = false);
+  void writeState(std::fstream &outfile, bool use_gr_act_from_poiss = false);
 
+  TemplatePoissonCells *getPoissGrs();
   InNet *getInputNet();
   MZone **getMZoneList();
 
@@ -53,12 +57,13 @@ protected:
 
   void syncCUDA(std::string title);
 
-  CBMState *simState;
+  TemplatePoissonCells *grs = NULL;
+  CBMState *simState = NULL;
 
   uint32_t numZones;
 
-  InNet *inputNet;
-  MZone **zones;
+  InNet *inputNet = NULL;
+  MZone **zones = NULL;
 
   cudaStream_t **streams;
   int gpuIndStart;
@@ -72,7 +77,7 @@ private:
   uint32_t curTime;
 
   void construct(CBMState *state, int *mzoneRSeed, int gpuIndStart,
-                 int numGPUP2);
+                 int numGPUP2, std::string in_gr_psth_filename);
 };
 
 #endif /* CBMSIMCORE_H_ */

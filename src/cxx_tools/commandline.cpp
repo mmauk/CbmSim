@@ -33,13 +33,12 @@ const std::string SYN_CONS_IDS[NUM_SYN_CONS] = {"MFGR", "GRGO", "MFGO", "GOGO",
 /*
  * available commandline flags which take no argument
  */
-const std::vector<std::string>
-    command_line_single_opts{
-        "--pfpc-off",
-        "--mfnc-off",
-        "--binary",
-        "--cascade",
-    };
+const std::vector<std::string> command_line_single_opts{
+    "--pfpc-off",
+    "--mfnc-off",
+    "--binary",
+    "--cascade",
+};
 
 /*
  * available commandline flags which take an argument. Each pair consists of the
@@ -66,8 +65,9 @@ const std::vector<std::pair<std::string, std::string>> command_line_pair_opts{
     {"-a", "--altered-weights"}, // used to specify what file to use to
                                  // overwrite weights
     {"-m", "--weight-mask"},     // array of length num_gr with entries 0 or 1
-    {"-c", "--con-arrs"} // used to specify what synaptic connectivity arrays
-                         // to collect
+    {"-c", "--con-arrs"},  // used to specify what synaptic connectivity arrays
+                           // to collect
+    {"-g", "--gr-in-psth"} // the input gr psth file for poisson gr runs
 };
 
 /*
@@ -374,15 +374,19 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl) {
         break;
       case 'a':
         p_cl.altered_weights_file = this_param;
+        break;
       case 'm':
         p_cl.weight_mask_file = this_param;
+        break;
       case 'c':
         fill_opt_map(p_cl.conn_arrs_files, this_opt, this_param);
+        break;
+      case 'g':
+        p_cl.gr_psth_file = this_param;
+        break;
+      default:
+        break;
       }
-      break;
-    case 0:
-      continue;
-      break;
     }
   }
 }
@@ -394,9 +398,10 @@ bool p_cmdline_is_empty(parsed_commandline &p_cl) {
          p_cl.build_file.empty() && p_cl.session_file.empty() &&
          p_cl.input_sim_file.empty() && p_cl.output_sim_file.empty() &&
          p_cl.output_basename.empty() && p_cl.pfpc_plasticity.empty() &&
-         p_cl.mfnc_plasticity.empty() && p_cl.raster_files.empty() &&
-         p_cl.psth_files.empty() && p_cl.weights_files.empty() &&
-         p_cl.conn_arrs_files.empty();
+         p_cl.mfnc_plasticity.empty() && p_cl.altered_weights_file.empty() &&
+         p_cl.weight_mask_file.empty() && p_cl.gr_psth_file.empty() &&
+         p_cl.raster_files.empty() && p_cl.psth_files.empty() &&
+         p_cl.weights_files.empty() && p_cl.conn_arrs_files.empty();
 }
 
 /*
@@ -497,6 +502,18 @@ void validate_commandline(parsed_commandline &p_cl) {
         }
         p_cl.weight_mask_file = weight_mask_fullpath;
       }
+      if (!p_cl.gr_psth_file.empty()) {
+        std::string gr_psth_fullpath;
+        // NOTE: for now, assume that gr psth file will be in the
+        // data/outputs folder
+        if (!file_exists(OUTPUT_DATA_PATH, p_cl.gr_psth_file,
+                         gr_psth_fullpath)) {
+          LOG_FATAL("Could not find input gr psth file '%s'. Exiting...",
+                    p_cl.gr_psth_file.c_str());
+          exit(11);
+        }
+        p_cl.gr_psth_file = gr_psth_fullpath;
+      }
       if (p_cl.output_basename.empty()) {
         LOG_FATAL("You must specify an output basename. Exiting...");
         exit(7);
@@ -584,6 +601,9 @@ void cp_parsed_commandline(parsed_commandline &from_p_cl,
   to_p_cl.output_basename = from_p_cl.output_basename;
   to_p_cl.pfpc_plasticity = from_p_cl.pfpc_plasticity;
   to_p_cl.mfnc_plasticity = from_p_cl.mfnc_plasticity;
+  to_p_cl.altered_weights_file = from_p_cl.altered_weights_file;
+  to_p_cl.weight_mask_file = from_p_cl.weight_mask_file;
+  to_p_cl.gr_psth_file = from_p_cl.gr_psth_file;
 
   to_p_cl.raster_files = from_p_cl.raster_files;
   to_p_cl.psth_files = from_p_cl.psth_files;
@@ -602,6 +622,10 @@ std::string parsed_commandline_to_str(parsed_commandline &p_cl) {
   p_cl_buf << "{ 'output_basename', '" << p_cl.output_basename << "' }\n";
   p_cl_buf << "{ 'pfpc_plasticity', '" << p_cl.pfpc_plasticity << "' }\n";
   p_cl_buf << "{ 'mfnc_plasticity', '" << p_cl.mfnc_plasticity << "' }\n";
+  p_cl_buf << "{ 'altered_weights_file', '" << p_cl.altered_weights_file
+           << "' }\n";
+  p_cl_buf << "{ 'weight_mask_file', '" << p_cl.weight_mask_file << "' }\n";
+  p_cl_buf << "{ 'gr_psth_file', '" << p_cl.gr_psth_file << "' }\n";
   p_cl_buf << "{ 'raster_files' :\n";
   for (auto pair : p_cl.raster_files) {
     p_cl_buf << "{ '" << pair.first << "', '" << pair.second << "' }\n";

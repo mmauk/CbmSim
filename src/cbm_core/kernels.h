@@ -14,11 +14,32 @@
 
 #include <cuda.h>
 #include <cuda_runtime.h>
+#include <curand_kernel.h>
 #include <iostream>
 
 #include <cstdint>
 
 void callTestKernel(cudaStream_t &st, float *a, float *b, float *c);
+
+template <typename randState, typename blockDims, typename threadDims>
+void callCurandSetupKernel(cudaStream_t &st, randState *state, uint32_t seed,
+                           blockDims &block_dim, threadDims &thread_dim);
+
+template <typename randState>
+void callCurandGenerateUniformKernel(cudaStream_t &st, randState *state,
+                                     uint32_t block_dim, uint32_t thread_dim,
+                                     float *randoms, size_t rand_offset);
+
+// NOTE: this is the poisson rand gen grs
+void callGRPoissActKernel(cudaStream_t &st, uint32_t numBlocks,
+                          uint32_t numGRPerBlock, float *threshGPU,
+                          uint8_t *apGPU, uint32_t *apBufGPU,
+                          uint64_t *apHistGPU, float *randoms,
+                          float *gr_templateGPU, size_t gr_template_pitchGPU,
+                          size_t num_gr_old, size_t ts, float s_per_ts,
+                          size_t pre_cs_ms, size_t isi, size_t num_out_ts,
+                          uint32_t ap_buf_hist_mask, float threshBase,
+                          float threshMax, float threshInc);
 
 void callGRActKernel(cudaStream_t &st, unsigned int numBlocks,
                      unsigned int numGRPerBlock, float *vGPU, float *gKCaGPU,

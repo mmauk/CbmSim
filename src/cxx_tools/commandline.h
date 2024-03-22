@@ -38,6 +38,7 @@ typedef struct {
   std::string mfnc_plasticity;
   std::string altered_weights_file;
   std::string weight_mask_file;
+  std::string gr_psth_file;
   std::map<std::string, bool> raster_files;
   std::map<std::string, bool> psth_files;
   std::map<std::string, bool> weights_files;
