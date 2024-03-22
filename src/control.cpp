@@ -882,6 +882,7 @@ void Control::runSession(struct gui *gui) {
       }
       reset_spike_sums();
     }
+    save_gr_rasters_at_trial_to_file(trial);
     //if (data_out_dir_created) {
     //  if (currTrialName != "probe_trial" && nextTrialName == "probe_trial") {
     //    save_pfpc_weights_at_trial_to_file(trial);
