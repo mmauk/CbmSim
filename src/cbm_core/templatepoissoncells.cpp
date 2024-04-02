@@ -15,12 +15,14 @@
 #include "templatepoissoncells.h"
 
 TemplatePoissonCells::TemplatePoissonCells(uint32_t num_gpus,
+                                           uint32_t gpuIndStart,
                                            std::fstream &psth_file_buf,
                                            cudaStream_t **streams) {
   // make this time(NULL) or something for random runs
   randSeedGen = new CRandomSFMT0(0);
 
   numGPUs = num_gpus;
+  this->gpuIndStart = gpuIndStart;
   nThreads = 1;
   // bad: should read this in from file so you do not have
   // to change in two places for every isi.

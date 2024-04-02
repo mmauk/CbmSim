@@ -1120,7 +1120,7 @@ void Control::update_spike_sums(int tts, float onset_cs, float offset_cs) {
     }
   }
   // update non-cs spikes
-  else if (tts < onset_cs) {
+  else if (tts < onset_cs || tts >= offset_cs) {
     for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
       if (cell_spikes[i]) {
         for (uint32_t j = 0; j < rast_cell_nums[i]; j++) {

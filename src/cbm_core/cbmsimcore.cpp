@@ -345,7 +345,7 @@ void CBMSimCore::construct(CBMState *state, int *mzoneRSeed, int gpuIndStart,
     LOG_DEBUG("Initializing template grs...");
     std::fstream gr_psth_file_buf(in_gr_psth_filename.c_str(),
                                   std::ios::in | std::ios::binary);
-    grs = new TemplatePoissonCells(numGPUs, gr_psth_file_buf, streams);
+    grs = new TemplatePoissonCells(numGPUs, this->gpuIndStart, gr_psth_file_buf, streams);
     LOG_DEBUG("Finished initialzing template grs.");
     zones = new MZone *[numZones];
     for (int i = 0; i < numZones; i++) {

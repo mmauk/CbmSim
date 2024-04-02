@@ -26,7 +26,7 @@
 class TemplatePoissonCells {
 public:
   TemplatePoissonCells();
-  TemplatePoissonCells(uint32_t num_gpus, std::fstream &psth_file_buf,
+  TemplatePoissonCells(uint32_t num_gpus, uint32_t gpuIndStart, std::fstream &psth_file_buf,
                        cudaStream_t **streams);
   ~TemplatePoissonCells();
 
