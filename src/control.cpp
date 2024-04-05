@@ -791,6 +791,8 @@ void Control::runSession(struct gui *gui) {
   trial = 0;
   raster_counter = 0;
   uint32_t forget_trial_counter = 0;
+  // go ahead and save at beginning of run to get copy of pre-forget weigths
+  save_pfpc_weights_at_trial_to_file(trial);
   // trial loop
   while (trial < td.num_trials && run_state != NOT_IN_RUN) {
     std::string currTrialName = td.trial_names[trial];
@@ -902,9 +904,9 @@ void Control::runSession(struct gui *gui) {
       reset_spike_sums();
     }
     save_gr_rasters_at_trial_to_file(trial);
-    //if (data_out_dir_created) {
-    //  if (currTrialName != "probe_trial" && nextTrialName == "probe_trial") {
-    //    save_pfpc_weights_at_trial_to_file(trial);
+    if (data_out_dir_created) {
+      if (currTrialName != "probe_trial" && nextTrialName == "probe_trial") {
+        save_pfpc_weights_at_trial_to_file(trial);
     //    std::string weight_steps_ltp_fname =
     //        data_out_path + "/" + data_out_base_name + "_TRIAL_" +
     //        std::to_string(trial) + "_LTP.pfpcpe";
@@ -934,8 +936,8 @@ void Control::runSession(struct gui *gui) {
     //    LOG_DEBUG("Resetting PFPC synapse LTP steps at %d...", trial);
     //    simCore->getMZoneList()[0]->reset_weight_steps_ltd();
     //    LOG_DEBUG("Resetting PFPC synapse LTD steps at %d...", trial);
-    //  }
-    //}
+      }
+    }
     trial++;
   }
   if (run_state == NOT_IN_RUN)
