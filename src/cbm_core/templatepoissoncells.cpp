@@ -315,7 +315,7 @@ void TemplatePoissonCells::initCURAND(cudaStream_t **streams) {
   grActRandNums = new float *[numGPUs];
 
   // we're just playing with some numbers rn
-  numGRPerRandBatch = 1048576;
+  numGRPerRandBatch = 524288;
   updateGRRandNumGRPerB = 512;
   updateGRRandNumBlocks = numGRPerRandBatch / updateGRRandNumGRPerB;
   dim3 updateGRRandGridDim(updateGRRandNumBlocks);

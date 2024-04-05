@@ -707,14 +707,22 @@ void Control::initialize_spike_sums() {
  */
 void Control::initialize_rasters() {
   uint32_t num_probe_trials = 0;
+  uint32_t num_forget_trials = 0;
   for (uint32_t i = 0; i < td.num_trials; i++) {
     if (td.trial_names[i] == "probe_trial")
       num_probe_trials++;
+    else if (td.trial_names[i] == "forget_trial")
+      num_forget_trials++;
   }
+
   for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
+    uint32_t row_size;
     if (!rf_names[i].empty() || use_gui) {
-      uint32_t row_size =
-          (CELL_IDS[i] == "GR") ? msMeasure : msMeasure * num_probe_trials;
+      if (CELL_IDS[i] == "IO") row_size = trialTime * num_forget_trials;
+      else {
+        row_size =
+            (CELL_IDS[i] == "GR") ? msMeasure : msMeasure * num_probe_trials;
+      }
       rasters[i] = allocate2DArray<uint8_t>(row_size, rast_cell_nums[i]);
     }
   }
@@ -742,18 +750,23 @@ void Control::initialize_psth_save_funcs() {
 
 void Control::initialize_raster_save_funcs() {
   uint32_t num_probe_trials = 0;
+  uint32_t num_forget_trials = 0;
   for (uint32_t i = 0; i < td.num_trials; i++) {
     if (td.trial_names[i] == "probe_trial")
       num_probe_trials++;
+    else if (td.trial_names[i] == "forget_trial")
+      num_forget_trials++;
   }
   for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
-    rast_save_funcs[i] = [this, i, num_probe_trials]() {
-      if (!rf_names[i].empty() && CELL_IDS[i] != "GR") {
-        uint32_t row_size = (CELL_IDS[i] == "GR")
-                                ? this->msMeasure
-                                : this->msMeasure * num_probe_trials;
-        LOG_DEBUG("Saving %s raster to file...", CELL_IDS[i].c_str());
-        write2DArray<uint8_t>(rf_names[i], this->rasters[i], row_size,
+    rast_save_funcs[i] = [this, i, num_probe_trials, num_forget_trials]() {
+      uint32_t row_size;
+      if (!this->rf_names[i].empty() || this->use_gui) {
+        if (CELL_IDS[i] == "IO") row_size = this->trialTime * num_forget_trials;
+        else {
+          row_size =
+              (CELL_IDS[i] == "GR") ? this->msMeasure : this->msMeasure * num_probe_trials;
+        }
+        write2DArray<uint8_t>(this->rf_names[i], this->rasters[i], row_size,
                               this->rast_cell_nums[i]);
       }
     };
@@ -777,6 +790,7 @@ void Control::runSession(struct gui *gui) {
     run_state = IN_RUN_NO_PAUSE;
   trial = 0;
   raster_counter = 0;
+  uint32_t forget_trial_counter = 0;
   // trial loop
   while (trial < td.num_trials && run_state != NOT_IN_RUN) {
     std::string currTrialName = td.trial_names[trial];
@@ -848,10 +862,15 @@ void Control::runSession(struct gui *gui) {
       // comment out for when collect every time step
       if (currTrialName == "probe_trial") {
         if (ts >= onsetCS - msPreCS && ts < onsetCS + csLength + msPostCS) {
-          fill_rasters(raster_counter, PSTHCounter);
-          fill_psths(PSTHCounter);
+          fill_rasters_no_io(raster_counter, PSTHCounter);
+          fill_psths_no_io(PSTHCounter);
           PSTHCounter++;
           raster_counter++;
+        }
+      } else if (currTrialName == "forget_trial") {
+        // collect the IOs at every time step
+        for (uint32_t j = 0; j < rast_cell_nums[IO]; j++) {
+          rasters[IO][forget_trial_counter * trialTime + ts][j] = cell_spikes[IO][j];
         }
       }
 
@@ -864,7 +883,7 @@ void Control::runSession(struct gui *gui) {
     }
     end = omp_get_wtime();
     LOG_INFO("'%s' took %0.2fs", currTrialName.c_str(), end - start);
-
+    if (currTrialName == "forget_trial") forget_trial_counter++;
     if (use_gui) {
       // for now, compute the mean and median firing rates for all cells if win
       // is visible
@@ -975,14 +994,21 @@ void Control::reset_spike_sums() {
 
 void Control::reset_rasters() {
   uint32_t num_probe_trials = 0;
+  uint32_t num_forget_trials = 0;
   for (uint32_t i = 0; i < td.num_trials; i++) {
     if (td.trial_names[i] == "probe_trial")
       num_probe_trials++;
+    else if (td.trial_names[i] == "forget_trial")
+      num_forget_trials++;
   }
   for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
+    uint32_t row_size;
     if (!rf_names[i].empty() || use_gui) {
-      uint32_t row_size =
+      if (CELL_IDS[i] == "IO") row_size = trialTime * num_forget_trials;
+      else {
+        row_size =
           (CELL_IDS[i] == "GR") ? msMeasure : msMeasure * num_probe_trials;
+      }
       memset(rasters[i][0], '\000',
              row_size * rast_cell_nums[i] * sizeof(uint8_t));
     }
@@ -1176,9 +1202,9 @@ void Control::countGOSpikes(int *goSpkCounter) {
   LOG_DEBUG("Median GO Rate: %0.1f", m / isi);
 }
 
-void Control::fill_rasters(uint32_t raster_counter, uint32_t psth_counter) {
+void Control::fill_rasters_no_io(uint32_t raster_counter, uint32_t psth_counter) {
   for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
-    if (cell_spikes[i]) {
+    if (CELL_IDS[i] != "IO" && cell_spikes[i]) {
       uint32_t temp_counter = raster_counter;
       if (!rf_names[i].empty() || use_gui) {
         /* GR spikes are only spikes not saved on host every time step:
@@ -1204,10 +1230,10 @@ void Control::fill_rasters(uint32_t raster_counter, uint32_t psth_counter) {
     for (int i = 0; i < num_pc; i++) {
       pc_vm_raster[psth_counter][i] = vm_pc[i];
     }
-    const float *vm_io = simCore->getMZoneList()[0]->exportVmIO();
-    for (int i = 0; i < num_io; i++) {
-      io_vm_raster[psth_counter][i] = vm_io[i];
-    }
+    //const float *vm_io = simCore->getMZoneList()[0]->exportVmIO();
+    //for (int i = 0; i < num_io; i++) {
+    //  io_vm_raster[psth_counter][i] = vm_io[i];
+    //}
     const float *vm_nc = simCore->getMZoneList()[0]->exportVmNC();
     for (int i = 0; i < num_nc; i++) {
       nc_vm_raster[psth_counter][i] = vm_nc[i];
@@ -1215,9 +1241,9 @@ void Control::fill_rasters(uint32_t raster_counter, uint32_t psth_counter) {
   }
 }
 
-void Control::fill_psths(uint32_t psth_counter) {
+void Control::fill_psths_no_io(uint32_t psth_counter) {
   for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
-    if (cell_spikes[i]) {
+    if (CELL_IDS[i] != "IO" && cell_spikes[i]) {
       if (!pf_names[i].empty() || use_gui) {
         /* GR spikes are only spikes not saved on host every time step:
          * InNet::exportAPGR makes cudaMemcpy call before returning pointer to

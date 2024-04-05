@@ -170,7 +170,7 @@ public:
   float inputStrength = 0.0;
 
   // sim params -> TODO: place in simcore
-  uint32_t gpuIndex = 0;
+  uint32_t gpuIndex = 2;
   uint32_t gpuP2 = 2;
 
   uint32_t trial;
@@ -450,10 +450,10 @@ public:
    *  @param raster_counter Counts time since the beginning of the session.
    *  @param psth_counter Counts time since the beginning of the current trial.
    */
-  void fill_rasters(uint32_t raster_counter, uint32_t psth_counter);
+  void fill_rasters_no_io(uint32_t raster_counter, uint32_t psth_counter);
 
   /* similar function to fill_rasters but for psths */
-  void fill_psths(uint32_t psth_counter);
+  void fill_psths_no_io(uint32_t psth_counter);
 
   /* save data objects to file functions */
   void save_weights();

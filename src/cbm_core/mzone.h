@@ -100,6 +100,7 @@ private:
   MZoneActivityState *as;
 
   CRandomSFMT0 *randGen;
+  CRandomSFMT0 *ioRandGen;
 
   int gpuIndStart;
   int numGPUs;

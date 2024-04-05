@@ -23,6 +23,7 @@ MZone::MZone(MZoneConnectivityState *cs, MZoneActivityState *as, int randSeed,
              uint32_t **apBufGRGPU, uint64_t **histGRGPU, int gpuIndStart,
              int numGPUs) {
   randGen = new CRandomSFMT0(randSeed);
+  ioRandGen = new CRandomSFMT0(time(0));
 
   // shallow copies. caller owns the data.
   this->cs = cs;
@@ -61,6 +62,7 @@ MZone::~MZone() {
   LOG_DEBUG("Deleting mzone gpu arrays...");
 
   delete randGen;
+  delete ioRandGen;
 
   delete[] pfSynWeightPCLinear;
   delete[] pfpc_weight_mask_h;
@@ -762,6 +764,19 @@ void MZone::runPFPCPlastCUDA(cudaStream_t **sts, int streamN, uint32_t t,
     curIOInd = 0;
 
     numGRPerIO = num_gr / num_io;
+
+    //for (int i = 0; i < num_io; i++) {
+    //  // note that IRandom is inclusive
+    //  uint32_t r = ioRandGen->IRandom(1, 10);
+
+    //  if (r <= 9) {
+    //    io_step_type[i] = LTP;
+    //    pfPCPlastStepIO[i] = synLTPStepSizeGRtoPC;
+    //  } else {
+    //    io_step_type[i] = LTD;
+    //    pfPCPlastStepIO[i] = synLTDStepSizeGRtoPC;
+    //  }
+    //}
 
     for (int i = 0; i < num_io; i++) {
       // plast step gets LTDstep if in LTD window
