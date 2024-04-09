@@ -153,6 +153,7 @@ public:
   bool data_out_dir_created = false;
   bool out_sim_filename_created = false;
   bool out_info_filename_created = false;
+  bool out_biv_filename_created = false;
   bool raster_filenames_created = false;
   bool psth_filenames_created = false;
 
@@ -222,11 +223,13 @@ public:
   enum plasticity mf_nc_plast = GRADED;
 
   /* input and output filenames */
+  std::string sess_file_name = "";
   std::string data_out_path = "";
   std::string data_out_base_name = "";
 
   std::string out_sim_name = "";
   std::string out_info_name = "";
+  std::string out_bvi_name = "";
 
   std::string rf_names[NUM_CELL_TYPES];
   std::string pf_names[NUM_CELL_TYPES];
@@ -327,6 +330,11 @@ public:
   void save_info_to_file();
 
   /**
+   *  @brief Write all relevant info to bvi file.
+   */
+  void save_bvi_to_file();
+
+  /**
    *  @brief Save the parallel fiber purkinje cell weights to binary file.
    */
   void save_pfpc_weights_to_file();
@@ -364,6 +372,11 @@ public:
    *  @brief Create the full-path filename of the output info file
    */
   void create_out_info_filename();
+
+  /**
+   *  @brief Create the full-path filename of the output bvi file
+   */
+  void create_out_bvi_filename();
 
   /**
    *  @brief Create the full-path filenames of cmdline-specified rasters

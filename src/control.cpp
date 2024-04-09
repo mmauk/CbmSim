@@ -57,6 +57,7 @@ Control::Control(parsed_commandline &p_cl) {
     // create various output filenames once session is initialized
     create_out_sim_filename();                    // default
     create_out_info_filename();                   // default
+    create_out_bvi_filename();                    // default
     create_raster_filenames(p_cl.raster_files);   // optional
     create_psth_filenames(p_cl.psth_files);       // optional
     create_weights_filenames(p_cl.weights_files); // optional
@@ -136,6 +137,7 @@ void Control::set_plasticity_modes(std::string pfpc_plasticity,
 void Control::initialize_session(std::string sess_file) {
   LOG_DEBUG("Initializing session...");
   // create temporary objects for parsing session file
+  sess_file_name = sess_file;
   tokenized_file t_file;
   lexed_file l_file;
   tokenize_file(sess_file, t_file);
@@ -487,6 +489,29 @@ void Control::save_info_to_file() {
   out_if_data_buf.close();
 }
 
+void Control::save_bvi_to_file() {
+  std::fstream out_bvi_data_buf(out_bvi_name.c_str(), std::ios::out);
+  out_bvi_data_buf << if_data.start_date << " " << if_data.start_time << "\n";
+  out_bvi_data_buf << sess_file_name << "\n"; // TODO: make abs path
+  out_bvi_data_buf << "6.0\n";
+  out_bvi_data_buf << td.num_trials << "\n";
+  out_bvi_data_buf << "0\ncbm_sim\n0\nNone\n0\nNone\n0\nNone\n";
+  for (uint32_t i = 0; i < td.num_trials; i++) {
+    out_bvi_data_buf << td.trial_names[i] << ", ";
+    if (!td.use_css[i]) {
+      out_bvi_data_buf << "0, ";
+    } else {
+      out_bvi_data_buf << td.cs_lens[i] << ", ";
+    }
+    if (!td.use_uss[i]) {
+      out_bvi_data_buf << "0\n";
+    } else {
+      out_bvi_data_buf << td.us_onsets[i] << "\n";
+    }
+  }
+  out_bvi_data_buf.close();
+}
+
 void Control::save_pfpc_weights_to_file() {
   if (pfpc_weights_filenames_created) {
     LOG_DEBUG("Saving granule to purkinje weights to file...");
@@ -578,6 +603,13 @@ void Control::create_out_info_filename() {
   if (data_out_dir_created) {
     out_info_name = data_out_path + "/" + data_out_base_name + TXT_EXT;
     out_info_filename_created = true;
+  }
+}
+
+void Control::create_out_bvi_filename() {
+  if (data_out_dir_created) {
+    out_bvi_name = data_out_path + "/" + data_out_base_name + BVI_EXT;
+    out_biv_filename_created = true;
   }
 }
 
@@ -760,20 +792,21 @@ void Control::runSession(struct gui *gui) {
     LOG_INFO("Trial number: %d", trial + 1);
     start = omp_get_wtime();
     for (uint32_t ts = 0; ts < trialTime; ts++) {
-      if (useUS == 1 && ts == onsetUS) // deliver the US
-      {
-        simCore->updateErrDrive(0, 0.3);
-      }
-      // deliver cs if specified at cmdline and within cs duration
-      if (useCS && ts >= onsetCS && ts < onsetCS + csLength) {
-        mfAP = mfs->calcPoissActivity(TONIC_CS_A, simCore->getMZoneList());
-      } else { // background mf activity
-        mfAP = mfs->calcPoissActivity(BKGD, simCore->getMZoneList());
-      }
+      // if (useUS == 1 && ts == onsetUS) // deliver the US
+      //{
+      //   simCore->updateErrDrive(0, 0.3);
+      // }
+      //// deliver cs if specified at cmdline and within cs duration
+      // if (useCS && ts >= onsetCS && ts < onsetCS + csLength) {
+      //   mfAP = mfs->calcPoissActivity(TONIC_CS_A, simCore->getMZoneList());
+      // } else { // background mf activity
+      //   mfAP = mfs->calcPoissActivity(BKGD, simCore->getMZoneList());
+      // }
 
-      simCore->updateMFInput(mfAP);
-      // this is the main simCore function which computes all cell pops' spikes
-      simCore->calcActivity(spillFrac, pf_pc_plast, mf_nc_plast);
+      // simCore->updateMFInput(mfAP);
+      //// this is the main simCore function which computes all cell pops'
+      ///spikes
+      // simCore->calcActivity(spillFrac, pf_pc_plast, mf_nc_plast);
 
       /* collect conductances used to check tuning */
       if (ts >= onsetCS && ts < onsetCS + csLength) {
@@ -851,6 +884,7 @@ void Control::runSession(struct gui *gui) {
     save_mfdcn_weights_to_file();
     save_sim_to_file();
     save_info_to_file();
+    save_bvi_to_file();
   }
 }
 

@@ -27,6 +27,8 @@ const std::string DEFAULT_TIME_FORMAT = "(%H:%M:%S)";
 const std::string DEFAULT_LOCALE_FORMAT = "(%z %Z)";
 
 const std::string TXT_EXT = ".txt";
+const std::string BVI_EXT = ".bvi";
+const std::string DAT_EXT = ".dat";
 const std::string BIN_EXT = ".bin";
 const std::string SIM_EXT = ".sim";
 
