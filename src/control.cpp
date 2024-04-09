@@ -492,7 +492,7 @@ void Control::save_info_to_file() {
 void Control::save_bvi_to_file() {
   std::fstream out_bvi_data_buf(out_bvi_name.c_str(), std::ios::out);
   out_bvi_data_buf << if_data.start_date << " " << if_data.start_time << "\n";
-  out_bvi_data_buf << sess_file_name << "\n"; // TODO: make abs path
+  out_bvi_data_buf << sess_file_name << "\n";
   out_bvi_data_buf << "6.0\n";
   out_bvi_data_buf << td.num_trials << "\n";
   out_bvi_data_buf << "0\ncbm_sim\n0\nNone\n0\nNone\n0\nNone\n";
