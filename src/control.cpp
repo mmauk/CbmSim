@@ -506,7 +506,9 @@ void Control::save_bvi_to_file() {
     if (!td.use_uss[i]) {
       out_bvi_data_buf << "0\n";
     } else {
-      out_bvi_data_buf << td.us_onsets[i] << "\n";
+      // relative difference removes dependency on choice of starting point
+      // add 200 for bunVis convention where msPreCS := 200
+      out_bvi_data_buf << td.us_onsets[i] - td.cs_onsets[i] + 200 << "\n";
     }
   }
   out_bvi_data_buf.close();
