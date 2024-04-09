@@ -150,6 +150,7 @@ public:
 
   bool raster_arrays_initialized = false;
   bool psth_arrays_initialized = false;
+  bool pc_crs_initialized = false;
   bool spike_sums_initialized = false;
 
   bool data_out_dir_created = false;
@@ -255,6 +256,7 @@ public:
   uint32_t rast_cell_nums[NUM_CELL_TYPES];
   uint8_t **rasters[NUM_CELL_TYPES];
   uint8_t **psths[NUM_CELL_TYPES];
+  float **pc_crs;
 
   /* save functions for time series data */
   uint32_t rast_sizes[NUM_CELL_TYPES];
@@ -413,6 +415,7 @@ public:
   void initialize_spike_sums();
   void initialize_rasters();
   void initialize_psths();
+  void initialize_pc_crs();
   void initialize_psth_save_funcs();
   void initialize_raster_save_funcs();
 
@@ -450,6 +453,11 @@ public:
   void calculate_firing_rates(float onset_cs, float offset_cs);
 
   /**
+   *  @brief compute crs for all trials
+   */
+  void calculate_pc_crs();
+
+  /**
    *  @brief fill raster arrays from cell spike arrays. Is run every ts.
    *  @param raster_counter Counts time since the beginning of the session.
    *  @param psth_counter Counts time since the beginning of the current trial.
@@ -470,6 +478,7 @@ public:
   /* delete data objects from memory. Only run in destructor */
   void delete_rasters();
   void delete_psths();
+  void delete_pc_crs();
   void delete_spike_sums();
 };
 

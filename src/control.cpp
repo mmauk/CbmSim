@@ -104,6 +104,8 @@ Control::~Control() {
     delete_rasters();
   if (psth_arrays_initialized)
     delete_psths();
+  if (pc_crs_initialized)
+    delete_pc_crs();
   if (spike_sums_initialized)
     delete_spike_sums();
 }
@@ -186,6 +188,7 @@ void Control::init_sim(std::string in_sim_filename) {
   initialize_psth_save_funcs();
   initialize_rasters();
   initialize_psths();
+  initialize_pc_crs();
   initialize_spike_sums();
   sim_file_buf.close();
   sim_initialized = true;
@@ -731,6 +734,20 @@ void Control::initialize_rasters() {
   raster_arrays_initialized = true;
 }
 
+void Control::initialize_psths() {
+  for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
+    if (!pf_names[i].empty() || use_gui)
+      // TODO: make data type bigger for psth
+      psths[i] = allocate2DArray<uint8_t>(msMeasure, rast_cell_nums[i]);
+  }
+  psth_arrays_initialized = true;
+}
+
+void Control::initialize_pc_crs() {
+  pc_crs = allocate2DArray<float>(td.num_trials, BUN_VIZ_MS_MEASURE);
+  pc_crs_initialized = true;
+}
+
 void Control::initialize_psth_save_funcs() {
   for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
     psth_save_funcs[i] = [this, i]() {
@@ -756,15 +773,6 @@ void Control::initialize_raster_save_funcs() {
       }
     };
   }
-}
-
-void Control::initialize_psths() {
-  for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
-    if (!pf_names[i].empty() || use_gui)
-      // TODO: make data type bigger for psth
-      psths[i] = allocate2DArray<uint8_t>(msMeasure, rast_cell_nums[i]);
-  }
-  psth_arrays_initialized = true;
 }
 
 void Control::runSession(struct gui *gui) {
@@ -1147,13 +1155,6 @@ void Control::fill_psths(uint32_t psth_counter) {
   }
 }
 
-void Control::delete_spike_sums() {
-  for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
-    free(spike_sums[i].non_cs_spike_counter);
-    free(spike_sums[i].cs_spike_counter);
-  }
-}
-
 void Control::delete_rasters() {
   for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
     if (!rf_names[i].empty() || use_gui)
@@ -1170,5 +1171,14 @@ void Control::delete_psths() {
   for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
     if (!pf_names[i].empty())
       delete2DArray<uint8_t>(psths[i]);
+  }
+}
+
+void Control::delete_pc_crs() { delete2DArray<float>(pc_crs); }
+
+void Control::delete_spike_sums() {
+  for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
+    free(spike_sums[i].non_cs_spike_counter);
+    free(spike_sums[i].cs_spike_counter);
   }
 }
