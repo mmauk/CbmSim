@@ -794,21 +794,21 @@ void Control::runSession(struct gui *gui) {
     LOG_INFO("Trial number: %d", trial + 1);
     start = omp_get_wtime();
     for (uint32_t ts = 0; ts < trialTime; ts++) {
-      // if (useUS == 1 && ts == onsetUS) // deliver the US
-      //{
-      //   simCore->updateErrDrive(0, 0.3);
-      // }
-      //// deliver cs if specified at cmdline and within cs duration
-      // if (useCS && ts >= onsetCS && ts < onsetCS + csLength) {
-      //   mfAP = mfs->calcPoissActivity(TONIC_CS_A, simCore->getMZoneList());
-      // } else { // background mf activity
-      //   mfAP = mfs->calcPoissActivity(BKGD, simCore->getMZoneList());
-      // }
+      if (useUS == 1 && ts == onsetUS) // deliver the US
+      {
+        simCore->updateErrDrive(0, 0.3);
+      }
+      // deliver cs if specified at cmdline and within cs duration
+      if (useCS && ts >= onsetCS && ts < onsetCS + csLength) {
+        mfAP = mfs->calcPoissActivity(TONIC_CS_A, simCore->getMZoneList());
+      } else { // background mf activity
+        mfAP = mfs->calcPoissActivity(BKGD, simCore->getMZoneList());
+      }
 
-      // simCore->updateMFInput(mfAP);
-      //// this is the main simCore function which computes all cell pops'
-      ///spikes
-      // simCore->calcActivity(spillFrac, pf_pc_plast, mf_nc_plast);
+      simCore->updateMFInput(mfAP);
+      // this is the main simCore function which computes all cell pops'
+      // spikes
+      simCore->calcActivity(spillFrac, pf_pc_plast, mf_nc_plast);
 
       /* collect conductances used to check tuning */
       if (ts >= onsetCS && ts < onsetCS + csLength) {
