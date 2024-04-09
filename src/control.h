@@ -34,6 +34,8 @@
 #define NUM_WEIGHTS_TYPES 2
 #define NUM_SAVE_OPTS 19
 #define NUM_SYN_CONS 12
+#define BUN_VIZ_MS_MEASURE 2500
+#define BUN_VIZ_MS_PRE_CS 200
 
 // TODO:  should put these in file_utility.h
 const std::string RAST_EXT[NUM_CELL_TYPES] = {".mfr", ".grr", ".gor", ".bcr",

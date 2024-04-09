@@ -508,7 +508,8 @@ void Control::save_bvi_to_file() {
     } else {
       // relative difference removes dependency on choice of starting point
       // add 200 for bunVis convention where msPreCS := 200
-      out_bvi_data_buf << td.us_onsets[i] - td.cs_onsets[i] + 200 << "\n";
+      out_bvi_data_buf << td.us_onsets[i] - td.cs_onsets[i] + BUN_VIZ_MS_PRE_CS
+                       << "\n";
     }
   }
   out_bvi_data_buf.close();
@@ -784,7 +785,8 @@ void Control::runSession(struct gui *gui) {
     // uint32_t percentCS    = td.cs_percents[trial]; // unused for now
     uint32_t useUS = td.use_uss[trial];
     uint32_t onsetUS = td.us_onsets[trial];
-
+    uint32_t data_collect_start_ms = onsetCS - msPreCS + BUN_VIZ_MS_PRE_CS;
+    uint32_t data_collect_end_ms = data_collect_start_ms + BUN_VIZ_MS_MEASURE;
     int PSTHCounter = 0;
     float gGRGO_sum = 0;
     float gMFGO_sum = 0;
@@ -811,6 +813,7 @@ void Control::runSession(struct gui *gui) {
       simCore->calcActivity(spillFrac, pf_pc_plast, mf_nc_plast);
 
       /* collect conductances used to check tuning */
+      /* cs is defined wrt msPreCS, so subtract it and add bun_viz on top */
       if (ts >= onsetCS && ts < onsetCS + csLength) {
         mfgoG = simCore->getInputNet()->exportgSum_MFGO();
         grgoG = simCore->getInputNet()->exportgSum_GRGO();
@@ -832,7 +835,7 @@ void Control::runSession(struct gui *gui) {
       }
 
       /* data collection */
-      if (ts >= onsetCS - msPreCS && ts < onsetCS + csLength + msPostCS) {
+      if (ts >= data_collect_start_ms && ts < data_collect_end_ms) {
         fill_rasters(raster_counter, PSTHCounter);
         fill_psths(PSTHCounter);
         PSTHCounter++;
