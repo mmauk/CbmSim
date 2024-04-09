@@ -453,11 +453,6 @@ public:
   void calculate_firing_rates(float onset_cs, float offset_cs);
 
   /**
-   *  @brief compute crs for all trials
-   */
-  void calculate_pc_crs();
-
-  /**
    *  @brief fill raster arrays from cell spike arrays. Is run every ts.
    *  @param raster_counter Counts time since the beginning of the session.
    *  @param psth_counter Counts time since the beginning of the current trial.
