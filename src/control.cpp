@@ -779,11 +779,11 @@ void Control::runSession(struct gui *gui) {
     std::string trialName = td.trial_names[trial];
 
     uint32_t useCS = td.use_css[trial];
-    uint32_t onsetCS = pre_collection_ts + td.cs_onsets[trial];
+    uint32_t onsetCS = td.cs_onsets[trial];
     uint32_t csLength = td.cs_lens[trial];
     // uint32_t percentCS    = td.cs_percents[trial]; // unused for now
     uint32_t useUS = td.use_uss[trial];
-    uint32_t onsetUS = pre_collection_ts + td.us_onsets[trial];
+    uint32_t onsetUS = td.us_onsets[trial];
 
     int PSTHCounter = 0;
     float gGRGO_sum = 0;
