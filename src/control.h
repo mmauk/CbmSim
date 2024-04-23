@@ -157,6 +157,7 @@ public:
   bool out_sim_filename_created = false;
   bool out_info_filename_created = false;
   bool out_biv_filename_created = false;
+  bool out_dat_filename_created = false;
   bool raster_filenames_created = false;
   bool psth_filenames_created = false;
 
@@ -232,6 +233,7 @@ public:
   std::string out_sim_name = "";
   std::string out_info_name = "";
   std::string out_bvi_name = "";
+  std::string out_dat_name = "";
 
   std::string rf_names[NUM_CELL_TYPES];
   std::string pf_names[NUM_CELL_TYPES];
@@ -338,6 +340,11 @@ public:
   void save_bvi_to_file();
 
   /**
+   *  @brief Write crs to dat file.
+   */
+  void save_dat_to_file();
+
+  /**
    *  @brief Save the parallel fiber purkinje cell weights to binary file.
    */
   void save_pfpc_weights_to_file();
@@ -380,6 +387,11 @@ public:
    *  @brief Create the full-path filename of the output bvi file
    */
   void create_out_bvi_filename();
+
+  /**
+   *  @brief Create the full-path filename of the output dat file
+   */
+  void create_out_dat_filename();
 
   /**
    *  @brief Create the full-path filenames of cmdline-specified rasters
