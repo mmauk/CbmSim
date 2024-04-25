@@ -28,20 +28,28 @@ slices or microzones, with the latter currently not being implemented.
 
 **Prerequisites**
 
-We run our simulations on Ubuntu 22.04, and we utilize CUDA to calculate the majority of cellular activity. The following
+We run our simulations on Ubuntu 22.04 and utilize CUDA to calculate granule cellular activity. The following
 table summarizes the general pre-requisites for running simulations with CbmSim:
 
 | Category                  | Prerequisite           |
 | ------------------------- | ---------------------- |
 | OS                        | Ubuntu 22.04 (x86_64)  |
 | GPU Compute Capability    | >= 7.5                 |
-| CUDA Version              | >= 11.8                |
+| CUDA Version              | >= 12.2                |
 
-A detailed description of the CUDA installation process can be found [here](https://docs.nvidia.com/cuda/archive/11.8.0/cuda-installation-guide-linux/index.html).
+A detailed description of the CUDA installation process can be found [here](https://docs.nvidia.com/cuda/archive/12.2.0/cuda-installation-guide-linux/index.html).
 
 **Getting Started**
 
-Once you have fulfilled all of the prerequisites and have cloned the repository, compile the source code:
+Once you have fulfilled all of the prerequisites and have cloned the repository, you first have to update  
+your .profile located in your home directory. Add these two lines to the end of it:
+
+```
+export PATH=/usr/local/cuda-12.2/bin${PATH:+:${PATH}}
+export LD_LIBRARY_PATH=/usr/local/cuda-12.2/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+```
+
+Now you can compile the source code. Enter the project directory and compile with:
 
 ```make```
 
