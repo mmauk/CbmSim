@@ -104,15 +104,16 @@ The following table summarizes the optional arguments:
 | ---------------- | -------------- | ----------------------------------------------------------------------------------------------------------------|
 | --visual         | TUI or GUI     | run from the commandline or the GUI                                                                             |
 | --pfpc-off       | None           | turn parallel fiber to purkinje cell plasticity off                                                             |
-| --binary         | None           | set parallel fiber to purkinje cell plasticity mode to binary (only available in branch seang/plastImpl)        |
-| --abbott-cascade | None           | set parallel fiber to purkinje cell plasticity mode to abbott cascade (only available in branch seang/plastImpl)|
-| --mauk-cascade   | None           | set parallel fiber to purkinje cell plasticity mode to mauk cascade   (only available in branch seang/plastImpl)|
+| --binary         | None           | set parallel fiber to purkinje cell plasticity mode to binary (only available in branch seang/shortPlast)        |
+| --abbott-cascade | None           | set parallel fiber to purkinje cell plasticity mode to abbott cascade (only available in branch seang/shortPlast)|
+| --mauk-cascade   | None           | set parallel fiber to purkinje cell plasticity mode to mauk cascade   (only available in branch seang/shortPlast)|
 | --mfnc-off       | None           | turn mossy fiber to deep nucleus plasticity off                                                                 |
 
 The following table summarizes the output data options and arguments:
 
 | Option          | Argument                | Description                                                                      |
 | --------------- | ----------------------- | -------------------------------------------------------------------------------- |
+| -c or --con-arrs |MFGR,GRGO,GOGR,GOGO,etc..| specify connectivity arrays. saves both pre and post synaptic arrays            |
 | -r or --raster  | MF,GR,GO,BC,SC,PC,NC,IO | specify cell-raster data to save. Any subset of the argument is accepted         |
 | -p or --psth    | MF,GR,GO,BC,SC,PC,NC,IO | specify cell-psth data to save. Any subset of the argument is accepted           |
 | -w or --weights | PFPC,MFNC               | specify plastic synaptic weights to save. Any subset of the argument is accepted |
