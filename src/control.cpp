@@ -163,8 +163,6 @@ void Control::initialize_session(std::string sess_file) {
               msPreCS, BUN_VIZ_MS_PRE_CS);
     exit(1);
   }
-  msPostCS =
-      std::stoi(s_file.parsed_var_sections["trial_spec"].param_map["msPostCS"]);
   // Assume msPreCS > BUN_VIZ_MS_PRE_CS, then we take
   // msMeasure to be BUN_VIZ_MS_MEASURE plus the amt extra
   // that is in msPreCS that is not in BUN_VIZ_MS_PRE_CS

@@ -218,7 +218,6 @@ public:
   /* time related variables in-trial */
   uint32_t trialTime = 0;
   uint32_t msPreCS = 0;   // how much time before the cs do we collect data for
-  uint32_t msPostCS = 0;  // how much time after the cs do we collect data for
   uint32_t msMeasure = 0; // total amount of time data is collected for
 
   /* plasticity types */

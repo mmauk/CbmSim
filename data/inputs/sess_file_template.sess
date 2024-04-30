@@ -56,7 +56,6 @@ begin filetype run
 	begin section trial_spec
 		trialTime 5000
 		msPreCS 400
-		msPostCS 400
 	end
 
 // generally, this section will not need to be modified by the end-user.
