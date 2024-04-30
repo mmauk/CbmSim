@@ -102,4 +102,6 @@ $(DEBUG_DIR):
 clean:
 	$(RM) $(BUILD_DIR)*.o
 	$(RM) $(RELEASE_TARGET)
+	$(RM) $(DEBUG_DIR)*.o
+	$(RM) $(DEBUG_TARGET)
 
