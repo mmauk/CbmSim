@@ -218,15 +218,31 @@ void print_usage_info() {
                "exclusive and work as follows:\n\n";
   std::cout << "\t\t\t\t \t--pfpc-off - turns PFPC plasticity off\n";
   std::cout << "\t\t\t\t \t--binary - turns PFPC plasticity on and sets the "
-               "type of plasticity to 'dual' ie 'binary'\n";
+               "type of plasticity to 'binary'\n";
   std::cout << "\t\t\t\t \t--cascade - turns PFPC plasticity on and sets the "
                "type of plasticity to 'cascade'\n\n";
   std::cout << std::right << std::setw(10) << "\t"
             << "\t\t\tif none of these options is given, PFPC plasticity is "
                "turned on and set to 'graded' by default\n\n";
   std::cout << std::right << std::setw(10) << "\t--mfnc-off"
-            << "\t\tturns off MFNC plasticity; if not included, MFNC "
-               "plasticity is turned on and set to 'graded' by default\n";
+            << "\t\tturns off MFNC plasticity; same as default for now (ie is "
+               "not tuned)\n";
+  std::cout << "\t-c, --con-arrs {[CODE]} comma-separated list of synapse "
+               "codes indicating what connectivity arrays";
+  std::cout << " are saved. Saves both pre and post arrays whenever possible. "
+               "CODEs are:\n\n";
+  std::cout << "\t\t\t\t \tMFGR - Mossy Fiber to Granule Cells\n";
+  std::cout << "\t\t\t\t \tGRGO - Granule Cells to Golgi Cells\n";
+  std::cout << "\t\t\t\t \tMFGO - Mossy Fiber to Granule Cells\n";
+  std::cout << "\t\t\t\t \tGOGO - Golgi Cells to Golgi Cells\n";
+  std::cout << "\t\t\t\t \tGOGR - Golgi Cells to Granule Cells\n";
+  std::cout << "\t\t\t\t \tBCPC - Basket Cells to Purkinje Cells\n";
+  std::cout << "\t\t\t\t \tSCPC - Stellate Cells to Purkinje Cells\n";
+  std::cout << "\t\t\t\t \tPCBC - Purkinje Cells to Basket Cells\n";
+  std::cout << "\t\t\t\t \tPCNC - Purkinje Cells to Nucleus Cells\n";
+  std::cout << "\t\t\t\t \tIOIO - Inferior Olives to Inferior Olives\n";
+  std::cout << "\t\t\t\t \tNCIO - Nucleus Cells to Inferior Olives\n";
+  std::cout << "\t\t\t\t \tMFNC - Mossy Fiber to Nucleus Cells\n\n";
   std::cout << "\t-r, --raster {[CODE]} comma-separated list of cell ids to be "
                "saved for that cell type. Possible CODEs are:\n\n";
   std::cout << "\t\t\t\t \tMF - Mossy Fiber\n";
@@ -247,28 +263,27 @@ void print_usage_info() {
   std::cout << "Output filenames are automatically generated: given an -o "
                "option of 'BASENAME', the relative filepaths from project ROOT "
                "are as follows:\n\n";
-  std::cout << "\t'ROOT/data/outputs/BASENAME/"
-               "BASENAME_{CELL_ID|WEIGHTS_ID}_{RASTER|PSTH|WEIGHTS}_{DATE}{_"
-               "TRIAL_{NUM}}.bin\n\n";
-  std::cout
-      << "Here DATE is the current date, with format %d%m%Y, and the final "
-         "trial format only applies for granule cell rasters and weights,\n";
-  std::cout << "as these outputs are saved on a trial-by-trial basis.\n\n";
+  std::cout << "\t'ROOT/data/outputs/BASENAME/BASENAME.[EXTENSION]\n\n";
+  std::cout << "Here [EXTENSION] is expressed as the cell/synapse CODE plus "
+               "the symbols ";
+  std::cout << "'r', 'p' and 'w' for 'raster,' 'psth', and 'weight' data. For "
+               "example, 'basename.pcr' is a raster file for pc cells while ";
+  std::cout << "basename.pfpcw is a weight file of the pf to pc weights\n\n";
   std::cout << "Example usage:\n\n";
   std::cout << "1) uses file 'build_file.bld' to construct a bunny, which is "
-               "saved to file 'ROOT/data/outputs/bunny/bunny_{DATE}.sim':\n\n";
+               "saved to file 'ROOT/data/outputs/bunny/bunny.sim':\n\n";
   std::cout << "\t./cbm_sim -b build_file.bld -o bunny\n\n";
   std::cout << "2) uses file 'acquisition.sess' to train the input simulation "
-               "'bunny_12122022.sim' with PFPC plasticity on and set to graded "
+               "'bunny.sim' with PFPC plasticity on and set to graded "
                "and MFNC plasticity off:\n\n";
-  std::cout << "\t./cbm_sim -s acquisition.sess -i bunny_12122022.sim -o "
+  std::cout << "\t./cbm_sim -s acquisition.sess -i bunny.sim -o "
                "acquisition --mfnc-off\n\n";
   std::cout << "3) uses file 'acquisition.sess' to train the input simulation "
-               "'bunny_12122022.sim' with PFPC and MFNC plasticity on and set "
+               "'bunny.sim' with PFPC and MFNC plasticity on and set "
                "to graded;\n";
   std::cout << "   saves purkinje cell, stellate cell, and basket cell rasters "
                "to files located in 'ROOT/data/outputs/acqusition'\n\n";
-  std::cout << "\t./cbm_sim -s acquisition.sess -i bunny_12122022.sim -o "
+  std::cout << "\t./cbm_sim -s acquisition.sess -i bunny.sim -o "
                "acquisition -r PC,SC,BC\n\n";
 }
 
@@ -410,7 +425,7 @@ void validate_commandline(parsed_commandline &p_cl) {
     // want run mode in gui later, will defer run mode to only tui, as gui
     // callbacks do not require such checks
     p_cl.pfpc_plasticity = "graded";
-    p_cl.mfnc_plasticity = "graded";
+    p_cl.mfnc_plasticity = "off";
   } else {
     /* for now, print usage info regardless of other arguments.
      * in future, if there is a commandline error, print usage info then exit
@@ -475,16 +490,16 @@ void validate_commandline(parsed_commandline &p_cl) {
         p_cl.pfpc_plasticity = "graded";
       } else {
         // just notify user what we already set above
-        if (p_cl.pfpc_plasticity == "dual")
-          LOG_DEBUG("Turning PFPC plasticity on in 'dual' mode...");
+        if (p_cl.pfpc_plasticity == "binary")
+          LOG_DEBUG("Turning PFPC plasticity on in 'binary' mode...");
         else if (p_cl.pfpc_plasticity == "cascade")
           LOG_DEBUG("Turning PFPC plasticity on in 'cascade' mode...");
         else if (p_cl.pfpc_plasticity == "off")
           LOG_DEBUG("Turning PFPC plasticity off..");
       }
       if (p_cl.mfnc_plasticity.empty()) {
-        LOG_DEBUG("Turning MFNC plasticity on to default mode 'graded'...");
-        p_cl.mfnc_plasticity = "graded";
+        LOG_DEBUG("Turning MFNC plasticity to default mode 'off'...");
+        p_cl.mfnc_plasticity = "off";
       } else if (p_cl.mfnc_plasticity == "off")
         LOG_DEBUG("Turning MFNC plasticity off...");
       if (p_cl.vis_mode.empty()) {

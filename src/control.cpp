@@ -84,7 +84,7 @@ Control::Control(parsed_commandline &p_cl) {
     simState = new CBMState(numMZones, sim_file_buf);
     sim_file_buf.close();
   } else { // user ran program with no args
-    set_plasticity_modes("graded", "graded");
+    set_plasticity_modes("graded", "off");
   }
 }
 
@@ -556,7 +556,7 @@ void Control::save_pfpc_weights_at_trial_to_file(uint32_t trial) {
       return;
     }
     std::string curr_trial_weight_name =
-        data_out_path + "/" + get_file_basename(pfpc_weights_file) + "_TRIAL_" +
+        data_out_path + "/" + get_file_basename(pfpc_weights_file) + "_trial_" +
         std::to_string(trial) + WEIGHTS_EXT[0];
     const float *pfpc_weights = simCore->getMZoneList()[0]->exportPFPCWeights();
     std::fstream outPFPCFileBuffer(curr_trial_weight_name.c_str(),
@@ -928,9 +928,9 @@ void Control::reset_psths() {
 
 void Control::save_gr_rasters_at_trial_to_file(uint32_t trial) {
   if (!rf_names[GR].empty()) {
-    std::string trial_raster_name = data_out_path + "/" +
-                                    get_file_basename(rf_names[GR]) +
-                                    "_TRIAL_" + std::to_string(trial) + BIN_EXT;
+    std::string trial_raster_name =
+        data_out_path + "/" + get_file_basename(rf_names[GR]) + "_trial_" +
+        std::to_string(trial) + RAST_EXT[GR];
     LOG_DEBUG("Saving granule raster to file...");
     write2DArray<uint8_t>(trial_raster_name, rasters[GR], num_gr, msMeasure);
   }
