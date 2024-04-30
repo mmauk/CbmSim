@@ -7,6 +7,7 @@
 #include "file_parse.h"
 #include "gui.h" /* tenuous inclide at best :pogO: */
 #include "logger.h"
+#include "red_nucleus.h"
 
 Control::Control(parsed_commandline &p_cl) {
   use_gui = (p_cl.vis_mode == "GUI") ? true : false;
@@ -57,6 +58,8 @@ Control::Control(parsed_commandline &p_cl) {
     // create various output filenames once session is initialized
     create_out_sim_filename();                    // default
     create_out_info_filename();                   // default
+    create_out_bvi_filename();                    // default
+    create_out_dat_filename();                    // default
     create_raster_filenames(p_cl.raster_files);   // optional
     create_psth_filenames(p_cl.psth_files);       // optional
     create_weights_filenames(p_cl.weights_files); // optional
@@ -103,6 +106,8 @@ Control::~Control() {
     delete_rasters();
   if (psth_arrays_initialized)
     delete_psths();
+  if (pc_crs_initialized)
+    delete_pc_crs();
   if (spike_sums_initialized)
     delete_spike_sums();
 }
@@ -136,6 +141,7 @@ void Control::set_plasticity_modes(std::string pfpc_plasticity,
 void Control::initialize_session(std::string sess_file) {
   LOG_DEBUG("Initializing session...");
   // create temporary objects for parsing session file
+  sess_file_name = sess_file;
   tokenized_file t_file;
   lexed_file l_file;
   tokenize_file(sess_file, t_file);
@@ -150,9 +156,17 @@ void Control::initialize_session(std::string sess_file) {
       s_file.parsed_var_sections["trial_spec"].param_map["trialTime"]);
   msPreCS =
       std::stoi(s_file.parsed_var_sections["trial_spec"].param_map["msPreCS"]);
-  msPostCS =
-      std::stoi(s_file.parsed_var_sections["trial_spec"].param_map["msPostCS"]);
-  msMeasure = msPreCS + td.cs_lens[0] + msPostCS;
+
+  if (msPreCS < BUN_VIZ_MS_PRE_CS) {
+    LOG_FATAL("msPreCS must be greater than or equal to BUN_VIZ_MS_PRE_CS. "
+              "got %d and %d respectively. Exiting...",
+              msPreCS, BUN_VIZ_MS_PRE_CS);
+    exit(1);
+  }
+  // Assume msPreCS > BUN_VIZ_MS_PRE_CS, then we take
+  // msMeasure to be BUN_VIZ_MS_MEASURE plus the amt extra
+  // that is in msPreCS that is not in BUN_VIZ_MS_PRE_CS
+  msMeasure = msPreCS - BUN_VIZ_MS_PRE_CS + BUN_VIZ_MS_MEASURE;
 
   trials_data_initialized = true;
   LOG_DEBUG("Session initialized.");
@@ -184,6 +198,7 @@ void Control::init_sim(std::string in_sim_filename) {
   initialize_psth_save_funcs();
   initialize_rasters();
   initialize_psths();
+  initialize_pc_crs();
   initialize_spike_sums();
   sim_file_buf.close();
   sim_initialized = true;
@@ -487,6 +502,36 @@ void Control::save_info_to_file() {
   out_if_data_buf.close();
 }
 
+void Control::save_bvi_to_file() {
+  std::fstream out_bvi_data_buf(out_bvi_name.c_str(), std::ios::out);
+  out_bvi_data_buf << if_data.start_date << " " << if_data.start_time << "\n";
+  out_bvi_data_buf << sess_file_name << "\n";
+  out_bvi_data_buf << "6.0\n";
+  out_bvi_data_buf << td.num_trials << "\n";
+  out_bvi_data_buf << "0\ncbm_sim\n0\nNone\n0\nNone\n0\nNone\n";
+  for (uint32_t i = 0; i < td.num_trials; i++) {
+    out_bvi_data_buf << td.trial_names[i] << ", ";
+    if (!td.use_css[i]) {
+      out_bvi_data_buf << "0, ";
+    } else {
+      out_bvi_data_buf << td.cs_lens[i] << ", ";
+    }
+    if (!td.use_uss[i]) {
+      out_bvi_data_buf << "0\n";
+    } else {
+      // relative difference removes dependency on choice of starting point
+      // add 200 for bunVis convention where msPreCS := 200
+      out_bvi_data_buf << td.us_onsets[i] - td.cs_onsets[i] + BUN_VIZ_MS_PRE_CS
+                       << "\n";
+    }
+  }
+  out_bvi_data_buf.close();
+}
+
+void Control::save_dat_to_file() {
+  write2DArray<float>(out_dat_name, pc_crs, td.num_trials, BUN_VIZ_MS_MEASURE);
+}
+
 void Control::save_pfpc_weights_to_file() {
   if (pfpc_weights_filenames_created) {
     LOG_DEBUG("Saving granule to purkinje weights to file...");
@@ -581,6 +626,20 @@ void Control::create_out_info_filename() {
   }
 }
 
+void Control::create_out_bvi_filename() {
+  if (data_out_dir_created) {
+    out_bvi_name = data_out_path + "/" + data_out_base_name + BVI_EXT;
+    out_biv_filename_created = true;
+  }
+}
+
+void Control::create_out_dat_filename() {
+  if (data_out_dir_created) {
+    out_dat_name = data_out_path + "/" + data_out_base_name + DAT_EXT;
+    out_dat_filename_created = true;
+  }
+}
+
 void Control::create_raster_filenames(std::map<std::string, bool> &rast_map) {
   if (data_out_dir_created) {
     for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
@@ -649,8 +708,8 @@ void Control::initialize_rast_cell_nums() {
 
 void Control::initialize_cell_spikes() {
   cell_spikes[MF] = mfs->getAPs();
-  // NOTE: incurs a call to cudaMemcpy from device to host, but initializing so
-  // is not repeatedly called.
+  // NOTE: incurs a call to cudaMemcpy from device to host, but initializing
+  // so is not repeatedly called.
   cell_spikes[GR] = simCore->getInputNet()->exportAPGR();
   cell_spikes[GO] = simCore->getInputNet()->exportAPGO();
   cell_spikes[BC] = simCore->getMZoneList()[0]->exportAPBC();
@@ -680,7 +739,7 @@ void Control::initialize_spike_sums() {
  */
 void Control::initialize_rasters() {
   for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
-    if (!rf_names[i].empty() || use_gui) {
+    if (!rf_names[i].empty() || CELL_IDS[i] == "NC" || use_gui) {
       uint32_t row_size =
           (CELL_IDS[i] == "GR") ? msMeasure : msMeasure * td.num_trials;
       rasters[i] = allocate2DArray<uint8_t>(row_size, rast_cell_nums[i]);
@@ -694,6 +753,20 @@ void Control::initialize_rasters() {
   }
 
   raster_arrays_initialized = true;
+}
+
+void Control::initialize_psths() {
+  for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
+    if (!pf_names[i].empty() || use_gui)
+      // TODO: make data type bigger for psth
+      psths[i] = allocate2DArray<uint8_t>(msMeasure, rast_cell_nums[i]);
+  }
+  psth_arrays_initialized = true;
+}
+
+void Control::initialize_pc_crs() {
+  pc_crs = allocate2DArray<float>(td.num_trials, BUN_VIZ_MS_MEASURE);
+  pc_crs_initialized = true;
 }
 
 void Control::initialize_psth_save_funcs() {
@@ -723,15 +796,6 @@ void Control::initialize_raster_save_funcs() {
   }
 }
 
-void Control::initialize_psths() {
-  for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
-    if (!pf_names[i].empty() || use_gui)
-      // TODO: make data type bigger for psth
-      psths[i] = allocate2DArray<uint8_t>(msMeasure, rast_cell_nums[i]);
-  }
-  psth_arrays_initialized = true;
-}
-
 void Control::runSession(struct gui *gui) {
   set_info_file_str_props(BEFORE_RUN, if_data);
   double start, end;
@@ -745,12 +809,11 @@ void Control::runSession(struct gui *gui) {
     std::string trialName = td.trial_names[trial];
 
     uint32_t useCS = td.use_css[trial];
-    uint32_t onsetCS = pre_collection_ts + td.cs_onsets[trial];
+    uint32_t onsetCS = td.cs_onsets[trial];
     uint32_t csLength = td.cs_lens[trial];
     // uint32_t percentCS    = td.cs_percents[trial]; // unused for now
     uint32_t useUS = td.use_uss[trial];
-    uint32_t onsetUS = pre_collection_ts + td.us_onsets[trial];
-
+    uint32_t onsetUS = td.us_onsets[trial];
     int PSTHCounter = 0;
     float gGRGO_sum = 0;
     float gMFGO_sum = 0;
@@ -772,10 +835,12 @@ void Control::runSession(struct gui *gui) {
       }
 
       simCore->updateMFInput(mfAP);
-      // this is the main simCore function which computes all cell pops' spikes
+      // this is the main simCore function which computes all cell pops'
+      // spikes
       simCore->calcActivity(spillFrac, pf_pc_plast, mf_nc_plast);
 
       /* collect conductances used to check tuning */
+      /* cs is defined wrt msPreCS, so subtract it and add bun_viz on top */
       if (ts >= onsetCS && ts < onsetCS + csLength) {
         mfgoG = simCore->getInputNet()->exportgSum_MFGO();
         grgoG = simCore->getInputNet()->exportgSum_GRGO();
@@ -797,7 +862,7 @@ void Control::runSession(struct gui *gui) {
       }
 
       /* data collection */
-      if (ts >= onsetCS - msPreCS && ts < onsetCS + csLength + msPostCS) {
+      if (ts >= onsetCS - msPreCS && ts < onsetCS - msPreCS + msMeasure) {
         fill_rasters(raster_counter, PSTHCounter);
         fill_psths(PSTHCounter);
         PSTHCounter++;
@@ -815,8 +880,8 @@ void Control::runSession(struct gui *gui) {
     LOG_INFO("'%s' took %0.2fs", trialName.c_str(), end - start);
 
     if (use_gui) {
-      // for now, compute the mean and median firing rates for all cells if win
-      // is visible
+      // for now, compute the mean and median firing rates for all cells if
+      // win is visible
       if (firing_rates_win_visible(gui)) {
         calculate_firing_rates(onsetCS, onsetCS + csLength);
         gdk_threads_add_idle((GSourceFunc)update_fr_labels, gui);
@@ -844,13 +909,19 @@ void Control::runSession(struct gui *gui) {
   run_state = NOT_IN_RUN;
   set_info_file_str_props(AFTER_RUN, if_data);
 
-  if (!use_gui) { // go ahead and save everything if we're not in the gui.
+  RedNucleus rn(num_nc);
+  rn.calc_crs_from((const uint8_t **)rasters[NC], pc_crs, td.num_trials,
+                   BUN_VIZ_MS_MEASURE, BUN_VIZ_MS_PRE_CS, msPreCS, msMeasure);
+  if (!use_gui) { // go ahead and save everything
+                  // if we're not in the gui.
     save_rasters();
     save_psths();
     save_pfpc_weights_to_file();
     save_mfdcn_weights_to_file();
     save_sim_to_file();
     save_info_to_file();
+    save_bvi_to_file();
+    save_dat_to_file();
   }
 }
 
@@ -1064,8 +1135,8 @@ void Control::fill_rasters(uint32_t raster_counter, uint32_t psth_counter) {
     uint32_t temp_counter = raster_counter;
     if (!rf_names[i].empty() || use_gui) {
       /* GR spikes are only spikes not saved on host every time step:
-       * InNet::exportAPGR makes cudaMemcpy call before returning pointer to mem
-       * address */
+       * InNet::exportAPGR makes cudaMemcpy call before returning pointer to
+       * mem address */
       if (CELL_IDS[i] == "GR") {
         cell_spikes[i] = simCore->getInputNet()->exportAPGR();
         temp_counter = psth_counter;
@@ -1096,8 +1167,8 @@ void Control::fill_psths(uint32_t psth_counter) {
   for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
     if (!pf_names[i].empty() || use_gui) {
       /* GR spikes are only spikes not saved on host every time step:
-       * InNet::exportAPGR makes cudaMemcpy call before returning pointer to mem
-       * address */
+       * InNet::exportAPGR makes cudaMemcpy call before returning pointer to
+       * mem address */
       if (CELL_IDS[i] == "GR") {
         cell_spikes[i] = simCore->getInputNet()->exportAPGR();
       }
@@ -1105,13 +1176,6 @@ void Control::fill_psths(uint32_t psth_counter) {
         psths[i][psth_counter][j] += cell_spikes[i][j];
       }
     }
-  }
-}
-
-void Control::delete_spike_sums() {
-  for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
-    free(spike_sums[i].non_cs_spike_counter);
-    free(spike_sums[i].cs_spike_counter);
   }
 }
 
@@ -1131,5 +1195,14 @@ void Control::delete_psths() {
   for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
     if (!pf_names[i].empty())
       delete2DArray<uint8_t>(psths[i]);
+  }
+}
+
+void Control::delete_pc_crs() { delete2DArray<float>(pc_crs); }
+
+void Control::delete_spike_sums() {
+  for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
+    free(spike_sums[i].non_cs_spike_counter);
+    free(spike_sums[i].cs_spike_counter);
   }
 }

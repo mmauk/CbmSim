@@ -24,6 +24,41 @@ Type **allocate2DArray(unsigned long long numRows, unsigned long long numCols) {
   return retArr;
 }
 
+// potentially dangerous: does not check the diminesions of the new array
+// also: caller owns the memory!
+template <typename Type>
+Type **transpose2DArray(Type **in, uint64_t num_rows_old,
+                        uint64_t num_cols_old) {
+  Type **result = allocate2DArray<Type>(num_cols_old, num_rows_old);
+  for (size_t i = 0; i < num_rows_old; i++) {
+    for (size_t j = 0; j < num_cols_old; j++) {
+      result[j][i] = in[i][j];
+    }
+  }
+  return result;
+}
+
+/*
+ * @brief: normalizes the 2D array wrt its maximum value st.
+ *         all array values lie in the interval [0.0, 1.0].
+ *         Does so in-place, ie modifies the actual vals of
+ *         the arr.
+ */
+template <typename Type>
+void norm_2d_array_ip(Type **arr, uint64_t numRows, uint64_t numCols) {
+  auto max_it = std::max_element(arr[0], arr[0] + numRows * numCols);
+  Type val = *max_it;
+  std::transform(arr[0], arr[0] + numRows * numCols, arr[0],
+                 [=](Type elem) { return elem / val; });
+}
+
+template <typename T, typename V = float>
+void mult_2d_array_by_val_ip(T **arr, uint64_t numRows, uint64_t numCols,
+                             V val) {
+  std::transform(arr[0], arr[0] + numRows * numCols, arr[0],
+                 [=](T elem) { return elem * val; });
+}
+
 template <typename Type>
 void write2DArray(std::string out_file_name, Type **inArr,
                   unsigned long long num_row, unsigned long long num_col,

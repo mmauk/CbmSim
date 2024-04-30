@@ -492,7 +492,14 @@ void validate_commandline(parsed_commandline &p_cl) {
                   "value of 'TUI'...");
         p_cl.vis_mode = "TUI";
       }
-      p_cl.session_file = INPUT_DATA_PATH + p_cl.session_file;
+      std::string input_sess_file_fullpath;
+      if (!file_exists(INPUT_DATA_PATH, p_cl.session_file,
+                       input_sess_file_fullpath)) {
+        LOG_FATAL("Could not find input session file '%s'. Exiting...",
+                  p_cl.session_file.c_str());
+        exit(11);
+      }
+      p_cl.session_file = input_sess_file_fullpath;
     } else if (!p_cl.input_sim_file.empty()) {
       if (p_cl.vis_mode.empty()) {
         LOG_DEBUG(

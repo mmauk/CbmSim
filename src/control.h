@@ -34,6 +34,8 @@
 #define NUM_WEIGHTS_TYPES 2
 #define NUM_SAVE_OPTS 19
 #define NUM_SYN_CONS 12
+#define BUN_VIZ_MS_MEASURE 2500
+#define BUN_VIZ_MS_PRE_CS 200
 
 // TODO:  should put these in file_utility.h
 const std::string RAST_EXT[NUM_CELL_TYPES] = {".mfr", ".grr", ".gor", ".bcr",
@@ -148,11 +150,14 @@ public:
 
   bool raster_arrays_initialized = false;
   bool psth_arrays_initialized = false;
+  bool pc_crs_initialized = false;
   bool spike_sums_initialized = false;
 
   bool data_out_dir_created = false;
   bool out_sim_filename_created = false;
   bool out_info_filename_created = false;
+  bool out_biv_filename_created = false;
+  bool out_dat_filename_created = false;
   bool raster_filenames_created = false;
   bool psth_filenames_created = false;
 
@@ -212,9 +217,7 @@ public:
 
   /* time related variables in-trial */
   uint32_t trialTime = 0;
-  const uint32_t pre_collection_ts = 2000;
   uint32_t msPreCS = 0;   // how much time before the cs do we collect data for
-  uint32_t msPostCS = 0;  // how much time after the cs do we collect data for
   uint32_t msMeasure = 0; // total amount of time data is collected for
 
   /* plasticity types */
@@ -222,11 +225,14 @@ public:
   enum plasticity mf_nc_plast = GRADED;
 
   /* input and output filenames */
+  std::string sess_file_name = "";
   std::string data_out_path = "";
   std::string data_out_base_name = "";
 
   std::string out_sim_name = "";
   std::string out_info_name = "";
+  std::string out_bvi_name = "";
+  std::string out_dat_name = "";
 
   std::string rf_names[NUM_CELL_TYPES];
   std::string pf_names[NUM_CELL_TYPES];
@@ -251,6 +257,7 @@ public:
   uint32_t rast_cell_nums[NUM_CELL_TYPES];
   uint8_t **rasters[NUM_CELL_TYPES];
   uint8_t **psths[NUM_CELL_TYPES];
+  float **pc_crs;
 
   /* save functions for time series data */
   uint32_t rast_sizes[NUM_CELL_TYPES];
@@ -327,6 +334,16 @@ public:
   void save_info_to_file();
 
   /**
+   *  @brief Write all relevant info to bvi file.
+   */
+  void save_bvi_to_file();
+
+  /**
+   *  @brief Write crs to dat file.
+   */
+  void save_dat_to_file();
+
+  /**
    *  @brief Save the parallel fiber purkinje cell weights to binary file.
    */
   void save_pfpc_weights_to_file();
@@ -366,6 +383,16 @@ public:
   void create_out_info_filename();
 
   /**
+   *  @brief Create the full-path filename of the output bvi file
+   */
+  void create_out_bvi_filename();
+
+  /**
+   *  @brief Create the full-path filename of the output dat file
+   */
+  void create_out_dat_filename();
+
+  /**
    *  @brief Create the full-path filenames of cmdline-specified rasters
    *  @param rast_map Reference to map of cell type to bool which encodes
    *  whether the cell type was specified at the cmdline
@@ -399,6 +426,7 @@ public:
   void initialize_spike_sums();
   void initialize_rasters();
   void initialize_psths();
+  void initialize_pc_crs();
   void initialize_psth_save_funcs();
   void initialize_raster_save_funcs();
 
@@ -456,6 +484,7 @@ public:
   /* delete data objects from memory. Only run in destructor */
   void delete_rasters();
   void delete_psths();
+  void delete_pc_crs();
   void delete_spike_sums();
 };
 
