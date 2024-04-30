@@ -756,8 +756,7 @@ void Control::initialize_rasters() {
 void Control::initialize_psths() {
   for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
     if (!pf_names[i].empty() || use_gui)
-      // TODO: make data type bigger for psth
-      psths[i] = allocate2DArray<uint8_t>(msMeasure, rast_cell_nums[i]);
+      psths[i] = allocate2DArray<uint32_t>(msMeasure, rast_cell_nums[i]);
   }
   psth_arrays_initialized = true;
 }
@@ -922,7 +921,7 @@ void Control::reset_psths() {
   for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
     if (!pf_names[i].empty()) {
       memset(psths[i][0], '\000',
-             rast_cell_nums[i] * msMeasure * sizeof(uint8_t));
+             rast_cell_nums[i] * msMeasure * sizeof(uint32_t));
     }
   }
 }
@@ -952,8 +951,8 @@ void Control::save_psths() {
   for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
     if (!pf_names[i].empty()) {
       LOG_DEBUG("Saving %s psth to file...", CELL_IDS[i].c_str());
-      write2DArray<uint8_t>(pf_names[i], psths[i], msMeasure,
-                            rast_cell_nums[i]);
+      write2DArray<uint32_t>(pf_names[i], psths[i], msMeasure,
+                             rast_cell_nums[i]);
     }
   }
 }
@@ -1172,7 +1171,7 @@ void Control::delete_rasters() {
 void Control::delete_psths() {
   for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
     if (!pf_names[i].empty())
-      delete2DArray<uint8_t>(psths[i]);
+      delete2DArray<uint32_t>(psths[i]);
   }
 }
 
