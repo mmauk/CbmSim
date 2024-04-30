@@ -156,8 +156,18 @@ void Control::initialize_session(std::string sess_file) {
       s_file.parsed_var_sections["trial_spec"].param_map["trialTime"]);
   msPreCS =
       std::stoi(s_file.parsed_var_sections["trial_spec"].param_map["msPreCS"]);
+
+  if (msPreCS < BUN_VIZ_MS_PRE_CS) {
+    LOG_FATAL("msPreCS must be greater than or equal to BUN_VIZ_MS_PRE_CS. "
+              "got %d and %d respectively. Exiting...",
+              msPreCS, BUN_VIZ_MS_PRE_CS);
+    exit(1);
+  }
   msPostCS =
       std::stoi(s_file.parsed_var_sections["trial_spec"].param_map["msPostCS"]);
+  // Assume msPreCS > BUN_VIZ_MS_PRE_CS, then we take
+  // msMeasure to be BUN_VIZ_MS_MEASURE plus the amt extra
+  // that is in msPreCS that is not in BUN_VIZ_MS_PRE_CS
   msMeasure = msPreCS - BUN_VIZ_MS_PRE_CS + BUN_VIZ_MS_MEASURE;
 
   trials_data_initialized = true;
@@ -854,8 +864,7 @@ void Control::runSession(struct gui *gui) {
       }
 
       /* data collection */
-      if (ts >= onsetCS - msPreCS &&
-          ts < onsetCS - msPreCS + BUN_VIZ_MS_PRE_CS + BUN_VIZ_MS_MEASURE) {
+      if (ts >= onsetCS - msPreCS && ts < onsetCS - msPreCS + msMeasure) {
         fill_rasters(raster_counter, PSTHCounter);
         fill_psths(PSTHCounter);
         PSTHCounter++;
