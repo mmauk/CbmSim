@@ -194,7 +194,6 @@ void Control::init_sim(std::string in_sim_filename) {
   simCore->setTrueMFs(mfs->getCollateralIds());
   initialize_rast_cell_nums();
   initialize_cell_spikes();
-  initialize_psth_save_funcs();
   initialize_rasters();
   initialize_psths();
   initialize_pc_crs();
@@ -768,18 +767,6 @@ void Control::initialize_pc_crs() {
   pc_crs_initialized = true;
 }
 
-void Control::initialize_psth_save_funcs() {
-  for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
-    psth_save_funcs[i] = [this, i]() {
-      if (!pf_names[i].empty()) {
-        LOG_DEBUG("Saving %s psth to file...", CELL_IDS[i].c_str());
-        write2DArray<uint8_t>(pf_names[i], this->psths[i], this->msMeasure,
-                              this->rast_cell_nums[i]);
-      }
-    };
-  }
-}
-
 void Control::runSession(struct gui *gui) {
   set_info_file_str_props(BEFORE_RUN, if_data);
   double start, end;
@@ -963,8 +950,11 @@ void Control::save_rasters_no_gr() {
 
 void Control::save_psths() {
   for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
-    if (!pf_names[i].empty())
-      psth_save_funcs[i]();
+    if (!pf_names[i].empty()) {
+      LOG_DEBUG("Saving %s psth to file...", CELL_IDS[i].c_str());
+      write2DArray<uint8_t>(pf_names[i], psths[i], msMeasure,
+                            rast_cell_nums[i]);
+    }
   }
 }
 

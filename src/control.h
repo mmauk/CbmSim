@@ -259,9 +259,6 @@ public:
   uint8_t **psths[NUM_CELL_TYPES];
   float **pc_crs;
 
-  /* save functions for time series data */
-  std::function<void()> psth_save_funcs[NUM_CELL_TYPES];
-
   /* voltage rasters for gui pc window */
   float **pc_vm_raster;
   float **nc_vm_raster;
@@ -425,7 +422,6 @@ public:
   void initialize_rasters();
   void initialize_psths();
   void initialize_pc_crs();
-  void initialize_psth_save_funcs();
 
   /**
    *  @brief Runs all trials in trials_data attribute.
