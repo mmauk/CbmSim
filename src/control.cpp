@@ -194,7 +194,6 @@ void Control::init_sim(std::string in_sim_filename) {
   simCore->setTrueMFs(mfs->getCollateralIds());
   initialize_rast_cell_nums();
   initialize_cell_spikes();
-  initialize_raster_save_funcs();
   initialize_psth_save_funcs();
   initialize_rasters();
   initialize_psths();
@@ -781,21 +780,6 @@ void Control::initialize_psth_save_funcs() {
   }
 }
 
-void Control::initialize_raster_save_funcs() {
-  for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
-    rast_save_funcs[i] = [this, i]() {
-      if (!rf_names[i].empty() && CELL_IDS[i] != "GR") {
-        uint32_t row_size = (CELL_IDS[i] == "GR")
-                                ? this->msMeasure
-                                : this->msMeasure * this->td.num_trials;
-        LOG_DEBUG("Saving %s raster to file...", CELL_IDS[i].c_str());
-        write2DArray<uint8_t>(rf_names[i], this->rasters[i], row_size,
-                              this->rast_cell_nums[i]);
-      }
-    };
-  }
-}
-
 void Control::runSession(struct gui *gui) {
   set_info_file_str_props(BEFORE_RUN, if_data);
   double start, end;
@@ -914,7 +898,7 @@ void Control::runSession(struct gui *gui) {
                    BUN_VIZ_MS_MEASURE, BUN_VIZ_MS_PRE_CS, msPreCS, msMeasure);
   if (!use_gui) { // go ahead and save everything
                   // if we're not in the gui.
-    save_rasters();
+    save_rasters_no_gr();
     save_psths();
     save_pfpc_weights_to_file();
     save_mfdcn_weights_to_file();
@@ -966,10 +950,14 @@ void Control::save_gr_rasters_at_trial_to_file(uint32_t trial) {
   }
 }
 
-void Control::save_rasters() {
+void Control::save_rasters_no_gr() {
   for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
-    if (!rf_names[i].empty())
-      rast_save_funcs[i]();
+    if (!rf_names[i].empty() && CELL_IDS[i] != "GR") {
+      uint32_t row_size = msMeasure * td.num_trials;
+      LOG_DEBUG("Saving %s raster to file...", CELL_IDS[i].c_str());
+      write2DArray<uint8_t>(rf_names[i], rasters[i], row_size,
+                            rast_cell_nums[i]);
+    }
   }
 }
 

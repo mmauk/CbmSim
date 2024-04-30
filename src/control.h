@@ -260,9 +260,7 @@ public:
   float **pc_crs;
 
   /* save functions for time series data */
-  uint32_t rast_sizes[NUM_CELL_TYPES];
   std::function<void()> psth_save_funcs[NUM_CELL_TYPES];
-  std::function<void()> rast_save_funcs[NUM_CELL_TYPES];
 
   /* voltage rasters for gui pc window */
   float **pc_vm_raster;
@@ -428,7 +426,6 @@ public:
   void initialize_psths();
   void initialize_pc_crs();
   void initialize_psth_save_funcs();
-  void initialize_raster_save_funcs();
 
   /**
    *  @brief Runs all trials in trials_data attribute.
@@ -476,7 +473,7 @@ public:
   /* save data objects to file functions */
   void save_weights();
   void save_gr_rasters_at_trial_to_file(uint32_t trial);
-  void save_rasters();
+  void save_rasters_no_gr();
   void save_psths();
   /* NOTE: for now, saving 2d arrays, only from pre-synaptic side */
   void save_con_arrs();
