@@ -741,7 +741,7 @@ void Control::initialize_spike_sums() {
  */
 void Control::initialize_rasters() {
   for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
-    if (!rf_names[i].empty() || use_gui) {
+    if (!rf_names[i].empty() || CELL_IDS[i] == "NC" || use_gui) {
       uint32_t row_size =
           (CELL_IDS[i] == "GR") ? msMeasure : msMeasure * td.num_trials;
       rasters[i] = allocate2DArray<uint8_t>(row_size, rast_cell_nums[i]);
