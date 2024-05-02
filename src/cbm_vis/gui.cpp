@@ -133,7 +133,10 @@ static void on_save_file(GtkWidget *widget, save_data *data) {
       if (!data->ctrl_ptr->raster_filenames_created) {
         data->ctrl_ptr->create_raster_filenames(init_all_rast_or_psth_map);
       }
-      data->ctrl_ptr->raster_save_funcs[data->opt]();
+      if (data->opt == GR_RAST) {
+        data->ctrl_ptr->save_gr_rasters_at_trial_to_file(data->ctrl_ptr->trial);
+      } else
+        data->ctrl_ptr->raster_save_funcs[data->opt]();
     } else {
       if (!data->ctrl_ptr->psth_filenames_created) {
         data->ctrl_ptr->create_psth_filenames(init_all_rast_or_psth_map);
@@ -147,7 +150,7 @@ static void on_save_file(GtkWidget *widget, save_data *data) {
     if (!data->ctrl_ptr->pfpc_weights_filenames_created) {
       data->ctrl_ptr->create_weights_filenames(init_all_weights_map);
     }
-    data->ctrl_ptr->save_pfpc_weights_to_file();
+    data->ctrl_ptr->save_pfpc_weights_at_trial_to_file(data->ctrl_ptr->trial);
   } else if (data->opt == MFNC) {
     if (!data->ctrl_ptr->mfnc_weights_filenames_created) {
       data->ctrl_ptr->create_weights_filenames(init_all_weights_map);
@@ -564,8 +567,6 @@ static void on_toggle_run(GtkWidget *widget, struct gui *gui) {
       gtk_button_set_label(GTK_BUTTON(widget), "Pause");
       gui->ctrl_ptr->run_state = IN_RUN_NO_PAUSE;
       gtk_widget_show(gui->normal_buttons[1].widget);
-      // FIXME: thats a segfault: where is the object this guy is called upon???
-      // g_thread_new("sim_thread", (GThreadFunc)&Control::runSession, gui);
       gui->ctrl_ptr->runSession(gui);
       gtk_button_set_label(GTK_BUTTON(widget), "Run");
       gtk_widget_hide(gui->normal_buttons[1].widget);
@@ -725,7 +726,6 @@ static void draw_pc_plot(GtkWidget *drawing_area, cairo_t *cr,
   unsigned int trial_start = control->trial * control->msMeasure;
   uint32_t k = trial_start;
 
-  // FIXME: not drawing on second trial
   for (uint32_t i = 0; i < control->msMeasure; i++) {
     int alternator = 1;
     for (int j = 0; j < num_pc; j++) {

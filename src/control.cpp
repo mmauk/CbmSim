@@ -894,10 +894,11 @@ void Control::runSession(struct gui *gui) {
         LOG_DEBUG("Continuing...");
       }
       reset_spike_sums();
+    } else {
+      // save gr rasters into new file every trial
+      save_gr_rasters_at_trial_to_file(trial);
+      save_pfpc_weights_at_trial_to_file(trial);
     }
-    // save gr rasters into new file every trial
-    save_gr_rasters_at_trial_to_file(trial);
-    save_pfpc_weights_at_trial_to_file(trial);
     trial++;
   }
   trial--; // setting so that is valid for drawing go rasters after a sim
