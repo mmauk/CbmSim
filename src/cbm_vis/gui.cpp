@@ -891,7 +891,7 @@ static void set_gui_dcn_plast_button_attribs(struct gui *gui) {
   gtk_button_set_label(GTK_BUTTON(gui->dcn_plast_button.widget),
                        gui->dcn_plast_button.label);
   gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(gui->dcn_plast_button.widget),
-                               true);
+                               false);
   gtk_widget_set_hexpand(gui->dcn_plast_button.widget, true);
   gtk_widget_set_vexpand(gui->dcn_plast_button.widget, true);
   gtk_grid_attach(GTK_GRID(gui->grid), gui->dcn_plast_button.widget,
