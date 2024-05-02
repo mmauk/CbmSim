@@ -413,9 +413,6 @@ void validate_commandline(parsed_commandline &p_cl) {
   if (p_cmdline_is_empty(p_cl)) // only executable given, open the gui
   {
     p_cl.vis_mode = "GUI";
-    // FIXME: for now, will not assign to either -o options. no args, assume
-    // want run mode in gui later, will defer run mode to only tui, as gui
-    // callbacks do not require such checks
     p_cl.pfpc_plasticity = "graded";
     p_cl.mfnc_plasticity = "off";
   } else {

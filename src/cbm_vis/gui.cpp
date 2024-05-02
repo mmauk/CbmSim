@@ -126,7 +126,7 @@ static void on_load_sim_file(GtkWidget *widget, Control *control) {
 }
 
 // FIXME: initialize filenames from output_sim_name, coming from either:
-// a) commandline
+// a) commandline b) output dir creation user flow
 static void on_save_file(GtkWidget *widget, save_data *data) {
   if (data->opt == data->opt % (2 * NUM_CELL_TYPES)) {
     if (data->opt == data->opt % NUM_CELL_TYPES) {
@@ -138,7 +138,7 @@ static void on_save_file(GtkWidget *widget, save_data *data) {
       if (!data->ctrl_ptr->psth_filenames_created) {
         data->ctrl_ptr->create_psth_filenames(init_all_rast_or_psth_map);
       }
-      // FIXME: place all psth and rast save funcs in a general save func so
+      // TODO: place all psth and rast save funcs in a general save func so
       // that we don't have to do this hacky modding out just to get the correct
       // index
       data->ctrl_ptr->psth_save_funcs[data->opt % NUM_CELL_TYPES]();
