@@ -32,7 +32,6 @@ typedef struct {
   std::string build_file;
   std::string session_file;
   std::string input_sim_file;
-  std::string output_sim_file;
   std::string output_basename;
   std::string pfpc_plasticity;
   std::string mfnc_plasticity;

@@ -197,6 +197,8 @@ void Control::init_sim(std::string in_sim_filename) {
   initialize_rasters();
   initialize_psths();
   initialize_pc_crs();
+  initialize_raster_save_funcs();
+  initialize_psth_save_funcs();
   initialize_spike_sums();
   sim_file_buf.close();
   sim_initialized = true;
@@ -324,7 +326,7 @@ void Control::write_cmdline_info(std::fstream &out_buf) {
   out_buf << "#" << std::setw(1) << "" << OUT_DIR_LBL
           << std::setw(col_1_remaining) << std::right << " : "
           << std::setw(CMDLINE_SECTION_COL_2_WIDTH) << std::left
-          << if_data.p_cl.output_sim_file << "#\n";
+          << if_data.p_cl.output_basename << "#\n";
 
   col_1_remaining = CMDLINE_SECTION_COL_1_WIDTH - PFPC_PLAST_LBL.length();
   out_buf << "#" << std::setw(1) << "" << PFPC_PLAST_LBL
@@ -766,6 +768,33 @@ void Control::initialize_pc_crs() {
   pc_crs_initialized = true;
 }
 
+void Control::initialize_raster_save_funcs() {
+  for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
+    raster_save_funcs[i] = [this, i]() {
+      if (!rf_names[i].empty()) {
+        uint32_t row_size = (CELL_IDS[i] == "GR")
+                                ? this->msMeasure
+                                : this->msMeasure * this->td.num_trials;
+        LOG_DEBUG("Saving %s raster to file...", CELL_IDS[i].c_str());
+        write2DArray<uint8_t>(rf_names[i], this->rasters[i], row_size,
+                              this->rast_cell_nums[i]);
+      }
+    };
+  }
+}
+
+void Control::initialize_psth_save_funcs() {
+  for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
+    psth_save_funcs[i] = [this, i]() {
+      if (!pf_names[i].empty()) {
+        LOG_DEBUG("Saving %s psth to file...", CELL_IDS[i].c_str());
+        write2DArray<uint32_t>(pf_names[i], this->psths[i], this->msMeasure,
+                               this->rast_cell_nums[i]);
+      }
+    };
+  }
+}
+
 void Control::runSession(struct gui *gui) {
   set_info_file_str_props(BEFORE_RUN, if_data);
   double start, end;
@@ -938,22 +967,15 @@ void Control::save_gr_rasters_at_trial_to_file(uint32_t trial) {
 
 void Control::save_rasters_no_gr() {
   for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
-    if (!rf_names[i].empty() && CELL_IDS[i] != "GR") {
-      uint32_t row_size = msMeasure * td.num_trials;
-      LOG_DEBUG("Saving %s raster to file...", CELL_IDS[i].c_str());
-      write2DArray<uint8_t>(rf_names[i], rasters[i], row_size,
-                            rast_cell_nums[i]);
+    if (CELL_IDS[i] != "GR") {
+      raster_save_funcs[i]();
     }
   }
 }
 
 void Control::save_psths() {
   for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
-    if (!pf_names[i].empty()) {
-      LOG_DEBUG("Saving %s psth to file...", CELL_IDS[i].c_str());
-      write2DArray<uint32_t>(pf_names[i], psths[i], msMeasure,
-                             rast_cell_nums[i]);
-    }
+    psth_save_funcs[i]();
   }
 }
 

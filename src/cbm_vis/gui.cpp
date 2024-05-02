@@ -133,7 +133,7 @@ static void on_save_file(GtkWidget *widget, save_data *data) {
       if (!data->ctrl_ptr->raster_filenames_created) {
         data->ctrl_ptr->create_raster_filenames(init_all_rast_or_psth_map);
       }
-      data->ctrl_ptr->rast_save_funcs[data->opt]();
+      data->ctrl_ptr->raster_save_funcs[data->opt]();
     } else {
       if (!data->ctrl_ptr->psth_filenames_created) {
         data->ctrl_ptr->create_psth_filenames(init_all_rast_or_psth_map);

@@ -309,23 +309,20 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl) {
   }
 
   // fill plasticity values, testing for mutually exclusive options
-  for (auto token : tokens) {
-    if (token == "--pfpc-off" || token == "--binary" || token == "--cascade") {
-      if (!p_cl.pfpc_plasticity.empty()) {
+  bool pfpc_opt_found = false;
+  for (auto single_opt : command_line_single_opts) {
+    if (cmd_opt_exists(tokens, single_opt)) {
+      if (single_opt.find("mfnc") != std::string::npos) {
+        p_cl.mfnc_plasticity = single_opt.substr(7, std::string::npos);
+      } else if (!pfpc_opt_found) {
+        int offset = (single_opt.find("pfpc") != std::string::npos) ? 7 : 2;
+        p_cl.pfpc_plasticity = single_opt.substr(offset, std::string::npos);
+        pfpc_opt_found = true;
+      } else {
         LOG_FATAL("Mutually exclusive or duplicate pfpc plasticity arguments "
                   "found. Exiting...");
-        exit(12);
+        exit(1);
       }
-      if (token == "--pfpc-off")
-        p_cl.pfpc_plasticity = token.substr(7, std::string::npos);
-      else
-        p_cl.pfpc_plasticity = token.substr(2, std::string::npos);
-    } else if (token == "--mfnc-off") {
-      if (!p_cl.mfnc_plasticity.empty()) {
-        LOG_FATAL("Duplicate mfnc plasticity arguments found. Exiting...");
-        exit(13);
-      }
-      p_cl.mfnc_plasticity = token.substr(7, std::string::npos);
     }
   }
 
@@ -334,16 +331,15 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl) {
     int first_opt_exist = cmd_opt_exists(tokens, opt.first);
     int second_opt_exist = cmd_opt_exists(tokens, opt.second);
     int opt_sum = first_opt_exist + second_opt_exist;
-    std::string this_opt;
-    std::string this_param;
+    std::string this_opt, this_param;
     char opt_char_code;
-    std::vector<std::string>::iterator curr_token_iter = tokens.begin();
+    auto curr_token_iter = tokens.begin();
     p_cl.cmd_name = *curr_token_iter;
     switch (opt_sum) {
     case 2:
       LOG_FATAL("Found both short and long form of option '%s'. Exiting...",
                 opt.first.c_str());
-      exit(9);
+      exit(1);
       break;
     case 1:
       this_opt = (first_opt_exist == 1) ? opt.first : opt.second;
@@ -370,9 +366,6 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl) {
         p_cl.input_sim_file = this_param;
         break;
       case 'o':
-        // FIXME: for now, regardless mode, add -o arg to both names. later, may
-        // deprecated one over other
-        p_cl.output_sim_file = this_param;
         p_cl.output_basename = this_param;
         break;
       case 'r':
@@ -400,11 +393,10 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl) {
 bool p_cmdline_is_empty(parsed_commandline &p_cl) {
   return p_cl.print_help.empty() && p_cl.vis_mode.empty() &&
          p_cl.build_file.empty() && p_cl.session_file.empty() &&
-         p_cl.input_sim_file.empty() && p_cl.output_sim_file.empty() &&
-         p_cl.output_basename.empty() && p_cl.pfpc_plasticity.empty() &&
-         p_cl.mfnc_plasticity.empty() && p_cl.raster_files.empty() &&
-         p_cl.psth_files.empty() && p_cl.weights_files.empty() &&
-         p_cl.conn_arrs_files.empty();
+         p_cl.input_sim_file.empty() && p_cl.output_basename.empty() &&
+         p_cl.pfpc_plasticity.empty() && p_cl.mfnc_plasticity.empty() &&
+         p_cl.raster_files.empty() && p_cl.psth_files.empty() &&
+         p_cl.weights_files.empty() && p_cl.conn_arrs_files.empty();
 }
 
 /*
@@ -443,9 +435,6 @@ void validate_commandline(parsed_commandline &p_cl) {
       if (p_cl.output_basename.empty()) {
         LOG_FATAL("You must specify an output basename. Exiting...");
         exit(9);
-      } else {
-        // temporary: will add full path in control
-        p_cl.output_sim_file = p_cl.output_basename + SIM_EXT;
       }
       if (p_cl.vis_mode.empty()) {
         LOG_DEBUG(
@@ -571,7 +560,6 @@ void cp_parsed_commandline(parsed_commandline &from_p_cl,
   to_p_cl.build_file = from_p_cl.build_file;
   to_p_cl.session_file = from_p_cl.session_file;
   to_p_cl.input_sim_file = from_p_cl.input_sim_file;
-  to_p_cl.output_sim_file = from_p_cl.output_sim_file;
   to_p_cl.output_basename = from_p_cl.output_basename;
   to_p_cl.pfpc_plasticity = from_p_cl.pfpc_plasticity;
   to_p_cl.mfnc_plasticity = from_p_cl.mfnc_plasticity;
@@ -589,7 +577,6 @@ std::string parsed_commandline_to_str(parsed_commandline &p_cl) {
   p_cl_buf << "{ 'build_file', '" << p_cl.build_file << "' }\n";
   p_cl_buf << "{ 'session_file', '" << p_cl.session_file << "' }\n";
   p_cl_buf << "{ 'input_sim_file', '" << p_cl.input_sim_file << "' }\n";
-  p_cl_buf << "{ 'output_sim_file', '" << p_cl.output_sim_file << "' }\n";
   p_cl_buf << "{ 'output_basename', '" << p_cl.output_basename << "' }\n";
   p_cl_buf << "{ 'pfpc_plasticity', '" << p_cl.pfpc_plasticity << "' }\n";
   p_cl_buf << "{ 'mfnc_plasticity', '" << p_cl.mfnc_plasticity << "' }\n";
