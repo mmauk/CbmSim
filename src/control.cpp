@@ -221,7 +221,6 @@ void Control::reset_sim(std::string in_sim_filename) {
   reset_psths();
   reset_spike_sums();
   sim_file_buf.close();
-  // TODO: more things to reset?
 }
 
 void Control::save_sim_to_file() {
@@ -643,7 +642,7 @@ void Control::create_out_dat_filename() {
 void Control::create_raster_filenames(std::map<std::string, bool> &rast_map) {
   if (data_out_dir_created) {
     for (uint32_t i = 0; i < NUM_CELL_TYPES; i++) {
-      if (rast_map[CELL_IDS[i]] || use_gui) {
+      if (rast_map[CELL_IDS[i]] || CELL_IDS[i] == "NC" || use_gui) {
         rf_names[i] = data_out_path + "/" + data_out_base_name + RAST_EXT[i];
       }
     }

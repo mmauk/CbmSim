@@ -1130,8 +1130,8 @@ template <typename Type>
 cudaError_t InNet::getGRGPUData(Type **gpuData, Type *hostData) {
   for (int i = 0; i < numGPUs; i++) {
     cudaSetDevice(i + gpuIndStart);
-    cudaMemcpy((void *)&hostData[i * numGRPerGPU], gpuData[i],
-               numGRPerGPU * sizeof(Type), cudaMemcpyDeviceToHost);
+    cudaMemcpyAsync((void *)&hostData[i * numGRPerGPU], gpuData[i],
+                    numGRPerGPU * sizeof(Type), cudaMemcpyDeviceToHost);
   }
   return cudaGetLastError();
 }
