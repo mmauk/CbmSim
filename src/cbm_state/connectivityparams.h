@@ -11,16 +11,6 @@
 #ifndef CONNECTIVITYPARAMS_H_
 #define CONNECTIVITYPARAMS_H_
 
-#include "file_parse.h"
-#include <cstdint>
-#include <fstream>
-#include <iostream>
-#include <string>
-
-#define NUM_CON_PARAMS 107
-
-extern bool con_params_populated;
-
 extern int mf_x;
 extern int mf_y;
 extern int num_mf;
@@ -150,9 +140,5 @@ extern float threshRestIO;
 extern float eLeakNC;
 extern float threshRestNC;
 extern float initSynWofMFtoNC;
-
-void populate_con_params(parsed_build_file &p_file);
-void read_con_params(std::fstream &in_param_buf);
-void write_con_params(std::fstream &out_param_buf);
 
 #endif /* CONNECTIVITYPARAMS_H_ */

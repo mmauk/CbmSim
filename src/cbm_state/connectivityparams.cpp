@@ -7,684 +7,168 @@
 
 #include "connectivityparams.h"
 
-bool con_params_populated = false;
+// cell numbers
+int mf_x = 128;
+int mf_y = 32;
+int num_mf = 4096;
 
-int mf_x = 0;
-int mf_y = 0;
-int num_mf = 0;
-int gl_x = 0;
-int gl_y = 0;
-int num_gl = 0;
-int gr_x = 0;
-int gr_y = 0;
-int num_gr = 0;
-int go_x = 0;
-int go_y = 0;
-int num_go = 0;
-int ubc_x = 0;
-int ubc_y = 0;
-int num_ubc = 0;
-int num_bc = 0;
-int num_sc = 0;
-int num_pc = 0;
-int num_nc = 0;
-int num_io = 0;
-int span_mf_to_gl_x = 0;
-int span_mf_to_gl_y = 0;
-int num_p_mf_to_gl = 0;
-int max_num_p_mf_from_mf_to_gl = 0;
-int initial_mf_output = 0;
-int max_mf_to_gl_attempts = 0;
-int span_gl_to_gr_x = 0;
-int span_gl_to_gr_y = 0;
-int num_p_gl_to_gr = 0;
-int low_num_p_gl_from_gl_to_gr = 0;
-int max_num_p_gr_from_gl_to_gr = 0;
-int max_num_p_gl_from_gl_to_gr = 0;
-int low_gl_to_gr_attempts = 0;
-int max_gl_to_gr_attempts = 0;
-int span_pf_to_go_x = 0;
-int span_pf_to_go_y = 0;
-int num_p_pf_to_go = 0;
-int max_num_p_go_from_gr_to_go = 0;
-int max_num_p_gr_from_gr_to_go = 0;
-int max_pf_to_go_input = 0;
-int max_pf_to_go_attempts = 0;
-int span_aa_to_go_x = 0;
-int span_aa_to_go_y = 0;
-int num_p_aa_to_go = 0;
-int max_aa_to_go_input = 0;
-int max_aa_to_go_attempts = 0;
-int span_go_to_go_x = 0;
-int span_go_to_go_y = 0;
-int num_p_go_to_go = 0;
-int num_con_go_to_go = 0;
-int go_go_recip_cons = 0;
+int gl_x = 512;
+int gl_y = 128;
+int num_gl = 65536;
+
+int gr_x = 2048;
+int gr_y = 512;
+int num_gr = 1048576;
+
+int go_x = 128;
+int go_y = 32;
+int num_go = 4096;
+
+int ubc_x = 64;
+int ubc_y = 16;
+int num_ubc = 1024;
+
+// mzone numbers
+int num_bc = 128;
+int num_sc = 512;
+int num_pc = 32;
+int num_nc = 8;
+int num_io = 4;
+
+// mf -> gl (uses Joe's Con alg (06/01/2022))
+int span_mf_to_gl_x = 512;
+int span_mf_to_gl_y = 128;
+int num_p_mf_to_gl = 66177;
+
+// int before = was; int 40 = as; int a = conservative; size (06/07/2022)
+int max_num_p_mf_from_mf_to_gl = 16;
+
+// NOTE: int not = a; int maxnump = as; int alg = is; adaptive
+int initial_mf_output = 14;
+int max_mf_to_gl_attempts = 4;
+
+// gl -> gr (int uses = connectCommon; (06/01/2022))
+int span_gl_to_gr_x = 4;
+int span_gl_to_gr_y = 4;
+int num_p_gl_to_gr = 25;
+
+int low_num_p_gl_from_gl_to_gr = 80;
+int max_num_p_gr_from_gl_to_gr = 5;
+int max_num_p_gl_from_gl_to_gr = 200;
+
+int low_gl_to_gr_attempts = 20000;
+int max_gl_to_gr_attempts = 50000;
+
+// gr -> go (int both = pf; int and = aa; int use = Joe;'int s = Con; Alg
+// (06/01/2022))
+int span_pf_to_go_x = 2048;
+int span_pf_to_go_y = 150;
+int num_p_pf_to_go = 309399;
+
+int max_num_p_go_from_gr_to_go =
+    4000; // (int was = 5000;) int should = be; int 4000 = 08;/09/2022
+int max_num_p_gr_from_gr_to_go =
+    50; // int should = be; int 22 = 08;/09/2022 (int change = to; 22, int no =
+        // gr; activity???)
+
+// int one = value; int we = play; int around = with;
+int max_pf_to_go_input =
+    3000; // (int was = 3750;) int should = be; int 3000 = 08;/09/2022
+int max_pf_to_go_attempts = 5;
+
+int span_aa_to_go_x = 150;
+int span_aa_to_go_y = 150;
+int num_p_aa_to_go = 22801;
+
+// int one = value; int we = play; int around = with;
+int max_aa_to_go_input =
+    1000; // (int was = 1250;) int should = be; int 1000 = 08;/08/2022
+int max_aa_to_go_attempts = 15;
+
+// go <-> go (int uses = Joe;'int s = Con; Alg (06/01/2022))
+int span_go_to_go_x = 10;
+int span_go_to_go_y = 10;
+int num_p_go_to_go = 121;
+
+int num_con_go_to_go = 12;
+
+int go_go_recip_cons = 1;
 int reduce_base_recip_go_go = 0;
-int max_go_to_go_attempts = 0;
-int span_go_to_go_gj_x = 0;
-int span_go_to_go_gj_y = 0;
-int num_p_go_to_go_gj = 0;
-int span_go_to_gl_x = 0;
-int span_go_to_gl_y = 0;
-int num_p_go_to_gl = 0;
-int max_num_p_gl_from_go_to_gl = 0;
-int max_num_p_go_from_go_to_gl = 0;
-int max_go_to_gl_attempts = 0;
-int span_gl_to_go_x = 0;
-int span_gl_to_go_y = 0;
-int num_p_gl_to_go = 0;
-int low_num_p_gl_from_gl_to_go = 0;
-int max_num_p_gl_from_gl_to_go = 0;
-int max_num_p_go_from_gl_to_go = 0;
-int initial_go_input = 0;
-int low_gl_to_go_attempts = 0;
-int max_gl_to_go_attempts = 0;
-int max_num_p_go_from_go_to_gr = 0;
-int max_num_p_gr_from_go_to_gr = 0;
-int max_num_p_gr_from_mf_to_gr = 0;
-int max_num_p_mf_from_mf_to_gr = 0;
-int max_num_p_go_from_mf_to_go = 0;
-int max_num_p_mf_from_mf_to_go = 0;
-int gr_pf_vel_in_gr_x_per_t_step = 0;
-int gr_af_delay_in_t_step = 0;
-int num_p_bc_from_bc_to_pc = 0;
-int num_p_pc_from_bc_to_pc = 0;
-int num_p_bc_from_gr_to_bc = 0;
-int num_p_bc_from_gr_to_bc_p2 = 0;
-int num_p_pc_from_pc_to_bc = 0;
-int num_p_bc_from_pc_to_bc = 0;
-int num_p_sc_from_sc_to_pc = 0;
-int num_p_pc_from_sc_to_pc = 0;
-int num_p_sc_from_gr_to_sc = 0;
-int num_p_sc_from_gr_to_sc_p2 = 0;
-int num_p_pc_from_pc_to_nc = 0;
-int num_p_nc_from_pc_to_nc = 0;
-int num_p_pc_from_gr_to_pc = 0;
-int num_p_pc_from_gr_to_pc_p2 = 0;
-int num_p_mf_from_mf_to_nc = 0;
-int num_p_nc_from_mf_to_nc = 0;
-int num_p_nc_from_nc_to_io = 0;
-int num_p_io_from_nc_to_io = 0;
-int num_p_io_from_io_to_pc = 0;
-int num_p_io_in_io_to_io = 0;
-int num_p_io_out_io_to_io = 0;
 
-float msPerTimeStep = 0.0;
-float numPopHistBinsPC = 0.0;
-float ampl_go_to_go = 0.0;
-float std_dev_go_to_go = 0.0;
-float p_recip_go_go = 0.0;
+int max_go_to_go_attempts = 200;
+int span_go_to_go_gj_x = 8;
+int span_go_to_go_gj_y = 8;
+int num_p_go_to_go_gj = 81;
+int span_go_to_gl_x = 56;
+int span_go_to_gl_y = 56;
+int num_p_go_to_gl = 3249;
+int max_num_p_gl_from_go_to_gl = 1;
+int max_num_p_go_from_go_to_gl = 64;
+int max_go_to_gl_attempts = 100;
+int span_gl_to_go_x = 12;
+int span_gl_to_go_y = 12;
+int num_p_gl_to_go = 169;
+int low_num_p_gl_from_gl_to_go = 1;
+int max_num_p_gl_from_gl_to_go = 1;
+int max_num_p_go_from_gl_to_go = 16;
+int initial_go_input = 1;
+int low_gl_to_go_attempts = 20000;
+int max_gl_to_go_attempts = 50000;
+int max_num_p_go_from_go_to_gr = 12800;
+int max_num_p_gr_from_go_to_gr = 3;
+int max_num_p_gr_from_mf_to_gr = 5;
+int max_num_p_mf_from_mf_to_gr = 4000;
+int max_num_p_go_from_mf_to_go = 16;
+int max_num_p_mf_from_mf_to_go = 20;
+int gr_pf_vel_in_gr_x_per_t_step = 147;
+int gr_af_delay_in_t_step = 1;
+int num_p_bc_from_bc_to_pc = 4;
+int num_p_pc_from_bc_to_pc = 16;
+int num_p_bc_from_gr_to_bc = 8192;
+int num_p_bc_from_gr_to_bc_p2 = 13;
+int num_p_pc_from_pc_to_bc = 16;
+int num_p_bc_from_pc_to_bc = 4;
+int num_p_sc_from_sc_to_pc = 1;
+int num_p_pc_from_sc_to_pc = 16;
+int num_p_sc_from_gr_to_sc = 2048;
+int num_p_sc_from_gr_to_sc_p2 = 11;
+int num_p_pc_from_pc_to_nc = 3;
+int num_p_nc_from_pc_to_nc = 12;
+int num_p_pc_from_gr_to_pc = 32768;
+int num_p_pc_from_gr_to_pc_p2 = 15;
+int num_p_mf_from_mf_to_nc = 1;
+int num_p_nc_from_mf_to_nc = 512;
+int num_p_nc_from_nc_to_io = 4;
+int num_p_io_from_nc_to_io = 8;
+int num_p_io_from_io_to_pc = 8;
+int num_p_io_in_io_to_io = 3;
+int num_p_io_out_io_to_io = 3;
+
+float msPerTimeStep = 1.0;
+float numPopHistBinsPC = 8.0;
+float ampl_go_to_go = 0.35;
+float std_dev_go_to_go = 1.95;
+float p_recip_go_go = 1.0;
 float p_recip_lower_base_go_go = 0.0;
-float ampl_go_to_gl = 0.0;
-float std_dev_go_to_gl_ml = 0.0;
-float std_dev_go_to_gl_s = 0.0;
+float ampl_go_to_gl = 0.01;
+float std_dev_go_to_gl_ml = 100.0;
+float std_dev_go_to_gl_s = 100.0;
 
-float eLeakGO = 0.0;
-float threshRestGO = 0.0;
-float eLeakGR = 0.0;
-float threshRestGR = 0.0;
+float eLeakGO = -70.0;
+float threshRestGO = -34.0;
+float eLeakGR = -65.0;
+float threshRestGR = -40.0;
 
-float eLeakSC = 0.0;
-float threshRestSC = 0.0;
-float eLeakBC = 0.0;
-float threshRestBC = 0.0;
-float eLeakPC = 0.0;
-float threshRestPC = 0.0;
-float initSynWofGRtoPC = 0.0;
-float eLeakIO = 0.0;
-float threshRestIO = 0.0;
-float eLeakNC = 0.0;
-float threshRestNC = 0.0;
-float initSynWofMFtoNC = 0.0;
+float eLeakSC = -60.0;
+float threshRestSC = -50.0;
+float eLeakBC = -70.0;
+float threshRestBC = -65.0;
+float eLeakPC = -60.0;
+float threshRestPC = -60.62;
+float initSynWofGRtoPC = 0.5;
+float eLeakIO = -60.0;
+float threshRestIO = -57.4;
+float eLeakNC = -65.0;
+float threshRestNC = -72.0;
+float initSynWofMFtoNC = 0.00085;
 
-void populate_con_params(parsed_build_file &p_file) {
-  /* int con params */
-  mf_x =
-      std::stoi(p_file.parsed_var_sections["connectivity"].param_map["mf_x"]);
-  mf_y =
-      std::stoi(p_file.parsed_var_sections["connectivity"].param_map["mf_y"]);
-  num_mf =
-      std::stoi(p_file.parsed_var_sections["connectivity"].param_map["num_mf"]);
-  gl_x =
-      std::stoi(p_file.parsed_var_sections["connectivity"].param_map["gl_x"]);
-  gl_y =
-      std::stoi(p_file.parsed_var_sections["connectivity"].param_map["gl_y"]);
-  num_gl =
-      std::stoi(p_file.parsed_var_sections["connectivity"].param_map["num_gl"]);
-  gr_x =
-      std::stoi(p_file.parsed_var_sections["connectivity"].param_map["gr_x"]);
-  gr_y =
-      std::stoi(p_file.parsed_var_sections["connectivity"].param_map["gr_y"]);
-  num_gr =
-      std::stoi(p_file.parsed_var_sections["connectivity"].param_map["num_gr"]);
-  go_x =
-      std::stoi(p_file.parsed_var_sections["connectivity"].param_map["go_x"]);
-  go_y =
-      std::stoi(p_file.parsed_var_sections["connectivity"].param_map["go_y"]);
-  num_go =
-      std::stoi(p_file.parsed_var_sections["connectivity"].param_map["num_go"]);
-  ubc_x =
-      std::stoi(p_file.parsed_var_sections["connectivity"].param_map["ubc_x"]);
-  ubc_y =
-      std::stoi(p_file.parsed_var_sections["connectivity"].param_map["ubc_y"]);
-  num_ubc = std::stoi(
-      p_file.parsed_var_sections["connectivity"].param_map["num_ubc"]);
-  num_bc =
-      std::stoi(p_file.parsed_var_sections["connectivity"].param_map["num_bc"]);
-  num_sc =
-      std::stoi(p_file.parsed_var_sections["connectivity"].param_map["num_sc"]);
-  num_pc =
-      std::stoi(p_file.parsed_var_sections["connectivity"].param_map["num_pc"]);
-  num_nc =
-      std::stoi(p_file.parsed_var_sections["connectivity"].param_map["num_nc"]);
-  num_io =
-      std::stoi(p_file.parsed_var_sections["connectivity"].param_map["num_io"]);
-  span_mf_to_gl_x = std::stoi(
-      p_file.parsed_var_sections["connectivity"].param_map["span_mf_to_gl_x"]);
-  span_mf_to_gl_y = std::stoi(
-      p_file.parsed_var_sections["connectivity"].param_map["span_mf_to_gl_y"]);
-  num_p_mf_to_gl = std::stoi(
-      p_file.parsed_var_sections["connectivity"].param_map["num_p_mf_to_gl"]);
-  max_num_p_mf_from_mf_to_gl =
-      std::stoi(p_file.parsed_var_sections["connectivity"]
-                    .param_map["max_num_p_mf_from_mf_to_gl"]);
-  initial_mf_output = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                    .param_map["initial_mf_output"]);
-  max_mf_to_gl_attempts = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                        .param_map["max_mf_to_gl_attempts"]);
-  span_gl_to_gr_x = std::stoi(
-      p_file.parsed_var_sections["connectivity"].param_map["span_gl_to_gr_x"]);
-  span_gl_to_gr_y = std::stoi(
-      p_file.parsed_var_sections["connectivity"].param_map["span_gl_to_gr_y"]);
-  num_p_gl_to_gr = std::stoi(
-      p_file.parsed_var_sections["connectivity"].param_map["num_p_gl_to_gr"]);
-  low_num_p_gl_from_gl_to_gr =
-      std::stoi(p_file.parsed_var_sections["connectivity"]
-                    .param_map["low_num_p_gl_from_gl_to_gr"]);
-  max_num_p_gr_from_gl_to_gr =
-      std::stoi(p_file.parsed_var_sections["connectivity"]
-                    .param_map["max_num_p_gr_from_gl_to_gr"]);
-  max_num_p_gl_from_gl_to_gr =
-      std::stoi(p_file.parsed_var_sections["connectivity"]
-                    .param_map["max_num_p_gl_from_gl_to_gr"]);
-  low_gl_to_gr_attempts = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                        .param_map["low_gl_to_gr_attempts"]);
-  max_gl_to_gr_attempts = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                        .param_map["max_gl_to_gr_attempts"]);
-  span_pf_to_go_x = std::stoi(
-      p_file.parsed_var_sections["connectivity"].param_map["span_pf_to_go_x"]);
-  span_pf_to_go_y = std::stoi(
-      p_file.parsed_var_sections["connectivity"].param_map["span_pf_to_go_y"]);
-  num_p_pf_to_go = std::stoi(
-      p_file.parsed_var_sections["connectivity"].param_map["num_p_pf_to_go"]);
-  max_num_p_go_from_gr_to_go =
-      std::stoi(p_file.parsed_var_sections["connectivity"]
-                    .param_map["max_num_p_go_from_gr_to_go"]);
-  max_num_p_gr_from_gr_to_go =
-      std::stoi(p_file.parsed_var_sections["connectivity"]
-                    .param_map["max_num_p_gr_from_gr_to_go"]);
-  max_pf_to_go_input = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                     .param_map["max_pf_to_go_input"]);
-  max_pf_to_go_attempts = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                        .param_map["max_pf_to_go_attempts"]);
-  span_aa_to_go_x = std::stoi(
-      p_file.parsed_var_sections["connectivity"].param_map["span_aa_to_go_x"]);
-  span_aa_to_go_y = std::stoi(
-      p_file.parsed_var_sections["connectivity"].param_map["span_aa_to_go_y"]);
-  num_p_aa_to_go = std::stoi(
-      p_file.parsed_var_sections["connectivity"].param_map["num_p_aa_to_go"]);
-  max_aa_to_go_input = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                     .param_map["max_aa_to_go_input"]);
-  max_aa_to_go_attempts = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                        .param_map["max_aa_to_go_attempts"]);
-  span_go_to_go_x = std::stoi(
-      p_file.parsed_var_sections["connectivity"].param_map["span_go_to_go_x"]);
-  span_go_to_go_y = std::stoi(
-      p_file.parsed_var_sections["connectivity"].param_map["span_go_to_go_y"]);
-  num_p_go_to_go = std::stoi(
-      p_file.parsed_var_sections["connectivity"].param_map["num_p_go_to_go"]);
-  num_con_go_to_go = std::stoi(
-      p_file.parsed_var_sections["connectivity"].param_map["num_con_go_to_go"]);
-  go_go_recip_cons = std::stoi(
-      p_file.parsed_var_sections["connectivity"].param_map["go_go_recip_cons"]);
-  reduce_base_recip_go_go =
-      std::stoi(p_file.parsed_var_sections["connectivity"]
-                    .param_map["reduce_base_recip_go_go"]);
-  max_go_to_go_attempts = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                        .param_map["max_go_to_go_attempts"]);
-  span_go_to_go_gj_x = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                     .param_map["span_go_to_go_gj_x"]);
-  span_go_to_go_gj_y = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                     .param_map["span_go_to_go_gj_y"]);
-  num_p_go_to_go_gj = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                    .param_map["num_p_go_to_go_gj"]);
-  span_go_to_gl_x = std::stoi(
-      p_file.parsed_var_sections["connectivity"].param_map["span_go_to_gl_x"]);
-  span_go_to_gl_y = std::stoi(
-      p_file.parsed_var_sections["connectivity"].param_map["span_go_to_gl_y"]);
-  num_p_go_to_gl = std::stoi(
-      p_file.parsed_var_sections["connectivity"].param_map["num_p_go_to_gl"]);
-  max_num_p_gl_from_go_to_gl =
-      std::stoi(p_file.parsed_var_sections["connectivity"]
-                    .param_map["max_num_p_gl_from_go_to_gl"]);
-  max_num_p_go_from_go_to_gl =
-      std::stoi(p_file.parsed_var_sections["connectivity"]
-                    .param_map["max_num_p_go_from_go_to_gl"]);
-  max_go_to_gl_attempts = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                        .param_map["max_go_to_gl_attempts"]);
-  span_gl_to_go_x = std::stoi(
-      p_file.parsed_var_sections["connectivity"].param_map["span_gl_to_go_x"]);
-  span_gl_to_go_y = std::stoi(
-      p_file.parsed_var_sections["connectivity"].param_map["span_gl_to_go_y"]);
-  num_p_gl_to_go = std::stoi(
-      p_file.parsed_var_sections["connectivity"].param_map["num_p_gl_to_go"]);
-  low_num_p_gl_from_gl_to_go =
-      std::stoi(p_file.parsed_var_sections["connectivity"]
-                    .param_map["low_num_p_gl_from_gl_to_go"]);
-  max_num_p_gl_from_gl_to_go =
-      std::stoi(p_file.parsed_var_sections["connectivity"]
-                    .param_map["max_num_p_gl_from_gl_to_go"]);
-  max_num_p_go_from_gl_to_go =
-      std::stoi(p_file.parsed_var_sections["connectivity"]
-                    .param_map["max_num_p_go_from_gl_to_go"]);
-  initial_go_input = std::stoi(
-      p_file.parsed_var_sections["connectivity"].param_map["initial_go_input"]);
-  low_gl_to_go_attempts = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                        .param_map["low_gl_to_go_attempts"]);
-  max_gl_to_go_attempts = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                        .param_map["max_gl_to_go_attempts"]);
-  max_num_p_go_from_go_to_gr =
-      std::stoi(p_file.parsed_var_sections["connectivity"]
-                    .param_map["max_num_p_go_from_go_to_gr"]);
-  max_num_p_gr_from_go_to_gr =
-      std::stoi(p_file.parsed_var_sections["connectivity"]
-                    .param_map["max_num_p_gr_from_go_to_gr"]);
-  max_num_p_gr_from_mf_to_gr =
-      std::stoi(p_file.parsed_var_sections["connectivity"]
-                    .param_map["max_num_p_gr_from_mf_to_gr"]);
-  max_num_p_mf_from_mf_to_gr =
-      std::stoi(p_file.parsed_var_sections["connectivity"]
-                    .param_map["max_num_p_mf_from_mf_to_gr"]);
-  max_num_p_go_from_mf_to_go =
-      std::stoi(p_file.parsed_var_sections["connectivity"]
-                    .param_map["max_num_p_go_from_mf_to_go"]);
-  max_num_p_mf_from_mf_to_go =
-      std::stoi(p_file.parsed_var_sections["connectivity"]
-                    .param_map["max_num_p_mf_from_mf_to_go"]);
-  gr_pf_vel_in_gr_x_per_t_step =
-      std::stoi(p_file.parsed_var_sections["connectivity"]
-                    .param_map["gr_pf_vel_in_gr_x_per_t_step"]);
-  gr_af_delay_in_t_step = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                        .param_map["gr_af_delay_in_t_step"]);
-  num_p_bc_from_bc_to_pc = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                         .param_map["num_p_bc_from_bc_to_pc"]);
-  num_p_pc_from_bc_to_pc = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                         .param_map["num_p_pc_from_bc_to_pc"]);
-  num_p_bc_from_gr_to_bc = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                         .param_map["num_p_bc_from_gr_to_bc"]);
-  num_p_bc_from_gr_to_bc_p2 =
-      std::stoi(p_file.parsed_var_sections["connectivity"]
-                    .param_map["num_p_bc_from_gr_to_bc_p2"]);
-  num_p_pc_from_pc_to_bc = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                         .param_map["num_p_pc_from_pc_to_bc"]);
-  num_p_bc_from_pc_to_bc = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                         .param_map["num_p_bc_from_pc_to_bc"]);
-  num_p_sc_from_sc_to_pc = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                         .param_map["num_p_sc_from_sc_to_pc"]);
-  num_p_pc_from_sc_to_pc = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                         .param_map["num_p_pc_from_sc_to_pc"]);
-  num_p_sc_from_gr_to_sc = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                         .param_map["num_p_sc_from_gr_to_sc"]);
-  num_p_sc_from_gr_to_sc_p2 =
-      std::stoi(p_file.parsed_var_sections["connectivity"]
-                    .param_map["num_p_sc_from_gr_to_sc_p2"]);
-  num_p_pc_from_pc_to_nc = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                         .param_map["num_p_pc_from_pc_to_nc"]);
-  num_p_nc_from_pc_to_nc = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                         .param_map["num_p_nc_from_pc_to_nc"]);
-  num_p_pc_from_gr_to_pc = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                         .param_map["num_p_pc_from_gr_to_pc"]);
-  num_p_pc_from_gr_to_pc_p2 =
-      std::stoi(p_file.parsed_var_sections["connectivity"]
-                    .param_map["num_p_pc_from_gr_to_pc_p2"]);
-  num_p_mf_from_mf_to_nc = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                         .param_map["num_p_mf_from_mf_to_nc"]);
-  num_p_nc_from_mf_to_nc = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                         .param_map["num_p_nc_from_mf_to_nc"]);
-  num_p_nc_from_nc_to_io = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                         .param_map["num_p_nc_from_nc_to_io"]);
-  num_p_io_from_nc_to_io = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                         .param_map["num_p_io_from_nc_to_io"]);
-  num_p_io_from_io_to_pc = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                         .param_map["num_p_io_from_io_to_pc"]);
-  num_p_io_in_io_to_io = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                       .param_map["num_p_io_in_io_to_io"]);
-  num_p_io_out_io_to_io = std::stoi(p_file.parsed_var_sections["connectivity"]
-                                        .param_map["num_p_io_out_io_to_io"]);
-
-  /* float con params */
-  msPerTimeStep = std::stof(
-      p_file.parsed_var_sections["connectivity"].param_map["msPerTimeStep"]);
-  numPopHistBinsPC = std::stof(
-      p_file.parsed_var_sections["connectivity"].param_map["numPopHistBinsPC"]);
-  ampl_go_to_go = std::stof(
-      p_file.parsed_var_sections["connectivity"].param_map["ampl_go_to_go"]);
-  std_dev_go_to_go = std::stof(
-      p_file.parsed_var_sections["connectivity"].param_map["std_dev_go_to_go"]);
-  p_recip_go_go = std::stof(
-      p_file.parsed_var_sections["connectivity"].param_map["p_recip_go_go"]);
-  p_recip_lower_base_go_go =
-      std::stof(p_file.parsed_var_sections["connectivity"]
-                    .param_map["p_recip_lower_base_go_go"]);
-  ampl_go_to_gl = std::stof(
-      p_file.parsed_var_sections["connectivity"].param_map["ampl_go_to_gl"]);
-  std_dev_go_to_gl_ml = std::stof(p_file.parsed_var_sections["connectivity"]
-                                      .param_map["std_dev_go_to_gl_ml"]);
-  std_dev_go_to_gl_s = std::stof(p_file.parsed_var_sections["connectivity"]
-                                     .param_map["std_dev_go_to_gl_s"]);
-
-  /* act params */
-  eLeakGO =
-      std::stof(p_file.parsed_var_sections["activity"].param_map["eLeakGO"]);
-  threshRestGO = std::stof(
-      p_file.parsed_var_sections["activity"].param_map["threshRestGO"]);
-  eLeakGR =
-      std::stof(p_file.parsed_var_sections["activity"].param_map["eLeakGR"]);
-  threshRestGR = std::stof(
-      p_file.parsed_var_sections["activity"].param_map["threshRestGR"]);
-
-  eLeakSC =
-      std::stof(p_file.parsed_var_sections["activity"].param_map["eLeakSC"]);
-  threshRestSC = std::stof(
-      p_file.parsed_var_sections["activity"].param_map["threshRestSC"]);
-  eLeakBC =
-      std::stof(p_file.parsed_var_sections["activity"].param_map["eLeakBC"]);
-  threshRestBC = std::stof(
-      p_file.parsed_var_sections["activity"].param_map["threshRestBC"]);
-  eLeakPC =
-      std::stof(p_file.parsed_var_sections["activity"].param_map["eLeakPC"]);
-  threshRestPC = std::stof(
-      p_file.parsed_var_sections["activity"].param_map["threshRestPC"]);
-  initSynWofGRtoPC = std::stof(
-      p_file.parsed_var_sections["activity"].param_map["initSynWofGRtoPC"]);
-  eLeakIO =
-      std::stof(p_file.parsed_var_sections["activity"].param_map["eLeakIO"]);
-  threshRestIO = std::stof(
-      p_file.parsed_var_sections["activity"].param_map["threshRestIO"]);
-  eLeakNC =
-      std::stof(p_file.parsed_var_sections["activity"].param_map["eLeakNC"]);
-  threshRestNC = std::stof(
-      p_file.parsed_var_sections["activity"].param_map["threshRestNC"]);
-  initSynWofMFtoNC = std::stof(
-      p_file.parsed_var_sections["activity"].param_map["initSynWofMFtoNC"]);
-
-  con_params_populated = true;
-}
-
-void read_con_params(std::fstream &in_param_buf) {
-  /* not checking whether these things are zeros or not... */
-  in_param_buf.read((char *)&mf_x, sizeof(int));
-  in_param_buf.read((char *)&mf_y, sizeof(int));
-  in_param_buf.read((char *)&num_mf, sizeof(int));
-  in_param_buf.read((char *)&gl_x, sizeof(int));
-  in_param_buf.read((char *)&gl_y, sizeof(int));
-  in_param_buf.read((char *)&num_gl, sizeof(int));
-  in_param_buf.read((char *)&gr_x, sizeof(int));
-  in_param_buf.read((char *)&gr_y, sizeof(int));
-  in_param_buf.read((char *)&num_gr, sizeof(int));
-  in_param_buf.read((char *)&go_x, sizeof(int));
-  in_param_buf.read((char *)&go_y, sizeof(int));
-  in_param_buf.read((char *)&num_go, sizeof(int));
-  in_param_buf.read((char *)&ubc_x, sizeof(int));
-  in_param_buf.read((char *)&ubc_y, sizeof(int));
-  in_param_buf.read((char *)&num_ubc, sizeof(int));
-  in_param_buf.read((char *)&num_bc, sizeof(int));
-  in_param_buf.read((char *)&num_sc, sizeof(int));
-  in_param_buf.read((char *)&num_pc, sizeof(int));
-  in_param_buf.read((char *)&num_nc, sizeof(int));
-  in_param_buf.read((char *)&num_io, sizeof(int));
-  in_param_buf.read((char *)&span_mf_to_gl_x, sizeof(int));
-  in_param_buf.read((char *)&span_mf_to_gl_y, sizeof(int));
-  in_param_buf.read((char *)&num_p_mf_to_gl, sizeof(int));
-  in_param_buf.read((char *)&max_num_p_mf_from_mf_to_gl, sizeof(int));
-  in_param_buf.read((char *)&initial_mf_output, sizeof(int));
-  in_param_buf.read((char *)&max_mf_to_gl_attempts, sizeof(int));
-  in_param_buf.read((char *)&span_gl_to_gr_x, sizeof(int));
-  in_param_buf.read((char *)&span_gl_to_gr_y, sizeof(int));
-  in_param_buf.read((char *)&num_p_gl_to_gr, sizeof(int));
-  in_param_buf.read((char *)&low_num_p_gl_from_gl_to_gr, sizeof(int));
-  in_param_buf.read((char *)&max_num_p_gr_from_gl_to_gr, sizeof(int));
-  in_param_buf.read((char *)&max_num_p_gl_from_gl_to_gr, sizeof(int));
-  in_param_buf.read((char *)&low_gl_to_gr_attempts, sizeof(int));
-  in_param_buf.read((char *)&max_gl_to_gr_attempts, sizeof(int));
-  in_param_buf.read((char *)&span_pf_to_go_x, sizeof(int));
-  in_param_buf.read((char *)&span_pf_to_go_y, sizeof(int));
-  in_param_buf.read((char *)&num_p_pf_to_go, sizeof(int));
-  in_param_buf.read((char *)&max_num_p_go_from_gr_to_go, sizeof(int));
-  in_param_buf.read((char *)&max_num_p_gr_from_gr_to_go, sizeof(int));
-  in_param_buf.read((char *)&max_pf_to_go_input, sizeof(int));
-  in_param_buf.read((char *)&max_pf_to_go_attempts, sizeof(int));
-  in_param_buf.read((char *)&span_aa_to_go_x, sizeof(int));
-  in_param_buf.read((char *)&span_aa_to_go_y, sizeof(int));
-  in_param_buf.read((char *)&num_p_aa_to_go, sizeof(int));
-  in_param_buf.read((char *)&max_aa_to_go_input, sizeof(int));
-  in_param_buf.read((char *)&max_aa_to_go_attempts, sizeof(int));
-  in_param_buf.read((char *)&span_go_to_go_x, sizeof(int));
-  in_param_buf.read((char *)&span_go_to_go_y, sizeof(int));
-  in_param_buf.read((char *)&num_p_go_to_go, sizeof(int));
-  in_param_buf.read((char *)&num_con_go_to_go, sizeof(int));
-  in_param_buf.read((char *)&go_go_recip_cons, sizeof(int));
-  in_param_buf.read((char *)&reduce_base_recip_go_go, sizeof(int));
-  in_param_buf.read((char *)&max_go_to_go_attempts, sizeof(int));
-  in_param_buf.read((char *)&span_go_to_go_gj_x, sizeof(int));
-  in_param_buf.read((char *)&span_go_to_go_gj_y, sizeof(int));
-  in_param_buf.read((char *)&num_p_go_to_go_gj, sizeof(int));
-  in_param_buf.read((char *)&span_go_to_gl_x, sizeof(int));
-  in_param_buf.read((char *)&span_go_to_gl_y, sizeof(int));
-  in_param_buf.read((char *)&num_p_go_to_gl, sizeof(int));
-  in_param_buf.read((char *)&max_num_p_gl_from_go_to_gl, sizeof(int));
-  in_param_buf.read((char *)&max_num_p_go_from_go_to_gl, sizeof(int));
-  in_param_buf.read((char *)&max_go_to_gl_attempts, sizeof(int));
-  in_param_buf.read((char *)&span_gl_to_go_x, sizeof(int));
-  in_param_buf.read((char *)&span_gl_to_go_y, sizeof(int));
-  in_param_buf.read((char *)&num_p_gl_to_go, sizeof(int));
-  in_param_buf.read((char *)&low_num_p_gl_from_gl_to_go, sizeof(int));
-  in_param_buf.read((char *)&max_num_p_gl_from_gl_to_go, sizeof(int));
-  in_param_buf.read((char *)&max_num_p_go_from_gl_to_go, sizeof(int));
-  in_param_buf.read((char *)&initial_go_input, sizeof(int));
-  in_param_buf.read((char *)&low_gl_to_go_attempts, sizeof(int));
-  in_param_buf.read((char *)&max_gl_to_go_attempts, sizeof(int));
-  in_param_buf.read((char *)&max_num_p_go_from_go_to_gr, sizeof(int));
-  in_param_buf.read((char *)&max_num_p_gr_from_go_to_gr, sizeof(int));
-  in_param_buf.read((char *)&max_num_p_gr_from_mf_to_gr, sizeof(int));
-  in_param_buf.read((char *)&max_num_p_mf_from_mf_to_gr, sizeof(int));
-  in_param_buf.read((char *)&max_num_p_go_from_mf_to_go, sizeof(int));
-  in_param_buf.read((char *)&max_num_p_mf_from_mf_to_go, sizeof(int));
-  in_param_buf.read((char *)&gr_pf_vel_in_gr_x_per_t_step, sizeof(int));
-  in_param_buf.read((char *)&gr_af_delay_in_t_step, sizeof(int));
-  in_param_buf.read((char *)&num_p_bc_from_bc_to_pc, sizeof(int));
-  in_param_buf.read((char *)&num_p_pc_from_bc_to_pc, sizeof(int));
-  in_param_buf.read((char *)&num_p_bc_from_gr_to_bc, sizeof(int));
-  in_param_buf.read((char *)&num_p_bc_from_gr_to_bc_p2, sizeof(int));
-  in_param_buf.read((char *)&num_p_pc_from_pc_to_bc, sizeof(int));
-  in_param_buf.read((char *)&num_p_bc_from_pc_to_bc, sizeof(int));
-  in_param_buf.read((char *)&num_p_sc_from_sc_to_pc, sizeof(int));
-  in_param_buf.read((char *)&num_p_pc_from_sc_to_pc, sizeof(int));
-  in_param_buf.read((char *)&num_p_sc_from_gr_to_sc, sizeof(int));
-  in_param_buf.read((char *)&num_p_sc_from_gr_to_sc_p2, sizeof(int));
-  in_param_buf.read((char *)&num_p_pc_from_pc_to_nc, sizeof(int));
-  in_param_buf.read((char *)&num_p_nc_from_pc_to_nc, sizeof(int));
-  in_param_buf.read((char *)&num_p_pc_from_gr_to_pc, sizeof(int));
-  in_param_buf.read((char *)&num_p_pc_from_gr_to_pc_p2, sizeof(int));
-  in_param_buf.read((char *)&num_p_mf_from_mf_to_nc, sizeof(int));
-  in_param_buf.read((char *)&num_p_nc_from_mf_to_nc, sizeof(int));
-  in_param_buf.read((char *)&num_p_nc_from_nc_to_io, sizeof(int));
-  in_param_buf.read((char *)&num_p_io_from_nc_to_io, sizeof(int));
-  in_param_buf.read((char *)&num_p_io_from_io_to_pc, sizeof(int));
-  in_param_buf.read((char *)&num_p_io_in_io_to_io, sizeof(int));
-  in_param_buf.read((char *)&num_p_io_out_io_to_io, sizeof(int));
-
-  in_param_buf.read((char *)&msPerTimeStep, sizeof(float));
-  in_param_buf.read((char *)&numPopHistBinsPC, sizeof(float));
-  in_param_buf.read((char *)&ampl_go_to_go, sizeof(float));
-  in_param_buf.read((char *)&std_dev_go_to_go, sizeof(float));
-  in_param_buf.read((char *)&p_recip_go_go, sizeof(float));
-  in_param_buf.read((char *)&p_recip_lower_base_go_go, sizeof(float));
-  in_param_buf.read((char *)&ampl_go_to_gl, sizeof(float));
-  in_param_buf.read((char *)&std_dev_go_to_gl_ml, sizeof(float));
-  in_param_buf.read((char *)&std_dev_go_to_gl_s, sizeof(float));
-
-  /* act params */
-  in_param_buf.read((char *)&eLeakGO, sizeof(float));
-  in_param_buf.read((char *)&threshRestGO, sizeof(float));
-  in_param_buf.read((char *)&eLeakGR, sizeof(float));
-  in_param_buf.read((char *)&threshRestGR, sizeof(float));
-
-  in_param_buf.read((char *)&eLeakSC, sizeof(float));
-  in_param_buf.read((char *)&threshRestSC, sizeof(float));
-  in_param_buf.read((char *)&eLeakBC, sizeof(float));
-  in_param_buf.read((char *)&threshRestBC, sizeof(float));
-  in_param_buf.read((char *)&eLeakPC, sizeof(float));
-  in_param_buf.read((char *)&threshRestPC, sizeof(float));
-  in_param_buf.read((char *)&initSynWofGRtoPC, sizeof(float));
-  in_param_buf.read((char *)&eLeakIO, sizeof(float));
-  in_param_buf.read((char *)&threshRestIO, sizeof(float));
-  in_param_buf.read((char *)&eLeakNC, sizeof(float));
-  in_param_buf.read((char *)&threshRestNC, sizeof(float));
-  in_param_buf.read((char *)&initSynWofMFtoNC, sizeof(float));
-
-  con_params_populated = true;
-}
-
-void write_con_params(std::fstream &out_param_buf) {
-  /* not checking whether these things are zeros or not... */
-  out_param_buf.write((char *)&mf_x, sizeof(int));
-  out_param_buf.write((char *)&mf_y, sizeof(int));
-  out_param_buf.write((char *)&num_mf, sizeof(int));
-  out_param_buf.write((char *)&gl_x, sizeof(int));
-  out_param_buf.write((char *)&gl_y, sizeof(int));
-  out_param_buf.write((char *)&num_gl, sizeof(int));
-  out_param_buf.write((char *)&gr_x, sizeof(int));
-  out_param_buf.write((char *)&gr_y, sizeof(int));
-  out_param_buf.write((char *)&num_gr, sizeof(int));
-  out_param_buf.write((char *)&go_x, sizeof(int));
-  out_param_buf.write((char *)&go_y, sizeof(int));
-  out_param_buf.write((char *)&num_go, sizeof(int));
-  out_param_buf.write((char *)&ubc_x, sizeof(int));
-  out_param_buf.write((char *)&ubc_y, sizeof(int));
-  out_param_buf.write((char *)&num_ubc, sizeof(int));
-  out_param_buf.write((char *)&num_bc, sizeof(int));
-  out_param_buf.write((char *)&num_sc, sizeof(int));
-  out_param_buf.write((char *)&num_pc, sizeof(int));
-  out_param_buf.write((char *)&num_nc, sizeof(int));
-  out_param_buf.write((char *)&num_io, sizeof(int));
-  out_param_buf.write((char *)&span_mf_to_gl_x, sizeof(int));
-  out_param_buf.write((char *)&span_mf_to_gl_y, sizeof(int));
-  out_param_buf.write((char *)&num_p_mf_to_gl, sizeof(int));
-  out_param_buf.write((char *)&max_num_p_mf_from_mf_to_gl, sizeof(int));
-  out_param_buf.write((char *)&initial_mf_output, sizeof(int));
-  out_param_buf.write((char *)&max_mf_to_gl_attempts, sizeof(int));
-  out_param_buf.write((char *)&span_gl_to_gr_x, sizeof(int));
-  out_param_buf.write((char *)&span_gl_to_gr_y, sizeof(int));
-  out_param_buf.write((char *)&num_p_gl_to_gr, sizeof(int));
-  out_param_buf.write((char *)&low_num_p_gl_from_gl_to_gr, sizeof(int));
-  out_param_buf.write((char *)&max_num_p_gr_from_gl_to_gr, sizeof(int));
-  out_param_buf.write((char *)&max_num_p_gl_from_gl_to_gr, sizeof(int));
-  out_param_buf.write((char *)&low_gl_to_gr_attempts, sizeof(int));
-  out_param_buf.write((char *)&max_gl_to_gr_attempts, sizeof(int));
-  out_param_buf.write((char *)&span_pf_to_go_x, sizeof(int));
-  out_param_buf.write((char *)&span_pf_to_go_y, sizeof(int));
-  out_param_buf.write((char *)&num_p_pf_to_go, sizeof(int));
-  out_param_buf.write((char *)&max_num_p_go_from_gr_to_go, sizeof(int));
-  out_param_buf.write((char *)&max_num_p_gr_from_gr_to_go, sizeof(int));
-  out_param_buf.write((char *)&max_pf_to_go_input, sizeof(int));
-  out_param_buf.write((char *)&max_pf_to_go_attempts, sizeof(int));
-  out_param_buf.write((char *)&span_aa_to_go_x, sizeof(int));
-  out_param_buf.write((char *)&span_aa_to_go_y, sizeof(int));
-  out_param_buf.write((char *)&num_p_aa_to_go, sizeof(int));
-  out_param_buf.write((char *)&max_aa_to_go_input, sizeof(int));
-  out_param_buf.write((char *)&max_aa_to_go_attempts, sizeof(int));
-  out_param_buf.write((char *)&span_go_to_go_x, sizeof(int));
-  out_param_buf.write((char *)&span_go_to_go_y, sizeof(int));
-  out_param_buf.write((char *)&num_p_go_to_go, sizeof(int));
-  out_param_buf.write((char *)&num_con_go_to_go, sizeof(int));
-  out_param_buf.write((char *)&go_go_recip_cons, sizeof(int));
-  out_param_buf.write((char *)&reduce_base_recip_go_go, sizeof(int));
-  out_param_buf.write((char *)&max_go_to_go_attempts, sizeof(int));
-  out_param_buf.write((char *)&span_go_to_go_gj_x, sizeof(int));
-  out_param_buf.write((char *)&span_go_to_go_gj_y, sizeof(int));
-  out_param_buf.write((char *)&num_p_go_to_go_gj, sizeof(int));
-  out_param_buf.write((char *)&span_go_to_gl_x, sizeof(int));
-  out_param_buf.write((char *)&span_go_to_gl_y, sizeof(int));
-  out_param_buf.write((char *)&num_p_go_to_gl, sizeof(int));
-  out_param_buf.write((char *)&max_num_p_gl_from_go_to_gl, sizeof(int));
-  out_param_buf.write((char *)&max_num_p_go_from_go_to_gl, sizeof(int));
-  out_param_buf.write((char *)&max_go_to_gl_attempts, sizeof(int));
-  out_param_buf.write((char *)&span_gl_to_go_x, sizeof(int));
-  out_param_buf.write((char *)&span_gl_to_go_y, sizeof(int));
-  out_param_buf.write((char *)&num_p_gl_to_go, sizeof(int));
-  out_param_buf.write((char *)&low_num_p_gl_from_gl_to_go, sizeof(int));
-  out_param_buf.write((char *)&max_num_p_gl_from_gl_to_go, sizeof(int));
-  out_param_buf.write((char *)&max_num_p_go_from_gl_to_go, sizeof(int));
-  out_param_buf.write((char *)&initial_go_input, sizeof(int));
-  out_param_buf.write((char *)&low_gl_to_go_attempts, sizeof(int));
-  out_param_buf.write((char *)&max_gl_to_go_attempts, sizeof(int));
-  out_param_buf.write((char *)&max_num_p_go_from_go_to_gr, sizeof(int));
-  out_param_buf.write((char *)&max_num_p_gr_from_go_to_gr, sizeof(int));
-  out_param_buf.write((char *)&max_num_p_gr_from_mf_to_gr, sizeof(int));
-  out_param_buf.write((char *)&max_num_p_mf_from_mf_to_gr, sizeof(int));
-  out_param_buf.write((char *)&max_num_p_go_from_mf_to_go, sizeof(int));
-  out_param_buf.write((char *)&max_num_p_mf_from_mf_to_go, sizeof(int));
-  out_param_buf.write((char *)&gr_pf_vel_in_gr_x_per_t_step, sizeof(int));
-  out_param_buf.write((char *)&gr_af_delay_in_t_step, sizeof(int));
-  out_param_buf.write((char *)&num_p_bc_from_bc_to_pc, sizeof(int));
-  out_param_buf.write((char *)&num_p_pc_from_bc_to_pc, sizeof(int));
-  out_param_buf.write((char *)&num_p_bc_from_gr_to_bc, sizeof(int));
-  out_param_buf.write((char *)&num_p_bc_from_gr_to_bc_p2, sizeof(int));
-  out_param_buf.write((char *)&num_p_pc_from_pc_to_bc, sizeof(int));
-  out_param_buf.write((char *)&num_p_bc_from_pc_to_bc, sizeof(int));
-  out_param_buf.write((char *)&num_p_sc_from_sc_to_pc, sizeof(int));
-  out_param_buf.write((char *)&num_p_pc_from_sc_to_pc, sizeof(int));
-  out_param_buf.write((char *)&num_p_sc_from_gr_to_sc, sizeof(int));
-  out_param_buf.write((char *)&num_p_sc_from_gr_to_sc_p2, sizeof(int));
-  out_param_buf.write((char *)&num_p_pc_from_pc_to_nc, sizeof(int));
-  out_param_buf.write((char *)&num_p_nc_from_pc_to_nc, sizeof(int));
-  out_param_buf.write((char *)&num_p_pc_from_gr_to_pc, sizeof(int));
-  out_param_buf.write((char *)&num_p_pc_from_gr_to_pc_p2, sizeof(int));
-  out_param_buf.write((char *)&num_p_mf_from_mf_to_nc, sizeof(int));
-  out_param_buf.write((char *)&num_p_nc_from_mf_to_nc, sizeof(int));
-  out_param_buf.write((char *)&num_p_nc_from_nc_to_io, sizeof(int));
-  out_param_buf.write((char *)&num_p_io_from_nc_to_io, sizeof(int));
-  out_param_buf.write((char *)&num_p_io_from_io_to_pc, sizeof(int));
-  out_param_buf.write((char *)&num_p_io_in_io_to_io, sizeof(int));
-  out_param_buf.write((char *)&num_p_io_out_io_to_io, sizeof(int));
-
-  out_param_buf.write((char *)&msPerTimeStep, sizeof(float));
-  out_param_buf.write((char *)&numPopHistBinsPC, sizeof(float));
-  out_param_buf.write((char *)&ampl_go_to_go, sizeof(float));
-  out_param_buf.write((char *)&std_dev_go_to_go, sizeof(float));
-  out_param_buf.write((char *)&p_recip_go_go, sizeof(float));
-  out_param_buf.write((char *)&p_recip_lower_base_go_go, sizeof(float));
-  out_param_buf.write((char *)&ampl_go_to_gl, sizeof(float));
-  out_param_buf.write((char *)&std_dev_go_to_gl_ml, sizeof(float));
-  out_param_buf.write((char *)&std_dev_go_to_gl_s, sizeof(float));
-
-  out_param_buf.write((char *)&eLeakGO, sizeof(float));
-  out_param_buf.write((char *)&threshRestGO, sizeof(float));
-  out_param_buf.write((char *)&eLeakGR, sizeof(float));
-  out_param_buf.write((char *)&threshRestGR, sizeof(float));
-
-  out_param_buf.write((char *)&eLeakSC, sizeof(float));
-  out_param_buf.write((char *)&threshRestSC, sizeof(float));
-  out_param_buf.write((char *)&eLeakBC, sizeof(float));
-  out_param_buf.write((char *)&threshRestBC, sizeof(float));
-  out_param_buf.write((char *)&eLeakPC, sizeof(float));
-  out_param_buf.write((char *)&threshRestPC, sizeof(float));
-  out_param_buf.write((char *)&initSynWofGRtoPC, sizeof(float));
-  out_param_buf.write((char *)&eLeakIO, sizeof(float));
-  out_param_buf.write((char *)&threshRestIO, sizeof(float));
-  out_param_buf.write((char *)&eLeakNC, sizeof(float));
-  out_param_buf.write((char *)&threshRestNC, sizeof(float));
-  out_param_buf.write((char *)&initSynWofMFtoNC, sizeof(float));
-}

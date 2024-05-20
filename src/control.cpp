@@ -13,14 +13,12 @@ Control::Control(parsed_commandline &p_cl) {
   use_gui = (p_cl.vis_mode == "GUI") ? true : false;
   if (!p_cl.build_file.empty()) {
     /* initialize temporary objects for parsing build file */
-    tokenized_file t_file;
-    lexed_file l_file;
-    parsed_build_file pb_file;
-    tokenize_file(p_cl.build_file, t_file);
-    lex_tokenized_file(t_file, l_file);
-    parse_lexed_build_file(l_file, pb_file);
-    if (!con_params_populated)
-      populate_con_params(pb_file);
+    // tokenized_file t_file;
+    // lexed_file l_file;
+    // parsed_build_file pb_file;
+    // tokenize_file(p_cl.build_file, t_file);
+    // lex_tokenized_file(t_file, l_file);
+    // parse_lexed_build_file(l_file, pb_file);
     data_out_path = OUTPUT_DATA_PATH + p_cl.output_basename;
     data_out_base_name = p_cl.output_basename;
     /* Next few lines create the output directory.
@@ -80,7 +78,6 @@ Control::Control(parsed_commandline &p_cl) {
     create_con_arrs_filenames(p_cl.conn_arrs_files);
     std::fstream sim_file_buf(p_cl.input_sim_file.c_str(),
                               std::ios::in | std::ios::binary);
-    read_con_params(sim_file_buf);
     simState = new CBMState(numMZones, sim_file_buf);
     sim_file_buf.close();
   } else { // user ran program with no args
@@ -181,7 +178,6 @@ void Control::init_sim(std::string in_sim_filename) {
   LOG_DEBUG("Initializing simulation...");
   std::fstream sim_file_buf(in_sim_filename.c_str(),
                             std::ios::in | std::ios::binary);
-  read_con_params(sim_file_buf);
   populate_act_params(s_file); 
   simState = new CBMState(numMZones, sim_file_buf);
   simCore = new CBMSimCore(simState, gpuIndex, gpuP2);
@@ -212,7 +208,6 @@ void Control::init_sim(std::string in_sim_filename) {
 void Control::reset_sim(std::string in_sim_filename) {
   std::fstream sim_file_buf(in_sim_filename.c_str(),
                             std::ios::in | std::ios::binary);
-  read_con_params(sim_file_buf);
   // read_act_params(sim_file_buf);
   simState->readState(sim_file_buf);
   // TODO: simCore, mfs
@@ -228,7 +223,6 @@ void Control::save_sim_to_file() {
     LOG_DEBUG("Saving simulation to file...");
     std::fstream outSimFileBuffer(out_sim_name.c_str(),
                                   std::ios::out | std::ios::binary);
-    write_con_params(outSimFileBuffer);
     if (!simCore)
       simState->writeState(outSimFileBuffer);
     else
