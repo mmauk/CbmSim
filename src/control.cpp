@@ -133,13 +133,9 @@ void Control::initialize_session(std::string sess_file) {
   LOG_DEBUG("Initializing session...");
   // create temporary objects for parsing session file
   sess_file_name = sess_file;
-  tokenized_file t_file;
-  lexed_file l_file;
-  tokenize_file(sess_file, t_file);
-  lex_tokenized_file(t_file, l_file);
-  parse_lexed_sess_file(l_file, s_file);
-  // this function is required to turn object of objects into object of arrays
-  // (performance benefit)
+  // parse_lexed_sess_file(l_file, s_file);
+  //  this function is required to turn object of objects into object of arrays
+  //  (performance benefit)
   translate_parsed_trials(s_file, td);
 
   // for now, manually use string to int for these parameters. clunky.

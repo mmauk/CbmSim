@@ -100,24 +100,6 @@ typedef struct {
 
 /*
  * Description:
- *     takes in the string in_file representing the input file's name and
- * constructs a tokenized file from it. See the above definition of
- * tokenized_file.
- *
- */
-void tokenize_file(std::string in_file, tokenized_file &t_file);
-
-/*
- * Description:
- *     takes a tokenized file reference t_file and lexes it, i.e. assigns
- * meaningful tags to the tokens. It does this by populating the lexed_file
- * reference l_file.
- *
- */
-void lex_tokenized_file(tokenized_file &t_file, lexed_file &l_file);
-
-/*
- * Description:
  *     takes a lexed file reference l_file and parses it, i.e. takes each lexeme
  *     and adds it to the correct entry in either
  * parsed_sess_file.parsed_trial_info or parsed_sess_file.parsed_var_sections
