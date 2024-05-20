@@ -8,18 +8,6 @@
 #ifndef ACTIVITYPARAMS_H_
 #define ACTIVITYPARAMS_H_
 
-#include "file_parse.h"
-#include "stdint.h"
-#include <fstream>
-#include <iostream>
-#include <math.h>
-#include <stdlib.h>
-#include <string>
-
-#define NUM_ACT_PARAMS 174
-
-extern bool act_params_populated;
-
 /* raw params */
 extern float coupleRiRjRatioGO;
 extern float coupleRiRjRatioIO;
@@ -183,9 +171,5 @@ extern float threshDecNC;
 extern float gLeakBC;
 extern float grgoW;
 extern float mfgoW;
-
-void populate_act_params(parsed_sess_file &s_file);
-void read_act_params(std::fstream &in_param_buf);
-void write_act_params(std::fstream &out_param_buf);
 
 #endif /* ACTIVITYPARAMS_H_ */

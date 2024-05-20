@@ -172,7 +172,6 @@ void Control::init_sim(std::string in_sim_filename) {
   LOG_DEBUG("Initializing simulation...");
   std::fstream sim_file_buf(in_sim_filename.c_str(),
                             std::ios::in | std::ios::binary);
-  populate_act_params(s_file); 
   simState = new CBMState(numMZones, sim_file_buf);
   simCore = new CBMSimCore(simState, gpuIndex, gpuP2);
   mfs = new ECMFPopulation(num_mf, mfRandSeed, CSTonicMFFrac, CSPhasicMFFrac,
@@ -202,7 +201,6 @@ void Control::init_sim(std::string in_sim_filename) {
 void Control::reset_sim(std::string in_sim_filename) {
   std::fstream sim_file_buf(in_sim_filename.c_str(),
                             std::ios::in | std::ios::binary);
-  // read_act_params(sim_file_buf);
   simState->readState(sim_file_buf);
   // TODO: simCore, mfs
 
