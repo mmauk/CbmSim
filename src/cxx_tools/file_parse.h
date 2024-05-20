@@ -20,37 +20,6 @@
 #include <utility> /* for std::pair */
 #include <vector>
 
-// lexemes of the input files ie the fundamental meanings behind each token
-typedef enum {
-  NONE,
-  BEGIN_MARKER,
-  END_MARKER,
-  REGION,
-  REGION_TYPE,
-  TYPE_NAME,
-  VAR_IDENTIFIER,
-  VAR_VALUE,
-  DEF,
-  DEF_TYPE,
-  DEF_TYPE_LABEL,
-  NEW_LINE,
-  SINGLE_COMMENT,
-  DOUBLE_COMMENT_BEGIN,
-  DOUBLE_COMMENT_END
-} lexeme;
-
-// a token that is identified by its lexeme
-typedef struct {
-  lexeme lex;
-  std::string raw_token;
-} lexed_token;
-
-typedef struct {
-  std::string type_name;
-  std::string identifier;
-  std::string value;
-} variable;
-
 typedef struct {
   uint32_t num_trials;
   std::string *trial_names;
@@ -79,20 +48,6 @@ typedef struct {
       session; // <-- pairs of block identifier and number of blocks
 } parsed_trial_section;
 
-// represents the entire file contents, broken up line-by-line, token-by-token
-typedef struct {
-  std::vector<std::vector<std::string>> tokens;
-} tokenized_file;
-
-/*
- * represents the entire file contents broken up line-by-line, token-by-token,
- * with each token being identified by its lexeme
- *
- */
-typedef struct {
-  std::vector<lexed_token> tokens;
-} lexed_file;
-
 typedef struct {
   parsed_trial_section parsed_trial_info;
   std::map<std::string, parsed_var_section> parsed_var_sections;
@@ -105,7 +60,7 @@ typedef struct {
  * parsed_sess_file.parsed_trial_info or parsed_sess_file.parsed_var_sections
  *
  */
-void parse_lexed_sess_file(lexed_file &l_file, parsed_sess_file &s_file);
+// void parse_lexed_sess_file(lexed_file &l_file, parsed_sess_file &s_file);
 
 /*
  * Description:
@@ -161,10 +116,6 @@ void delete_trials_data(trials_data &td);
  *
  *     std::cout << t_file << std::endl;
  */
-
-std::ostream &operator<<(std::ostream &os, tokenized_file &t_file);
-
-std::ostream &operator<<(std::ostream &os, lexed_file &l_file);
 
 std::ostream &operator<<(std::ostream &os, parsed_sess_file &s_file);
 

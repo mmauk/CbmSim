@@ -15,56 +15,6 @@
 #include "file_parse.h"
 #include "logger.h"
 
-// regex strings for matching variable identifiers and variable values
-static const std::string var_id_regex_str = "[a-zA-Z_]{1}[a-zA-Z0-9_]*";
-static const std::string var_val_regex_str =
-    "[+-]?([0-9]*[.])?[0-9]*([e][+-]?[0-9]+)?";
-
-// look-up table for lexemes, is used for printing lexemes to whatever stream
-// you want
-static std::map<lexeme, std::string> lex_string_look_up = {
-    {NONE, "NONE"},
-    {BEGIN_MARKER, "BEGIN_MARKER"},
-    {END_MARKER, "END_MARKER"},
-    {REGION, "REGION"},
-    {REGION_TYPE, "REGION_TYPE"},
-    {TYPE_NAME, "TYPE_NAME"},
-    {VAR_IDENTIFIER, "VAR_IDENTIFIER"},
-    {VAR_VALUE, "VAR_VALUE"},
-    {DEF, "DEF"},
-    {DEF_TYPE, "DEF_TYPE"},
-    {SINGLE_COMMENT, "SINGLE_COMMENT"},
-    {DOUBLE_COMMENT_BEGIN, "DOUBLE_COMMENT_BEGIN"},
-    {DOUBLE_COMMENT_END, "DOUBLE_COMMENT_END"},
-};
-
-// definitions of tokens via their lexemes
-static std::map<std::string, lexeme> token_defs = {
-    {"begin", BEGIN_MARKER},
-    {"end", END_MARKER},
-    {"filetype", REGION},
-    {"section", REGION},
-    {"build", REGION_TYPE}, // might be deprecated
-    {"run", REGION_TYPE},
-    {"connectivity", REGION_TYPE},
-    {"activity", REGION_TYPE},
-    {"trial_def", REGION_TYPE},
-    {"mf_input", REGION_TYPE},
-    {"trial_spec", REGION_TYPE},
-    {"activity", REGION_TYPE},
-    {"int", TYPE_NAME},
-    {"float", TYPE_NAME},
-    {"[a-zA-Z_]{1}[a-zA-Z0-9_]*", VAR_IDENTIFIER},
-    {"[+-]?([0-9]*[.])?[0-9]*([e][+-]?[0-9]+)?", VAR_VALUE},
-    {"def", DEF},
-    {"trial", DEF_TYPE},
-    {"block", DEF_TYPE},
-    {"session", DEF_TYPE},
-    {"//", SINGLE_COMMENT},
-    {"/*", DOUBLE_COMMENT_BEGIN},
-    {"*/", DOUBLE_COMMENT_END},
-};
-
 /*
  * Implementation Notes:
  *     meant to be called within parse_trial_section. Loops until the end lex is
@@ -80,73 +30,74 @@ static std::map<std::string, lexeme> token_defs = {
  * which conceptually adds in the value of "1" for that trial or block
  * identifier.
  */
-static void parse_def(std::vector<lexed_token>::iterator &ltp,
-                      lexed_file &l_file, parsed_sess_file &s_file,
-                      std::string def_type, std::string def_label) {
-  std::pair<std::string, std::string> curr_pair = {};
-  std::map<std::string, std::string> curr_trial = {};
-  std::vector<std::pair<std::string, std::string>> curr_block = {};
-  lexeme prev_lex = NONE;
-  while (ltp->lex != END_MARKER) {
-    switch (ltp->lex) {
-    case VAR_IDENTIFIER:
-      if (def_type == "trial") {
-        curr_pair.first = ltp->raw_token;
-      } else {
-        /* disgusting hack: inserts a 'shadow token'
-         * so that if the prev identifier didnt include
-         * a value immediately proceeding it, a value
-         * is inserted into the vector to act as if there
-         * was one.
-         */
-        if (curr_pair.first != "") {
-          lexed_token shadow_token = {VAR_VALUE, "1"};
-          ltp = l_file.tokens.insert(ltp, shadow_token);
-          ltp--;
-        } else
-          curr_pair.first = ltp->raw_token;
-      }
-      break;
-    case VAR_VALUE:
-      if (prev_lex != VAR_IDENTIFIER && prev_lex != NEW_LINE) {
-        // TODO: report error
-      } else {
-        curr_pair.second = ltp->raw_token;
-        if (def_type == "trial") {
-          curr_trial[curr_pair.first] = curr_pair.second;
-        } else if (def_type == "block") {
-          curr_block.push_back(curr_pair);
-        } else if (def_type == "session") {
-          // TODO: should check if curr_pair.first is either a block or a trial
-          // identifier (at a later stage of processing)
-          s_file.parsed_trial_info.session.push_back(curr_pair);
-        }
-        curr_pair = {};
-      }
-      break;
-    case SINGLE_COMMENT:
-      while (ltp->lex != NEW_LINE)
-        ltp++;
-      break;
-    }
-    prev_lex = ltp->lex;
-    ltp++;
-    // ensures a single identifier in a def block is added to the right
-    // structure
-    if (ltp->lex == END_MARKER && def_type != "trial" &&
-        curr_pair.first != "" && curr_pair.second == "") {
-      curr_pair.second = "1";
-      if (def_type == "block")
-        curr_block.push_back(curr_pair);
-      else if (def_type == "session")
-        s_file.parsed_trial_info.session.push_back(curr_pair);
-    }
-  }
-  if (def_type == "trial")
-    s_file.parsed_trial_info.trial_map[def_label] = curr_trial;
-  else if (def_type == "block")
-    s_file.parsed_trial_info.block_map[def_label] = curr_block;
-}
+// static void parse_def(std::vector<lexed_token>::iterator &ltp,
+//                       lexed_file &l_file, parsed_sess_file &s_file,
+//                       std::string def_type, std::string def_label) {
+//   std::pair<std::string, std::string> curr_pair = {};
+//   std::map<std::string, std::string> curr_trial = {};
+//   std::vector<std::pair<std::string, std::string>> curr_block = {};
+//   lexeme prev_lex = NONE;
+//   while (ltp->lex != END_MARKER) {
+//     switch (ltp->lex) {
+//     case VAR_IDENTIFIER:
+//       if (def_type == "trial") {
+//         curr_pair.first = ltp->raw_token;
+//       } else {
+//         /* disgusting hack: inserts a 'shadow token'
+//          * so that if the prev identifier didnt include
+//          * a value immediately proceeding it, a value
+//          * is inserted into the vector to act as if there
+//          * was one.
+//          */
+//         if (curr_pair.first != "") {
+//           lexed_token shadow_token = {VAR_VALUE, "1"};
+//           ltp = l_file.tokens.insert(ltp, shadow_token);
+//           ltp--;
+//         } else
+//           curr_pair.first = ltp->raw_token;
+//       }
+//       break;
+//     case VAR_VALUE:
+//       if (prev_lex != VAR_IDENTIFIER && prev_lex != NEW_LINE) {
+//         // TODO: report error
+//       } else {
+//         curr_pair.second = ltp->raw_token;
+//         if (def_type == "trial") {
+//           curr_trial[curr_pair.first] = curr_pair.second;
+//         } else if (def_type == "block") {
+//           curr_block.push_back(curr_pair);
+//         } else if (def_type == "session") {
+//           // TODO: should check if curr_pair.first is either a block or a
+//           trial
+//           // identifier (at a later stage of processing)
+//           s_file.parsed_trial_info.session.push_back(curr_pair);
+//         }
+//         curr_pair = {};
+//       }
+//       break;
+//     case SINGLE_COMMENT:
+//       while (ltp->lex != NEW_LINE)
+//         ltp++;
+//       break;
+//     }
+//     prev_lex = ltp->lex;
+//     ltp++;
+//     // ensures a single identifier in a def block is added to the right
+//     // structure
+//     if (ltp->lex == END_MARKER && def_type != "trial" &&
+//         curr_pair.first != "" && curr_pair.second == "") {
+//       curr_pair.second = "1";
+//       if (def_type == "block")
+//         curr_block.push_back(curr_pair);
+//       else if (def_type == "session")
+//         s_file.parsed_trial_info.session.push_back(curr_pair);
+//     }
+//   }
+//   if (def_type == "trial")
+//     s_file.parsed_trial_info.trial_map[def_label] = curr_trial;
+//   else if (def_type == "block")
+//     s_file.parsed_trial_info.block_map[def_label] = curr_block;
+// }
 
 /*
  * Implementation Notes:
@@ -156,23 +107,23 @@ static void parse_def(std::vector<lexed_token>::iterator &ltp,
  * the end marker is reached, the current section is added to the session file's
  * parsed_var_sections map.
  */
-static void parse_var_section(std::vector<lexed_token>::iterator &ltp,
-                              lexed_file &l_file, parsed_sess_file &s_file,
-                              std::string region_type) {
-  parsed_var_section curr_section = {};
-  while (ltp->lex != END_MARKER) {
-    auto next_ltp = std::next(ltp, 1);
-    if (ltp->lex == VAR_IDENTIFIER && next_ltp->lex == VAR_VALUE) {
-      curr_section.param_map[ltp->raw_token] = next_ltp->raw_token;
-      ltp += 1;
-    } else if (ltp->lex == SINGLE_COMMENT) {
-      while (ltp->lex != NEW_LINE)
-        ltp++;
-    }
-    ltp++;
-  }
-  s_file.parsed_var_sections[region_type] = curr_section;
-}
+// static void parse_var_section(std::vector<lexed_token>::iterator &ltp,
+//                               lexed_file &l_file, parsed_sess_file &s_file,
+//                               std::string region_type) {
+//   parsed_var_section curr_section = {};
+//   while (ltp->lex != END_MARKER) {
+//     auto next_ltp = std::next(ltp, 1);
+//     if (ltp->lex == VAR_IDENTIFIER && next_ltp->lex == VAR_VALUE) {
+//       curr_section.param_map[ltp->raw_token] = next_ltp->raw_token;
+//       ltp += 1;
+//     } else if (ltp->lex == SINGLE_COMMENT) {
+//       while (ltp->lex != NEW_LINE)
+//         ltp++;
+//     }
+//     ltp++;
+//   }
+//   s_file.parsed_var_sections[region_type] = curr_section;
+// }
 
 /*
  * Implementation Notes:
@@ -180,26 +131,28 @@ static void parse_var_section(std::vector<lexed_token>::iterator &ltp,
  * sequence definition header is found, and if so, calls parse_def. Ignores
  * single comments by passing over the lexes until the new line lex is found.
  */
-static void parse_trial_section(std::vector<lexed_token>::iterator &ltp,
-                                lexed_file &l_file, parsed_sess_file &s_file) {
-  while (ltp->lex != END_MARKER) // parse this section
-  {
-    if (ltp->lex == DEF) {
-      auto next_ltp = std::next(ltp, 1);
-      auto second_next_ltp = std::next(ltp, 2);
-      if (next_ltp->lex == DEF_TYPE && second_next_ltp->lex == VAR_IDENTIFIER) {
-        ltp += 4;
-        parse_def(ltp, l_file, s_file, next_ltp->raw_token,
-                  second_next_ltp->raw_token);
-      } else {
-      } // TODO: report error
-    } else if (ltp->lex == SINGLE_COMMENT) {
-      while (ltp->lex != NEW_LINE)
-        ltp++;
-    }
-    ltp++;
-  }
-}
+// static void parse_trial_section(std::vector<lexed_token>::iterator &ltp,
+//                                 lexed_file &l_file, parsed_sess_file &s_file)
+//                                 {
+//   while (ltp->lex != END_MARKER) // parse this section
+//   {
+//     if (ltp->lex == DEF) {
+//       auto next_ltp = std::next(ltp, 1);
+//       auto second_next_ltp = std::next(ltp, 2);
+//       if (next_ltp->lex == DEF_TYPE && second_next_ltp->lex ==
+//       VAR_IDENTIFIER) {
+//         ltp += 4;
+//         parse_def(ltp, l_file, s_file, next_ltp->raw_token,
+//                   second_next_ltp->raw_token);
+//       } else {
+//       } // TODO: report error
+//     } else if (ltp->lex == SINGLE_COMMENT) {
+//       while (ltp->lex != NEW_LINE)
+//         ltp++;
+//     }
+//     ltp++;
+//   }
+// }
 
 /*
  * Implementation Notes:
@@ -211,30 +164,30 @@ static void parse_trial_section(std::vector<lexed_token>::iterator &ltp,
  * and region type.
  *
  */
-static void parse_region(std::vector<lexed_token>::iterator &ltp,
-                         lexed_file &l_file, parsed_sess_file &s_file,
-                         std::string region_type) {
-  if (region_type == "mf_input" || region_type == "activity" ||
-      region_type == "trial_spec") {
-    parse_var_section(ltp, l_file, s_file, region_type);
-  } else if (region_type == "trial_def") {
-    parse_trial_section(ltp, l_file, s_file);
-  } else {
-    while (ltp->lex != END_MARKER) {
-      auto next_lt = std::next(ltp, 1);
-      auto second_next_lt = std::next(ltp, 2);
-      if (ltp->lex == BEGIN_MARKER && next_lt->lex == REGION &&
-          second_next_lt->lex == REGION_TYPE) {
-        ltp += 4;
-        parse_region(ltp, l_file, s_file, second_next_lt->raw_token);
-      } else if (ltp->lex == SINGLE_COMMENT) {
-        while (ltp->lex != NEW_LINE)
-          ltp++;
-      }
-      ltp++;
-    }
-  }
-}
+// static void parse_region(std::vector<lexed_token>::iterator &ltp,
+//                          lexed_file &l_file, parsed_sess_file &s_file,
+//                          std::string region_type) {
+//   if (region_type == "mf_input" || region_type == "activity" ||
+//       region_type == "trial_spec") {
+//     parse_var_section(ltp, l_file, s_file, region_type);
+//   } else if (region_type == "trial_def") {
+//     parse_trial_section(ltp, l_file, s_file);
+//   } else {
+//     while (ltp->lex != END_MARKER) {
+//       auto next_lt = std::next(ltp, 1);
+//       auto second_next_lt = std::next(ltp, 2);
+//       if (ltp->lex == BEGIN_MARKER && next_lt->lex == REGION &&
+//           second_next_lt->lex == REGION_TYPE) {
+//         ltp += 4;
+//         parse_region(ltp, l_file, s_file, second_next_lt->raw_token);
+//       } else if (ltp->lex == SINGLE_COMMENT) {
+//         while (ltp->lex != NEW_LINE)
+//           ltp++;
+//       }
+//       ltp++;
+//     }
+//   }
+// }
 
 /*
  * Implementation Notes:
@@ -246,41 +199,42 @@ static void parse_region(std::vector<lexed_token>::iterator &ltp,
  *     parsing subroutine.
  *
  */
-void parse_lexed_sess_file(lexed_file &l_file, parsed_sess_file &s_file) {
-  // NOTE: ltp stands for [l]exed [t]oken [p]ointer, not long-term potentiation!
-  std::vector<lexed_token>::iterator ltp = l_file.tokens.begin();
-  // parse the first region, ie the filetype region
-  while (ltp->lex != BEGIN_MARKER) {
-    if (ltp->lex == SINGLE_COMMENT) {
-      while (ltp->lex != NEW_LINE)
-        ltp++;
-    } else if (ltp->lex != NEW_LINE) {
-      LOG_FATAL("Unidentified token. Exiting...");
-      exit(1);
-    }
-    ltp++;
-  }
-  auto next_lt = std::next(ltp, 1);
-  auto second_next_lt = std::next(ltp, 2);
-  if (next_lt->lex == REGION) {
-    if (next_lt->raw_token != "filetype") {
-      LOG_FATAL(
-          "First interpretable line does not specify filetype. Exiting...");
-      exit(2);
-    } else if (second_next_lt->raw_token != "run") {
-      LOG_FATAL("'%s' does not indicate a session file. Exiting...",
-                second_next_lt->raw_token.c_str());
-      exit(3);
-    } else {
-      ltp += 4;
-      parse_region(ltp, l_file, s_file, second_next_lt->raw_token);
-    }
-  } else {
-    LOG_FATAL("Unidentified token after '%s'. Exiting...",
-              ltp->raw_token.c_str());
-    exit(4);
-  }
-}
+// void parse_lexed_sess_file(lexed_file &l_file, parsed_sess_file &s_file) {
+//   // NOTE: ltp stands for [l]exed [t]oken [p]ointer, not long-term
+//   potentiation! std::vector<lexed_token>::iterator ltp =
+//   l_file.tokens.begin();
+//   // parse the first region, ie the filetype region
+//   while (ltp->lex != BEGIN_MARKER) {
+//     if (ltp->lex == SINGLE_COMMENT) {
+//       while (ltp->lex != NEW_LINE)
+//         ltp++;
+//     } else if (ltp->lex != NEW_LINE) {
+//       LOG_FATAL("Unidentified token. Exiting...");
+//       exit(1);
+//     }
+//     ltp++;
+//   }
+//   auto next_lt = std::next(ltp, 1);
+//   auto second_next_lt = std::next(ltp, 2);
+//   if (next_lt->lex == REGION) {
+//     if (next_lt->raw_token != "filetype") {
+//       LOG_FATAL(
+//           "First interpretable line does not specify filetype. Exiting...");
+//       exit(2);
+//     } else if (second_next_lt->raw_token != "run") {
+//       LOG_FATAL("'%s' does not indicate a session file. Exiting...",
+//                 second_next_lt->raw_token.c_str());
+//       exit(3);
+//     } else {
+//       ltp += 4;
+//       parse_region(ltp, l_file, s_file, second_next_lt->raw_token);
+//     }
+//   } else {
+//     LOG_FATAL("Unidentified token after '%s'. Exiting...",
+//               ltp->raw_token.c_str());
+//     exit(4);
+//   }
+// }
 
 void cp_parsed_sess_file(parsed_sess_file &from_s_file,
                          parsed_sess_file &to_s_file) {
@@ -435,38 +389,6 @@ void translate_parsed_trials(parsed_sess_file &s_file, trials_data &td) {
   initialize_trials_data(td, s_file.parsed_trial_info);
 }
 
-/*
- * Implementation Notes for to_str functions:
- *     all *to_str functions use std::stringstreams to create a str
- * representation of the given data structure. For the std::ostream insertion
- * operator overloads, the *to_str functions are called to return the string
- * representation which is then inserted into the given argument std::ostream.
- *
- */
-std::string tokenized_file_to_str(tokenized_file &t_file) {
-  std::stringstream tokenized_file_buf;
-  tokenized_file_buf << "[\n";
-  for (auto line : t_file.tokens) {
-    for (auto token : line) {
-      tokenized_file_buf << "['" << token << "'],\n";
-    }
-  }
-  tokenized_file_buf << "]\n";
-  return tokenized_file_buf.str();
-}
-
-std::string lexed_file_to_str(lexed_file &l_file) {
-  std::stringstream lexed_file_buf;
-  lexed_file_buf << "[\n";
-  for (auto token : l_file.tokens) {
-    lexed_file_buf << "['";
-    lexed_file_buf << lex_string_look_up[token.lex] << "', '";
-    lexed_file_buf << token.raw_token << "'],\n";
-  }
-  lexed_file_buf << "]\n";
-  return lexed_file_buf.str();
-}
-
 std::string parsed_sess_file_to_str(parsed_sess_file &s_file) {
   std::stringstream sess_file_buf;
   sess_file_buf << "{\n";
@@ -513,14 +435,6 @@ std::string parsed_sess_file_to_str(parsed_sess_file &s_file) {
   sess_file_buf << "}\n";
 
   return sess_file_buf.str();
-}
-
-std::ostream &operator<<(std::ostream &os, tokenized_file &t_file) {
-  return os << tokenized_file_to_str(t_file);
-}
-
-std::ostream &operator<<(std::ostream &os, lexed_file &l_file) {
-  return os << lexed_file_to_str(l_file);
 }
 
 std::ostream &operator<<(std::ostream &os, parsed_sess_file &s_file) {
