@@ -28,6 +28,7 @@
 typedef struct {
   std::string cmd_name;
   std::string print_help;
+  std::string verbose;
   std::string vis_mode;
   std::string build_file;
   std::string session_file;

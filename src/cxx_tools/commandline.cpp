@@ -33,20 +33,20 @@ const std::string SYN_CONS_IDS[NUM_SYN_CONS] = {"MFGR", "GRGO", "MFGO", "GOGO",
 /*
  * available commandline flags which take no argument
  */
-const std::vector<std::string>
-    command_line_single_opts{
-        "--pfpc-off",
-        "--mfnc-off",
-        "--binary",
-        "--cascade",
-    };
+const std::vector<std::string> command_line_single_opts{
+    "--pfpc-off", "--mfnc-off", "--binary", "--cascade", "--verbose",
+};
 
 /*
  * available commandline flags which take an argument. Each pair consists of the
  * short and long versions of the flag. Only one of either the short or long
  * versions of a flag may be specified in a single invocation of the cbm_sim
  * executable.
+ *
+ * e.g. how to obtain the first element of the array, and the first elem of the
+ * pair: command_line_pair_opts[0].first == "-h"
  */
+
 const std::vector<std::pair<std::string, std::string>> command_line_pair_opts{
     {"-h", "--help"},    // used when user wants usage information
     {"-v", "--visual"},  // used to specify whether to run in the terminal or a
@@ -314,6 +314,8 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl) {
     if (cmd_opt_exists(tokens, single_opt)) {
       if (single_opt.find("mfnc") != std::string::npos) {
         p_cl.mfnc_plasticity = single_opt.substr(7, std::string::npos);
+      } else if (single_opt.find("verbose") != std::string::npos) {
+        p_cl.verbose = single_opt.substr(2, std::string::npos);
       } else if (!pfpc_opt_found) {
         int offset = (single_opt.find("pfpc") != std::string::npos) ? 7 : 2;
         p_cl.pfpc_plasticity = single_opt.substr(offset, std::string::npos);
@@ -391,12 +393,13 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl) {
 // I am sorry in advance for this implementation. C++ doesn't have reflection. A
 // shame.
 bool p_cmdline_is_empty(parsed_commandline &p_cl) {
-  return p_cl.print_help.empty() && p_cl.vis_mode.empty() &&
-         p_cl.build_file.empty() && p_cl.session_file.empty() &&
-         p_cl.input_sim_file.empty() && p_cl.output_basename.empty() &&
-         p_cl.pfpc_plasticity.empty() && p_cl.mfnc_plasticity.empty() &&
-         p_cl.raster_files.empty() && p_cl.psth_files.empty() &&
-         p_cl.weights_files.empty() && p_cl.conn_arrs_files.empty();
+  return p_cl.print_help.empty() && p_cl.verbose.empty() &&
+         p_cl.vis_mode.empty() && p_cl.build_file.empty() &&
+         p_cl.session_file.empty() && p_cl.input_sim_file.empty() &&
+         p_cl.output_basename.empty() && p_cl.pfpc_plasticity.empty() &&
+         p_cl.mfnc_plasticity.empty() && p_cl.raster_files.empty() &&
+         p_cl.psth_files.empty() && p_cl.weights_files.empty() &&
+         p_cl.conn_arrs_files.empty();
 }
 
 /*
@@ -409,6 +412,7 @@ bool p_cmdline_is_empty(parsed_commandline &p_cl) {
  * definitely required.
  *
  */
+
 void validate_commandline(parsed_commandline &p_cl) {
   if (p_cmdline_is_empty(p_cl)) // only executable given, open the gui
   {
@@ -422,6 +426,9 @@ void validate_commandline(parsed_commandline &p_cl) {
     if (!p_cl.print_help.empty()) {
       print_usage_info();
       exit(0);
+    }
+    if (!p_cl.verbose.empty()) {
+      logger_setLevel(LogLevel_DEBUG);
     }
     if (!p_cl.build_file.empty()) // checking validity of input for build mode
     {
@@ -553,6 +560,7 @@ void cp_parsed_commandline(parsed_commandline &from_p_cl,
                            parsed_commandline &to_p_cl) {
   to_p_cl.cmd_name = from_p_cl.cmd_name;
   to_p_cl.print_help = from_p_cl.print_help;
+  to_p_cl.verbose = from_p_cl.verbose;
   to_p_cl.vis_mode = from_p_cl.vis_mode;
   to_p_cl.build_file = from_p_cl.build_file;
   to_p_cl.session_file = from_p_cl.session_file;
@@ -569,7 +577,9 @@ void cp_parsed_commandline(parsed_commandline &from_p_cl,
 
 std::string parsed_commandline_to_str(parsed_commandline &p_cl) {
   std::stringstream p_cl_buf;
+  p_cl_buf << "{ 'cmd_name', '" << p_cl.cmd_name << "' }\n";
   p_cl_buf << "{ 'print_help', '" << p_cl.print_help << "' }\n";
+  p_cl_buf << "{ 'verbose', '" << p_cl.verbose << "' }\n";
   p_cl_buf << "{ 'vis_mode', '" << p_cl.vis_mode << "' }\n";
   p_cl_buf << "{ 'build_file', '" << p_cl.build_file << "' }\n";
   p_cl_buf << "{ 'session_file', '" << p_cl.session_file << "' }\n";
