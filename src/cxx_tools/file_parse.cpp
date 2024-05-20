@@ -365,113 +365,6 @@ void cp_parsed_sess_file(parsed_sess_file &from_s_file,
 
 /*
  * Implementation Notes:
- *     meant for parsing var sections in parsed_build files. loops until the end
- * lex {END_MARKER, "end"} is found. Within the loop current variable attributes
- * are collected and added to the (temporary) current section. Once the end
- * marker is reached, the current section is added to the build file's
- * parsed_var_sections map.
- */
-static void parse_var_section(std::vector<lexed_token>::iterator &ltp,
-                              lexed_file &l_file, parsed_build_file &b_file,
-                              std::string region_type) {
-  parsed_var_section curr_section = {};
-  while (ltp->lex != END_MARKER) {
-    auto next_ltp = std::next(ltp, 1);
-    if (ltp->lex == VAR_IDENTIFIER && next_ltp->lex == VAR_VALUE) {
-      curr_section.param_map[ltp->raw_token] = next_ltp->raw_token;
-      ltp += 1;
-    } else if (ltp->lex == SINGLE_COMMENT) {
-      while (ltp->lex != NEW_LINE)
-        ltp++;
-    }
-    ltp++;
-  }
-  b_file.parsed_var_sections[region_type] = curr_section;
-}
-
-/*
- * Implementation Notes:
- *     a region is defined as a code block in a .sess file which begins with
- * "begin" and ends with "end." This recursive function is run on regions in a
- * parsed build file: it checks the region type (there are two recognized region
- * types) and calls parse_var_section, otherwise loops over lexes until it
- *     encounters a valid sequence of begin marker, region, and region type.
- */
-static void parse_region(std::vector<lexed_token>::iterator &ltp,
-                         lexed_file &l_file, parsed_build_file &b_file,
-                         std::string region_type) {
-  if (region_type == "connectivity") {
-    parse_var_section(ltp, l_file, b_file, region_type);
-  } else if (region_type == "activity") {
-    parse_var_section(ltp, l_file, b_file, region_type);
-  } else {
-    while (ltp->lex != END_MARKER) {
-      auto next_lt = std::next(ltp, 1);
-      auto second_next_lt = std::next(ltp, 2);
-      if (ltp->lex == BEGIN_MARKER && next_lt->lex == REGION &&
-          second_next_lt->lex == REGION_TYPE) {
-        ltp += 4;
-        parse_region(ltp, l_file, b_file, second_next_lt->raw_token);
-      } else if (ltp->lex == SINGLE_COMMENT) {
-        while (ltp->lex != NEW_LINE)
-          ltp++;
-      }
-      ltp++;
-    }
-  }
-}
-
-/*
- * Implementation Notes:
- *     This function operates upon a lexed file, converting that file into a
- * parsed file. While a recursive solution is more elegant, I brute-forced it
- * for now by looping over lines and then over tokens. I create an empty
- * parsed_section at the beginning of the algorithm, which will be filled within
- * a section and then cleared in preparation for the next section. Basically I
- * match each lexed token with the relevant lexemes. Notice that I do not have a
- * case for VAR_VALUE: this is because when I reach VAR_IDENTIFIER I must use
- * the identifier in the param map to assign the VAR_VALUE. So I progress the
- * lexed token iterator by two at the end of this operatation, either reaching a
- * comment or EOL. One final note is that I needed to keep the END_MARKERs in as
- * they helped solve the problem of finding when we are finished with a section.
- */
-void parse_lexed_build_file(lexed_file &l_file, parsed_build_file &b_file) {
-  std::vector<lexed_token>::iterator ltp = l_file.tokens.begin();
-  // parse the first region, ie the filetype region
-  while (ltp->lex != BEGIN_MARKER) {
-    if (ltp->lex == SINGLE_COMMENT) {
-      while (ltp->lex != NEW_LINE)
-        ltp++;
-    } else if (ltp->lex != NEW_LINE) {
-      LOG_FATAL("Unidentified token. Exiting...");
-      exit(1);
-    }
-    ltp++;
-  }
-  auto next_lt = std::next(ltp, 1);
-  auto second_next_lt = std::next(ltp, 2);
-  if (next_lt->lex == REGION) {
-    if (next_lt->raw_token != "filetype") {
-      LOG_FATAL(
-          "First interpretable line does not specify filetype. Exiting...");
-      exit(2);
-    } else if (second_next_lt->raw_token != "build") {
-      LOG_FATAL("'%s' does not indicate a build file. Exiting...",
-                second_next_lt->raw_token.c_str());
-      exit(3);
-    } else {
-      ltp += 4;
-      parse_region(ltp, l_file, b_file, second_next_lt->raw_token);
-    }
-  } else {
-    LOG_FATAL("Unidentified token after '%s'. Exiting...",
-              ltp->raw_token.c_str());
-    exit(4);
-  }
-}
-
-/*
- * Implementation Notes:
  *     allocates memory for arrays in td. Note that it is expected that
  *     num_trials would be determined from the .sess file via
  * calculate_num_trials.
@@ -645,21 +538,6 @@ std::string lexed_file_to_str(lexed_file &l_file) {
   return lexed_file_buf.str();
 }
 
-std::string parsed_build_file_to_str(parsed_build_file &b_file) {
-  std::stringstream build_file_buf;
-  build_file_buf << "[\n";
-  for (auto var_sec : b_file.parsed_var_sections) {
-    build_file_buf << "\t{\n";
-    for (auto pair : var_sec.second.param_map) {
-      build_file_buf << "\t\t'" << pair.first << "', '";
-      build_file_buf << pair.second << "'\n";
-    }
-    build_file_buf << "\t},\n";
-  }
-  build_file_buf << "]\n";
-  return build_file_buf.str();
-}
-
 std::string parsed_sess_file_to_str(parsed_sess_file &s_file) {
   std::stringstream sess_file_buf;
   sess_file_buf << "{\n";
@@ -714,10 +592,6 @@ std::ostream &operator<<(std::ostream &os, tokenized_file &t_file) {
 
 std::ostream &operator<<(std::ostream &os, lexed_file &l_file) {
   return os << lexed_file_to_str(l_file);
-}
-
-std::ostream &operator<<(std::ostream &os, parsed_build_file &b_file) {
-  return os << parsed_build_file_to_str(b_file);
 }
 
 std::ostream &operator<<(std::ostream &os, parsed_sess_file &s_file) {

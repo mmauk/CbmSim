@@ -13,12 +13,6 @@ Control::Control(parsed_commandline &p_cl) {
   use_gui = (p_cl.vis_mode == "GUI") ? true : false;
   if (!p_cl.build_file.empty()) {
     /* initialize temporary objects for parsing build file */
-    // tokenized_file t_file;
-    // lexed_file l_file;
-    // parsed_build_file pb_file;
-    // tokenize_file(p_cl.build_file, t_file);
-    // lex_tokenized_file(t_file, l_file);
-    // parse_lexed_build_file(l_file, pb_file);
     data_out_path = OUTPUT_DATA_PATH + p_cl.output_basename;
     data_out_base_name = p_cl.output_basename;
     /* Next few lines create the output directory.

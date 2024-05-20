@@ -94,10 +94,6 @@ typedef struct {
 } lexed_file;
 
 typedef struct {
-  std::map<std::string, parsed_var_section> parsed_var_sections;
-} parsed_build_file;
-
-typedef struct {
   parsed_trial_section parsed_trial_info;
   std::map<std::string, parsed_var_section> parsed_var_sections;
 } parsed_sess_file;
@@ -136,16 +132,6 @@ void parse_lexed_sess_file(lexed_file &l_file, parsed_sess_file &s_file);
  */
 void cp_parsed_sess_file(parsed_sess_file &from_s_file,
                          parsed_sess_file &to_s_file);
-
-/*
- * Description:
- *     takes a lexed file reference l_file and parses it, i.e. takes each lexeme
- *     and adds it to the correct entry in p_file.parsed_var_sections. See the
- * above definition of parsed_build_file and parsed_section for more
- * information.
- *
- */
-void parse_lexed_build_file(lexed_file &l_file, parsed_build_file &p_file);
 
 /*
  * Description:
@@ -197,8 +183,6 @@ void delete_trials_data(trials_data &td);
 std::ostream &operator<<(std::ostream &os, tokenized_file &t_file);
 
 std::ostream &operator<<(std::ostream &os, lexed_file &l_file);
-
-std::ostream &operator<<(std::ostream &os, parsed_build_file &b_file);
 
 std::ostream &operator<<(std::ostream &os, parsed_sess_file &s_file);
 
