@@ -16,11 +16,11 @@
 #include "info_file.h"
 #include "logger.h"
 
-void cp_to_info_file_data(parsed_commandline &p_cl, parsed_sess_file &s_file,
-                          info_file_data &if_data) {
-  cp_parsed_commandline(p_cl, if_data.p_cl);
-  cp_parsed_sess_file(s_file, if_data.s_file);
-}
+// void cp_to_info_file_data(parsed_commandline &p_cl, parsed_sess_file &s_file,
+//                           info_file_data &if_data) {
+//   cp_parsed_commandline(p_cl, if_data.p_cl);
+//   cp_parsed_sess_file(s_file, if_data.s_file);
+// }
 
 /*
  * Description:

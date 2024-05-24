@@ -672,7 +672,7 @@ void InNet::runUpdateGOInGRDepressionCUDA(cudaStream_t **sts, int streamN) {
   for (int i = 0; i < numGPUs; i++) {
     error = cudaSetDevice(i + gpuIndStart);
     callUpdateGOInGRDepressionOPKernel(
-        sts[i][streamN], updateGOInGRNumBlocks, updateGOInGRNumGRPerB, num_mf,
+        sts[i][streamN], updateGOInGRNumBlocks, updateGOInGRNumGRPerB, num_go,
         depAmpGOGPU[i], grConGOOutGRGPU[i], grConGOOutGRGPUP[i],
         numGOInPerGRGPU[i], depAmpGOGRGPU[i]);
 #ifdef DEBUGOUT
@@ -687,7 +687,7 @@ void InNet::runUpdateGOInGRDynamicSpillCUDA(cudaStream_t **sts, int streamN) {
   for (int i = 0; i < numGPUs; i++) {
     error = cudaSetDevice(i + gpuIndStart);
     callUpdateGOInGRDynamicSpillOPKernel(
-        sts[i][streamN], updateGOInGRNumBlocks, updateGOInGRNumGRPerB, num_mf,
+        sts[i][streamN], updateGOInGRNumBlocks, updateGOInGRNumGRPerB, num_go,
         dynamicAmpGOGPU[i], grConGOOutGRGPU[i], grConGOOutGRGPUP[i],
         numGOInPerGRGPU[i], dynamicAmpGOGRGPU[i]);
 #ifdef DEBUGOUT

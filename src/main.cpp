@@ -22,6 +22,18 @@
 
 int main(int argc, char **argv) {
   logger_initConsoleLogger(stderr);
+  logger_setLevel(LogLevel_DEBUG);
+  parsed_commandline p_cl = {};
+  parse_and_validate_parsed_commandline(&argc, &argv, p_cl);
+  trials_data td;
+  allocate_trials_data(td, p_cl.session_file);
+  translate_trials(p_cl.session_file, td);
+  delete_trials_data(td);
+  return 0;
+}
+
+int main2(int argc, char **argv) {
+  logger_initConsoleLogger(stderr);
   // for now, set the log level dependent on whether
   // we are compiling for debug target or release target
 #ifdef DEBUG

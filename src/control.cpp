@@ -31,7 +31,7 @@ Control::Control(parsed_commandline &p_cl) {
   } else if (!p_cl.session_file.empty()) {
     initialize_session(p_cl.session_file);
     // cp session info to info file obj
-    cp_to_info_file_data(p_cl, s_file, if_data);
+    // cp_to_info_file_data(p_cl, s_file, if_data);
     set_plasticity_modes(p_cl.pfpc_plasticity, p_cl.mfnc_plasticity);
     // assume that validated commandline opts includes 1) input file 2) session
     // file 3) output directory name
@@ -136,13 +136,13 @@ void Control::initialize_session(std::string sess_file) {
   // parse_lexed_sess_file(l_file, s_file);
   //  this function is required to turn object of objects into object of arrays
   //  (performance benefit)
-  translate_parsed_trials(s_file, td);
+  // translate_parsed_trials(s_file, td);
 
   // for now, manually use string to int for these parameters. clunky.
-  trialTime = std::stoi(
-      s_file.parsed_var_sections["trial_spec"].param_map["trialTime"]);
-  msPreCS =
-      std::stoi(s_file.parsed_var_sections["trial_spec"].param_map["msPreCS"]);
+  // trialTime = std::stoi(
+  //    s_file.parsed_var_sections["trial_spec"].param_map["trialTime"]);
+  // msPreCS =
+  //    std::stoi(s_file.parsed_var_sections["trial_spec"].param_map["msPreCS"]);
 
   if (msPreCS < BUN_VIZ_MS_PRE_CS) {
     LOG_FATAL("msPreCS must be greater than or equal to BUN_VIZ_MS_PRE_CS. "
@@ -396,83 +396,83 @@ void Control::write_cmdline_info(std::fstream &out_buf) {
 }
 
 void Control::write_sess_info(std::fstream &out_buf) {
-  out_buf << "############################## SESSION INFO "
-             "##################################\n";
-  out_buf << "#" << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH - 1)
-          << "#\n";
+  // out_buf << "############################## SESSION INFO "
+  //            "##################################\n";
+  // out_buf << "#" << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH - 1)
+  //         << "#\n";
 
-  uint32_t col_2_width =
-      INFO_FILE_COL_WIDTH - TRIAL_DEFINE_LBL.length() - TAB_WIDTH - 1;
-  out_buf << "#" << std::left << std::setw(1) << "" << TRIAL_DEFINE_LBL
-          << std::setw(1) << std::right << " : " << std::setw(col_2_width)
-          << "#\n";
-  out_buf << "#" << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH - 1)
-          << "#\n";
+  // uint32_t col_2_width =
+  //     INFO_FILE_COL_WIDTH - TRIAL_DEFINE_LBL.length() - TAB_WIDTH - 1;
+  // out_buf << "#" << std::left << std::setw(1) << "" << TRIAL_DEFINE_LBL
+  //         << std::setw(1) << std::right << " : " << std::setw(col_2_width)
+  //         << "#\n";
+  // out_buf << "#" << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH - 1)
+  //         << "#\n";
 
-  for (auto trial : if_data.s_file.parsed_trial_info.trial_map) {
-    col_2_width = INFO_FILE_COL_WIDTH - trial.first.length() - TAB_WIDTH - 4;
-    out_buf << "#" << std::setw(TAB_WIDTH) << "" << std::left << trial.first
-            << std::right << " : " << std::setw(col_2_width) << "#\n";
-    out_buf << "#" << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH - 1)
-            << "#\n";
+  // for (auto trial : if_data.s_file.parsed_trial_info.trial_map) {
+  //   col_2_width = INFO_FILE_COL_WIDTH - trial.first.length() - TAB_WIDTH - 4;
+  //   out_buf << "#" << std::setw(TAB_WIDTH) << "" << std::left << trial.first
+  //           << std::right << " : " << std::setw(col_2_width) << "#\n";
+  //   out_buf << "#" << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH - 1)
+  //           << "#\n";
 
-    uint32_t max_trial_param_len = get_max_key_len(trial.second);
+  //  uint32_t max_trial_param_len = get_max_key_len(trial.second);
 
-    for (auto var : trial.second) {
-      col_2_width =
-          INFO_FILE_COL_WIDTH - max_trial_param_len - 2 * TAB_WIDTH - 6;
-      out_buf << "#" << std::setw(2 * TAB_WIDTH) << "" << std::left
-              << std::setw(max_trial_param_len) << var.first << std::right
-              << " : " << std::left << std::setw(col_2_width) << var.second
-              << "#\n";
-    }
-    out_buf << "#" << std::right << std::setfill(' ')
-            << std::setw(INFO_FILE_COL_WIDTH - 1) << "#\n";
-  }
+  //  for (auto var : trial.second) {
+  //    col_2_width =
+  //        INFO_FILE_COL_WIDTH - max_trial_param_len - 2 * TAB_WIDTH - 6;
+  //    out_buf << "#" << std::setw(2 * TAB_WIDTH) << "" << std::left
+  //            << std::setw(max_trial_param_len) << var.first << std::right
+  //            << " : " << std::left << std::setw(col_2_width) << var.second
+  //            << "#\n";
+  //  }
+  //  out_buf << "#" << std::right << std::setfill(' ')
+  //          << std::setw(INFO_FILE_COL_WIDTH - 1) << "#\n";
+  //}
 
-  col_2_width = INFO_FILE_COL_WIDTH - BLOCK_DEFINE_LBL.length() - 5;
-  out_buf << "#" << std::setw(1) << "" << BLOCK_DEFINE_LBL << std::setw(1)
-          << std::right << " : " << std::setw(col_2_width) << "#\n";
-  out_buf << "#" << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH - 1)
-          << "#\n";
+  // col_2_width = INFO_FILE_COL_WIDTH - BLOCK_DEFINE_LBL.length() - 5;
+  // out_buf << "#" << std::setw(1) << "" << BLOCK_DEFINE_LBL << std::setw(1)
+  //         << std::right << " : " << std::setw(col_2_width) << "#\n";
+  // out_buf << "#" << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH - 1)
+  //         << "#\n";
 
-  for (auto block : if_data.s_file.parsed_trial_info.block_map) {
-    col_2_width = INFO_FILE_COL_WIDTH - block.first.length() - TAB_WIDTH - 4;
-    out_buf << "#" << std::setw(TAB_WIDTH) << "" << std::left << block.first
-            << " : " << std::right << std::setw(col_2_width) << "#\n";
-    out_buf << "#" << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH - 1)
-            << "#\n";
+  // for (auto block : if_data.s_file.parsed_trial_info.block_map) {
+  //   col_2_width = INFO_FILE_COL_WIDTH - block.first.length() - TAB_WIDTH - 4;
+  //   out_buf << "#" << std::setw(TAB_WIDTH) << "" << std::left << block.first
+  //           << " : " << std::right << std::setw(col_2_width) << "#\n";
+  //   out_buf << "#" << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH - 1)
+  //           << "#\n";
 
-    uint32_t max_block_param_len = get_max_first_len(block.second);
+  //  uint32_t max_block_param_len = get_max_first_len(block.second);
 
-    for (auto pair : block.second) {
-      col_2_width =
-          INFO_FILE_COL_WIDTH - max_block_param_len - 2 * TAB_WIDTH - 6;
-      out_buf << "#" << std::setw(2 * TAB_WIDTH) << "" << std::left
-              << std::setw(max_block_param_len) << pair.first << std::right
-              << " : " << std::left << std::setw(col_2_width) << pair.second
-              << "#\n";
-    }
-    out_buf << "#" << std::right << std::setfill(' ')
-            << std::setw(INFO_FILE_COL_WIDTH - 1) << "#\n";
-  }
+  //  for (auto pair : block.second) {
+  //    col_2_width =
+  //        INFO_FILE_COL_WIDTH - max_block_param_len - 2 * TAB_WIDTH - 6;
+  //    out_buf << "#" << std::setw(2 * TAB_WIDTH) << "" << std::left
+  //            << std::setw(max_block_param_len) << pair.first << std::right
+  //            << " : " << std::left << std::setw(col_2_width) << pair.second
+  //            << "#\n";
+  //  }
+  //  out_buf << "#" << std::right << std::setfill(' ')
+  //          << std::setw(INFO_FILE_COL_WIDTH - 1) << "#\n";
+  //}
 
-  col_2_width = INFO_FILE_COL_WIDTH - SESSION_DEFINE_LBL.length() - 5;
-  out_buf << "#" << std::setw(1) << "" << SESSION_DEFINE_LBL << std::setw(1)
-          << std::right << " : " << std::setw(col_2_width) << "#\n";
-  out_buf << "#" << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH - 1)
-          << "#\n";
-  for (auto pair : if_data.s_file.parsed_trial_info.session) {
-    col_2_width = INFO_FILE_COL_WIDTH - pair.first.length() - TAB_WIDTH - 6;
-    out_buf << "#" << std::setw(TAB_WIDTH) << "" << std::left
-            << std::setw(pair.first.length()) << pair.first << std::right
-            << " : " << std::left << std::setw(col_2_width) << pair.second
-            << "#\n";
-  }
-  out_buf << "#" << std::right << std::setfill(' ')
-          << std::setw(INFO_FILE_COL_WIDTH - 1) << "#\n";
-  out_buf << "############################ END SESSION RECORD "
-             "##############################\n";
+  // col_2_width = INFO_FILE_COL_WIDTH - SESSION_DEFINE_LBL.length() - 5;
+  // out_buf << "#" << std::setw(1) << "" << SESSION_DEFINE_LBL << std::setw(1)
+  //         << std::right << " : " << std::setw(col_2_width) << "#\n";
+  // out_buf << "#" << std::setfill(' ') << std::setw(INFO_FILE_COL_WIDTH - 1)
+  //         << "#\n";
+  // for (auto pair : if_data.s_file.parsed_trial_info.session) {
+  //   col_2_width = INFO_FILE_COL_WIDTH - pair.first.length() - TAB_WIDTH - 6;
+  //   out_buf << "#" << std::setw(TAB_WIDTH) << "" << std::left
+  //           << std::setw(pair.first.length()) << pair.first << std::right
+  //           << " : " << std::left << std::setw(col_2_width) << pair.second
+  //           << "#\n";
+  // }
+  // out_buf << "#" << std::right << std::setfill(' ')
+  //         << std::setw(INFO_FILE_COL_WIDTH - 1) << "#\n";
+  // out_buf << "############################ END SESSION RECORD "
+  //            "##############################\n";
 }
 
 void Control::save_info_to_file() {

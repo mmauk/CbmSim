@@ -135,7 +135,7 @@ public:
   ~Control();
 
   // Objects
-  parsed_sess_file s_file;
+  // parsed_sess_file s_file;
   trials_data td;
   info_file_data if_data;
   CBMState *simState = NULL;

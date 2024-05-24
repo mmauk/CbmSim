@@ -14,11 +14,14 @@
 #ifndef FILE_PARSE_H_
 #define FILE_PARSE_H_
 
+#include "json.hpp"
 #include <cstdint>
 #include <map>
 #include <string>
 #include <utility> /* for std::pair */
 #include <vector>
+
+using json = nlohmann::json;
 
 typedef struct {
   uint32_t num_trials;
@@ -32,45 +35,6 @@ typedef struct {
 } trials_data;
 
 /*
- * a section within an input file that includes the label of the section
- * and the dictionary of parameters in that section
- *
- */
-typedef struct {
-  std::map<std::string, std::string> param_map;
-} parsed_var_section;
-
-typedef struct {
-  std::map<std::string, std::map<std::string, std::string>> trial_map;
-  std::map<std::string, std::vector<std::pair<std::string, std::string>>>
-      block_map;
-  std::vector<std::pair<std::string, std::string>>
-      session; // <-- pairs of block identifier and number of blocks
-} parsed_trial_section;
-
-typedef struct {
-  parsed_trial_section parsed_trial_info;
-  std::map<std::string, parsed_var_section> parsed_var_sections;
-} parsed_sess_file;
-
-/*
- * Description:
- *     takes a lexed file reference l_file and parses it, i.e. takes each lexeme
- *     and adds it to the correct entry in either
- * parsed_sess_file.parsed_trial_info or parsed_sess_file.parsed_var_sections
- *
- */
-// void parse_lexed_sess_file(lexed_file &l_file, parsed_sess_file &s_file);
-
-/*
- * Description:
- *     takes in parsed_session_file 'from_s_file' and copies its data into
- * 'to_s_file'
- */
-void cp_parsed_sess_file(parsed_sess_file &from_s_file,
-                         parsed_sess_file &to_s_file);
-
-/*
  * Description:
  *     allocates memory for the arrays within reference to trials_data td.
  *     Caller is responsible for the memory that is allocated in this function.
@@ -78,16 +42,7 @@ void cp_parsed_sess_file(parsed_sess_file &from_s_file,
  *      to call delete_trials_data at a later point to prevent memory leak)
  *
  */
-void allocate_trials_data(trials_data &td, uint32_t num_trials);
-
-/*
- * Description:
- *     initializes elements of arrays in td according to parsed trial
- * definitions in pt_section. NOTE: "allocate_trials_data" must be run before
- * this function is called.
- *
- */
-void initialize_trials_data(trials_data &td, parsed_trial_section &pt_section);
+void allocate_trials_data(trials_data &td, std::string s_file_name);
 
 /*
  * Description:
@@ -96,7 +51,7 @@ void initialize_trials_data(trials_data &td, parsed_trial_section &pt_section);
  *     member element access. Data in td is used later in Control::runSession
  *
  */
-void translate_parsed_trials(parsed_sess_file &s_file, trials_data &td);
+void translate_trials(std::string s_file_name, trials_data &td);
 
 /*
  * Description:
@@ -105,18 +60,5 @@ void translate_parsed_trials(parsed_sess_file &s_file, trials_data &td);
  *
  */
 void delete_trials_data(trials_data &td);
-
-/*
- * Description of following 4 functions:
- *      following are used to print the given type to the console like
- *      you would use the stream insertion operator for atomic types and stl
- *      types for which an operator overload exists.
- *
- * Example Usage:
- *
- *     std::cout << t_file << std::endl;
- */
-
-std::ostream &operator<<(std::ostream &os, parsed_sess_file &s_file);
 
 #endif /* FILE_PARSE_H_ */

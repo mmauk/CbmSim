@@ -80,7 +80,7 @@ typedef struct {
   std::string sim_version;
   std::string username;
   parsed_commandline p_cl;
-  parsed_sess_file s_file;
+  // parsed_sess_file s_file;
 } info_file_data;
 
 /*
@@ -102,8 +102,8 @@ get_max_first_len(std::vector<std::pair<std::string, std::string>> &vec);
  *     copies relevant parsed_commandline and parsed_session_file data to the
  * input_file_data reference 'if_data'
  */
-void cp_to_info_file_data(parsed_commandline &p_cl, parsed_sess_file &s_file,
-                          info_file_data &if_data);
+// void cp_to_info_file_data(parsed_commandline &p_cl, parsed_sess_file &s_file,
+//                           info_file_data &if_data);
 
 /*
  * Description:

@@ -47,8 +47,8 @@ NVCC       := nvcc
 NVCC_FLAGS := -arch=native -Xcompiler -fPIC -O3
 
 CPP             := g++-11
-CPP_FLAGS       := -m64 -pipe -std=c++14 -fopenmp -O3 -fPIC
-CPP_DEBUG_FLAGS := -m64 -pipe -std=c++14 -fopenmp -g -D DEBUG -fPIC 
+CPP_FLAGS       := -m64 -pipe -std=c++17 -fopenmp -O3 -fPIC
+CPP_DEBUG_FLAGS := -m64 -pipe -std=c++17 -fopenmp -g -D DEBUG -fPIC 
 
 LD             := g++-11
 LD_FLAGS       := -m64 -fopenmp -O3

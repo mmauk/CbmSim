@@ -1,7 +1,6 @@
 #include <sys/stat.h>
 
 #include "array_util.h"
-#include "commandline.h" // for OUTPUT_DATA_PATH def
 #include "connectivityparams.h"
 #include "gui.h"
 #include "logger.h"
@@ -19,8 +18,8 @@ std::map<std::string, bool> init_all_weights_map = {
 // temp function so gtk doesn't whine abt NULL callbacks
 static void null_callback(GtkWidget *widget, gpointer data) {}
 
-static bool assert(bool expr, const char *error_string,
-                   const char *func = "assert") {
+static bool assert_for_callback(bool expr, const char *error_string,
+                                const char *func = "assert") {
   if (!expr) {
     LOG_FATAL("%s(): %s", func, error_string);
     return false;
@@ -834,7 +833,7 @@ static void on_pc_window(GtkWidget *widget, Control *control) {
 }
 
 static bool on_parameters(GtkWidget *widget, gpointer data) {
-  return assert(false, "[DEBUG]: Not implemented", __func__);
+  return assert_for_callback(false, "[DEBUG]: Not implemented", __func__);
 }
 
 static void on_dcn_plast(GtkWidget *widget, Control *control) {

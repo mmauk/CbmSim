@@ -253,8 +253,7 @@ __global__ void updateGOGRDepressionInOPGPU(unsigned int inNLoads,
     conRow = (unsigned int *)((char *)conFromIn + i * conFromInPitch);
     tempDepAmpSum += sharedIOBufGRfloat[conRow[index]];
   }
-  // not sure why we divide by three. know there are around 3 gr inputs from go...
-  depAmpGOGRGPU[index] = tempDepAmpSum / 3;
+  depAmpGOGRGPU[index] = tempDepAmpSum / tempNSyn;
 }
 
 __global__ void updateMFGRDepressionInOPGPU(unsigned int inNLoads,
@@ -375,6 +374,7 @@ __global__ void updateMFGRInOPGPU(unsigned int inNLoads, uint32_t *apIn,
   for (int i = 0; i < inNLoads; i++) {
     sharedIOBufGR[tid + i * blockDim.x] = apIn[tid + i * blockDim.x];
   }
+  // wait for all threads to finish writing to shared memory
   __syncthreads();
 
   for (int i = 0; i < tempNSyn; i++) {
