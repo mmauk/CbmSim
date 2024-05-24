@@ -41,10 +41,12 @@ Control::Control(parsed_commandline &p_cl) {
     init_sim(p_cl.input_sim_file);
   } else if (!p_cl.conn_arrs_files.empty()) {
     create_con_arrs_filenames(p_cl.conn_arrs_files);
-    std::fstream sim_file_buf(p_cl.input_sim_file.c_str(),
-                              std::ios::in | std::ios::binary);
-    simState = new CBMState(numMZones, sim_file_buf);
-    sim_file_buf.close();
+    if (!p_cl.input_sim_file.empty()) {
+      std::fstream sim_file_buf(p_cl.input_sim_file.c_str(),
+                                std::ios::in | std::ios::binary);
+      simState = new CBMState(numMZones, sim_file_buf);
+      sim_file_buf.close();
+    }
   }
 }
 
