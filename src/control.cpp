@@ -11,44 +11,26 @@
 
 Control::Control(parsed_commandline &p_cl) {
   use_gui = (p_cl.vis_mode == "GUI") ? true : false;
-  if (!p_cl.build_file.empty()) {
-    /* initialize temporary objects for parsing build file */
-    data_out_path = OUTPUT_DATA_PATH + p_cl.output_basename;
-    data_out_base_name = p_cl.output_basename;
-    /* Next few lines create the output directory.
-     * TODO: This might need refactoring. A utility function should do this.
-     */
-    int status = mkdir(data_out_path.c_str(), 0775);
-    if (status == -1) {
-      LOG_FATAL("Could not create directory '%s'. Maybe it already exists. "
-                "Exiting...",
-                data_out_path.c_str());
-      exit(10);
-    }
-    data_out_dir_created = true;
-    create_out_sim_filename();
-    create_con_arrs_filenames(p_cl.conn_arrs_files);
-  } else if (!p_cl.session_file.empty()) {
+  data_out_path = OUTPUT_DATA_PATH + p_cl.output_basename;
+  data_out_base_name = p_cl.output_basename;
+  LOG_DEBUG("Using '%s' as the output directory...", data_out_path.c_str());
+  int status = mkdir(data_out_path.c_str(), 0775);
+  if (status == -1) {
+    LOG_DEBUG("Could not create directory '%s'. Maybe it already exists. "
+              "Exiting...",
+              data_out_path.c_str());
+    exit(10);
+  }
+  data_out_dir_created = true;
+  create_out_sim_filename();
+  if (!p_cl.session_file.empty()) {
     initialize_session(p_cl.session_file);
     // cp session info to info file obj
     // cp_to_info_file_data(p_cl, s_file, if_data);
     set_plasticity_modes(p_cl.pfpc_plasticity, p_cl.mfnc_plasticity);
     // assume that validated commandline opts includes 1) input file 2) session
     // file 3) output directory name
-    data_out_path = OUTPUT_DATA_PATH + p_cl.output_basename;
-    data_out_base_name = p_cl.output_basename;
-    // NOTE: make the output directory here, so in case of error, user not
-    // run an entire simulation just to not have files save
-    int status = mkdir(data_out_path.c_str(), 0775);
-    if (status == -1) {
-      LOG_FATAL("Could not create directory '%s'. Maybe it already exists. "
-                "Exiting...",
-                data_out_path.c_str());
-      exit(10);
-    }
-    data_out_dir_created = true;
     // create various output filenames once session is initialized
-    create_out_sim_filename();                    // default
     create_out_info_filename();                   // default
     create_out_bvi_filename();                    // default
     create_out_dat_filename();                    // default
@@ -58,24 +40,11 @@ Control::Control(parsed_commandline &p_cl) {
     create_con_arrs_filenames(p_cl.conn_arrs_files); // optional
     init_sim(p_cl.input_sim_file);
   } else if (!p_cl.conn_arrs_files.empty()) {
-    data_out_path = OUTPUT_DATA_PATH + p_cl.output_basename;
-    data_out_base_name = p_cl.output_basename;
-    LOG_DEBUG("Using '%s' as the output directory...", data_out_path.c_str());
-    int status = mkdir(data_out_path.c_str(), 0775);
-    if (status == -1) {
-      LOG_DEBUG("Could not create directory '%s'. Maybe it already exists. "
-                "Exiting...",
-                data_out_path.c_str());
-      exit(10);
-    }
-    data_out_dir_created = true;
     create_con_arrs_filenames(p_cl.conn_arrs_files);
     std::fstream sim_file_buf(p_cl.input_sim_file.c_str(),
                               std::ios::in | std::ios::binary);
     simState = new CBMState(numMZones, sim_file_buf);
     sim_file_buf.close();
-  } else { // user ran program with no args
-    set_plasticity_modes("graded", "off");
   }
 }
 
@@ -131,30 +100,9 @@ void Control::set_plasticity_modes(std::string pfpc_plasticity,
 
 void Control::initialize_session(std::string sess_file) {
   LOG_DEBUG("Initializing session...");
-  // create temporary objects for parsing session file
   sess_file_name = sess_file;
-  // parse_lexed_sess_file(l_file, s_file);
-  //  this function is required to turn object of objects into object of arrays
-  //  (performance benefit)
-  // translate_parsed_trials(s_file, td);
-
-  // for now, manually use string to int for these parameters. clunky.
-  // trialTime = std::stoi(
-  //    s_file.parsed_var_sections["trial_spec"].param_map["trialTime"]);
-  // msPreCS =
-  //    std::stoi(s_file.parsed_var_sections["trial_spec"].param_map["msPreCS"]);
-
-  if (msPreCS < BUN_VIZ_MS_PRE_CS) {
-    LOG_FATAL("msPreCS must be greater than or equal to BUN_VIZ_MS_PRE_CS. "
-              "got %d and %d respectively. Exiting...",
-              msPreCS, BUN_VIZ_MS_PRE_CS);
-    exit(1);
-  }
-  // Assume msPreCS > BUN_VIZ_MS_PRE_CS, then we take
-  // msMeasure to be BUN_VIZ_MS_MEASURE plus the amt extra
-  // that is in msPreCS that is not in BUN_VIZ_MS_PRE_CS
-  msMeasure = msPreCS - BUN_VIZ_MS_PRE_CS + BUN_VIZ_MS_MEASURE;
-
+  allocate_trials_data(td, sess_file);
+  translate_trials(sess_file, td);
   trials_data_initialized = true;
   LOG_DEBUG("Session initialized.");
 }

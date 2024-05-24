@@ -51,7 +51,6 @@ const std::vector<std::pair<std::string, std::string>> command_line_pair_opts{
     {"-h", "--help"},    // used when user wants usage information
     {"-v", "--visual"},  // used to specify whether to run in the terminal or a
                          // GUI interface
-    {"-b", "--build"},   // used to specify the build file in synaptogenesis
     {"-s", "--session"}, // used to specify the session file for running trials
     {"-i", "--input"},   // used to specify the file representing the initial
                          // state of a simulation for a run
@@ -202,9 +201,6 @@ void print_usage_info() {
             << "\t\tprint this information and exit\n";
   std::cout << std::right << std::setw(20) << "\t-v, --visual [TUI|GUI]"
             << "\tspecify the visual mode the simulation is run in\n";
-  std::cout << std::right << std::setw(20) << "\t-b, --build [FILE]"
-            << "\tsets the simulation to build a bunny using FILE as the build "
-               "file\n";
   std::cout << std::right << std::setw(20) << "\t-s, --session [FILE]"
             << "\tsets the simulation to run a session using FILE as the "
                "session file\n";
@@ -270,20 +266,20 @@ void print_usage_info() {
                "example, 'basename.pcr' is a raster file for pc cells while ";
   std::cout << "basename.pfpcw is a weight file of the pf to pc weights\n\n";
   std::cout << "Example usage:\n\n";
-  std::cout << "1) uses file 'build_file.bld' to construct a bunny, which is "
+  std::cout << "1) constructs a bunny, which is "
                "saved to file 'ROOT/data/outputs/bunny/bunny.sim':\n\n";
-  std::cout << "\t./cbm_sim -b build_file.bld -o bunny\n\n";
-  std::cout << "2) uses file 'acquisition.sess' to train the input simulation "
+  std::cout << "\t./cbm_sim -o bunny\n\n";
+  std::cout << "2) uses file 'acquisition.json' to train the input simulation "
                "'bunny.sim' with PFPC plasticity on and set to graded "
                "and MFNC plasticity off:\n\n";
-  std::cout << "\t./cbm_sim -s acquisition.sess -i bunny.sim -o "
+  std::cout << "\t./cbm_sim -s acquisition.json -i bunny.sim -o "
                "acquisition --mfnc-off\n\n";
-  std::cout << "3) uses file 'acquisition.sess' to train the input simulation "
+  std::cout << "3) uses file 'acquisition.json' to train the input simulation "
                "'bunny.sim' with PFPC and MFNC plasticity on and set "
                "to graded;\n";
   std::cout << "   saves purkinje cell, stellate cell, and basket cell rasters "
                "to files located in 'ROOT/data/outputs/acqusition'\n\n";
-  std::cout << "\t./cbm_sim -s acquisition.sess -i bunny.sim -o "
+  std::cout << "\t./cbm_sim -s acquisition.json -i bunny.sim -o "
                "acquisition -r PC,SC,BC\n\n";
 }
 
@@ -358,9 +354,6 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl) {
       case 'v':
         p_cl.vis_mode = this_param;
         break;
-      case 'b':
-        p_cl.build_file = this_param;
-        break;
       case 's':
         p_cl.session_file = this_param;
         break;
@@ -394,12 +387,11 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl) {
 // shame.
 bool p_cmdline_is_empty(parsed_commandline &p_cl) {
   return p_cl.print_help.empty() && p_cl.verbose.empty() &&
-         p_cl.vis_mode.empty() && p_cl.build_file.empty() &&
-         p_cl.session_file.empty() && p_cl.input_sim_file.empty() &&
-         p_cl.output_basename.empty() && p_cl.pfpc_plasticity.empty() &&
-         p_cl.mfnc_plasticity.empty() && p_cl.raster_files.empty() &&
-         p_cl.psth_files.empty() && p_cl.weights_files.empty() &&
-         p_cl.conn_arrs_files.empty();
+         p_cl.vis_mode.empty() && p_cl.session_file.empty() &&
+         p_cl.input_sim_file.empty() && p_cl.output_basename.empty() &&
+         p_cl.pfpc_plasticity.empty() && p_cl.mfnc_plasticity.empty() &&
+         p_cl.raster_files.empty() && p_cl.psth_files.empty() &&
+         p_cl.weights_files.empty() && p_cl.conn_arrs_files.empty();
 }
 
 /*
@@ -430,35 +422,8 @@ void validate_commandline(parsed_commandline &p_cl) {
     if (!p_cl.verbose.empty()) {
       logger_setLevel(LogLevel_DEBUG);
     }
-    if (!p_cl.build_file.empty()) // checking validity of input for build mode
+    if (!p_cl.session_file.empty()) // checking validity of input for run mode
     {
-      if (!p_cl.session_file.empty()) {
-        LOG_FATAL("Cannot specify both session and build file. Exiting...");
-        exit(5);
-      }
-      if (p_cl.output_basename.empty()) {
-        LOG_FATAL("You must specify an output basename. Exiting...");
-        exit(9);
-      }
-      if (p_cl.vis_mode.empty()) {
-        LOG_DEBUG(
-            "Visual mode not specified. Setting to default value of 'TUI'...");
-        p_cl.vis_mode = "TUI";
-      } else if (p_cl.vis_mode == "GUI") {
-        LOG_FATAL("Cannot specify visual mode 'GUI' in build mode. Exiting...");
-        exit(7);
-      }
-      if (!p_cl.input_sim_file.empty() || !p_cl.raster_files.empty()) {
-        LOG_DEBUG("Ignoring additional arguments in build mode.");
-      }
-      p_cl.build_file = INPUT_DATA_PATH + p_cl.build_file;
-    } else if (!p_cl.session_file
-                    .empty()) // checking validity of input for run mode
-    {
-      if (!p_cl.build_file.empty()) {
-        LOG_FATAL("Cannot specify both build and session file. Exiting.");
-        exit(6);
-      }
       if (!p_cl.input_sim_file.empty()) {
         std::string input_sim_file_fullpath;
         // verify whether the input simulation file can be found recursively
@@ -493,8 +458,12 @@ void validate_commandline(parsed_commandline &p_cl) {
       if (p_cl.mfnc_plasticity.empty()) {
         LOG_DEBUG("Turning MFNC plasticity to default mode 'off'...");
         p_cl.mfnc_plasticity = "off";
-      } else if (p_cl.mfnc_plasticity == "off")
+      } else if (p_cl.mfnc_plasticity == "off") {
         LOG_DEBUG("Turning MFNC plasticity off...");
+      } else if (p_cl.mfnc_plasticity == "graded") {
+        LOG_DEBUG("Turning MFNC plasticity on in 'graded' mode...");
+        p_cl.mfnc_plasticity = "graded";
+      }
       if (p_cl.vis_mode.empty()) {
         LOG_DEBUG("Visual mode not specified in run mode. Setting to default "
                   "value of 'TUI'...");
@@ -538,10 +507,16 @@ void validate_commandline(parsed_commandline &p_cl) {
       }
       p_cl.input_sim_file = input_sim_file_fullpath;
     } else {
-      LOG_FATAL("Run mode not specified. You must provide either {-b|--build}, "
-                "{-s|--session}, or {-i|--input + -c|--conn-arrs} arguments. "
-                "Exiting...");
-      exit(7);
+      if (p_cl.output_basename.empty()) {
+        LOG_FATAL(
+            "You must specify an output basename in build mode. Exiting...");
+        exit(9);
+      }
+      if (p_cl.vis_mode.empty()) {
+        LOG_DEBUG("Visual mode not specified in run mode. Setting to default "
+                  "value of 'TUI'...");
+        p_cl.vis_mode = "TUI";
+      }
     }
   }
 }
@@ -562,7 +537,6 @@ void cp_parsed_commandline(parsed_commandline &from_p_cl,
   to_p_cl.print_help = from_p_cl.print_help;
   to_p_cl.verbose = from_p_cl.verbose;
   to_p_cl.vis_mode = from_p_cl.vis_mode;
-  to_p_cl.build_file = from_p_cl.build_file;
   to_p_cl.session_file = from_p_cl.session_file;
   to_p_cl.input_sim_file = from_p_cl.input_sim_file;
   to_p_cl.output_basename = from_p_cl.output_basename;
@@ -581,7 +555,6 @@ std::string parsed_commandline_to_str(parsed_commandline &p_cl) {
   p_cl_buf << "{ 'print_help', '" << p_cl.print_help << "' }\n";
   p_cl_buf << "{ 'verbose', '" << p_cl.verbose << "' }\n";
   p_cl_buf << "{ 'vis_mode', '" << p_cl.vis_mode << "' }\n";
-  p_cl_buf << "{ 'build_file', '" << p_cl.build_file << "' }\n";
   p_cl_buf << "{ 'session_file', '" << p_cl.session_file << "' }\n";
   p_cl_buf << "{ 'input_sim_file', '" << p_cl.input_sim_file << "' }\n";
   p_cl_buf << "{ 'output_basename', '" << p_cl.output_basename << "' }\n";

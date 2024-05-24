@@ -30,7 +30,6 @@ typedef struct {
   std::string print_help;
   std::string verbose;
   std::string vis_mode;
-  std::string build_file;
   std::string session_file;
   std::string input_sim_file;
   std::string output_basename;

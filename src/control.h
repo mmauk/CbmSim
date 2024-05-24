@@ -216,13 +216,13 @@ public:
   float fracOverlap = 0.2;
 
   /* time related variables in-trial */
-  uint32_t trialTime = 0;
-  uint32_t msPreCS = 0;   // how much time before the cs do we collect data for
-  uint32_t msMeasure = 0; // total amount of time data is collected for
+  uint32_t trialTime = 5000;
+  uint32_t msPreCS = 400; // how much time before the cs do we collect data for
+  uint32_t msMeasure = msPreCS - BUN_VIZ_MS_PRE_CS + BUN_VIZ_MS_MEASURE;
 
   /* plasticity types */
-  enum plasticity pf_pc_plast = GRADED;
-  enum plasticity mf_nc_plast = GRADED;
+  enum plasticity pf_pc_plast = OFF;
+  enum plasticity mf_nc_plast = OFF;
 
   /* input and output filenames */
   std::string sess_file_name = "";

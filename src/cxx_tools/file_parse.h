@@ -16,10 +16,7 @@
 
 #include "json.hpp"
 #include <cstdint>
-#include <map>
 #include <string>
-#include <utility> /* for std::pair */
-#include <vector>
 
 using json = nlohmann::json;
 
@@ -46,7 +43,7 @@ void allocate_trials_data(trials_data &td, std::string s_file_name);
 
 /*
  * Description:
- *     translates trials section information in parsed sess file into td.
+ *     translates json file s_file_name into trials_data td.
  *     td follows the structure of arrays (SoA) paradigm for efficiency in
  *     member element access. Data in td is used later in Control::runSession
  *
