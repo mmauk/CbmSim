@@ -1,0 +1,34 @@
+{
+   "trials" : {
+      "isi_250_paired_trial" : {
+         "use_cs": 1,
+         "cs_onset": 400,
+         "cs_len": 250,
+         "cs_percent": 100.0,
+         "use_us": 1,
+         "us_onset": 650
+      },
+      "probe_trial" : {
+         "use_cs": 1,
+         "cs_onset": 400,
+         "cs_len": 250,
+         "cs_percent": 100.0,
+         "use_us": 0,
+         "us_onset": 650
+      }
+   },
+   "blocks": {
+      "acq_block" : [
+         {"isi_250_paired_trial": 720},
+         {"probe_trial": 50}
+      ],
+      "another_block" : [
+         {"isi_250_paired_trial": 5},
+         {"probe_trial": 1}
+      ]
+   },
+   "session": [
+      {"probe_trial": 50},
+      {"acq_block": 28}
+   ]
+}
