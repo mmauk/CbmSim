@@ -28,7 +28,7 @@
       ]
    },
    "session": [
-      {"probe_trial": 50},
-      {"acq_block": 28}
+      {"acq_block": 10},
+      {"another_block": 5}
    ]
 }

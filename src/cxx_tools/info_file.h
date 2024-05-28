@@ -20,7 +20,7 @@
 #include "file_parse.h"
 #include "file_utility.h"
 
-const std::string SIM_VERSION = "0.1.0";
+const std::string SIM_VERSION = "0.1.1";
 
 // various constants related to formatting
 const uint32_t INFO_FILE_COL_WIDTH = 79;
@@ -69,7 +69,6 @@ enum when { BEFORE_RUN, AFTER_RUN };
  * the main data structure containing relevant information which will be saved
  * as text to the info file.
  *
- * TODO: may want to add raster, psth, and weight filenames to this guy
  */
 typedef struct {
   std::string start_date;
@@ -80,30 +79,20 @@ typedef struct {
   std::string sim_version;
   std::string username;
   parsed_commandline p_cl;
-  // parsed_sess_file s_file;
 } info_file_data;
 
 /*
  * Description:
  *     obtains the length of the longest key in the input map.
  */
-uint32_t get_max_key_len(std::map<std::string, std::string> &map);
-
-/*
- * Description;
- *     obtains the length of the longest first element of all pairs in the input
- * vector.
- */
-uint32_t
-get_max_first_len(std::vector<std::pair<std::string, std::string>> &vec);
+uint32_t get_max_key_len(json &trial_params);
 
 /*
  * Description:
- *     copies relevant parsed_commandline and parsed_session_file data to the
- * input_file_data reference 'if_data'
+ *     copies relevant parsed_commandline data to the
+ *     input_file_data reference 'if_data'
  */
-// void cp_to_info_file_data(parsed_commandline &p_cl, parsed_sess_file &s_file,
-//                           info_file_data &if_data);
+void cp_to_info_file_data(parsed_commandline &p_cl, info_file_data &if_data);
 
 /*
  * Description:

@@ -16,11 +16,9 @@
 #include "info_file.h"
 #include "logger.h"
 
-// void cp_to_info_file_data(parsed_commandline &p_cl, parsed_sess_file &s_file,
-//                           info_file_data &if_data) {
-//   cp_parsed_commandline(p_cl, if_data.p_cl);
-//   cp_parsed_sess_file(s_file, if_data.s_file);
-// }
+void cp_to_info_file_data(parsed_commandline &p_cl, info_file_data &if_data) {
+  cp_parsed_commandline(p_cl, if_data.p_cl);
+}
 
 /*
  * Description:
@@ -95,33 +93,14 @@ void set_info_file_str_props(enum when when, info_file_data &if_data) {
  * Implementation Notes:
  *     essentially implements the most brute-force search for the largest
  * element in a linear data structure. Unfortunately, this function has O(N)
- * time complexity, but the input map is not expected to exceed 10 elements, so
- * the penalties at higher N will most likely never be seen.
+ * time complexity, but the input object is not expected to exceed 10 elements,
+ * so the penalties at higher N will most likely never be seen.
  */
-uint32_t get_max_key_len(std::map<std::string, std::string> &map) {
+uint32_t get_max_key_len(json &trial_params) {
   uint32_t max_len = 0;
   uint32_t test_len;
-  for (auto pair : map) {
-    test_len = pair.first.length();
-    if (test_len > max_len)
-      max_len = test_len;
-  }
-  return max_len;
-}
-
-/*
- * Implementation Notes:
- *     also implements the most brute-force search for the largest element in a
- * linear data structure. Unfortunately, this function has O(N) time complexity,
- * but the input map is not expected to exceed 10 elements, so the penalties at
- * higher N will most likely never be seen.
- */
-uint32_t
-get_max_first_len(std::vector<std::pair<std::string, std::string>> &vec) {
-  uint32_t max_len = 0;
-  uint32_t test_len = 0;
-  for (auto pair : vec) {
-    test_len = pair.first.length();
+  for (auto &[param_name, _] : trial_params.items()) {
+    test_len = param_name.length();
     if (test_len > max_len)
       max_len = test_len;
   }
