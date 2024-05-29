@@ -15,7 +15,7 @@ the simulation: their types and numbers are as follows:
 - Deep Cerebellar Nucleus Cells: 8
 - Inferior Olive Cells: 4
 
-For detailed information about each file/module, see the documentation (make link).
+For detailed information about each file/module, see the documentation.
 
 ## Scope
 The simulation has been designed in the context of eyelid-conditioning in rabbits and is tuned to this task.
