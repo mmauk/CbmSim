@@ -34,7 +34,7 @@ public:
 
   void calcActivity(float spillFrac, enum plasticity pf_pc_plast,
                     enum plasticity mf_nc_plast, uint32_t use_cs,
-                    uint32_t use_us);
+                    uint32_t use_us, bool stp_on);
   void updateMFInput(const uint8_t *mfIn);
   void setTrueMFs(bool *isCollateralMF);
   void updateGRStim(int startGRStim, int numGRStim);

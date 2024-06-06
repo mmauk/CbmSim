@@ -223,7 +223,7 @@ public:
   /* plasticity types */
   enum plasticity pf_pc_plast = OFF;
   enum plasticity mf_nc_plast = OFF;
-
+  bool stp_on = false;
   /* input and output filenames */
   std::string sess_file_name = "";
   std::string data_out_path = "";
@@ -281,7 +281,7 @@ public:
    *  plasticity.
    */
   void set_plasticity_modes(std::string pfpc_plasticity,
-                            std::string mfnc_plasticity);
+                            std::string mfnc_plasticity, std::string stp);
   /**
    *  @brief initialize session class attribute from file.
    *  @param sess_file String representing the filepath of the input session
