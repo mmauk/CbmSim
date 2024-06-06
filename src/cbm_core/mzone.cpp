@@ -71,6 +71,9 @@ MZone::~MZone() {
     cudaFree(pfpcSynWRandNums[i]);
     // free cuda device memory
     cudaFree(delayMaskGRGPU[i]);
+
+    cudaFree(grEligGPU[i]);
+    cudaFree(pfpcSTPsGPU[i]);
     cudaFree(pfSynWeightPCGPU[i]);
     cudaFree(inputPFPCGPU[i]);
     cudaFree(inputSumPFPCMZGPU[i]);
@@ -82,6 +85,9 @@ MZone::~MZone() {
   delete[] pfpcSynWRandNums;
 
   delete[] delayMaskGRGPU;
+
+  delete[] grEligGPU;
+  delete[] pfpcSTPsGPU;
   delete[] pfSynWeightPCGPU;
   delete[] inputPFPCGPU;
   delete[] inputPFPCGPUPitch;
@@ -201,6 +207,8 @@ void MZone::initCUDA(cudaStream_t **stream) {
     }
   }
 
+  grEligGPU = new float *[numGPUs];
+  pfpcSTPsGPU = new float *[numGPUs];
   pfSynWeightPCGPU = new float *[numGPUs];
   inputPFPCGPU = new float *[numGPUs];
   inputPFPCGPUPitch = new size_t[numGPUs];
@@ -218,6 +226,8 @@ void MZone::initCUDA(cudaStream_t **stream) {
                cpySize * sizeof(uint32_t), cudaMemcpyHostToDevice);
 
     // allocate device cuda memory
+    cudaMalloc((void **)&grEligGPU[i], numGRPerGPU * sizeof(float));
+    cudaMalloc((void **)&pfpcSTPsGPU[i], numGRPerGPU * sizeof(float));
     cudaMalloc((void **)&pfSynWeightPCGPU[i], numGRPerGPU * sizeof(float));
     cudaMallocPitch((void **)&inputPFPCGPU[i], (size_t *)&inputPFPCGPUPitch[i],
                     num_p_pc_from_gr_to_pc * sizeof(float), num_pc / numGPUs);
@@ -226,6 +236,10 @@ void MZone::initCUDA(cudaStream_t **stream) {
 
     cudaDeviceSynchronize();
     // initialize device cuda memory
+    cudaMemcpy(grEligGPU[i], as->grElig.get() + cpyStartInd,
+               numGRPerGPU * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(pfpcSTPsGPU[i], as->pfpcSTPs.get() + cpyStartInd,
+               numGRPerGPU * sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(pfSynWeightPCGPU[i], &pfSynWeightPCLinear[cpyStartInd],
                numGRPerGPU * sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(pfPCSynWeightStatesGPU[i],
@@ -770,6 +784,17 @@ void MZone::cpyPFPCSumCUDA(cudaStream_t **sts, int streamN) {
   }
 }
 
+void MZone::runPFPCSTPCUDA(cudaStream_t **sts, int streamN, uint32_t use_cs,
+                           uint32_t use_us) {
+  for (uint32_t i = 0; i < numGPUs; i++) {
+    cudaSetDevice(i + gpuIndStart);
+    callPFPCSTPKernel(sts[i][streamN], updatePFPCSynWNumBlocks,
+                      updatePFPCSynWNumGRPerB, use_cs, use_us, grEligBase,
+                      grEligMax, grEligExpScale, grEligDecay, grStpMax,
+                      grStpDecay, grStpInc, grEligGPU[i], pfpcSTPsGPU[i],
+                      apBufGRGPU[i], delayMaskGRGPU[i]);
+  }
+}
 void MZone::runPFPCGradedPlastCUDA(cudaStream_t **sts, int streamN,
                                    uint32_t t) {
   cudaError_t error;
@@ -814,8 +839,8 @@ void MZone::runPFPCGradedPlastCUDA(cudaStream_t **sts, int streamN,
       callPFPCGradedPlastKernel(
           sts[curGPUInd][streamN + curIOInd], updatePFPCSynWNumBlocks,
           updatePFPCSynWNumGRPerB, pfSynWeightPCGPU[curGPUInd],
-          histGRGPU[curGPUInd], grPCHistCheckBinIO, curGROffset,
-          pfPCPlastStepIO[curIOInd]);
+          pfpcSTPsGPU[curGPUInd], histGRGPU[curGPUInd], grPCHistCheckBinIO,
+          curGROffset, pfPCPlastStepIO[curIOInd]);
 
       curGROffset += num_p_pc_from_gr_to_pc;
     }
@@ -1013,18 +1038,6 @@ void MZone::runPFPCMaukCascadePlastCUDA(cudaStream_t **sts, int streamN,
   }
 }
 
-// void MZone::runPFPCSTPCuda(cudaStream_t **sts, int streamN, uint32_t use_cs,
-//                            uint32_t use_us) {
-//   for (uint32_t i = 0; i < numGPUs; i++) {
-//     cudaSetDevice(i + gpuIndStart);
-//     callPFPCSTPKernel(sts[i][streamN], updatePFPCSynWNumBlocks,
-//                       updatePFPCSynWNumGRPerB, use_cs, use_us, grEligBase,
-//                       grEligMax, grEligExpScale, grEligDecay, grStpMax,
-//                       grStpDecay, grStpInc, grEligGPU[i], pfpcSTPsGPU[i],
-//                       apBufGRGPU[i], delayMaskGRGPU[i]);
-//   }
-// }
-
 void MZone::runSumPFSCCUDA(cudaStream_t **sts, int streamN) {
   cudaError_t error;
   for (int i = 0; i < numGPUs; i++) {
@@ -1077,6 +1090,38 @@ void MZone::cpyPFBCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN) {
                         inputSumPFBCGPU[i], num_bc / numGPUs * sizeof(uint32_t),
                         cudaMemcpyDeviceToHost, sts[i][streamN]);
   }
+}
+
+const float *MZone::exportGREligToState() {
+  int cpyStartInd;
+  cudaError_t error;
+  for (int i = 0; i < numGPUs; i++) {
+    cpyStartInd = i * numGRPerGPU;
+    cudaSetDevice(i + gpuIndStart);
+    error = cudaMemcpy(as->grElig.get() + cpyStartInd, grEligGPU[i],
+                       numGRPerGPU * sizeof(float), cudaMemcpyDeviceToHost);
+    if (error != cudaSuccess) {
+      LOG_ERROR("CUDA Error: %s", cudaGetErrorString(error));
+      return NULL;
+    }
+  }
+  return (const float *)as->grElig.get();
+}
+
+const float *MZone::exportPFPCSTPToState() {
+  int cpyStartInd;
+  cudaError_t error;
+  for (int i = 0; i < numGPUs; i++) {
+    cpyStartInd = i * numGRPerGPU;
+    cudaSetDevice(i + gpuIndStart);
+    error = cudaMemcpy(as->pfpcSTPs.get() + cpyStartInd, pfpcSTPsGPU[i],
+                       numGRPerGPU * sizeof(float), cudaMemcpyDeviceToHost);
+    if (error != cudaSuccess) {
+      LOG_ERROR("CUDA Error: %s", cudaGetErrorString(error));
+      return NULL;
+    }
+  }
+  return (const float *)as->pfpcSTPs.get();
 }
 
 const float *MZone::exportPFPCWeights() {

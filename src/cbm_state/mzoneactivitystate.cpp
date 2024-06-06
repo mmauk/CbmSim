@@ -61,6 +61,10 @@ void MZoneActivityState::allocateMemory() {
   vBC = std::make_unique<float[]>(num_bc);
   threshBC = std::make_unique<float[]>(num_bc);
 
+  // technically granule cells
+  grElig = std::make_unique<float[]>(num_gr);
+  pfpcSTPs = std::make_unique<float[]>(num_gr);
+
   // purkinje cells
   apPC = std::make_unique<uint8_t[]>(num_pc);
   apBufPC = std::make_unique<uint32_t[]>(num_pc);
@@ -110,6 +114,9 @@ void MZoneActivityState::initializeVals(int randSeed) {
   // bc
   std::fill(vBC.get(), vBC.get() + num_bc, eLeakBC);
   std::fill(threshBC.get(), threshBC.get() + num_bc, threshRestBC);
+
+  // gr
+  std::fill(grElig.get(), grElig.get() + num_gr, grEligBase);
 
   // pc
   std::fill(vPC.get(), vPC.get() + num_pc, eLeakPC);

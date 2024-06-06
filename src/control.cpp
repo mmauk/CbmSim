@@ -773,7 +773,7 @@ void Control::runSession(struct gui *gui) {
       simCore->updateMFInput(mfAP);
       // this is the main simCore function which computes all cell pops'
       // spikes
-      simCore->calcActivity(spillFrac, pf_pc_plast, mf_nc_plast);
+      simCore->calcActivity(spillFrac, pf_pc_plast, mf_nc_plast, useCS, useUS);
 
       /* collect conductances used to check tuning */
       /* cs is defined wrt msPreCS, so subtract it and add bun_viz on top */
