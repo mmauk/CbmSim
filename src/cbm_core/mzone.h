@@ -52,6 +52,8 @@ public:
   void runPFPCOutCUDA(cudaStream_t **sts, int streamN);
   void runPFPCSumCUDA(cudaStream_t **sts, int streamN);
   void cpyPFPCSumCUDA(cudaStream_t **sts, int streamN);
+  void runPFPCSTPCUDA(cudaStream_t **sts, int streamN, uint32_t use_cs,
+                      uint32_t use_us);
   void runPFPCGradedPlastCUDA(cudaStream_t **sts, int streamN, uint32_t t);
   void runPFPCBinaryPlastCUDA(cudaStream_t **sts, int streamN, uint32_t t);
   void runPFPCAbbottCascadePlastCUDA(cudaStream_t **sts, int streamN,
@@ -78,6 +80,8 @@ public:
   const float *exportVmIO();
   const float *exportgBCPC();
   const float *exportgPFPC();
+  const float *exportGREligToState();
+  const float *exportPFPCSTPToState();
   const float *exportPFPCWeights();
   const float *exportMFDCNWeights();
   const uint8_t *exportPFPCWeightStates();
@@ -147,6 +151,10 @@ private:
   uint32_t **inputSumPFBCGPU;
   // end gpu related variables
   // end basket cell variables
+
+  // technically granule
+  float **grEligGPU;
+  float **pfpcSTPsGPU;
 
   // purkinje cell variables
   float **pfSynWeightPCGPU;

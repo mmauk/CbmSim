@@ -130,9 +130,16 @@ void callUpdateGRHistKernel(cudaStream_t &st, unsigned int numBlocks,
                             unsigned int numGRPerBlock, uint32_t *apBufGPU,
                             uint64_t *historyGPU, uint32_t apBufGRHistMask);
 
+void callPFPCSTPKernel(cudaStream_t &st, uint32_t numBlocks,
+                       uint32_t numGRPerBlock, uint32_t use_cs, uint32_t use_us,
+                       float grEligBase, float grEligMax, float grEligExpScale,
+                       float grEligDecay, float grStpMax, float grStpDecay,
+                       float grStpInc, float *grEligGPU, float *pfpcSTPsGPU,
+                       uint32_t *apBufGPU, uint32_t *delayMaskGPU);
+
 void callPFPCGradedPlastKernel(cudaStream_t &st, unsigned int numBlocks,
                                unsigned int numGRPerBlock, float *synWeightGPU,
-                               uint64_t *historyGPU,
+                               float *stpPFPCGPU, uint64_t *historyGPU,
                                unsigned int pastBinNToCheck, int offSet,
                                float pfPCPlastStep);
 

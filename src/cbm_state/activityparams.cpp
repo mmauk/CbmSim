@@ -75,6 +75,18 @@ float gluScaleGO = 0.0;
 float goGABAGOGOSynDepF = 1.0;
 float goGABAGOGOSynRecTau = 100.0;
 
+// experimental short term plasticity params
+float grEligBase = 0.002;
+float grEligMax = 1.0;
+float grEligExpScale = 2.5;
+float grEligDecayTau = 20;
+float grEligDecay = 1.0 - exp(-msPerTimeStep / grEligDecayTau);
+float grStpMax = 0.075;
+float grStpDecayTau = 24.5;
+float grStpDecay = exp(-msPerTimeStep / grStpDecayTau);
+float grStpInc = 0.00025;
+// experimental short term plasticity params
+
 // experimental long term plasticity params
 float fracSynWLow = 0.5;
 float fracLowState = 0.5;

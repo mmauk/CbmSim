@@ -439,14 +439,45 @@ __global__ void updatePFPCOutGPU(uint32_t *apBuf, uint32_t *delay,
 
 //**---------------IO kernels-----------------**
 
-__global__ void updatePFPCGradedSynWeightKernel(float *synWPFPC, uint64_t *historyGR,
-                                uint64_t plastCheckMask, unsigned int offset,
-                                float plastStep) {
+__global__ void updatePFPCSTPKernel(uint32_t use_cs, uint32_t use_us, float grEligBase, float grEligMax,
+	float grEligExpScale, float grEligDecay, float grStpMax, float grStpDecay, float grStpInc, float *grEligGPU,
+	float *pfpcSTPsGPU, uint32_t *apBufGPU, uint32_t *delayMaskGPU)
+{
+	int index = blockIdx.x * blockDim.x + threadIdx.x;
+	uint32_t apGR = (apBufGPU[index] & delayMaskGPU[index]) > 0;
+
+	grEligGPU[index] = apGR * grEligGPU[index] * grEligExpScale
+		+ (1 - apGR) * (grEligGPU[index] - (grEligGPU[index] - grEligBase) * grEligDecay);
+
+	// ensure the eligibility is greater than grEligBase
+	grEligGPU[index] = (grEligGPU[index] < grEligBase) * grEligBase + (grEligGPU[index] >= grEligBase) * grEligGPU[index];
+
+	// rule for inducing stp
+	if (grEligGPU[index] > grEligMax)
+	{
+		pfpcSTPsGPU[index] += grStpInc;
+		// ensure stp variable is less than grStpMax
+		pfpcSTPsGPU[index] = (pfpcSTPsGPU[index] > grStpMax) * grStpMax
+						   + (pfpcSTPsGPU[index] <= grStpMax) * pfpcSTPsGPU[index];
+		grEligGPU[index] = grEligBase;
+	}
+
+	// special stp decay rule: only do so during background trials
+	if (use_cs == 0 && use_us == 0)
+	{
+		pfpcSTPsGPU[index] *= grStpDecay;
+	}
+}
+
+__global__ void updatePFPCGradedSynWeightKernel(float *synWPFPC, float *stpPFPC,
+      uint64_t *historyGR, uint64_t plastCheckMask, unsigned int offset,
+      float plastStep) {
   int i = blockIdx.x * blockDim.x + threadIdx.x + offset;
   synWPFPC[i] = synWPFPC[i] + ((historyGR[i] & plastCheckMask) > 0) * plastStep;
 
   synWPFPC[i] = (synWPFPC[i] > 0) * synWPFPC[i];
   synWPFPC[i] = (synWPFPC[i] > 1) + (synWPFPC[i] <= 1) * synWPFPC[i];
+  synWPFPC[i] += stpPFPC[i]; // -> this may not be what we want
 }
 
 template <typename randState>
@@ -1010,14 +1041,23 @@ void callUpdateGRHistKernel(cudaStream_t &st, unsigned int numBlocks,
                                                        apBufGRHistMask);
 }
 
+
+void callPFPCSTPKernel(cudaStream_t &st, uint32_t numBlocks, uint32_t numGRPerBlock, uint32_t use_cs, uint32_t use_us,
+	float grEligBase, float grEligMax, float grEligExpScale, float grEligDecay, float grStpMax, float grStpDecay,
+	float grStpInc, float *grEligGPU, float *pfpcSTPsGPU, uint32_t *apBufGPU, uint32_t *delayMaskGPU)
+{
+	updatePFPCSTPKernel<<<numBlocks, numGRPerBlock, 0, st>>>(use_cs, use_cs, grEligBase, grEligMax,
+		  grEligExpScale, grEligDecay, grStpMax, grStpDecay, grStpInc, grEligGPU, pfpcSTPsGPU, apBufGPU, delayMaskGPU);
+}
+
 void callPFPCGradedPlastKernel(cudaStream_t &st, unsigned int numBlocks,
-                               unsigned int numGRPerBlock,
-                               float *synWeightGPU, uint64_t *historyGPU,
+                               unsigned int numGRPerBlock, float *synWeightGPU,
+                               float *stpPFPCGPU, uint64_t *historyGPU,
                                unsigned int pastBinNToCheck, int offSet,
                                float pfPCPlastStep) {
   uint64_t mask = ((uint64_t)1) << (pastBinNToCheck - 1);
   updatePFPCGradedSynWeightKernel<<<numBlocks, numGRPerBlock, 0, st>>>(
-      synWeightGPU, historyGPU, mask, offSet, pfPCPlastStep);
+      synWeightGPU, stpPFPCGPU, historyGPU, mask, offSet, pfPCPlastStep);
 }
 
 template <typename randState>
