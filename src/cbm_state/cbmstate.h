@@ -29,7 +29,8 @@ class CBMState {
 public:
   CBMState();
   CBMState(unsigned int nZones);
-  CBMState(unsigned int nZones, std::fstream &sim_file_buf);
+  CBMState(unsigned int nZones, enum plasticity plast_type,
+           std::fstream &sim_file_buf);
   ~CBMState();
 
   void readState(std::fstream &infile);

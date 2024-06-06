@@ -44,7 +44,7 @@ Control::Control(parsed_commandline &p_cl) {
     if (!p_cl.input_sim_file.empty()) {
       std::fstream sim_file_buf(p_cl.input_sim_file.c_str(),
                                 std::ios::in | std::ios::binary);
-      simState = new CBMState(numMZones, sim_file_buf);
+      simState = new CBMState(numMZones, pf_pc_plast, sim_file_buf);
       sim_file_buf.close();
     }
   }
@@ -87,17 +87,15 @@ void Control::set_plasticity_modes(std::string pfpc_plasticity,
     pf_pc_plast = GRADED;
   else if (pfpc_plasticity == "binary")
     pf_pc_plast = BINARY;
-  else if (pfpc_plasticity == "cascade")
-    pf_pc_plast = CASCADE;
+  else if (pfpc_plasticity == "abbott-cascade")
+    pf_pc_plast = ABBOTT_CASCADE;
+  else if (pfpc_plasticity == "mauk-cascade")
+    pf_pc_plast = MAUK_CASCADE;
 
   if (mfnc_plasticity == "off")
     mf_nc_plast = OFF;
-  else if (mfnc_plasticity == "graded")
+  else
     mf_nc_plast = GRADED;
-  else if (mfnc_plasticity == "binary")
-    mf_nc_plast = BINARY;
-  else if (mfnc_plasticity == "cascade")
-    mf_nc_plast = CASCADE;
 }
 
 void Control::initialize_session(std::string sess_file) {
@@ -118,7 +116,7 @@ void Control::init_sim(std::string in_sim_filename) {
   LOG_DEBUG("Initializing simulation...");
   std::fstream sim_file_buf(in_sim_filename.c_str(),
                             std::ios::in | std::ios::binary);
-  simState = new CBMState(numMZones, sim_file_buf);
+  simState = new CBMState(numMZones, pf_pc_plast, sim_file_buf);
   simCore = new CBMSimCore(simState, gpuIndex, gpuP2);
   mfs = new ECMFPopulation(num_mf, mfRandSeed, CSTonicMFFrac, CSPhasicMFFrac,
                            contextMFFrac, nucCollFrac, bgFreqMin, csbgFreqMin,

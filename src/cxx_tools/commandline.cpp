@@ -197,6 +197,8 @@ static void fill_opt_map(std::map<std::string, bool> &opt_map, std::string opt,
 void print_usage_info() {
   std::cout << "Usage: ./cbm_sim [options]\n";
   std::cout << "Options:\n";
+  std::cout << std::right << std::setw(10) << "\t--verbose"
+            << "\t\tBe verbose about std output logs\n";
   std::cout << std::right << std::setw(10) << "\t-h, --help"
             << "\t\tprint this information and exit\n";
   std::cout << std::right << std::setw(20) << "\t-v, --visual [TUI|GUI]"
@@ -224,9 +226,9 @@ void print_usage_info() {
             << "\t\tturns off MFNC plasticity; same as default for now (ie is "
                "not tuned)\n";
   std::cout << "\t-c, --con-arrs {[CODE]} comma-separated list of synapse "
-               "codes indicating what connectivity arrays";
-  std::cout << " are saved. Saves both pre and post arrays whenever possible. "
-               "CODEs are:\n\n";
+               "codes indicating what connectivity arrays are saved.\n";
+  std::cout << "\t                        Saves both pre and post arrays "
+               "whenever possible. CODEs are:\n\n";
   std::cout << "\t\t\t\t \tMFGR - Mossy Fiber to Granule Cells\n";
   std::cout << "\t\t\t\t \tGRGO - Granule Cells to Golgi Cells\n";
   std::cout << "\t\t\t\t \tMFGO - Mossy Fiber to Granule Cells\n";
@@ -262,13 +264,18 @@ void print_usage_info() {
   std::cout << "\t'ROOT/data/outputs/BASENAME/BASENAME.[EXTENSION]\n\n";
   std::cout << "Here [EXTENSION] is expressed as the cell/synapse CODE plus "
                "the symbols ";
-  std::cout << "'r', 'p' and 'w' for 'raster,' 'psth', and 'weight' data. For "
-               "example, 'basename.pcr' is a raster file for pc cells while ";
+  std::cout
+      << "'r', 'p' and 'w' for 'raster,' 'psth', and 'weight' data.\n"
+         "For example, 'basename.pcr' is a raster file for pc cells while ";
   std::cout << "basename.pfpcw is a weight file of the pf to pc weights\n\n";
   std::cout << "Example usage:\n\n";
   std::cout << "1) constructs a bunny, which is "
                "saved to file 'ROOT/data/outputs/bunny/bunny.sim':\n\n";
   std::cout << "\t./cbm_sim -o bunny\n\n";
+  std::cout << "1) constructs a bunny, which is "
+               "saved to file 'ROOT/data/outputs/bunny/bunny.sim' and";
+  std::cout << "saves GRGO pre-synaptic and post-synaptic arrays to file:\n\n";
+  std::cout << "\t./cbm_sim -o bunny -c GRGO\n\n";
   std::cout << "2) uses file 'acquisition.json' to train the input simulation "
                "'bunny.sim' with PFPC plasticity on and set to graded "
                "and MFNC plasticity off:\n\n";

@@ -9,6 +9,7 @@
 #include <iostream>
 
 #include "activityparams.h"
+#include "array_util.h"
 #include "connectivityparams.h"
 #include "file_utility.h"
 #include "logger.h"
@@ -24,9 +25,13 @@ MZoneActivityState::MZoneActivityState(int randSeed) {
   LOG_DEBUG("Finished allocating and initializing mzone activity state.");
 }
 
-MZoneActivityState::MZoneActivityState(std::fstream &infile) {
+MZoneActivityState::MZoneActivityState(enum plasticity plast_type,
+                                       std::fstream &infile) {
+  LOG_DEBUG("Allocating and initializing mzone activity state...");
   allocateMemory();
   stateRW(true, infile);
+  initializePFPCSynWVars(plast_type);
+  LOG_DEBUG("Finished allocating and initializing mzone activity state.");
 }
 
 MZoneActivityState::~MZoneActivityState() {}
@@ -61,7 +66,8 @@ void MZoneActivityState::allocateMemory() {
   apBufPC = std::make_unique<uint32_t[]>(num_pc);
   inputBCPC = std::make_unique<uint32_t[]>(num_pc);
   inputSCPC = std::make_unique<uint32_t[]>(num_pc);
-  pfSynWeightPC = std::make_unique<float[]>(num_pc * num_p_pc_from_gr_to_pc);
+  pfSynWeightPC = std::make_unique<float[]>(num_gr);
+  pfPCSynWeightStates = std::make_unique<uint8_t[]>(num_gr);
   inputSumPFPC = std::make_unique<float[]>(num_pc);
   gPFPC = std::make_unique<float[]>(num_pc);
   gBCPC = std::make_unique<float[]>(num_pc);
@@ -109,8 +115,7 @@ void MZoneActivityState::initializeVals(int randSeed) {
   std::fill(vPC.get(), vPC.get() + num_pc, eLeakPC);
   std::fill(threshPC.get(), threshPC.get() + num_pc, threshRestPC);
 
-  std::fill(pfSynWeightPC.get(),
-            pfSynWeightPC.get() + num_pc * num_p_pc_from_gr_to_pc,
+  std::fill(pfSynWeightPC.get(), pfSynWeightPC.get() + num_gr,
             initSynWofGRtoPC);
 
   std::fill(histPCPopAct.get(), histPCPopAct.get() + (int)numPopHistBinsPC, 0);
@@ -137,6 +142,41 @@ void MZoneActivityState::initializeVals(int randSeed) {
             initSynWofMFtoNC);
 }
 
+// TODO: do some unit tests, especially in fisher_yates_shuffle
+void MZoneActivityState::initializePFPCSynWVars(enum plasticity plast_type) {
+  if (plast_type == BINARY || plast_type == ABBOTT_CASCADE ||
+      plast_type == MAUK_CASCADE) {
+    LOG_DEBUG("Initializing PFPC synaptic weight variables...");
+    float temp_low_weight, temp_high_weight;
+    uint32_t num_pfpc_syn_w_low = num_gr * fracSynWLow;
+    if (plast_type == BINARY) {
+      temp_low_weight = binPlastWeightLow;
+      temp_high_weight = binPlastWeightHigh;
+    } else {
+      uint32_t num_pfpc_state_low = num_gr * fracLowState;
+      temp_low_weight = cascPlastWeightLow;
+      temp_high_weight = cascPlastWeightHigh;
+      memset(pfPCSynWeightStates.get(), CASCADE_STATE_MIN_SHALLOWEST,
+             num_pfpc_state_low * sizeof(uint8_t));
+      memset(pfPCSynWeightStates.get() + num_pfpc_state_low,
+             CASCADE_STATE_MAX_SHALLOWEST,
+             (num_gr - num_pfpc_state_low) * sizeof(uint8_t));
+      fisher_yates_shuffle<uint8_t>(pfPCSynWeightStates.get(), num_gr);
+    }
+
+    // reset weights 0 through num_pfpc_syn_w_low to low weight, rest to high
+    // weight NOTE: no memset for floats :sigh:
+    for (uint32_t i = 0; i < num_pfpc_syn_w_low; i++) {
+      pfSynWeightPC[i] = temp_low_weight;
+    }
+    for (uint32_t i = num_pfpc_syn_w_low; i < num_gr; i++) {
+      pfSynWeightPC[i] = temp_high_weight;
+    }
+    fisher_yates_shuffle<float>(pfSynWeightPC.get(), num_gr);
+    LOG_DEBUG("Finished initializing PFPC synaptic weight variables.");
+  }
+}
+
 void MZoneActivityState::stateRW(bool read, std::fstream &file) {
   // stellate cells
   rawBytesRW((char *)apSC.get(), num_sc * sizeof(uint8_t), read, file);
@@ -159,8 +199,9 @@ void MZoneActivityState::stateRW(bool read, std::fstream &file) {
   rawBytesRW((char *)apBufPC.get(), num_pc * sizeof(uint32_t), read, file);
   rawBytesRW((char *)inputBCPC.get(), num_pc * sizeof(uint32_t), read, file);
   rawBytesRW((char *)inputSCPC.get(), num_pc * sizeof(uint32_t), read, file);
-  rawBytesRW((char *)pfSynWeightPC.get(),
-             num_pc * num_p_pc_from_gr_to_pc * sizeof(float), read, file);
+  rawBytesRW((char *)pfSynWeightPC.get(), num_gr * sizeof(float), read, file);
+  rawBytesRW((char *)pfPCSynWeightStates.get(), num_gr * sizeof(uint8_t), read,
+             file);
   rawBytesRW((char *)inputSumPFPC.get(), num_pc * sizeof(float), read, file);
   rawBytesRW((char *)gPFPC.get(), num_pc * sizeof(float), read, file);
   rawBytesRW((char *)gBCPC.get(), num_pc * sizeof(float), read, file);

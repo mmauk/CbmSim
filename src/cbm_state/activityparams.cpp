@@ -75,6 +75,19 @@ float gluScaleGO = 0.0;
 float goGABAGOGOSynDepF = 1.0;
 float goGABAGOGOSynRecTau = 100.0;
 
+// experimental long term plasticity params
+float fracSynWLow = 0.5;
+float fracLowState = 0.5;
+float cascPlastProbMin = 0.9;
+float cascPlastProbMax = 0.1;
+float cascPlastWeightLow = 0.25;
+float cascPlastWeightHigh = 0.55;
+float binPlastProbMin = 0.8;
+float binPlastProbMax = 0.2;
+float binPlastWeightLow = 0.3;
+float binPlastWeightHigh = 0.7;
+// experimental long term plasticity params
+
 float synLTDStepSizeGRtoPC = -0.00275;
 float synLTPStepSizeGRtoPC = 0.00030556;
 float mGluRDecayGO = 0.98;
