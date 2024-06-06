@@ -26,8 +26,6 @@
 #include "mzone.h"
 #include "sfmt.h"
 
-enum plasticity { OFF, GRADED, BINARY, CASCADE };
-
 class CBMSimCore {
 public:
   CBMSimCore();

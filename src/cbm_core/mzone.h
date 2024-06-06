@@ -23,14 +23,14 @@
 class MZone {
 public:
   MZone();
-  MZone(MZoneConnectivityState *cs, MZoneActivityState *as, int randSeed,
-        uint32_t **apBufGRGPU, uint64_t **histGRGPU, int gpuIndStart,
-        int numGPUs);
+  MZone(cudaStream_t **stream, MZoneConnectivityState *cs,
+        MZoneActivityState *as, int randSeed, uint32_t **apBufGRGPU,
+        uint64_t **histGRGPU, int gpuIndStart, int numGPUs);
   ~MZone();
 
   void writeToState();
   void cpyPFPCSynWCUDA();
-
+  void cpyPFPCWeightStatesCUDA();
   void setErrDrive(float errDriveRelative);
   void updateMFActivities(const uint8_t *actMF);
   void setTrueMFs(bool *isCollateralMF);
@@ -52,7 +52,11 @@ public:
   void runPFPCOutCUDA(cudaStream_t **sts, int streamN);
   void runPFPCSumCUDA(cudaStream_t **sts, int streamN);
   void cpyPFPCSumCUDA(cudaStream_t **sts, int streamN);
-  void runPFPCPlastCUDA(cudaStream_t **sts, int streamN, uint32_t t);
+  void runPFPCGradedPlastCUDA(cudaStream_t **sts, int streamN, uint32_t t);
+  void runPFPCBinaryPlastCUDA(cudaStream_t **sts, int streamN, uint32_t t);
+  void runPFPCAbbottCascadePlastCUDA(cudaStream_t **sts, int streamN,
+                                     uint32_t t);
+  void runPFPCMaukCascadePlastCUDA(cudaStream_t **sts, int streamN, uint32_t t);
 
   void runSumPFSCCUDA(cudaStream_t **sts, int streamN);
   void cpyPFSCSumGPUtoHostCUDA(cudaStream_t **sts, int streamN);
@@ -76,6 +80,7 @@ public:
   const float *exportgPFPC();
   const float *exportPFPCWeights();
   const float *exportMFDCNWeights();
+  const uint8_t *exportPFPCWeightStates();
 
   void load_pfpc_weights_from_file(std::fstream &in_file_buf);
   void load_mfdcn_weights_from_file(std::fstream &in_file_buf);
@@ -89,7 +94,8 @@ private:
   MZoneConnectivityState *cs;
   MZoneActivityState *as;
 
-  CRandomSFMT0 *randGen;
+  CRandomSFMT0 *randGen;              // host randGen
+  curandStateMRG32k3a **mrg32k3aRNGs; // device randGens
 
   int gpuIndStart;
   int numGPUs;
@@ -111,6 +117,8 @@ private:
   unsigned int sumGRBCOutNumBCPerB;
   unsigned int sumGRBCOutNumBlocks;
   /* ======== not used ====== */
+
+  float **pfpcSynWRandNums;
 
   // mossy fiber variables
   const uint8_t *apMFInput;
@@ -143,6 +151,8 @@ private:
   // purkinje cell variables
   float **pfSynWeightPCGPU;
   float *pfSynWeightPCLinear;
+  uint8_t *pfPCSynWeightStatesLinear; // for cascade plasticity only
+  uint8_t **pfPCSynWeightStatesGPU;   // for cascade plasticity only
   float **inputPFPCGPU;
   size_t *inputPFPCGPUPitch;
   float **inputSumPFPCMZGPU;
@@ -155,7 +165,7 @@ private:
   // IO cell variables
   float *pfPCPlastStepIO;
 
-  void initCUDA();
+  void initCUDA(cudaStream_t **stream);
   void initBCCUDA();
   void initSCCUDA();
   void testReduction();

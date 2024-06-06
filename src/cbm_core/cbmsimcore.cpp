@@ -169,9 +169,15 @@ void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast,
   inputNet->runUpdateGOInGRDynamicSpillCUDA(streams, 4);
 
   // perform pf -> pc plasticity
-  if (pf_pc_plast == GRADED) {
-    for (int i = 0; i < numZones; i++) {
-      zones[i]->runPFPCPlastCUDA(streams, 1, curTime);
+  for (int i = 0; i < numZones; i++) {
+    if (pf_pc_plast == GRADED) {
+      zones[i]->runPFPCGradedPlastCUDA(streams, 1, curTime);
+    } else if (pf_pc_plast == BINARY) {
+      zones[i]->runPFPCBinaryPlastCUDA(streams, 1, curTime);
+    } else if (pf_pc_plast == ABBOTT_CASCADE) {
+      zones[i]->runPFPCAbbottCascadePlastCUDA(streams, 1, curTime);
+    } else if (pf_pc_plast == MAUK_CASCADE) {
+      zones[i]->runPFPCMaukCascadePlastCUDA(streams, 1, curTime);
     }
   }
 
@@ -302,10 +308,11 @@ void CBMSimCore::construct(CBMState *state, int *mzoneRSeed, int gpuIndStart,
 
   for (int i = 0; i < numZones; i++) {
     // same thing for zones as with innet
-    zones[i] = new MZone(
-        state->getMZoneConStateInternal(i), state->getMZoneActStateInternal(i),
-        mzoneRSeed[i], inputNet->getApBufGRGPUPointer(),
-        inputNet->getHistGRGPUPointer(), this->gpuIndStart, numGPUs);
+    zones[i] =
+        new MZone(streams, state->getMZoneConStateInternal(i),
+                  state->getMZoneActStateInternal(i), mzoneRSeed[i],
+                  inputNet->getApBufGRGPUPointer(),
+                  inputNet->getHistGRGPUPointer(), this->gpuIndStart, numGPUs);
   }
   LOG_DEBUG("Mzone construction complete");
   initAuxVars();

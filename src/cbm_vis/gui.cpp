@@ -854,8 +854,10 @@ static void on_radio(GtkWidget *widget, Control *control) {
       control->pf_pc_plast = GRADED;
     else if (this_rad_label == "Binary")
       control->pf_pc_plast = BINARY;
-    else if (this_rad_label == "Cascade")
-      control->pf_pc_plast = CASCADE;
+    else if (this_rad_label == "Abbott Cascade")
+      control->pf_pc_plast = ABBOTT_CASCADE;
+    else if (this_rad_label == "Mauk Cascade")
+      control->pf_pc_plast = MAUK_CASCADE;
     else if (this_rad_label == "Off")
       control->pf_pc_plast = OFF;
   }
@@ -1044,15 +1046,20 @@ int gui_init_and_run(int *argc, char ***argv, Control *control) {
                              0,
                              4,
                              {"toggled", G_CALLBACK(on_radio), control, false}},
-                            {"Cascade",
+                            {"Abbott Cascade",
                              gtk_radio_button_new(NULL),
                              0,
                              5,
                              {"toggled", G_CALLBACK(on_radio), control, false}},
-                            {"Off",
+                            {"Mauk Cascade",
                              gtk_radio_button_new(NULL),
                              0,
                              6,
+                             {"toggled", G_CALLBACK(on_radio), control, false}},
+                            {"Off",
+                             gtk_radio_button_new(NULL),
+                             0,
+                             7,
                              {"toggled", G_CALLBACK(on_radio), control,
                               false}}},
       .menu_bar =

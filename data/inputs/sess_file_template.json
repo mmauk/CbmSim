@@ -19,7 +19,7 @@
    },
    "blocks": {
       "acq_block" : [
-         {"isi_250_paired_trial": 720},
+         {"isi_250_paired_trial": 100},
          {"probe_trial": 50}
       ],
       "another_block" : [
@@ -28,7 +28,6 @@
       ]
    },
    "session": [
-      {"acq_block": 10},
-      {"another_block": 5}
+      {"isi_250_paired_trial": 250}
    ]
 }

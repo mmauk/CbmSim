@@ -19,9 +19,9 @@
 
 MZone::MZone() {}
 
-MZone::MZone(MZoneConnectivityState *cs, MZoneActivityState *as, int randSeed,
-             uint32_t **apBufGRGPU, uint64_t **histGRGPU, int gpuIndStart,
-             int numGPUs) {
+MZone::MZone(cudaStream_t **stream, MZoneConnectivityState *cs,
+             MZoneActivityState *as, int randSeed, uint32_t **apBufGRGPU,
+             uint64_t **histGRGPU, int gpuIndStart, int numGPUs) {
   randGen = new CRandomSFMT0(randSeed);
 
   // shallow copies. caller owns the data.
@@ -41,13 +41,14 @@ MZone::MZone(MZoneConnectivityState *cs, MZoneActivityState *as, int randSeed,
   delayMaskGRGPU = new uint32_t *[numGPUs];
 
   pfSynWeightPCLinear = new float[num_gr];
+  pfPCSynWeightStatesLinear = new uint8_t[num_gr];
   pfPCPlastStepIO = new float[num_io];
 
   this->numGPUs = numGPUs;
   this->gpuIndStart = gpuIndStart;
 
   LOG_DEBUG("Initializing CUDA...");
-  initCUDA();
+  initCUDA(stream);
 }
 
 MZone::~MZone() {
@@ -56,6 +57,7 @@ MZone::~MZone() {
   delete randGen;
 
   delete[] pfSynWeightPCLinear;
+  delete[] pfPCSynWeightStatesLinear;
   delete[] pfPCPlastStepIO;
 
   // free cuda host memory
@@ -65,6 +67,8 @@ MZone::~MZone() {
 
   for (int i = 0; i < numGPUs; i++) {
     cudaSetDevice(i + gpuIndStart);
+    cudaFree(mrg32k3aRNGs[i]);
+    cudaFree(pfpcSynWRandNums[i]);
     // free cuda device memory
     cudaFree(delayMaskGRGPU[i]);
     cudaFree(pfSynWeightPCGPU[i]);
@@ -74,6 +78,8 @@ MZone::~MZone() {
   }
 
   delete[] isTrueMF;
+  delete[] mrg32k3aRNGs;
+  delete[] pfpcSynWRandNums;
 
   delete[] delayMaskGRGPU;
   delete[] pfSynWeightPCGPU;
@@ -120,7 +126,7 @@ MZone::~MZone() {
   LOG_DEBUG("Finished deleting mzone gpu arrays.");
 }
 
-void MZone::initCUDA() {
+void MZone::initCUDA(cudaStream_t **stream) {
   int maxNumGPUs;
   cudaGetDeviceCount(&maxNumGPUs);
 
@@ -145,6 +151,34 @@ void MZone::initCUDA() {
   sumGRBCOutNumBlocks = num_bc / sumGRBCOutNumBCPerB;
   /* ======== not used ====== */
 
+  // set up rng
+  LOG_DEBUG("Initializing curand state...");
+
+  CRandomSFMT cudaRNGSeedGen(time(0));
+
+  int32_t curandInitSeed = cudaRNGSeedGen.IRandom(0, INT_MAX);
+
+  mrg32k3aRNGs = new curandStateMRG32k3a *[numGPUs];
+  pfpcSynWRandNums = new float *[numGPUs];
+
+  dim3 updatePFPCSynWGridDim(updatePFPCSynWNumBlocks);
+  dim3 updatePFPCSynWBlockDim(updatePFPCSynWNumGRPerB);
+
+  for (uint8_t i = 0; i < numGPUs; i++) {
+    cudaSetDevice(i + gpuIndStart);
+    cudaMalloc((void **)&mrg32k3aRNGs[i], updatePFPCSynWNumGRPerB *
+                                              updatePFPCSynWNumBlocks *
+                                              sizeof(curandStateMRG32k3a));
+    callCurandSetupKernel<curandStateMRG32k3a, dim3, dim3>(
+        stream[i][1], mrg32k3aRNGs[i],
+        (curandInitSeed + (uint32_t)i) % UINT_MAX, updatePFPCSynWGridDim,
+        updatePFPCSynWBlockDim);
+    cudaMalloc((void **)&pfpcSynWRandNums[i], numGRPerGPU * sizeof(float));
+    cudaDeviceSynchronize();
+  }
+  LOG_DEBUG("Finished initializing curand state.");
+  LOG_DEBUG("Last error: %s", cudaGetErrorString(cudaGetLastError()));
+
   cudaSetDevice(0 + gpuIndStart);
   // allocate host cuda memory
   cudaHostAlloc((void **)&inputSumPFPCMZH, num_pc * sizeof(float),
@@ -162,6 +196,8 @@ void MZone::initCUDA() {
       // directly
       pfSynWeightPCLinear[i * num_p_pc_from_gr_to_pc + j] =
           as->pfSynWeightPC[i * num_p_pc_from_gr_to_pc + j];
+      pfPCSynWeightStatesLinear[i * num_p_pc_from_gr_to_pc + j] =
+          as->pfPCSynWeightStates[i * num_p_pc_from_gr_to_pc + j];
     }
   }
 
@@ -192,6 +228,9 @@ void MZone::initCUDA() {
     // initialize device cuda memory
     cudaMemcpy(pfSynWeightPCGPU[i], &pfSynWeightPCLinear[cpyStartInd],
                numGRPerGPU * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(pfPCSynWeightStatesGPU[i],
+               &pfPCSynWeightStatesLinear[cpyStartInd],
+               numGRPerGPU * sizeof(uint8_t), cudaMemcpyHostToDevice);
 
     for (int j = 0; j < num_pc / numGPUs; j++) {
       cudaMemset(((char *)inputPFPCGPU[i] + j * inputPFPCGPUPitch[i]), 0,
@@ -321,6 +360,17 @@ void MZone::cpyPFPCSynWCUDA() {
           pfSynWeightPCLinear[i * num_p_pc_from_gr_to_pc + j];
     }
   }
+}
+
+void MZone::cpyPFPCWeightStatesCUDA() {
+  for (int i = 0; i < numGPUs; i++) {
+    cudaSetDevice(i + gpuIndStart);
+    cudaMemcpy((void *)&pfPCSynWeightStatesLinear[i * numGRPerGPU],
+               pfPCSynWeightStatesGPU[i], numGRPerGPU * sizeof(uint8_t),
+               cudaMemcpyDeviceToHost);
+  }
+  memcpy(as->pfPCSynWeightStates.get(), pfPCSynWeightStatesLinear,
+         num_gr * sizeof(uint8_t));
 }
 
 void MZone::setErrDrive(float errDriveRelative) {
@@ -720,7 +770,8 @@ void MZone::cpyPFPCSumCUDA(cudaStream_t **sts, int streamN) {
   }
 }
 
-void MZone::runPFPCPlastCUDA(cudaStream_t **sts, int streamN, uint32_t t) {
+void MZone::runPFPCGradedPlastCUDA(cudaStream_t **sts, int streamN,
+                                   uint32_t t) {
   cudaError_t error;
   if (t % (uint32_t)tsPerHistBinGR == 0) {
     int curGROffset;
@@ -760,7 +811,7 @@ void MZone::runPFPCPlastCUDA(cudaStream_t **sts, int streamN, uint32_t t) {
       if (i >= (curIOInd + 1) * numGRPerIO) {
         curIOInd++;
       }
-      callUpdatePFPCPlasticityIOKernel(
+      callPFPCGradedPlastKernel(
           sts[curGPUInd][streamN + curIOInd], updatePFPCSynWNumBlocks,
           updatePFPCSynWNumGRPerB, pfSynWeightPCGPU[curGPUInd],
           histGRGPU[curGPUInd], grPCHistCheckBinIO, curGROffset,
@@ -770,6 +821,209 @@ void MZone::runPFPCPlastCUDA(cudaStream_t **sts, int streamN, uint32_t t) {
     }
   }
 }
+
+void MZone::runPFPCBinaryPlastCUDA(cudaStream_t **sts, int streamN,
+                                   uint32_t t) {
+  if (t % (uint32_t)tsPerHistBinGR == 0) {
+    int curGROffset = 0;
+    int curGPUInd = 0;
+    int curIOInd = 0;
+
+    float transition_prob[num_io] = {0.0};
+    float weight_diff = binPlastWeightHigh - binPlastWeightLow;
+
+    int numGRPerIO = num_gr / num_io;
+    for (int i = 0; i < num_io; i++) {
+      if (as->pfPCPlastTimerIO[i] < (tsLTDstartAPIO + (int)tsLTDDurationIO) &&
+          as->pfPCPlastTimerIO[i] >= tsLTDstartAPIO) {
+        pfPCPlastStepIO[i] = -weight_diff;
+        transition_prob[i] = binPlastProbMin;
+      } else if (as->pfPCPlastTimerIO[i] >= tsLTPstartAPIO ||
+                 as->pfPCPlastTimerIO[i] < tsLTPEndAPIO) {
+        pfPCPlastStepIO[i] = weight_diff;
+        transition_prob[i] = binPlastProbMax;
+      }
+    }
+    cudaError_t error = cudaSetDevice(curGPUInd + gpuIndStart);
+    for (int i = 0; i < num_gr; i += num_p_pc_from_gr_to_pc) {
+      if (i >= (curGPUInd + 1) * numGRPerGPU) {
+        curGPUInd++;
+        curGROffset = 0;
+        error = cudaSetDevice(curGPUInd + gpuIndStart);
+      }
+      if (i >= (curIOInd + 1) * numGRPerIO) {
+        curIOInd++;
+      }
+      callCurandGenerateUniformKernel<curandStateMRG32k3a>(
+          sts[curGPUInd][streamN + curIOInd], mrg32k3aRNGs[curGPUInd],
+          updatePFPCSynWNumBlocks, updatePFPCSynWNumGRPerB,
+          pfpcSynWRandNums[curGPUInd], curGROffset);
+
+      callPFPCBinaryPlastKernel<curandStateMRG32k3a>(
+          sts[curGPUInd][streamN + curIOInd], updatePFPCSynWNumBlocks,
+          updatePFPCSynWNumGRPerB, pfSynWeightPCGPU[curGPUInd],
+          histGRGPU[curGPUInd], grPCHistCheckBinIO, curGROffset,
+          pfPCPlastStepIO[curIOInd], binPlastWeightLow, binPlastWeightHigh,
+          transition_prob[curIOInd], pfpcSynWRandNums[curGPUInd]);
+
+      curGROffset += num_p_pc_from_gr_to_pc;
+    }
+  }
+}
+
+void MZone::runPFPCAbbottCascadePlastCUDA(cudaStream_t **sts, int streamN,
+                                          uint32_t t) {
+  cudaError_t error;
+  if (t % (uint32_t)tsPerHistBinGR == 0) {
+    int numGRPerIO = num_gr / num_io;
+    for (int i = 0; i < num_io; i++) {
+      if (as->pfPCPlastTimerIO[i] < (tsLTDstartAPIO + (int)tsLTDDurationIO) &&
+          as->pfPCPlastTimerIO[i] >= tsLTDstartAPIO) {
+        int curGROffset = 0;
+        int curGPUInd = 0;
+        int curIOInd = 0;
+
+        error = cudaSetDevice(curGPUInd + gpuIndStart);
+        for (int i = 0; i < num_gr; i += num_p_pc_from_gr_to_pc) {
+          if (i >= (curGPUInd + 1) * numGRPerGPU) {
+            curGPUInd++;
+            curGROffset = 0;
+            error = cudaSetDevice(curGPUInd + gpuIndStart);
+          }
+          if (i >= (curIOInd + 1) * numGRPerIO) {
+            curIOInd++;
+          }
+          callCurandGenerateUniformKernel<curandStateMRG32k3a>(
+              sts[curGPUInd][streamN + curIOInd], mrg32k3aRNGs[curGPUInd],
+              updatePFPCSynWNumBlocks, updatePFPCSynWNumGRPerB,
+              pfpcSynWRandNums[curGPUInd], curGROffset);
+
+          callPFPCAbbottCascadeLTDPlastKernel<curandStateMRG32k3a>(
+              sts[curGPUInd][streamN + curIOInd], updatePFPCSynWNumBlocks,
+              updatePFPCSynWNumGRPerB, pfSynWeightPCGPU[curGPUInd],
+              pfPCSynWeightStatesGPU[curGPUInd], histGRGPU[curGPUInd],
+              grPCHistCheckBinIO, curGROffset, cascPlastWeightLow,
+              cascPlastProbMin, pfpcSynWRandNums[curGPUInd]);
+
+          curGROffset += num_p_pc_from_gr_to_pc;
+        }
+      } else if (as->pfPCPlastTimerIO[i] >= tsLTPstartAPIO ||
+                 as->pfPCPlastTimerIO[i] < tsLTPEndAPIO) {
+        int curGROffset = 0;
+        int curGPUInd = 0;
+        int curIOInd = 0;
+
+        error = cudaSetDevice(curGPUInd + gpuIndStart);
+        for (int i = 0; i < num_gr; i += num_p_pc_from_gr_to_pc) {
+          if (i >= (curGPUInd + 1) * numGRPerGPU) {
+            curGPUInd++;
+            curGROffset = 0;
+            error = cudaSetDevice(curGPUInd + gpuIndStart);
+          }
+          if (i >= (curIOInd + 1) * numGRPerIO) {
+            curIOInd++;
+          }
+          callCurandGenerateUniformKernel<curandStateMRG32k3a>(
+              sts[curGPUInd][streamN + curIOInd], mrg32k3aRNGs[curGPUInd],
+              updatePFPCSynWNumBlocks, updatePFPCSynWNumGRPerB,
+              pfpcSynWRandNums[curGPUInd], curGROffset);
+
+          callPFPCAbbottCascadeLTPPlastKernel<curandStateMRG32k3a>(
+              sts[curGPUInd][streamN + curIOInd], updatePFPCSynWNumBlocks,
+              updatePFPCSynWNumGRPerB, pfSynWeightPCGPU[curGPUInd],
+              pfPCSynWeightStatesGPU[curGPUInd], histGRGPU[curGPUInd],
+              grPCHistCheckBinIO, curGROffset, cascPlastWeightHigh,
+              cascPlastProbMax, pfpcSynWRandNums[curGPUInd]);
+
+          curGROffset += num_p_pc_from_gr_to_pc;
+        }
+      }
+    }
+  }
+}
+
+void MZone::runPFPCMaukCascadePlastCUDA(cudaStream_t **sts, int streamN,
+                                        uint32_t t) {
+  cudaError_t error;
+  if (t % (uint32_t)tsPerHistBinGR == 0) {
+    int numGRPerIO = num_gr / num_io;
+    for (int i = 0; i < num_io; i++) {
+      if (as->pfPCPlastTimerIO[i] < (tsLTDstartAPIO + (int)tsLTDDurationIO) &&
+          as->pfPCPlastTimerIO[i] >= tsLTDstartAPIO) {
+        int curGROffset = 0;
+        int curGPUInd = 0;
+        int curIOInd = 0;
+
+        error = cudaSetDevice(curGPUInd + gpuIndStart);
+        for (int i = 0; i < num_gr; i += num_p_pc_from_gr_to_pc) {
+          if (i >= (curGPUInd + 1) * numGRPerGPU) {
+            curGPUInd++;
+            curGROffset = 0;
+            error = cudaSetDevice(curGPUInd + gpuIndStart);
+          }
+          if (i >= (curIOInd + 1) * numGRPerIO) {
+            curIOInd++;
+          }
+          callCurandGenerateUniformKernel<curandStateMRG32k3a>(
+              sts[curGPUInd][streamN + curIOInd], mrg32k3aRNGs[curGPUInd],
+              updatePFPCSynWNumBlocks, updatePFPCSynWNumGRPerB,
+              pfpcSynWRandNums[curGPUInd], curGROffset);
+
+          callPFPCMaukCascadeLTDPlastKernel<curandStateMRG32k3a>(
+              sts[curGPUInd][streamN + curIOInd], updatePFPCSynWNumBlocks,
+              updatePFPCSynWNumGRPerB, pfSynWeightPCGPU[curGPUInd],
+              pfPCSynWeightStatesGPU[curGPUInd], histGRGPU[curGPUInd],
+              grPCHistCheckBinIO, curGROffset, cascPlastWeightLow,
+              cascPlastProbMin, pfpcSynWRandNums[curGPUInd]);
+
+          curGROffset += num_p_pc_from_gr_to_pc;
+        }
+      } else if (as->pfPCPlastTimerIO[i] >= tsLTPstartAPIO ||
+                 as->pfPCPlastTimerIO[i] < tsLTPEndAPIO) {
+        int curGROffset = 0;
+        int curGPUInd = 0;
+        int curIOInd = 0;
+
+        error = cudaSetDevice(curGPUInd + gpuIndStart);
+        for (int i = 0; i < num_gr; i += num_p_pc_from_gr_to_pc) {
+          if (i >= (curGPUInd + 1) * numGRPerGPU) {
+            curGPUInd++;
+            curGROffset = 0;
+            error = cudaSetDevice(curGPUInd + gpuIndStart);
+          }
+          if (i >= (curIOInd + 1) * numGRPerIO) {
+            curIOInd++;
+          }
+          callCurandGenerateUniformKernel<curandStateMRG32k3a>(
+              sts[curGPUInd][streamN + curIOInd], mrg32k3aRNGs[curGPUInd],
+              updatePFPCSynWNumBlocks, updatePFPCSynWNumGRPerB,
+              pfpcSynWRandNums[curGPUInd], curGROffset);
+
+          callPFPCMaukCascadeLTPPlastKernel<curandStateMRG32k3a>(
+              sts[curGPUInd][streamN + curIOInd], updatePFPCSynWNumBlocks,
+              updatePFPCSynWNumGRPerB, pfSynWeightPCGPU[curGPUInd],
+              pfPCSynWeightStatesGPU[curGPUInd], histGRGPU[curGPUInd],
+              grPCHistCheckBinIO, curGROffset, cascPlastWeightHigh,
+              cascPlastProbMax, pfpcSynWRandNums[curGPUInd]);
+
+          curGROffset += num_p_pc_from_gr_to_pc;
+        }
+      }
+    }
+  }
+}
+
+// void MZone::runPFPCSTPCuda(cudaStream_t **sts, int streamN, uint32_t use_cs,
+//                            uint32_t use_us) {
+//   for (uint32_t i = 0; i < numGPUs; i++) {
+//     cudaSetDevice(i + gpuIndStart);
+//     callPFPCSTPKernel(sts[i][streamN], updatePFPCSynWNumBlocks,
+//                       updatePFPCSynWNumGRPerB, use_cs, use_us, grEligBase,
+//                       grEligMax, grEligExpScale, grEligDecay, grStpMax,
+//                       grStpDecay, grStpInc, grEligGPU[i], pfpcSTPsGPU[i],
+//                       apBufGRGPU[i], delayMaskGRGPU[i]);
+//   }
+// }
 
 void MZone::runSumPFSCCUDA(cudaStream_t **sts, int streamN) {
   cudaError_t error;
@@ -832,6 +1086,11 @@ const float *MZone::exportPFPCWeights() {
 
 const float *MZone::exportMFDCNWeights() {
   return (const float *)as->mfSynWeightNC.get();
+}
+
+const uint8_t *MZone::exportPFPCWeightStates() {
+  cpyPFPCWeightStatesCUDA();
+  return (const uint8_t *)pfPCSynWeightStatesLinear;
 }
 
 void MZone::load_pfpc_weights_from_file(std::fstream &in_file_buf) {
