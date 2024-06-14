@@ -75,6 +75,7 @@ MZone::~MZone() {
     cudaFree(grEligGPU[i]);
     cudaFree(pfpcSTPsGPU[i]);
     cudaFree(pfSynWeightPCGPU[i]);
+    cudaFree(pfPCSynWeightStatesGPU[i]);
     cudaFree(inputPFPCGPU[i]);
     cudaFree(inputSumPFPCMZGPU[i]);
     cudaDeviceSynchronize();
@@ -89,6 +90,7 @@ MZone::~MZone() {
   delete[] grEligGPU;
   delete[] pfpcSTPsGPU;
   delete[] pfSynWeightPCGPU;
+  delete[] pfPCSynWeightStatesGPU;
   delete[] inputPFPCGPU;
   delete[] inputPFPCGPUPitch;
   delete[] inputSumPFPCMZGPU;
@@ -183,13 +185,13 @@ void MZone::initCUDA(cudaStream_t **stream) {
     cudaDeviceSynchronize();
   }
   LOG_DEBUG("Finished initializing curand state.");
-  LOG_DEBUG("Last error: %s", cudaGetErrorString(cudaGetLastError()));
 
   cudaSetDevice(0 + gpuIndStart);
   // allocate host cuda memory
   cudaHostAlloc((void **)&inputSumPFPCMZH, num_pc * sizeof(float),
                 cudaHostAllocPortable);
 
+  LOG_DEBUG("Last error: %s", cudaGetErrorString(cudaGetLastError()));
   cudaDeviceSynchronize();
   // initialize host cuda memory
   for (int i = 0; i < num_pc; i++) {
@@ -210,6 +212,7 @@ void MZone::initCUDA(cudaStream_t **stream) {
   grEligGPU = new float *[numGPUs];
   pfpcSTPsGPU = new float *[numGPUs];
   pfSynWeightPCGPU = new float *[numGPUs];
+  pfPCSynWeightStatesGPU = new uint8_t *[numGPUs];
   inputPFPCGPU = new float *[numGPUs];
   inputPFPCGPUPitch = new size_t[numGPUs];
   inputSumPFPCMZGPU = new float *[numGPUs];
@@ -229,6 +232,8 @@ void MZone::initCUDA(cudaStream_t **stream) {
     cudaMalloc((void **)&grEligGPU[i], numGRPerGPU * sizeof(float));
     cudaMalloc((void **)&pfpcSTPsGPU[i], numGRPerGPU * sizeof(float));
     cudaMalloc((void **)&pfSynWeightPCGPU[i], numGRPerGPU * sizeof(float));
+    cudaMalloc((void **)&pfPCSynWeightStatesGPU[i],
+               numGRPerGPU * sizeof(uint8_t));
     cudaMallocPitch((void **)&inputPFPCGPU[i], (size_t *)&inputPFPCGPUPitch[i],
                     num_p_pc_from_gr_to_pc * sizeof(float), num_pc / numGPUs);
     cudaMalloc((void **)&inputSumPFPCMZGPU[i],
@@ -393,10 +398,9 @@ void MZone::setErrDrive(float errDriveRelative) {
 
 void MZone::updateMFActivities(const uint8_t *actMF) { apMFInput = actMF; }
 
-void MZone::setTrueMFs(bool *isCollateralMF) {
+void MZone::setTrueMFs(const bool *isCollateralMF) {
   for (uint32_t i = 0; i < num_mf; i++) {
-    // TODO: initialize is TrueMF
-    isTrueMF[i] = (isCollateralMF[i]) ? false : true;
+    isTrueMF[i] = !isCollateralMF[i];
   }
 }
 

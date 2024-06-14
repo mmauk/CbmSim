@@ -251,7 +251,7 @@ void CBMSimCore::updateMFInput(const uint8_t *mfIn) {
   }
 }
 
-void CBMSimCore::setTrueMFs(bool *isCollateralMF) {
+void CBMSimCore::setTrueMFs(const bool *isCollateralMF) {
 
   for (int i = 0; i < numZones; i++) {
     zones[i]->setTrueMFs(isCollateralMF);

@@ -122,13 +122,11 @@ void Control::init_sim(std::string in_sim_filename) {
                             std::ios::in | std::ios::binary);
   simState = new CBMState(numMZones, pf_pc_plast, sim_file_buf);
   simCore = new CBMSimCore(simState, gpuIndex, gpuP2);
-  mfs = new ECMFPopulation(num_mf, mfRandSeed, CSTonicMFFrac, CSPhasicMFFrac,
-                           contextMFFrac, nucCollFrac, bgFreqMin, csbgFreqMin,
-                           contextFreqMin, tonicFreqMin, phasicFreqMin,
-                           bgFreqMax, csbgFreqMax, contextFreqMax, tonicFreqMax,
-                           phasicFreqMax, collaterals_off, fracImport, secondCS,
-                           fracOverlap, numMZones);
-  simCore->setTrueMFs(mfs->getCollateralIds());
+  mfs = new ECMFPopulation(mfRandSeed, csMfFrac, nucCollFrac, bgFreqMin,
+                           csFreqMin, bgFreqMax, csFreqMax, collaterals_on,
+                           numMZones);
+  mfAP = mfs->getAPs();
+  simCore->setTrueMFs(mfs->getCollIds());
   initialize_rast_cell_nums();
   initialize_cell_spikes();
   initialize_rasters();
@@ -769,9 +767,9 @@ void Control::runSession(struct gui *gui) {
       }
       // deliver cs if specified at cmdline and within cs duration
       if (useCS && ts >= onsetCS && ts < onsetCS + csLength) {
-        mfAP = mfs->calcPoissActivity(TONIC_CS_A, simCore->getMZoneList());
+        mfs->calcPoissActivity(CS, simCore->getMZoneList());
       } else { // background mf activity
-        mfAP = mfs->calcPoissActivity(BKGD, simCore->getMZoneList());
+        mfs->calcPoissActivity(BKGD, simCore->getMZoneList());
       }
 
       simCore->updateMFInput(mfAP);

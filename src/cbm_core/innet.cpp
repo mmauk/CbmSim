@@ -291,8 +291,6 @@ void InNet::writeToState() {
 
 const uint8_t *InNet::exportAPGO() { return (const uint8_t *)as->apGO.get(); }
 
-const uint8_t *InNet::exportAPMF() { return (const uint8_t *)apMFOut; }
-
 const uint8_t *InNet::exportHistMF() {
   return (const uint8_t *)as->histMF.get();
 }
@@ -335,13 +333,12 @@ const float *InNet::exportgSum_MFGO() {
 const float *InNet::exportgSum_GRGO() { return (const float *)as->gGRGO.get(); }
 
 void InNet::updateMFActivties(const uint8_t *actInMF) {
-  apMFOut = actInMF;
   for (int i = 0; i < num_mf; i++) {
-    as->histMF[i] = as->histMF[i] || (actInMF[i] > 0);
+    as->histMF[i] = as->histMF[i] || actInMF[i];
+    as->apBufMF[i] = (as->apBufMF[i] << 1) | actInMF[i];
     for (int j = 0; j < numGPUs; j++) {
-      apMFH[j][i] = (actInMF[i] > 0);
+      apMFH[j][i] = actInMF[i];
     }
-    as->apBufMF[i] = (as->apBufMF[i] << 1) | ((actInMF[i] > 0) * 0x00000001);
   }
 }
 

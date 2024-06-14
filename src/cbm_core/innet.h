@@ -34,7 +34,6 @@ public:
   // silly little functions used to send a const (immutable) pointer to the
   // caller to read this data
   const uint8_t *exportAPGO();
-  const uint8_t *exportAPMF();
   const uint8_t *exportHistMF();
   const uint8_t *exportAPGR();
 

@@ -152,6 +152,7 @@ extern float gogrW;
 extern float gogoW;
 
 /* derived act params */
+extern float threshDecMF;
 extern float numTSinMFHist;
 extern float gLeakGO;
 extern float gDecMFtoGO;

@@ -180,8 +180,6 @@ public:
   uint32_t trial;
   uint32_t raster_counter;
 
-  uint32_t csPhasicSize = 50;
-
   // mzone stuff -> TODO: place in build file down the road
   uint32_t numMZones = 1;
 
@@ -191,29 +189,14 @@ public:
 
   float nucCollFrac = 0.02;
 
-  float CSTonicMFFrac = 0.05;
-  float tonicFreqMin = 100.0;
-  float tonicFreqMax = 110.0;
-
-  float CSPhasicMFFrac = 0.0;
-  float phasicFreqMin = 200.0;
-  float phasicFreqMax = 250.0;
-
-  /* separate set of contextual MF due to position of rabbit */
-  float contextMFFrac = 0.0;
-  float contextFreqMin = 20.0;
-  float contextFreqMax = 50.0;
+  float csMfFrac = 0.01;
 
   float bgFreqMin = 10.0;
-  float csbgFreqMin = 10.0;
   float bgFreqMax = 30.0;
-  float csbgFreqMax = 30.0;
+  float csFreqMin = 100.0;
+  float csFreqMax = 110.0;
 
-  bool collaterals_off = false;
-  bool secondCS = true;
-
-  float fracImport = 0.0;
-  float fracOverlap = 0.2;
+  bool collaterals_on = true;
 
   /* time related variables in-trial */
   uint32_t trialTime = 5000;
