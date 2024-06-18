@@ -837,7 +837,7 @@ void Control::runSession(struct gui *gui) {
     } else {
       // save gr rasters into new file every trial
       save_gr_rasters_at_trial_to_file(trial);
-      save_pfpc_weights_at_trial_to_file(trial);
+      // save_pfpc_weights_at_trial_to_file(trial);
     }
     trial++;
   }

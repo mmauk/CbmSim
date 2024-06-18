@@ -57,17 +57,14 @@ private:
 
   float *mfFreqBG;
   float *mfFreqCS;
-  float *mfThresh;
 
   bool *isCS;
   bool *isAny;
   bool *isColl;
-  bool turnOffColls;
 
   /* poisson spike generator vars */
   uint32_t nThreads = 1;   // hard-coded
-  uint32_t spikeTimer = 0; // initialize within class def
-  uint32_t kappa = 5;
+  uint32_t kappa = 4;      // the other parameter in a gamma dist
   uint32_t num_spike_mask = (1 << kappa) - 1;
   uint32_t numZones;
 

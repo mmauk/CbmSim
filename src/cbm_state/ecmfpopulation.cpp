@@ -48,7 +48,6 @@ ECMFPopulation::ECMFPopulation(int randSeed, float fracCS, float fracColl,
     anySum += isAny[i];
   }
 
-  // float adjustFactor = 1.2;
   for (int i = 0; i < num_mf; i++) {
     if (isColl[i]) {
       mfFreqBG[i] = -1;
@@ -56,11 +55,9 @@ ECMFPopulation::ECMFPopulation(int randSeed, float fracCS, float fracColl,
     } else {
       mfFreqBG[i] = randGen.Random() * (bgFreqMax - bgFreqMin) + bgFreqMin;
       mfFreqBG[i] *= sPerTS * kappa;
-      // mfFreqBG[i] -= (mfFreqBG[i] * (100.0 - mfFreqBG[i])) / 55000;
       if (isCS[i]) {
         mfFreqCS[i] = randGen.Random() * (csFreqMax - csFreqMin) + csFreqMin;
         mfFreqCS[i] *= sPerTS * kappa;
-        // mfFreqCS[i] -= (mfFreqCS[i] * (100.0 - mfFreqCS[i])) / 55000;
       } else
         mfFreqCS[i] = mfFreqBG[i];
     }
@@ -165,10 +162,7 @@ void ECMFPopulation::calcPoissActivity(enum mf_type type, MZone **mZoneList) {
         noise = (*normDist)((*noiseRandGen));
 
       // frequencies is really the prob of firing (see constructor)
-      aps[i] =
-          randGens[tid]->Random() < frequencies[i] + noise; // - mfThresh[i];
-      // mfThresh[i] = 2.0 * aps[i] * frequencies[i] +
-      //               (1 - aps[i]) * mfThresh[i] * threshDecMF;
+      aps[i] = randGens[tid]->Random() < frequencies[i] + noise;
       // change apBuf only if we spike!
       apBufs[i] =
           aps[i] * ((apBufs[i] << 1) | aps[i]) + (1 - aps[i]) * apBufs[i];
