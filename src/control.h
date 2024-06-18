@@ -173,30 +173,15 @@ public:
   float spillFrac = 0.15; // go->gr synapse, part of build
   float inputStrength = 0.0;
 
-  // sim params -> TODO: place in simcore
+  // sim params
   uint32_t gpuIndex = 0;
   uint32_t gpuP2 = 2;
 
   uint32_t trial;
   uint32_t raster_counter;
 
-  // mzone stuff -> TODO: place in build file down the road
+  // mzone stuff
   uint32_t numMZones = 1;
-
-  /* MFFreq params (formally in Simulation::getMFs, Simulation::getMFFreq) */
-  uint32_t mfRandSeed = 3;
-  float threshDecayTau = 4.0;
-
-  float nucCollFrac = 0.02;
-
-  float csMfFrac = 0.01;
-
-  float bgFreqMin = 10.0;
-  float bgFreqMax = 30.0;
-  float csFreqMin = 100.0;
-  float csFreqMax = 110.0;
-
-  bool collaterals_on = true;
 
   /* time related variables in-trial */
   uint32_t trialTime = 5000;

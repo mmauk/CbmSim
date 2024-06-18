@@ -26,9 +26,8 @@ enum mf_type { BKGD, CS };
 
 class ECMFPopulation {
 public:
-  ECMFPopulation(int randSeed, float fracCS, float fracColl, float bgFreqMin,
-                 float csFreqMin, float bgFreqMax, float csFreqMax,
-                 bool turnOnColls, uint32_t numZones, float noiseSigma = 0);
+  ECMFPopulation();
+  ECMFPopulation(std::fstream &infile);
 
   ~ECMFPopulation();
 
@@ -46,6 +45,7 @@ public:
   const uint8_t *getAPs();
 
 private:
+  void allocateMemory();
   /* frequency pop functions */
   void setMFs(int numTypeMF, int numMF, CRandomSFMT0 &randGen, bool *isAny,
               bool *isType);
@@ -53,7 +53,6 @@ private:
   /* poisson gen functions */
   void prepCollaterals(int rSeed);
   /* frequency population variables */
-  uint32_t numMF;
 
   float *mfFreqBG;
   float *mfFreqCS;
@@ -62,14 +61,23 @@ private:
   bool *isAny;
   bool *isColl;
 
+  int randSeed = 3;
+  float fracCS = 0.01;
+  float fracColl = 0.02;
+  float bgFreqMin = 10.0;
+  float csFreqMin = 100.0;
+  float bgFreqMax = 30.0;
+  float csFreqMax = 110.0;
+
   /* poisson spike generator vars */
   uint32_t nThreads = 1;   // hard-coded
   uint32_t kappa = 4;      // the other parameter in a gamma dist
   uint32_t num_spike_mask = (1 << kappa) - 1;
-  uint32_t numZones;
+  uint32_t numZones = 1;
 
   float sPerTS = msPerTimeStep / 1000;
-  float noiseSigma;
+  float noiseSigma = 0;
+  bool turnOnColls = true;
 
   CRandomSFMT0 *randSeedGen; // the uber seed
   CRandomSFMT0 **randGens;   // diff randgens per thread, if use openmp
@@ -81,8 +89,6 @@ private:
 
   uint32_t *dnCellIndex;
   uint32_t *mZoneIndex;
-
-  bool *isTrueMF;
 };
 
 #endif /* ECMFPOPULATION_H_ */

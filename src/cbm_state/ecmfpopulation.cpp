@@ -8,46 +8,32 @@
 #include <random>
 
 #include "ecmfpopulation.h"
+#include "file_utility.h"
 #include "logger.h"
 
-ECMFPopulation::ECMFPopulation(int randSeed, float fracCS, float fracColl,
-                               float bgFreqMin, float csFreqMin,
-                               float bgFreqMax, float csFreqMax,
-                               bool turnOnColls, uint32_t numZones,
-                               float noiseSigma) {
+ECMFPopulation::ECMFPopulation() {
 
   /* initialize mf frequency population variables */
   CRandomSFMT0 randGen(randSeed);
+  LOG_DEBUG("Allocating mf memory...");
+  allocateMemory();
+  LOG_DEBUG("Finished allocating mf memory.");
 
   int numCS = fracCS * num_mf;
   int numColl = fracColl * num_mf;
 
-  mfFreqBG = new float[num_mf]();
-  mfFreqCS = new float[num_mf]();
-  mfThresh = new float[num_mf]();
-
-  isCS = new bool[num_mf]();
-  isColl = new bool[num_mf]();
-  isAny = new bool[num_mf]();
-
+  LOG_DEBUG("Setting CS Mfs...");
   // Pick MFs for CS
   setMFs(numCS, num_mf, randGen, isAny, isCS);
+  LOG_DEBUG("Finished setting CS Mfs...");
 
   // Set the collaterals
-  if (turnOnColls)
+  if (turnOnColls) {
+    LOG_DEBUG("Setting Collateral Mfs...");
     setMFs(numColl, num_mf, randGen, isAny, isColl);
-
-
-  int collSum = 0;
-  int csSum = 0;
-  int anySum = 0;
-
-  for (int i = 0; i < num_mf; i++) {
-    collSum += isColl[i];
-    csSum += isCS[i];
-    anySum += isAny[i];
+    LOG_DEBUG("Finished setting Collateral Mfs.");
   }
-
+  LOG_DEBUG("Setting Mf frequencies...");
   for (int i = 0; i < num_mf; i++) {
     if (isColl[i]) {
       mfFreqBG[i] = -1;
@@ -62,38 +48,30 @@ ECMFPopulation::ECMFPopulation(int randSeed, float fracCS, float fracColl,
         mfFreqCS[i] = mfFreqBG[i];
     }
   }
+  LOG_DEBUG("Finished setting Mf frequencies.");
 
-  /* initializing poisson gen vars */
-
-  this->numZones = numZones;
-  this->noiseSigma = noiseSigma;
-
-  randSeedGen = new CRandomSFMT0(randSeed);
-  randGens = new CRandomSFMT0 *[nThreads];
-
-  for (uint32_t i = 0; i < nThreads; i++) {
-    randGens[i] = new CRandomSFMT0(randSeedGen->IRandom(0, INT_MAX));
-  }
-
-  normDist = new std::normal_distribution<float>(0, this->noiseSigma);
-  noiseRandGen = new std::mt19937(randSeed);
-
-  aps = (uint8_t *)calloc(num_mf, sizeof(uint8_t));
-  apBufs = (uint32_t *)calloc(num_mf, sizeof(uint32_t));
-
-  dnCellIndex = (uint32_t *)calloc(num_mf, sizeof(uint32_t));
-  mZoneIndex = (uint32_t *)calloc(num_mf, sizeof(uint32_t));
-
-  isTrueMF = (bool *)calloc(num_mf, sizeof(bool));
-  memset(isTrueMF, true, num_mf * sizeof(bool));
-  
+  LOG_DEBUG("Preparing Collaterals...");
   prepCollaterals(randSeedGen->IRandom(0, INT_MAX));
+  LOG_DEBUG("Finished preparing Collaterals...");
+}
+
+ECMFPopulation::ECMFPopulation(std::fstream &infile) {
+  LOG_DEBUG("Allocating mf memory...");
+  allocateMemory();
+  LOG_DEBUG("Finished allocating mf memory.");
+  LOG_DEBUG("Loading mfs from file...");
+  rawBytesRW((char *)mfFreqBG, num_mf * sizeof(float), true, infile);
+  rawBytesRW((char *)mfFreqCS, num_mf * sizeof(float), true, infile);
+  rawBytesRW((char *)isCS, num_mf * sizeof(bool), true, infile);
+  rawBytesRW((char *)isColl, num_mf * sizeof(bool), true, infile);
+  rawBytesRW((char *)dnCellIndex, num_mf * sizeof(uint32_t), true, infile);
+  rawBytesRW((char *)mZoneIndex, num_mf * sizeof(uint32_t), true, infile);
+  LOG_DEBUG("finished loading mfs from file.");
 }
 
 ECMFPopulation::~ECMFPopulation() {
   delete[] mfFreqBG;
   delete[] mfFreqCS;
-  delete[] mfThresh;
 
   delete[] isCS;
   delete[] isColl;
@@ -109,17 +87,18 @@ ECMFPopulation::~ECMFPopulation() {
   delete normDist;
   free(aps);
   free(apBufs);
-  free(isTrueMF);
   free(dnCellIndex);
   free(mZoneIndex);
 }
 
 /* public methods except constructor and destructor */
 void ECMFPopulation::writeToFile(std::fstream &outfile) {
-  outfile.write((char *)mfFreqBG, num_mf * sizeof(float));
-  outfile.write((char *)mfFreqCS, num_mf * sizeof(float));
-  outfile.write((char *)isCS, num_mf * sizeof(bool));
-  outfile.write((char *)isColl, num_mf * sizeof(bool));
+  rawBytesRW((char *)mfFreqBG, num_mf * sizeof(float), false, outfile);
+  rawBytesRW((char *)mfFreqCS, num_mf * sizeof(float), false, outfile);
+  rawBytesRW((char *)isCS, num_mf * sizeof(bool), false, outfile);
+  rawBytesRW((char *)isColl, num_mf * sizeof(bool), false, outfile);
+  rawBytesRW((char *)dnCellIndex, num_mf * sizeof(uint32_t), false, outfile);
+  rawBytesRW((char *)mZoneIndex, num_mf * sizeof(uint32_t), false, outfile);
 }
 
 void ECMFPopulation::writeMFLabels(std::string labelFileName) {
@@ -178,6 +157,34 @@ void ECMFPopulation::calcPoissActivity(enum mf_type type, MZone **mZoneList) {
 const uint8_t *ECMFPopulation::getAPs() { return (const uint8_t *)aps; }
 
 /* private methods */
+
+void ECMFPopulation::allocateMemory() {
+  mfFreqBG = new float[num_mf]();
+  mfFreqCS = new float[num_mf]();
+
+  isCS = new bool[num_mf]();
+  isColl = new bool[num_mf]();
+  isAny = new bool[num_mf]();
+
+  /* initializing poisson gen vars */
+
+  randSeedGen = new CRandomSFMT0(randSeed);
+  randGens = new CRandomSFMT0 *[nThreads];
+
+  for (uint32_t i = 0; i < nThreads; i++) {
+    randGens[i] = new CRandomSFMT0(randSeedGen->IRandom(0, INT_MAX));
+  }
+
+  normDist = new std::normal_distribution<float>(0, this->noiseSigma);
+  noiseRandGen = new std::mt19937(randSeed);
+
+  aps = (uint8_t *)calloc(num_mf, sizeof(uint8_t));
+  apBufs = (uint32_t *)calloc(num_mf, sizeof(uint32_t));
+
+  dnCellIndex = (uint32_t *)calloc(num_mf, sizeof(uint32_t));
+  mZoneIndex = (uint32_t *)calloc(num_mf, sizeof(uint32_t));
+}
+
 void ECMFPopulation::setMFs(int numTypeMF, int num_mf, CRandomSFMT0 &randGen,
                             bool *isAny, bool *isType) {
   for (int i = 0; i < numTypeMF; i++) {

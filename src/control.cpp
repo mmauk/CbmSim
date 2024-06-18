@@ -75,8 +75,10 @@ Control::~Control() {
 }
 
 void Control::build_sim() {
-  if (!simState)
+  if (!simState && !mfs) {
+    mfs = new ECMFPopulation();
     simState = new CBMState(numMZones);
+  }
 }
 
 void Control::set_plasticity_modes(std::string pfpc_plasticity,
@@ -120,11 +122,9 @@ void Control::init_sim(std::string in_sim_filename) {
   LOG_DEBUG("Initializing simulation...");
   std::fstream sim_file_buf(in_sim_filename.c_str(),
                             std::ios::in | std::ios::binary);
+  mfs = new ECMFPopulation(sim_file_buf);
   simState = new CBMState(numMZones, pf_pc_plast, sim_file_buf);
   simCore = new CBMSimCore(simState, gpuIndex, gpuP2);
-  mfs = new ECMFPopulation(mfRandSeed, csMfFrac, nucCollFrac, bgFreqMin,
-                           csFreqMin, bgFreqMax, csFreqMax, collaterals_on,
-                           numMZones);
   mfAP = mfs->getAPs();
   simCore->setTrueMFs(mfs->getCollIds());
   initialize_rast_cell_nums();
@@ -141,7 +141,7 @@ void Control::init_sim(std::string in_sim_filename) {
 }
 
 /**
- *  @details This function has not been finished: still need to reset
+ *  @details TODO: This function has not been finished: still need to reset
  *  the sim_core, mfFreq, and mfs.
  */
 void Control::reset_sim(std::string in_sim_filename) {
@@ -161,6 +161,7 @@ void Control::save_sim_to_file() {
     LOG_DEBUG("Saving simulation to file...");
     std::fstream outSimFileBuffer(out_sim_name.c_str(),
                                   std::ios::out | std::ios::binary);
+    mfs->writeToFile(outSimFileBuffer);
     if (!simCore)
       simState->writeState(outSimFileBuffer);
     else
