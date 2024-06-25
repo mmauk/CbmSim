@@ -33,7 +33,7 @@ public:
   void cpyPFPCWeightStatesCUDA();
   void setErrDrive(float errDriveRelative);
   void updateMFActivities(const uint8_t *actMF);
-  void setTrueMFs(bool *isCollateralMF);
+  void setTrueMFs(const bool *isCollateralMF);
 
   void calcPCActivities();
   void calcSCActivities();

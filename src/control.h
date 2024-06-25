@@ -173,47 +173,15 @@ public:
   float spillFrac = 0.15; // go->gr synapse, part of build
   float inputStrength = 0.0;
 
-  // sim params -> TODO: place in simcore
-  uint32_t gpuIndex = 2;
+  // sim params
+  uint32_t gpuIndex = 0;
   uint32_t gpuP2 = 2;
 
   uint32_t trial;
   uint32_t raster_counter;
 
-  uint32_t csPhasicSize = 50;
-
-  // mzone stuff -> TODO: place in build file down the road
+  // mzone stuff
   uint32_t numMZones = 1;
-
-  /* MFFreq params (formally in Simulation::getMFs, Simulation::getMFFreq) */
-  uint32_t mfRandSeed = 3;
-  float threshDecayTau = 4.0;
-
-  float nucCollFrac = 0.02;
-
-  float CSTonicMFFrac = 0.05;
-  float tonicFreqMin = 100.0;
-  float tonicFreqMax = 110.0;
-
-  float CSPhasicMFFrac = 0.0;
-  float phasicFreqMin = 200.0;
-  float phasicFreqMax = 250.0;
-
-  /* separate set of contextual MF due to position of rabbit */
-  float contextMFFrac = 0.0;
-  float contextFreqMin = 20.0;
-  float contextFreqMax = 50.0;
-
-  float bgFreqMin = 10.0;
-  float csbgFreqMin = 10.0;
-  float bgFreqMax = 30.0;
-  float csbgFreqMax = 30.0;
-
-  bool collaterals_off = false;
-  bool secondCS = true;
-
-  float fracImport = 0.0;
-  float fracOverlap = 0.2;
 
   /* time related variables in-trial */
   uint32_t trialTime = 5000;
@@ -223,7 +191,7 @@ public:
   /* plasticity types */
   enum plasticity pf_pc_plast = OFF;
   enum plasticity mf_nc_plast = OFF;
-
+  bool stp_on = false;
   /* input and output filenames */
   std::string sess_file_name = "";
   std::string data_out_path = "";
@@ -281,7 +249,7 @@ public:
    *  plasticity.
    */
   void set_plasticity_modes(std::string pfpc_plasticity,
-                            std::string mfnc_plasticity);
+                            std::string mfnc_plasticity, std::string stp);
   /**
    *  @brief initialize session class attribute from file.
    *  @param sess_file String representing the filepath of the input session

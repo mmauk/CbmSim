@@ -114,7 +114,7 @@ void CBMSimCore::syncCUDA(std::string title) {
 
 void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast,
                               enum plasticity mf_nc_plast, uint32_t use_cs,
-                              uint32_t use_us) {
+                              uint32_t use_us, bool stp_on) {
   syncCUDA("1");
 
   curTime++;
@@ -171,7 +171,9 @@ void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast,
 
   // perform pf -> pc plasticity
   for (int i = 0; i < numZones; i++) {
-    zones[i]->runPFPCSTPCUDA(streams, 0, use_cs, use_us);
+    if (stp_on) {
+      zones[i]->runPFPCSTPCUDA(streams, 0, use_cs, use_us);
+    }
     if (pf_pc_plast == GRADED) {
       zones[i]->runPFPCGradedPlastCUDA(streams, 1, curTime);
     } else if (pf_pc_plast == BINARY) {
@@ -249,7 +251,7 @@ void CBMSimCore::updateMFInput(const uint8_t *mfIn) {
   }
 }
 
-void CBMSimCore::setTrueMFs(bool *isCollateralMF) {
+void CBMSimCore::setTrueMFs(const bool *isCollateralMF) {
 
   for (int i = 0; i < numZones; i++) {
     zones[i]->setTrueMFs(isCollateralMF);

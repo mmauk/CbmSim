@@ -27,7 +27,7 @@ Control::Control(parsed_commandline &p_cl) {
     initialize_session(p_cl.session_file);
     // cp session info to info file obj
     cp_to_info_file_data(p_cl, if_data);
-    set_plasticity_modes(p_cl.pfpc_plasticity, p_cl.mfnc_plasticity);
+    set_plasticity_modes(p_cl.pfpc_plasticity, p_cl.mfnc_plasticity, p_cl.stp);
     // assume that validated commandline opts includes 1) input file 2) session
     // file 3) output directory name
     // create various output filenames once session is initialized
@@ -75,12 +75,15 @@ Control::~Control() {
 }
 
 void Control::build_sim() {
-  if (!simState)
+  if (!simState && !mfs) {
+    mfs = new ECMFPopulation();
     simState = new CBMState(numMZones);
+  }
 }
 
 void Control::set_plasticity_modes(std::string pfpc_plasticity,
-                                   std::string mfnc_plasticity) {
+                                   std::string mfnc_plasticity,
+                                   std::string stp) {
   if (pfpc_plasticity == "off")
     pf_pc_plast = OFF;
   else if (pfpc_plasticity == "graded")
@@ -96,6 +99,9 @@ void Control::set_plasticity_modes(std::string pfpc_plasticity,
     mf_nc_plast = OFF;
   else
     mf_nc_plast = GRADED;
+
+  if (stp == "on")
+    stp_on = true;
 }
 
 void Control::initialize_session(std::string sess_file) {
@@ -116,15 +122,11 @@ void Control::init_sim(std::string in_sim_filename) {
   LOG_DEBUG("Initializing simulation...");
   std::fstream sim_file_buf(in_sim_filename.c_str(),
                             std::ios::in | std::ios::binary);
+  mfs = new ECMFPopulation(sim_file_buf);
   simState = new CBMState(numMZones, pf_pc_plast, sim_file_buf);
   simCore = new CBMSimCore(simState, gpuIndex, gpuP2);
-  mfs = new ECMFPopulation(num_mf, mfRandSeed, CSTonicMFFrac, CSPhasicMFFrac,
-                           contextMFFrac, nucCollFrac, bgFreqMin, csbgFreqMin,
-                           contextFreqMin, tonicFreqMin, phasicFreqMin,
-                           bgFreqMax, csbgFreqMax, contextFreqMax, tonicFreqMax,
-                           phasicFreqMax, collaterals_off, fracImport, secondCS,
-                           fracOverlap, numMZones);
-  simCore->setTrueMFs(mfs->getCollateralIds());
+  mfAP = mfs->getAPs();
+  simCore->setTrueMFs(mfs->getCollIds());
   initialize_rast_cell_nums();
   initialize_cell_spikes();
   initialize_rasters();
@@ -139,7 +141,7 @@ void Control::init_sim(std::string in_sim_filename) {
 }
 
 /**
- *  @details This function has not been finished: still need to reset
+ *  @details TODO: This function has not been finished: still need to reset
  *  the sim_core, mfFreq, and mfs.
  */
 void Control::reset_sim(std::string in_sim_filename) {
@@ -159,6 +161,7 @@ void Control::save_sim_to_file() {
     LOG_DEBUG("Saving simulation to file...");
     std::fstream outSimFileBuffer(out_sim_name.c_str(),
                                   std::ios::out | std::ios::binary);
+    mfs->writeToFile(outSimFileBuffer);
     if (!simCore)
       simState->writeState(outSimFileBuffer);
     else
@@ -765,15 +768,16 @@ void Control::runSession(struct gui *gui) {
       }
       // deliver cs if specified at cmdline and within cs duration
       if (useCS && ts >= onsetCS && ts < onsetCS + csLength) {
-        mfAP = mfs->calcPoissActivity(TONIC_CS_A, simCore->getMZoneList());
+        mfs->calcPoissActivity(CS, simCore->getMZoneList());
       } else { // background mf activity
-        mfAP = mfs->calcPoissActivity(BKGD, simCore->getMZoneList());
+        mfs->calcPoissActivity(BKGD, simCore->getMZoneList());
       }
 
       simCore->updateMFInput(mfAP);
       // this is the main simCore function which computes all cell pops'
       // spikes
-      simCore->calcActivity(spillFrac, pf_pc_plast, mf_nc_plast, useCS, useUS);
+      simCore->calcActivity(spillFrac, pf_pc_plast, mf_nc_plast, useCS, useUS,
+                            stp_on);
 
       /* collect conductances used to check tuning */
       /* cs is defined wrt msPreCS, so subtract it and add bun_viz on top */
@@ -834,7 +838,7 @@ void Control::runSession(struct gui *gui) {
     } else {
       // save gr rasters into new file every trial
       save_gr_rasters_at_trial_to_file(trial);
-      save_pfpc_weights_at_trial_to_file(trial);
+      // save_pfpc_weights_at_trial_to_file(trial);
     }
     trial++;
   }

@@ -35,7 +35,8 @@ float gIncMFtoGO = 0.0009;
 float gConstGO = 0.0;
 float NMDA_AMPAratioMFGO = 1.3;
 float gDecTauMFtoGONMDA = 30.0;
-float gIncDirectMFtoGR = 0.0265; // float was = 0.0237; // float was = 0.0239;
+float gIncDirectMFtoGR =
+    0.0320; // 0.0265; // float was = 0.0237; // float was = 0.0239;
 float gDirectTauMFtoGR = 0.0;    // very crucial synapse!!!
 float gIncFracSpilloverMFtoGR = 0.2;
 float gSpilloverTauMFtoGR = 15.0;
@@ -151,7 +152,7 @@ float threshMaxPC = -48.0;
 float threshMaxSC = 0.0;
 float weightScale = 1.0;
 float rawGRGOW = 0.0007;
-float rawMFGOW = 0.0035;
+float rawMFGOW = 0.0042; // 0.0035;
 float gogrW = 0.015;
 float gogoW = 0.0125;
 

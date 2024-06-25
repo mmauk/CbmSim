@@ -34,7 +34,7 @@ const std::string SYN_CONS_IDS[NUM_SYN_CONS] = {"MFGR", "GRGO", "MFGO", "GOGO",
  * available commandline flags which take no argument
  */
 const std::vector<std::string> command_line_single_opts{
-    "--pfpc-off", "--mfnc-off", "--binary", "--cascade", "--verbose",
+    "--pfpc-off", "--mfnc-off", "--binary", "--cascade", "--stp", "--verbose",
 };
 
 /*
@@ -319,6 +319,8 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl) {
         p_cl.mfnc_plasticity = single_opt.substr(7, std::string::npos);
       } else if (single_opt.find("verbose") != std::string::npos) {
         p_cl.verbose = single_opt.substr(2, std::string::npos);
+      } else if (single_opt.find("stp") != std::string::npos) {
+        p_cl.stp = "on";
       } else if (!pfpc_opt_found) {
         int offset = (single_opt.find("pfpc") != std::string::npos) ? 7 : 2;
         p_cl.pfpc_plasticity = single_opt.substr(offset, std::string::npos);
@@ -393,7 +395,7 @@ void parse_commandline(int *argc, char ***argv, parsed_commandline &p_cl) {
 // I am sorry in advance for this implementation. C++ doesn't have reflection. A
 // shame.
 bool p_cmdline_is_empty(parsed_commandline &p_cl) {
-  return p_cl.print_help.empty() && p_cl.verbose.empty() &&
+  return p_cl.print_help.empty() && p_cl.verbose.empty() && p_cl.stp.empty() &&
          p_cl.vis_mode.empty() && p_cl.session_file.empty() &&
          p_cl.input_sim_file.empty() && p_cl.output_basename.empty() &&
          p_cl.pfpc_plasticity.empty() && p_cl.mfnc_plasticity.empty() &&
@@ -543,6 +545,7 @@ void cp_parsed_commandline(parsed_commandline &from_p_cl,
   to_p_cl.cmd_name = from_p_cl.cmd_name;
   to_p_cl.print_help = from_p_cl.print_help;
   to_p_cl.verbose = from_p_cl.verbose;
+  to_p_cl.stp = from_p_cl.stp;
   to_p_cl.vis_mode = from_p_cl.vis_mode;
   to_p_cl.session_file = from_p_cl.session_file;
   to_p_cl.input_sim_file = from_p_cl.input_sim_file;
@@ -561,6 +564,7 @@ std::string parsed_commandline_to_str(parsed_commandline &p_cl) {
   p_cl_buf << "{ 'cmd_name', '" << p_cl.cmd_name << "' }\n";
   p_cl_buf << "{ 'print_help', '" << p_cl.print_help << "' }\n";
   p_cl_buf << "{ 'verbose', '" << p_cl.verbose << "' }\n";
+  p_cl_buf << "{ 'stp', '" << p_cl.stp << "' }\n";
   p_cl_buf << "{ 'vis_mode', '" << p_cl.vis_mode << "' }\n";
   p_cl_buf << "{ 'session_file', '" << p_cl.session_file << "' }\n";
   p_cl_buf << "{ 'input_sim_file', '" << p_cl.input_sim_file << "' }\n";

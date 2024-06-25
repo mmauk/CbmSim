@@ -475,9 +475,9 @@ __global__ void updatePFPCGradedSynWeightKernel(float *synWPFPC, float *stpPFPC,
   int i = blockIdx.x * blockDim.x + threadIdx.x + offset;
   synWPFPC[i] = synWPFPC[i] + ((historyGR[i] & plastCheckMask) > 0) * plastStep;
 
+  synWPFPC[i] += stpPFPC[i]; // -> this may not be what we want
   synWPFPC[i] = (synWPFPC[i] > 0) * synWPFPC[i];
   synWPFPC[i] = (synWPFPC[i] > 1) + (synWPFPC[i] <= 1) * synWPFPC[i];
-  synWPFPC[i] += stpPFPC[i]; // -> this may not be what we want
 }
 
 template <typename randState>
