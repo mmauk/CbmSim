@@ -739,6 +739,7 @@ void Control::runSession(struct gui *gui) {
   set_info_file_str_props(BEFORE_RUN, if_data);
   double start, end;
   int goSpkCounter[num_go];
+  bool inCS = false;
   if (!use_gui)
     run_state = IN_RUN_NO_PAUSE;
   trial = 0;
@@ -754,7 +755,7 @@ void Control::runSession(struct gui *gui) {
     uint32_t useUS = td.use_uss[trial];
     uint32_t onsetUS = td.us_onsets[trial];
     int PSTHCounter = 0;
-    float gGRGO_sum = 0;
+    // float gGRGO_sum = 0;
     float gMFGO_sum = 0;
 
     memset(goSpkCounter, 0, num_go * sizeof(int));
@@ -769,26 +770,28 @@ void Control::runSession(struct gui *gui) {
       // deliver cs if specified at cmdline and within cs duration
       if (useCS && ts >= onsetCS && ts < onsetCS + csLength) {
         mfs->calcGammaActivity(CS, simCore->getMZoneList());
+        inCS = false;
       } else { // background mf activity
         mfs->calcGammaActivity(BKGD, simCore->getMZoneList());
+        inCS = true;
       }
 
       simCore->updateMFInput(mfAP);
       // this is the main simCore function which computes all cell pops'
       // spikes
       simCore->calcActivity(spillFrac, pf_pc_plast, mf_nc_plast, useCS, useUS,
-                            stp_on);
+                            stp_on, inCS);
 
       /* collect conductances used to check tuning */
       /* cs is defined wrt msPreCS, so subtract it and add bun_viz on top */
       if (ts >= onsetCS && ts < onsetCS + csLength) {
         mfgoG = simCore->getInputNet()->exportgSum_MFGO();
-        grgoG = simCore->getInputNet()->exportgSum_GRGO();
+        // grgoG = simCore->getInputNet()->exportgSum_GRGO();
         goSpks = simCore->getInputNet()->exportAPGO();
 
         for (int i = 0; i < num_go; i++) {
           goSpkCounter[i] += goSpks[i];
-          gGRGO_sum += grgoG[i];
+          // gGRGO_sum += grgoG[i];
           gMFGO_sum += mfgoG[i];
         }
       }
@@ -796,9 +799,9 @@ void Control::runSession(struct gui *gui) {
       /* upon offset of CS, report averages of above collected conductances */
       if (ts == onsetCS + csLength) {
         countGOSpikes(goSpkCounter);
-        LOG_DEBUG("Mean gGRGO   = %0.4f", gGRGO_sum / (num_go * csLength));
-        LOG_DEBUG("Mean gMFGO   = %0.5f", gMFGO_sum / (num_go * csLength));
-        LOG_DEBUG("GR:MF ratio  = %0.2f", gGRGO_sum / gMFGO_sum);
+        // LOG_INFO("Mean gGRGO   = %0.4f", gGRGO_sum / (num_go * csLength));
+        LOG_INFO("Mean gMFGO   = %0.5f", gMFGO_sum / (num_go * csLength));
+        // LOG_INFO("GR:MF ratio  = %0.2f", gGRGO_sum / gMFGO_sum);
       }
 
       /* data collection */
@@ -1067,8 +1070,8 @@ void Control::countGOSpikes(int *goSpkCounter) {
   for (int i = 0; i < num_go; i++)
     goSpkSum += goSpkCounter[i];
 
-  LOG_DEBUG("Mean GO Rate: %0.2f", goSpkSum / ((float)num_go * isi));
-  LOG_DEBUG("Median GO Rate: %0.1f", m / isi);
+  LOG_INFO("Mean GO Rate: %0.2f", goSpkSum / ((float)num_go * isi));
+  LOG_INFO("Median GO Rate: %0.1f", m / isi);
 }
 
 void Control::fill_rasters(uint32_t raster_counter, uint32_t psth_counter) {

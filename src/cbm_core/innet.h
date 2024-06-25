@@ -50,9 +50,10 @@ public:
   const float *exportGISumGR();
   const float *exportgSum_MFGO();
   const float *exportgSum_GRGO();
+  const float *exportgSum_GRGONMDA();
 
   void updateMFActivties(const uint8_t *actInMF);
-  void calcGOActivities();
+  void calcGOActivities(bool inCS);
 
   void updateMFtoGROut();
   void updateMFtoGOOut();
@@ -150,6 +151,8 @@ protected:
 
   float **depAmpGOH;
   float **dynamicAmpGOH;
+  float *biasGOBkgdH;
+  float *biasGOCSH;
 
   int *counter;
 
