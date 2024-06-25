@@ -126,7 +126,7 @@ const bool *ECMFPopulation::getCSIds() { return isCS; }
 
 const bool *ECMFPopulation::getCollIds() { return isColl; }
 
-void ECMFPopulation::calcPoissActivity(enum mf_type type, MZone **mZoneList) {
+void ECMFPopulation::calcGammaActivity(enum mf_type type, MZone **mZoneList) {
   float *frequencies = (type == CS) ? mfFreqCS : mfFreqBG;
   int countColls = 0;
   float noise = 0.0;

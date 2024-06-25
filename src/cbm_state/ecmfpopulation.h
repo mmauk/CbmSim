@@ -41,7 +41,7 @@ public:
 
   const bool *getCollIds();
 
-  void calcPoissActivity(enum mf_type type, MZone **mZoneList);
+  void calcGammaActivity(enum mf_type type, MZone **mZoneList);
   const uint8_t *getAPs();
 
 private:
