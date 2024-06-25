@@ -768,9 +768,9 @@ void Control::runSession(struct gui *gui) {
       }
       // deliver cs if specified at cmdline and within cs duration
       if (useCS && ts >= onsetCS && ts < onsetCS + csLength) {
-        mfs->calcPoissActivity(CS, simCore->getMZoneList());
+        mfs->calcGammaActivity(CS, simCore->getMZoneList());
       } else { // background mf activity
-        mfs->calcPoissActivity(BKGD, simCore->getMZoneList());
+        mfs->calcGammaActivity(BKGD, simCore->getMZoneList());
       }
 
       simCore->updateMFInput(mfAP);
