@@ -5,6 +5,11 @@
 #include "gui.h"
 #include "logger.h"
 
+struct {
+  double x = -1;
+  double y = -1;
+} mouse_coords;
+
 std::map<std::string, bool> init_all_rast_or_psth_map{
     {"MF", true}, {"GR", true}, {"GO", true}, {"BC", true},
     {"SC", true}, {"PC", true}, {"IO", true}, {"NC", true},
@@ -784,13 +789,22 @@ static void draw_pc_plot(GtkWidget *drawing_area, cairo_t *cr,
     k++;
   }
 }
+static bool on_mouse_click_connectivity(GtkWidget *widget,
+                                        GdkEventButton *event, void *data) {
+  if (event->button == GDK_BUTTON_PRIMARY) {
+    mouse_coords.x = event->x;
+    mouse_coords.y = event->y;
+    gtk_widget_queue_draw(widget);
+  }
+  return true;
+}
 
 static void generate_plot(GtkWidget *widget,
                           void (*draw_func)(GtkWidget *, cairo_t *, Control *),
                           Control *control, const gchar *title, gint width,
                           gint height) {
   if (!control->sim_initialized) {
-    std::cout << "[ERROR]: Simulation not initialized. Nothing to show...\n";
+    LOG_ERROR("[ERROR]: Simulation not initialized. Nothing to show...");
     return;
   }
   GtkWidget *child_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -804,12 +818,71 @@ static void generate_plot(GtkWidget *widget,
   gtk_container_add(GTK_CONTAINER(child_window), drawing_area);
   g_signal_connect(G_OBJECT(drawing_area), "draw", G_CALLBACK(draw_func),
                    control);
+  g_signal_connect(G_OBJECT(drawing_area), "button-press-event",
+                   G_CALLBACK(on_mouse_click_connectivity), control);
+  gtk_widget_add_events(drawing_area, GDK_BUTTON_PRESS_MASK);
   gtk_widget_show_all(child_window);
 }
 
 static void on_quit(GtkWidget *widget, Control *control) {
   control->run_state = NOT_IN_RUN;
   gtk_main_quit();
+}
+
+static void draw_connectivity(GtkWidget *widget, cairo_t *cr,
+                              Control *control) {
+  if (mouse_coords.x > 0 && mouse_coords.y > 0) {
+    const InNetConnectivityState *conn_state =
+        control->simState->getInnetConStateInternal();
+    // basic case: go-go
+    // background color setup
+    cairo_set_source_rgb(cr, 0, 0, 0);
+    cairo_paint(cr);
+
+    /* GtkDrawingArea size */
+    GdkRectangle da;
+    GdkWindow *window = gtk_widget_get_window(GTK_WIDGET(widget));
+
+    /* Determine GtkDrawingArea dimensions */
+    gdk_window_get_geometry(window, &da.x, &da.y, &da.width, &da.height);
+
+    float conn_matrix_to_pixel_scale_y = da.height / (float)go_y;
+    float conn_matrix_to_pixel_scale_x = da.width / (float)go_x;
+
+    cairo_translate(cr, 0, da.height);
+    cairo_scale(cr, conn_matrix_to_pixel_scale_x,
+                -conn_matrix_to_pixel_scale_y);
+    // point color
+    cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
+
+    uint32_t go_id =
+        uint32_t(mouse_coords.x / conn_matrix_to_pixel_scale_x) +
+        uint32_t((da.height - mouse_coords.y) / conn_matrix_to_pixel_scale_y) *
+            go_x;
+
+    cairo_rectangle(cr, go_id % go_x, int(go_id / go_x), 1, 1);
+    cairo_fill(cr);
+
+    cairo_set_source_rgb(cr, 0.0, 1.0, 0.0);
+    for (size_t i = 0; i < num_con_go_to_go; i++) {
+      if (conn_state->pGOGABAOutGOGO[go_id][i] != INT_MAX) {
+        uint32_t dest_id = conn_state->pGOGABAOutGOGO[go_id][i];
+        cairo_rectangle(cr, dest_id % go_x, int(dest_id / go_x), 1, 1);
+        cairo_fill(cr);
+      }
+    }
+    mouse_coords.x = -1;
+    mouse_coords.y = -1;
+  } else {
+    cairo_set_source_rgb(cr, 0, 0, 0);
+    cairo_paint(cr);
+  }
+}
+
+static void on_connectivity_window(GtkWidget *widget, Control *control) {
+  generate_plot(widget, draw_connectivity, control, "Connectivity",
+                DEFAULT_CONNECTIVITY_WINDOW_WIDTH,
+                DEFAULT_CONNECTIVITY_WINDOW_HEIGHT);
 }
 
 static void on_gr_raster(GtkWidget *widget, Control *control) {
@@ -1229,6 +1302,11 @@ int gui_init_and_run(int *argc, char ***argv, Control *control) {
                           {"activate", G_CALLBACK(on_firing_rates_window), &gui,
                            false},
                           {}},
+                         {"Connectivity",
+                          gtk_menu_item_new(),
+                          {"activate", G_CALLBACK(on_connectivity_window),
+                           control, false},
+                          {}},
                      }}},
                    {"Tuning",
                     gtk_menu_item_new(),
@@ -1329,13 +1407,15 @@ int gui_init_and_run(int *argc, char ***argv, Control *control) {
   //								 GTK_DIALOG_MODAL,
   //								 GTK_MESSAGE_INFO,
   //								 GTK_BUTTONS_NONE,
-  //								 "CbmSim - A Cerebellar
-  //Simulator\n\n" 								 "Welcome to the Cerebellar Simulator! The goal of this
-  //software is to\n" 								 "simulate dynamics of the micro-circuitry within the
-  //cerebellar cortex.\n" 								 "See the \"help\" menu to get started and for further
-  //information on the\n" 								 "various features included in this program. Also, see
-  //the \"about\" menu\n" 								 "for more information about the history of this
-  //project's development"); GtkWidget *msg_area =
+  //								 "CbmSim - A
+  //Cerebellar
+  // Simulator\n\n" 								 "Welcome to the Cerebellar
+  // Simulator! The goal of this software is to\n"
+  // "simulate dynamics of the micro-circuitry within the cerebellar cortex.\n"
+  // "See the \"help\" menu to get started and for further information on the\n"
+  // "various features included in this program. Also, see the \"about\" menu\n"
+  // "for more information about the history of this project's development");
+  // GtkWidget *msg_area =
   // gtk_message_dialog_get_message_area(GTK_MESSAGE_DIALOG(dialog)); GtkWidget
   // *check_btn_label = gtk_label_new("hello world"); GtkWidget
   // *dialog_check_btn = gtk_check_button_new_with_label("Don't show me this
