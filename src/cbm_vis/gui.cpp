@@ -799,29 +799,34 @@ static bool on_mouse_click_connectivity(GtkWidget *widget,
   return true;
 }
 
+static void set_child_window_props(GtkWidget *child_window, const gchar *title,
+                                   gint width, gint height, bool resizable) {
+  gtk_window_set_title(GTK_WINDOW(child_window), title);
+  gtk_window_set_default_size(GTK_WINDOW(child_window), width, height);
+  gtk_window_set_resizable(GTK_WINDOW(child_window), resizable);
+}
+
 static void generate_plot(GtkWidget *widget,
                           void (*draw_func)(GtkWidget *, cairo_t *, Control *),
-                          Control *control, const gchar *title, gint width,
-                          gint height) {
+                          Control *control) {
   if (!control->sim_initialized) {
     LOG_ERROR("[ERROR]: Simulation not initialized. Nothing to show...");
     return;
   }
-  GtkWidget *child_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-
-  gtk_window_set_title(GTK_WINDOW(child_window), title);
-  gtk_window_set_default_size(GTK_WINDOW(child_window), width, height);
-  gtk_window_set_resizable(GTK_WINDOW(child_window), FALSE);
-
+  if (!widget) {
+    LOG_ERROR("[ERROR]: Cannot generate plot on a non-existant window...");
+    return;
+  }
+  gint width, height;
+  gtk_window_get_size(GTK_WINDOW(widget), &width, &height);
   GtkWidget *drawing_area = gtk_drawing_area_new();
   gtk_widget_set_size_request(drawing_area, width, height);
-  gtk_container_add(GTK_CONTAINER(child_window), drawing_area);
+  gtk_container_add(GTK_CONTAINER(widget), drawing_area);
   g_signal_connect(G_OBJECT(drawing_area), "draw", G_CALLBACK(draw_func),
                    control);
   g_signal_connect(G_OBJECT(drawing_area), "button-press-event",
                    G_CALLBACK(on_mouse_click_connectivity), control);
   gtk_widget_add_events(drawing_area, GDK_BUTTON_PRESS_MASK);
-  gtk_widget_show_all(child_window);
 }
 
 static void on_quit(GtkWidget *widget, Control *control) {
@@ -880,29 +885,48 @@ static void draw_connectivity(GtkWidget *widget, cairo_t *cr,
 }
 
 static void on_connectivity_window(GtkWidget *widget, Control *control) {
-  generate_plot(widget, draw_connectivity, control, "Connectivity",
-                DEFAULT_CONNECTIVITY_WINDOW_WIDTH,
-                DEFAULT_CONNECTIVITY_WINDOW_HEIGHT);
+  GtkWidget *child_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  set_child_window_props(child_window, "Connectivity",
+                         DEFAULT_CONNECTIVITY_WINDOW_WIDTH,
+                         DEFAULT_CONNECTIVITY_WINDOW_HEIGHT, true);
+
+  generate_plot(child_window, draw_connectivity, control);
+  gtk_widget_show_all(child_window);
 }
 
 static void on_gr_raster(GtkWidget *widget, Control *control) {
-  generate_plot(widget, draw_gr_raster, control, "GR Rasters",
-                DEFAULT_RASTER_WINDOW_WIDTH, DEFAULT_RASTER_WINDOW_HEIGHT);
+  GtkWidget *child_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  set_child_window_props(child_window, "GR Rasters",
+                         DEFAULT_RASTER_WINDOW_WIDTH,
+                         DEFAULT_RASTER_WINDOW_HEIGHT, true);
+  generate_plot(child_window, draw_gr_raster, control);
+  gtk_widget_show_all(child_window);
 }
 
 static void on_go_raster(GtkWidget *widget, Control *control) {
-  generate_plot(widget, draw_go_raster, control, "GO Rasters",
-                DEFAULT_RASTER_WINDOW_WIDTH, DEFAULT_RASTER_WINDOW_HEIGHT);
+  GtkWidget *child_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  set_child_window_props(child_window, "GO Rasters",
+                         DEFAULT_RASTER_WINDOW_WIDTH,
+                         DEFAULT_RASTER_WINDOW_HEIGHT, true);
+  generate_plot(child_window, draw_go_raster, control);
+  gtk_widget_show_all(child_window);
 }
 
 static void on_pfpc_window(GtkWidget *widget, Control *control) {
-  generate_plot(widget, draw_pf_pc_plot, control, "PF-PC Weights",
-                DEFAULT_PFPC_WINDOW_WIDTH, DEFAULT_PFPC_WINDOW_HEIGHT);
+  GtkWidget *child_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  set_child_window_props(child_window, "PF-PC Weights",
+                         DEFAULT_PFPC_WINDOW_WIDTH, DEFAULT_PFPC_WINDOW_HEIGHT,
+                         true);
+  generate_plot(child_window, draw_pf_pc_plot, control);
+  gtk_widget_show_all(child_window);
 }
 
 static void on_pc_window(GtkWidget *widget, Control *control) {
-  generate_plot(widget, draw_pc_plot, control, "PC Window",
-                DEFAULT_PC_WINDOW_WIDTH, DEFAULT_PC_WINDOW_HEIGHT);
+  GtkWidget *child_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  set_child_window_props(child_window, "PC Window", DEFAULT_PC_WINDOW_WIDTH,
+                         DEFAULT_PC_WINDOW_HEIGHT, true);
+  generate_plot(child_window, draw_pc_plot, control);
+  gtk_widget_show_all(child_window);
 }
 
 static bool on_parameters(GtkWidget *widget, gpointer data) {
