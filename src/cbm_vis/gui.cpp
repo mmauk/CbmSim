@@ -5,6 +5,8 @@
 #include "gui.h"
 #include "logger.h"
 
+enum conn_win_opts conn_win_state = GOGO;
+
 struct {
   double x = -1;
   double y = -1;
@@ -19,6 +21,10 @@ std::map<std::string, bool> init_all_weights_map = {
     {"PFPC", true},
     {"MFNC", true},
 };
+
+/* forward declarations */
+static void set_gui_menu_helper(struct menu *menu);
+static void set_gui_menu_item_helper(struct menu_item *menu_item);
 
 // temp function so gtk doesn't whine abt NULL callbacks
 static void null_callback(GtkWidget *widget, gpointer data) {}
@@ -808,7 +814,7 @@ static void set_child_window_props(GtkWidget *child_window, const gchar *title,
 
 static void generate_plot(GtkWidget *widget,
                           void (*draw_func)(GtkWidget *, cairo_t *, Control *),
-                          Control *control) {
+                          Control *control, GtkWidget *v_box = NULL) {
   if (!control->sim_initialized) {
     LOG_ERROR("[ERROR]: Simulation not initialized. Nothing to show...");
     return;
@@ -821,7 +827,11 @@ static void generate_plot(GtkWidget *widget,
   gtk_window_get_size(GTK_WINDOW(widget), &width, &height);
   GtkWidget *drawing_area = gtk_drawing_area_new();
   gtk_widget_set_size_request(drawing_area, width, height);
-  gtk_container_add(GTK_CONTAINER(widget), drawing_area);
+  if (v_box) {
+    gtk_box_pack_start(GTK_BOX(v_box), drawing_area, FALSE, TRUE, 0);
+  } else {
+    gtk_container_add(GTK_CONTAINER(widget), drawing_area);
+  }
   g_signal_connect(G_OBJECT(drawing_area), "draw", G_CALLBACK(draw_func),
                    control);
   g_signal_connect(G_OBJECT(drawing_area), "button-press-event",
@@ -834,12 +844,209 @@ static void on_quit(GtkWidget *widget, Control *control) {
   gtk_main_quit();
 }
 
+// expect data to be null (don't need it)
+static bool on_connectivity_radio(GtkWidget *widget, gpointer data) {
+  if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget))) {
+    const gchar *this_rad_label = gtk_button_get_label(GTK_BUTTON(widget));
+    LOG_INFO("Displaying Connectivity for: %s", this_rad_label);
+    if (strcmp(this_rad_label, "gr -> go") == 0)
+      conn_win_state = GRGO;
+    else if (strcmp(this_rad_label, "go -> go") == 0)
+      conn_win_state = GOGO;
+    else if (strcmp(this_rad_label, "go -> go gj") == 0)
+      conn_win_state = GOGOGJ;
+    else if (strcmp(this_rad_label, "go -> gr") == 0)
+      conn_win_state = GOGR;
+    else if (strcmp(this_rad_label, "mf -> go") == 0)
+      conn_win_state = MFGO;
+    else if (strcmp(this_rad_label, "mf -> gr") == 0)
+      conn_win_state = MFGR;
+    gtk_widget_queue_draw(widget);
+  }
+  return true;
+}
+
+static void draw_grgo(const InNetConnectivityState *conn_state, gint height,
+                      gint width, cairo_t *cr) {
+  float conn_matrix_to_pixel_scale_y = height / (float)go_y;
+  float conn_matrix_to_pixel_scale_x = width / (float)go_x;
+
+  float grid_scale_y = (float)go_y / gr_y;
+  float grid_scale_x = (float)go_x / gr_x;
+
+  cairo_translate(cr, 0, height);
+  cairo_scale(cr, conn_matrix_to_pixel_scale_x, -conn_matrix_to_pixel_scale_y);
+  // point color
+  cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
+
+  uint32_t go_id =
+      uint32_t(mouse_coords.x / conn_matrix_to_pixel_scale_x) +
+      uint32_t((height - mouse_coords.y) / conn_matrix_to_pixel_scale_y) * go_x;
+
+  cairo_rectangle(cr, go_id % go_x, int(go_id / go_x), 1, 1);
+  cairo_fill(cr);
+
+  cairo_set_source_rgb(cr, 0.0, 1.0, 0.0);
+  for (size_t i = 0; i < max_num_p_go_from_gr_to_go; i++) {
+    if (conn_state->pGOfromGRtoGO[go_id][i] != UINT_MAX) {
+      uint32_t dest_id = conn_state->pGOfromGRtoGO[go_id][i];
+      cairo_rectangle(cr, (dest_id % gr_x) * grid_scale_x,
+                      int(dest_id / gr_x) * grid_scale_y, grid_scale_x,
+                      grid_scale_y);
+      cairo_fill(cr);
+    }
+  }
+}
+
+static void draw_gogo(const InNetConnectivityState *conn_state, gint height,
+                      gint width, cairo_t *cr) {
+  float conn_matrix_to_pixel_scale_y = height / (float)go_y;
+  float conn_matrix_to_pixel_scale_x = width / (float)go_x;
+
+  cairo_translate(cr, 0, height);
+  cairo_scale(cr, conn_matrix_to_pixel_scale_x, -conn_matrix_to_pixel_scale_y);
+  // point color
+  cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
+
+  uint32_t go_id =
+      uint32_t(mouse_coords.x / conn_matrix_to_pixel_scale_x) +
+      uint32_t((height - mouse_coords.y) / conn_matrix_to_pixel_scale_y) * go_x;
+
+  cairo_rectangle(cr, go_id % go_x, int(go_id / go_x), 1, 1);
+  cairo_fill(cr);
+
+  cairo_set_source_rgb(cr, 0.0, 1.0, 0.0);
+  for (size_t i = 0; i < num_con_go_to_go; i++) {
+    if (conn_state->pGOGABAOutGOGO[go_id][i] != INT_MAX) {
+      uint32_t dest_id = conn_state->pGOGABAOutGOGO[go_id][i];
+      cairo_rectangle(cr, dest_id % go_x, int(dest_id / go_x), 1, 1);
+      cairo_fill(cr);
+    }
+  }
+}
+
+static void draw_gogogj(const InNetConnectivityState *conn_state, gint height,
+                        gint width, cairo_t *cr) {
+  float conn_matrix_to_pixel_scale_y = height / (float)go_y;
+  float conn_matrix_to_pixel_scale_x = width / (float)go_x;
+
+  cairo_translate(cr, 0, height);
+  cairo_scale(cr, conn_matrix_to_pixel_scale_x, -conn_matrix_to_pixel_scale_y);
+  // point color
+  cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
+
+  uint32_t go_id =
+      uint32_t(mouse_coords.x / conn_matrix_to_pixel_scale_x) +
+      uint32_t((height - mouse_coords.y) / conn_matrix_to_pixel_scale_y) * go_x;
+
+  cairo_rectangle(cr, go_id % go_x, int(go_id / go_x), 1, 1);
+  cairo_fill(cr);
+
+  cairo_set_source_rgb(cr, 0.0, 1.0, 0.0);
+  for (size_t i = 0; i < num_p_go_to_go_gj; i++) {
+    if (conn_state->pGOCoupInGOGO[go_id][i] != UINT_MAX) {
+      uint32_t dest_id = conn_state->pGOCoupInGOGO[go_id][i];
+      cairo_rectangle(cr, dest_id % go_x, int(dest_id / go_x), 1, 1);
+      cairo_fill(cr);
+    }
+  }
+}
+
+static void draw_gogr(const InNetConnectivityState *conn_state, gint height,
+                      gint width, cairo_t *cr) {
+  float conn_matrix_to_pixel_scale_y = height / (float)gr_y;
+  float conn_matrix_to_pixel_scale_x = width / (float)gr_x;
+
+  float grid_scale_y = (float)gr_y / go_y;
+  float grid_scale_x = (float)gr_x / go_x;
+
+  cairo_translate(cr, 0, height);
+  cairo_scale(cr, conn_matrix_to_pixel_scale_x, -conn_matrix_to_pixel_scale_y);
+  // point color
+  cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
+
+  uint32_t gr_id =
+      uint32_t(mouse_coords.x / conn_matrix_to_pixel_scale_x) +
+      uint32_t((height - mouse_coords.y) / conn_matrix_to_pixel_scale_y) * gr_x;
+
+  cairo_rectangle(cr, gr_id % gr_x, int(gr_id / gr_x), 1, 1);
+  cairo_fill(cr);
+
+  cairo_set_source_rgb(cr, 0.0, 1.0, 0.0);
+  for (size_t i = 0; i < max_num_p_gr_from_go_to_gr; i++) {
+    if (conn_state->pGRfromGOtoGR[gr_id][i] != UINT_MAX) {
+      uint32_t dest_id = conn_state->pGRfromGOtoGR[gr_id][i];
+      cairo_rectangle(cr, (dest_id % go_x) * grid_scale_x,
+                      int(dest_id / go_x) * grid_scale_y, grid_scale_x,
+                      grid_scale_y);
+      cairo_fill(cr);
+    }
+  }
+}
+
+static void draw_mfgo(const InNetConnectivityState *conn_state, gint height,
+                      gint width, cairo_t *cr) {
+  float conn_matrix_to_pixel_scale_y = height / (float)mf_y;
+  float conn_matrix_to_pixel_scale_x = width / (float)mf_x;
+
+  float grid_scale_y = (float)go_y / mf_y;
+  float grid_scale_x = (float)go_x / mf_x;
+
+  cairo_translate(cr, 0, height);
+  cairo_scale(cr, conn_matrix_to_pixel_scale_x, -conn_matrix_to_pixel_scale_y);
+  // point color
+  cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
+
+  uint32_t mf_id =
+      uint32_t(mouse_coords.x / conn_matrix_to_pixel_scale_x) +
+      uint32_t((height - mouse_coords.y) / conn_matrix_to_pixel_scale_y) * mf_x;
+
+  cairo_set_source_rgb(cr, 0.0, 1.0, 0.0);
+  for (size_t i = 0; i < max_num_p_go_from_mf_to_go; i++) {
+    if (conn_state->pGOfromMFtoGO[mf_id][i] != UINT_MAX) {
+      uint32_t dest_id = conn_state->pGOfromMFtoGO[mf_id][i];
+      cairo_rectangle(cr, (dest_id % go_x) * grid_scale_x,
+                      int(dest_id / go_x) * grid_scale_y, grid_scale_x,
+                      grid_scale_y);
+      cairo_fill(cr);
+    }
+  }
+}
+
+static void draw_mfgr(const InNetConnectivityState *conn_state, gint height,
+                      gint width, cairo_t *cr) {
+  float conn_matrix_to_pixel_scale_y = height / (float)mf_y;
+  float conn_matrix_to_pixel_scale_x = width / (float)mf_x;
+
+  float grid_scale_y = (float)gr_y / mf_y;
+  float grid_scale_x = (float)gr_x / mf_x;
+
+  cairo_translate(cr, 0, height);
+  cairo_scale(cr, conn_matrix_to_pixel_scale_x, -conn_matrix_to_pixel_scale_y);
+  // point color
+  cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
+
+  uint32_t mf_id =
+      uint32_t(mouse_coords.x / conn_matrix_to_pixel_scale_x) +
+      uint32_t((height - mouse_coords.y) / conn_matrix_to_pixel_scale_y) * mf_x;
+
+  cairo_set_source_rgb(cr, 0.0, 1.0, 0.0);
+  for (size_t i = 0; i < max_num_p_mf_from_mf_to_gr; i++) {
+    if (conn_state->pMFfromMFtoGR[mf_id][i] != UINT_MAX) {
+      uint32_t dest_id = conn_state->pMFfromMFtoGR[mf_id][i];
+      cairo_rectangle(cr, (dest_id % gr_x) / grid_scale_x,
+                      int(dest_id / gr_x) / grid_scale_y, 1 / grid_scale_x,
+                      1 / grid_scale_y);
+      cairo_fill(cr);
+    }
+  }
+}
+
 static void draw_connectivity(GtkWidget *widget, cairo_t *cr,
                               Control *control) {
   if (mouse_coords.x > 0 && mouse_coords.y > 0) {
     const InNetConnectivityState *conn_state =
         control->simState->getInnetConStateInternal();
-    // basic case: go-go
     // background color setup
     cairo_set_source_rgb(cr, 0, 0, 0);
     cairo_paint(cr);
@@ -850,31 +1057,25 @@ static void draw_connectivity(GtkWidget *widget, cairo_t *cr,
 
     /* Determine GtkDrawingArea dimensions */
     gdk_window_get_geometry(window, &da.x, &da.y, &da.width, &da.height);
-
-    float conn_matrix_to_pixel_scale_y = da.height / (float)go_y;
-    float conn_matrix_to_pixel_scale_x = da.width / (float)go_x;
-
-    cairo_translate(cr, 0, da.height);
-    cairo_scale(cr, conn_matrix_to_pixel_scale_x,
-                -conn_matrix_to_pixel_scale_y);
-    // point color
-    cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
-
-    uint32_t go_id =
-        uint32_t(mouse_coords.x / conn_matrix_to_pixel_scale_x) +
-        uint32_t((da.height - mouse_coords.y) / conn_matrix_to_pixel_scale_y) *
-            go_x;
-
-    cairo_rectangle(cr, go_id % go_x, int(go_id / go_x), 1, 1);
-    cairo_fill(cr);
-
-    cairo_set_source_rgb(cr, 0.0, 1.0, 0.0);
-    for (size_t i = 0; i < num_con_go_to_go; i++) {
-      if (conn_state->pGOGABAOutGOGO[go_id][i] != INT_MAX) {
-        uint32_t dest_id = conn_state->pGOGABAOutGOGO[go_id][i];
-        cairo_rectangle(cr, dest_id % go_x, int(dest_id / go_x), 1, 1);
-        cairo_fill(cr);
-      }
+    switch (conn_win_state) {
+    case GRGO:
+      draw_grgo(conn_state, da.height, da.width, cr);
+      break;
+    case GOGO:
+      draw_gogo(conn_state, da.height, da.width, cr);
+      break;
+    case GOGOGJ:
+      draw_gogogj(conn_state, da.height, da.width, cr);
+      break;
+    case GOGR:
+      draw_gogr(conn_state, da.height, da.width, cr);
+      break;
+    case MFGO:
+      draw_mfgo(conn_state, da.height, da.width, cr);
+      break;
+    case MFGR:
+      draw_mfgr(conn_state, da.height, da.width, cr);
+      break;
     }
     mouse_coords.x = -1;
     mouse_coords.y = -1;
@@ -886,11 +1087,72 @@ static void draw_connectivity(GtkWidget *widget, cairo_t *cr,
 
 static void on_connectivity_window(GtkWidget *widget, Control *control) {
   GtkWidget *child_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+
   set_child_window_props(child_window, "Connectivity",
                          DEFAULT_CONNECTIVITY_WINDOW_WIDTH,
                          DEFAULT_CONNECTIVITY_WINDOW_HEIGHT, true);
 
-  generate_plot(child_window, draw_connectivity, control);
+  GtkWidget *conn_window_radio_label = gtk_label_new("Synapses");
+  struct button conn_window_radios[6] = {
+      {"gr -> go",
+       gtk_radio_button_new(NULL),
+       0,
+       0,
+       {"toggled", G_CALLBACK(on_connectivity_radio), NULL, false}},
+      {"go -> go",
+       gtk_radio_button_new(NULL),
+       0,
+       0,
+       {"toggled", G_CALLBACK(on_connectivity_radio), NULL, false}},
+      {"go -> go gj",
+       gtk_radio_button_new(NULL),
+       0,
+       0,
+       {"toggled", G_CALLBACK(on_connectivity_radio), NULL, false}},
+      {"go -> gr",
+       gtk_radio_button_new(NULL),
+       0,
+       0,
+       {"toggled", G_CALLBACK(on_connectivity_radio), NULL, false}},
+      {"mf -> go",
+       gtk_radio_button_new(NULL),
+       0,
+       0,
+       {"toggled", G_CALLBACK(on_connectivity_radio), NULL, false}},
+      {"mf -> gr",
+       gtk_radio_button_new(NULL),
+       0,
+       0,
+       {"toggled", G_CALLBACK(on_connectivity_radio), NULL, false}},
+  };
+
+  GtkWidget *v_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+  gtk_box_pack_start(GTK_BOX(v_box), conn_window_radio_label, FALSE, TRUE, 0);
+
+  GtkWidget *group;
+  FOREACH(conn_window_radios, r) {
+    if (strcmp(r->label, "go -> go") == 0) {
+      group = r->widget;
+      break;
+    }
+  }
+  FOREACH(conn_window_radios, r) {
+    gtk_button_set_label(GTK_BUTTON(r->widget), r->label);
+    gtk_widget_set_hexpand(r->widget, true);
+    gtk_widget_set_vexpand(r->widget, true);
+    if (strcmp(r->label, "go -> go") != 0) {
+      gtk_radio_button_join_group(GTK_RADIO_BUTTON(r->widget),
+                                  GTK_RADIO_BUTTON(group));
+    }
+    gtk_box_pack_start(GTK_BOX(v_box), r->widget, FALSE, TRUE, 0);
+    g_signal_connect(r->widget, r->signal.signal, r->signal.handler,
+                     r->signal.data);
+  }
+
+  GtkWidget *h_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+  gtk_container_add(GTK_CONTAINER(child_window), h_box);
+  gtk_box_pack_start(GTK_BOX(h_box), v_box, FALSE, TRUE, 0);
+  generate_plot(child_window, draw_connectivity, control, h_box);
   gtk_widget_show_all(child_window);
 }
 
@@ -1019,9 +1281,6 @@ static void set_gui_radio_button_attribs(struct gui *gui) {
     radio_mask++;
   }
 }
-
-static void
-set_gui_menu_item_helper(struct menu_item *menu_item); /* forward declare */
 
 static void set_gui_menu_helper(struct menu *menu) {
   FOREACH_NELEM(menu->menu_items, menu->num_menu_items, mi) {
@@ -1432,14 +1691,14 @@ int gui_init_and_run(int *argc, char ***argv, Control *control) {
   //								 GTK_MESSAGE_INFO,
   //								 GTK_BUTTONS_NONE,
   //								 "CbmSim - A
-  //Cerebellar
-  // Simulator\n\n" 								 "Welcome to the Cerebellar
-  // Simulator! The goal of this software is to\n"
-  // "simulate dynamics of the micro-circuitry within the cerebellar cortex.\n"
-  // "See the \"help\" menu to get started and for further information on the\n"
-  // "various features included in this program. Also, see the \"about\" menu\n"
-  // "for more information about the history of this project's development");
-  // GtkWidget *msg_area =
+  // Cerebellar
+  // Simulator\n\n" 								 "Welcome to the
+  // Cerebellar Simulator! The goal of this software is to\n" "simulate dynamics
+  // of the micro-circuitry within the cerebellar cortex.\n" "See the \"help\"
+  // menu to get started and for further information on the\n" "various features
+  // included in this program. Also, see the \"about\" menu\n" "for more
+  // information about the history of this project's development"); GtkWidget
+  // *msg_area =
   // gtk_message_dialog_get_message_area(GTK_MESSAGE_DIALOG(dialog)); GtkWidget
   // *check_btn_label = gtk_label_new("hello world"); GtkWidget
   // *dialog_check_btn = gtk_check_button_new_with_label("Don't show me this

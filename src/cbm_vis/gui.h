@@ -70,6 +70,8 @@
 #define DEFAULT_SC_PSTH_FILE_NAME "sc_psth.bin"
 #define DEFAULT_MF_PSTH_FILE_NAME "mf_psth.bin"
 
+enum conn_win_opts { GRGO, GOGO, GOGOGJ, GOGR, MFGO, MFGR };
+
 typedef struct {
   Control *ctrl_ptr;
   enum save_opts opt;
