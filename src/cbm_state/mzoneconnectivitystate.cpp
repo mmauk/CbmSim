@@ -141,6 +141,7 @@ void MZoneConnectivityState::allocateMemory() {
   pCompartfromCompartToPC = new uint32_t[num_compart]();
   pPCfromCompartToPC =
       allocate2DArray<uint32_t>(num_pc, max_num_p_pc_from_compart_to_pc);
+  numpPCfromCompartToPC = new uint32_t[num_pc]();
 
   // purkinje cells
   pPCfromBCtoPC = allocate2DArray<uint32_t>(num_pc, num_p_pc_from_bc_to_pc);
@@ -219,6 +220,7 @@ void MZoneConnectivityState::deallocMemory() {
   delete2DArray<uint32_t>(pCompartfromSCtoCompart);
   delete[] pCompartfromCompartToPC;
   delete2DArray<uint32_t>(pPCfromCompartToPC);
+  delete[] numpPCfromCompartToPC;
 
   // purkinje cells
   delete2DArray<uint32_t>(pPCfromBCtoPC);
@@ -262,6 +264,8 @@ void MZoneConnectivityState::stateRW(bool read, std::fstream &file) {
 
   rawBytesRW((char *)pPCfromCompartToPC[0],
              num_pc * max_num_p_pc_from_compart_to_pc * sizeof(uint32_t), read,
+             file);
+  rawBytesRW((char *)numpPCfromCompartToPC, num_pc * sizeof(uint32_t), read,
              file);
 
   // purkinje cells
@@ -397,6 +401,7 @@ void MZoneConnectivityState::connectCompartToPC() {
         compartAssigned[compart_id] = true;
       }
     }
+    numpPCfromCompartToPC[pc_id] = num_to_assign;
     total += num_to_assign;
     pc_id++;
   }

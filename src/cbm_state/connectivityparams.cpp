@@ -210,6 +210,11 @@ float threshRestGR = -40.0;
 // mzone
 float eLeakSC = -60.0;
 float threshRestSC = -50.0;
+
+// NEW
+float eLeakCompart = -60.0;
+float compartThresh = -40.0;
+
 float eLeakBC = -70.0;
 float threshRestBC = -65.0;
 float eLeakPC = -60.0;

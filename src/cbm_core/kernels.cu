@@ -470,14 +470,18 @@ __global__ void updatePFPCSTPKernel(uint32_t use_cs, uint32_t use_us, float grEl
 }
 
 __global__ void updatePFPCGradedSynWeightKernel(float *synWPFPC, float *stpPFPC,
-      uint64_t *historyGR, uint64_t plastCheckMask, unsigned int offset,
-      float plastStep) {
+      uint64_t *historyGR, uint8_t *compartMaskGPU, uint64_t plastCheckMask,
+      unsigned int offset, float plastStep) {
   int i = blockIdx.x * blockDim.x + threadIdx.x + offset;
+  float tempSynW = synWPFPC[i];
   synWPFPC[i] = synWPFPC[i] + ((historyGR[i] & plastCheckMask) > 0) * plastStep;
 
   synWPFPC[i] += stpPFPC[i]; // -> this may not be what we want
   synWPFPC[i] = (synWPFPC[i] > 0) * synWPFPC[i];
   synWPFPC[i] = (synWPFPC[i] > 1) + (synWPFPC[i] <= 1) * synWPFPC[i];
+  // keep change if compartment reaches thresh, else revert to original value
+  // (see MZone::UpdateCompartPCOut for implementation)
+  synWPFPC[i] = compartMaskGPU[i] * synWPFPC[i] + (1-compartMaskGPU[i]) * tempSynW;
 }
 
 template <typename randState>
@@ -1053,11 +1057,12 @@ void callPFPCSTPKernel(cudaStream_t &st, uint32_t numBlocks, uint32_t numGRPerBl
 void callPFPCGradedPlastKernel(cudaStream_t &st, unsigned int numBlocks,
                                unsigned int numGRPerBlock, float *synWeightGPU,
                                float *stpPFPCGPU, uint64_t *historyGPU,
+                               uint8_t *compartMaskGPU,
                                unsigned int pastBinNToCheck, int offSet,
                                float pfPCPlastStep) {
   uint64_t mask = ((uint64_t)1) << (pastBinNToCheck - 1);
   updatePFPCGradedSynWeightKernel<<<numBlocks, numGRPerBlock, 0, st>>>(
-      synWeightGPU, stpPFPCGPU, historyGPU, mask, offSet, pfPCPlastStep);
+      synWeightGPU, stpPFPCGPU, historyGPU, compartMaskGPU, mask, offSet, pfPCPlastStep);
 }
 
 template <typename randState>

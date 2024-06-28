@@ -52,6 +52,10 @@ public:
   std::unique_ptr<float[]> threshSC{nullptr};
   std::unique_ptr<float[]> vSC{nullptr};
 
+  // compartments
+  std::unique_ptr<float[]> gSCCompart{nullptr};
+  std::unique_ptr<float[]> vCompart{nullptr};
+
   // basket cells
   std::unique_ptr<uint8_t[]> apBC{nullptr};
   std::unique_ptr<uint32_t[]> apBufBC{nullptr};
@@ -69,7 +73,9 @@ public:
   std::unique_ptr<uint8_t[]> apPC{nullptr};
   std::unique_ptr<uint32_t[]> apBufPC{nullptr};
   std::unique_ptr<uint32_t[]> inputBCPC{nullptr};
-  std::unique_ptr<uint32_t[]> inputSCPC{nullptr};
+  // std::unique_ptr<uint32_t[]> inputSCPC{nullptr};
+  std::unique_ptr<uint32_t[]> inputSCCompart{nullptr};
+
   std::unique_ptr<float[]> pfSynWeightPC{nullptr};
   std::unique_ptr<uint8_t[]> pfPCSynWeightStates{nullptr};
   std::unique_ptr<float[]> inputSumPFPC{nullptr};

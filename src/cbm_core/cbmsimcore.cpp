@@ -169,22 +169,6 @@ void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast,
   // run dynamic spillover input go -> gr
   inputNet->runUpdateGOInGRDynamicSpillCUDA(streams, 4);
 
-  // perform pf -> pc plasticity
-  for (int i = 0; i < numZones; i++) {
-    if (stp_on) {
-      zones[i]->runPFPCSTPCUDA(streams, 0, use_cs, use_us);
-    }
-    if (pf_pc_plast == GRADED) {
-      zones[i]->runPFPCGradedPlastCUDA(streams, 1, curTime);
-    } else if (pf_pc_plast == BINARY) {
-      zones[i]->runPFPCBinaryPlastCUDA(streams, 1, curTime);
-    } else if (pf_pc_plast == ABBOTT_CASCADE) {
-      zones[i]->runPFPCAbbottCascadePlastCUDA(streams, 1, curTime);
-    } else if (pf_pc_plast == MAUK_CASCADE) {
-      zones[i]->runPFPCMaukCascadePlastCUDA(streams, 1, curTime);
-    }
-  }
-
   /* mzone (stripe) computation */
   for (int i = 0; i < numZones; i++) {
     // update pf output on the device
@@ -213,7 +197,27 @@ void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast,
     // update spike outputs from bc -> pc
     zones[i]->updateBCPCOut();
     // update spike outputs from sc -> pc
-    zones[i]->updateSCPCOut();
+    // zones[i]->updateSCPCOut();
+    zones[i]->updateSCCompartOut();
+    zones[i]->calcCompartMembraneV();
+    zones[i]->UpdateCompartPCOut();
+    zones[i]->cpyCompartMaskCUDA(streams, i + 2);
+
+    // perform pf -> pc plasticity
+    // Note order: I cpy mask to device first so that compart info
+    // propagates to plasticity before pc act computation
+    if (stp_on) {
+      zones[i]->runPFPCSTPCUDA(streams, 0, use_cs, use_us);
+    }
+    if (pf_pc_plast == GRADED) {
+      zones[i]->runPFPCGradedPlastCUDA(streams, 1, curTime);
+    } else if (pf_pc_plast == BINARY) {
+      zones[i]->runPFPCBinaryPlastCUDA(streams, 1, curTime);
+    } else if (pf_pc_plast == ABBOTT_CASCADE) {
+      zones[i]->runPFPCAbbottCascadePlastCUDA(streams, 1, curTime);
+    } else if (pf_pc_plast == MAUK_CASCADE) {
+      zones[i]->runPFPCMaukCascadePlastCUDA(streams, 1, curTime);
+    }
 
     // compute pc spiking activity (host)
     zones[i]->calcPCActivities();

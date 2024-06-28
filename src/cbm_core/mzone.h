@@ -43,7 +43,12 @@ public:
 
   void updatePCOut();
   void updateBCPCOut();
-  void updateSCPCOut();
+  // void updateSCPCOut();
+  void updateSCCompartOut();
+  void calcCompartMembraneV();
+  void UpdateCompartPCOut();
+  void cpyCompartMaskCUDA(cudaStream_t **sts, int streamN);
+
   void updateIOOut();
   void updateNCOut();
   void updateMFNCOut();
@@ -141,6 +146,16 @@ private:
   // end gpu related variables
   // end stellate cell variables
 
+  // compart variables
+  // host variables
+  uint8_t *compartMaskHost;
+  // end host variables
+  // gpu related variables
+  uint8_t **compartMaskGPU;
+
+  // end gpu related variables
+  // end compart variables
+
   // basket cell variables
   // host variables
   uint32_t *inputSumPFBCH;
@@ -176,6 +191,7 @@ private:
   void initCUDA(cudaStream_t **stream);
   void initBCCUDA();
   void initSCCUDA();
+  void initCompartCUDA();
   void testReduction();
 };
 

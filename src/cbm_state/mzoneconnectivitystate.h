@@ -77,6 +77,7 @@ public:
   uint32_t **pCompartfromSCtoCompart;
   uint32_t *pCompartfromCompartToPC;
   uint32_t **pPCfromCompartToPC;
+  uint32_t *numpPCfromCompartToPC;
 
   // purkinje cells
   uint32_t **pPCfromBCtoPC;

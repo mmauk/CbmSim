@@ -52,6 +52,10 @@ void MZoneActivityState::allocateMemory() {
   threshSC = std::make_unique<float[]>(num_sc);
   vSC = std::make_unique<float[]>(num_sc);
 
+  // compartments
+  gSCCompart = std::make_unique<float[]>(num_compart);
+  vCompart = std::make_unique<float[]>(num_compart);
+
   // basket cells
   apBC = std::make_unique<uint8_t[]>(num_bc);
   apBufBC = std::make_unique<uint32_t[]>(num_bc);
@@ -69,7 +73,9 @@ void MZoneActivityState::allocateMemory() {
   apPC = std::make_unique<uint8_t[]>(num_pc);
   apBufPC = std::make_unique<uint32_t[]>(num_pc);
   inputBCPC = std::make_unique<uint32_t[]>(num_pc);
-  inputSCPC = std::make_unique<uint32_t[]>(num_pc);
+  // inputSCPC = std::make_unique<uint32_t[]>(num_pc);
+  inputSCCompart = std::make_unique<uint32_t[]>(num_compart);
+
   pfSynWeightPC = std::make_unique<float[]>(num_gr);
   pfPCSynWeightStates = std::make_unique<uint8_t[]>(num_gr);
   inputSumPFPC = std::make_unique<float[]>(num_pc);
@@ -110,6 +116,9 @@ void MZoneActivityState::initializeVals(int randSeed) {
   // sc
   std::fill(vSC.get(), vSC.get() + num_sc, eLeakSC);
   std::fill(threshSC.get(), threshSC.get() + num_sc, threshRestSC);
+
+  // compartments
+  std::fill(vCompart.get(), vCompart.get() + num_compart, eLeakCompart);
 
   // bc
   std::fill(vBC.get(), vBC.get() + num_bc, eLeakBC);
@@ -192,6 +201,10 @@ void MZoneActivityState::stateRW(bool read, std::fstream &file) {
   rawBytesRW((char *)threshSC.get(), num_sc * sizeof(float), read, file);
   rawBytesRW((char *)vSC.get(), num_sc * sizeof(float), read, file);
 
+  // compartments
+  rawBytesRW((char *)vCompart.get(), num_compart * sizeof(float), read, file);
+  rawBytesRW((char *)gSCCompart.get(), num_compart * sizeof(float), read, file);
+
   // basket cells
   rawBytesRW((char *)apBC.get(), num_bc * sizeof(uint8_t), read, file);
   rawBytesRW((char *)apBufBC.get(), num_bc * sizeof(uint32_t), read, file);
@@ -205,7 +218,9 @@ void MZoneActivityState::stateRW(bool read, std::fstream &file) {
   rawBytesRW((char *)apPC.get(), num_pc * sizeof(uint8_t), read, file);
   rawBytesRW((char *)apBufPC.get(), num_pc * sizeof(uint32_t), read, file);
   rawBytesRW((char *)inputBCPC.get(), num_pc * sizeof(uint32_t), read, file);
-  rawBytesRW((char *)inputSCPC.get(), num_pc * sizeof(uint32_t), read, file);
+  // rawBytesRW((char *)inputSCPC.get(), num_pc * sizeof(uint32_t), read, file);
+  rawBytesRW((char *)inputSCCompart.get(), num_compart * sizeof(uint32_t), read,
+             file);
   rawBytesRW((char *)pfSynWeightPC.get(), num_gr * sizeof(float), read, file);
   rawBytesRW((char *)pfPCSynWeightStates.get(), num_gr * sizeof(uint8_t), read,
              file);

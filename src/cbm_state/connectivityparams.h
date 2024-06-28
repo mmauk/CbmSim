@@ -137,6 +137,11 @@ extern float threshRestGR;
 
 extern float eLeakSC;
 extern float threshRestSC;
+
+// NEW
+extern float eLeakCompart;
+extern float compartThresh;
+
 extern float eLeakBC;
 extern float threshRestBC;
 extern float eLeakPC;

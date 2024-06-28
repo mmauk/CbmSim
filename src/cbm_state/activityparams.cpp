@@ -68,9 +68,17 @@ float gIncAvgPCtoNC = 0.1;
 float gDecTauGRtoBC = 2.0;
 float gDecTauGRtoPC = 4.15;
 float gDecTauGRtoSC = 2.0;
+
+// NEW
+float gDecTauSCtoCompart = 3.0;
+
 float gIncGRtoPC = 0.55e-05;
 float gDecTauSCtoPC = 4.15;
 float gIncSCtoPC = 0.0001;
+
+// NEW
+float gIncSCtoCompart = 0.1;
+
 float gluDecayGO = 0.98;
 float gluScaleGO = 0.0;
 float goGABAGOGOSynDepF = 1.0;
@@ -133,6 +141,10 @@ float rawGLeakIO = 0.15;
 float rawGLeakNC = 0.1;
 float rawGLeakPC = 0.2;
 float rawGLeakSC = 0.2;
+
+// NEW
+float rawGLeakCompart = 0.2;
+
 float rawGMFAMPAIncNC = 2.35; // 3.0
 float rawGMFNMDAIncNC = 2.35; // 3.0
 float threshDecTauBC = 10.0;
@@ -173,15 +185,24 @@ float threshDecGR = 1 - exp(-msPerTimeStep / threshDecTauGR);
 float tsPerHistBinGR = msPerHistBinGR / msPerTimeStep;
 float gLeakSC = rawGLeakSC / (6 - msPerTimeStep);
 float gDecGRtoSC = exp(-msPerTimeStep / gDecTauGRtoSC);
+
+// NEW
+float gDecSCtoCompart = exp(-msPerTimeStep / gDecTauSCtoCompart);
+
 float threshDecSC = 1 - exp(-msPerTimeStep / threshDecTauSC);
 float gDecGRtoBC = exp(-msPerTimeStep / gDecTauGRtoBC);
 float gDecPCtoBC = exp(-msPerTimeStep / gDecTauPCtoBC);
 float threshDecBC = 1 - exp(-msPerTimeStep / threshDecTauBC);
 float threshDecPC = 1 - exp(-msPerTimeStep / threshDecTauPC);
+
+// NEW
+float gLeakCompart = rawGLeakCompart / (6 - msPerTimeStep);
+
 float gLeakPC = rawGLeakPC / (6 - msPerTimeStep);
 float gDecGRtoPC = exp(-msPerTimeStep / gDecTauGRtoPC);
 float gDecBCtoPC = exp(-msPerTimeStep / gDecTauBCtoPC);
 float gDecSCtoPC = exp(-msPerTimeStep / gDecTauSCtoPC);
+
 float tsPopHistPC = 40 / msPerTimeStep;
 float tsPerPopHistBinPC = 5 / msPerTimeStep;
 // numPopHistBinsPC    =  8.0; tsPopHistPC / tsPerPopHistBinPC
