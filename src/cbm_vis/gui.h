@@ -17,7 +17,7 @@
 #define NUM_FILE_MENU_ITEMS 5
 #define NUM_WEIGHTS_MENU_ITEMS 4
 #define NUM_RASTER_MENU_ITEMS 8
-#define NUM_ANALYSIS_MENU_ITEMS 1
+#define NUM_ANALYSIS_MENU_ITEMS 2 // 1
 #define NUM_TUNING_MENU_ITEMS 1
 #define NUM_FILE_SUB_MENU_ITEMS 2
 
@@ -27,6 +27,8 @@
 #define NUM_FIRING_RATE_DATA_COLS 5
 #define DEFAULT_FIRING_RATE_WINDOW_WIDTH 600
 #define DEFAULT_FIRING_RATE_WINDOW_HEIGHT 160
+#define DEFAULT_CONNECTIVITY_WINDOW_WIDTH 1000
+#define DEFAULT_CONNECTIVITY_WINDOW_HEIGHT 250
 
 /* tuning window constants */
 #define NUM_TUNING_BUTTONS 14
@@ -67,6 +69,8 @@
 #define DEFAULT_BC_PSTH_FILE_NAME "bc_psth.bin"
 #define DEFAULT_SC_PSTH_FILE_NAME "sc_psth.bin"
 #define DEFAULT_MF_PSTH_FILE_NAME "mf_psth.bin"
+
+enum conn_win_opts { GRGO, GOGO, GOGOGJ, GOGR, MFGO, MFGR };
 
 typedef struct {
   Control *ctrl_ptr;
