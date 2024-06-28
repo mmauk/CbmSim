@@ -31,6 +31,7 @@ int num_ubc = 1024;
 // mzone numbers
 int num_bc = 128;
 int num_sc = 512;
+int num_compart = 4096;
 int num_pc = 32;
 int num_nc = 8;
 int num_io = 4;
@@ -154,6 +155,14 @@ int num_p_bc_from_pc_to_bc = 4;
 // sc -> pc
 int num_p_sc_from_sc_to_pc = 1;
 int num_p_pc_from_sc_to_pc = 16;
+
+// sc -> compart
+int num_p_sc_from_sc_to_compart = 256;
+int num_p_compart_from_sc_to_compart = 32;
+
+// compart -> pc
+int min_num_p_pc_from_compart_to_pc = 100;
+int max_num_p_pc_from_compart_to_pc = 200;
 
 // gr -> sc
 int num_p_sc_from_gr_to_sc = 2048;

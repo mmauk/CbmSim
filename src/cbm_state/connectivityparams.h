@@ -28,6 +28,7 @@ extern int ubc_y;
 extern int num_ubc;
 extern int num_bc;
 extern int num_sc;
+extern int num_compart;
 extern int num_pc;
 extern int num_nc;
 extern int num_io;
@@ -98,6 +99,12 @@ extern int num_p_pc_from_pc_to_bc;
 extern int num_p_bc_from_pc_to_bc;
 extern int num_p_sc_from_sc_to_pc;
 extern int num_p_pc_from_sc_to_pc;
+
+extern int num_p_sc_from_sc_to_compart;
+extern int num_p_compart_from_sc_to_compart;
+extern int min_num_p_pc_from_compart_to_pc;
+extern int max_num_p_pc_from_compart_to_pc;
+
 extern int num_p_sc_from_gr_to_sc;
 extern int num_p_sc_from_gr_to_sc_p2;
 extern int num_p_pc_from_pc_to_nc;

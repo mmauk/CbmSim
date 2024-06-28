@@ -633,18 +633,18 @@ void MZone::updateBCPCOut() {
 }
 
 void MZone::updateSCPCOut() {
-  for (int i = 0; i < num_pc; i++)
-    as->inputSCPC[i] = 0;
+  // for (int i = 0; i < num_pc; i++)
+  //   as->inputSCPC[i] = 0;
 
-  for (int i = 0; i < num_sc; i++) {
-    // if this sp spiked, update post syn inputs
-    if (as->apSC[i]) {
-      for (int j = 0; j < num_p_sc_from_sc_to_pc; j++) {
-        // update sc -> pc inputs using pre-synaptic con array
-        as->inputSCPC[cs->pSCfromSCtoPC[i][j]]++;
-      }
-    }
-  }
+  // for (int i = 0; i < num_sc; i++) {
+  //   // if this sp spiked, update post syn inputs
+  //   if (as->apSC[i]) {
+  //     for (int j = 0; j < num_p_sc_from_sc_to_pc; j++) {
+  //       // update sc -> pc inputs using pre-synaptic con array
+  //       as->inputSCPC[cs->pSCfromSCtoPC[i][j]]++;
+  //     }
+  //   }
+  // }
 }
 
 void MZone::updateIOOut() {
