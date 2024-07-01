@@ -877,8 +877,7 @@ void Control::runSession(struct gui *gui) {
         // }
         fill_psths_no_io(PSTHCounter);
         PSTHCounter++;
-      }
-
+      
       if (use_gui) {
         update_spike_sums(ts, onsetCS, onsetCS + csLength);
         // Update gui main loop if any events are pending.
