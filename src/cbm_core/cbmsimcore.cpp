@@ -114,133 +114,18 @@ void CBMSimCore::syncCUDA(std::string title) {
 
 void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast,
                               enum plasticity mf_nc_plast, uint32_t use_cs,
-                              uint32_t use_us, bool stp_on) {
+                              uint32_t use_us, bool stp_on, bool inCS) {
   syncCUDA("1");
 
-  curTime++;
-
-  // cp mf spike activity to gpu
-  inputNet->cpyAPMFHosttoGPUCUDA(streams, 6);
-  // update mf -> gr synaptic variables
-  inputNet->updateMFtoGROut();
-  // cpy mf -> gr depression amplitude to gpu
-  inputNet->cpyDepAmpMFHosttoGPUCUDA(streams, 5);
-
-  // update gr inputs from mf
-  inputNet->runUpdateMFInGRDepressionCUDA(streams, 2);
-  inputNet->runUpdateMFInGRCUDA(streams, 0);
-
-  // the gr spiking activity kernel
-  inputNet->runGRActivitiesCUDA(streams, 0);
-
-  // update gr spike history array
-  inputNet->runUpdateGRHistoryCUDA(streams, 4, curTime);
-
-  // update the output variables for gr -> go synapse
-  inputNet->runUpdateGROutGOCUDA(streams, 7);
-  // sum over go inputs from gr
-  inputNet->runSumGRGOOutCUDA(streams, 4);
-  // cpy resulting sums from device to host
-  inputNet->cpyGRGOSumGPUtoHostCUDA(streams, 3);
 
   // update mf output to go for mf -> go synapse
   inputNet->updateMFtoGOOut();
   // golgi spiking activity function (on host)
-  inputNet->calcGOActivities();
+  inputNet->calcGOActivities(inCS);
 
   // update go <-> go output params
   inputNet->updateGOtoGOOut();
-  // update go -> gr output params
-  inputNet->updateGOtoGROutParameters(spillFrac);
-
-  // copy depression amplitude from go -> gr from host to device
-  inputNet->cpyDepAmpGOGRHosttoGPUCUDA(
-      streams, 2); // NOTE: currently does nothing (08/11/2022)
-  // copy dynamic amplitude from host to device
-  inputNet->cpyDynamicAmpGOGRHosttoGPUCUDA(streams, 3);
-  // copy go spikes to device
-  inputNet->cpyAPGOHosttoGPUCUDA(streams, 7);
-
-  // syncCUDA("2");
-  // run update input function go -> gr synapse
-  inputNet->runUpdateGOInGRCUDA(streams, 1);
-  // run update input for depression amplitude go -> gr
-  inputNet->runUpdateGOInGRDepressionCUDA(streams, 3);
-  // run dynamic spillover input go -> gr
-  inputNet->runUpdateGOInGRDynamicSpillCUDA(streams, 4);
-
-  // perform pf -> pc plasticity
-  for (int i = 0; i < numZones; i++) {
-    if (stp_on) {
-      zones[i]->runPFPCSTPCUDA(streams, 0, use_cs, use_us);
-    }
-    if (pf_pc_plast == GRADED) {
-      zones[i]->runPFPCGradedPlastCUDA(streams, 1, curTime);
-    } else if (pf_pc_plast == BINARY) {
-      zones[i]->runPFPCBinaryPlastCUDA(streams, 1, curTime);
-    } else if (pf_pc_plast == ABBOTT_CASCADE) {
-      zones[i]->runPFPCAbbottCascadePlastCUDA(streams, 1, curTime);
-    } else if (pf_pc_plast == MAUK_CASCADE) {
-      zones[i]->runPFPCMaukCascadePlastCUDA(streams, 1, curTime);
-    }
-  }
-
-  /* mzone (stripe) computation */
-  for (int i = 0; i < numZones; i++) {
-    // update pf output on the device
-    zones[i]->runPFPCOutCUDA(streams, i + 2);
-    // update pfpc sums on device
-    zones[i]->runPFPCSumCUDA(streams, 1);
-    // copy pfpc sums to host
-    zones[i]->cpyPFPCSumCUDA(streams, i + 2);
-
-    // update input from pf to bc and sc
-    zones[i]->runUpdatePFBCSCOutCUDA(
-        streams, i + 4); // adding i might break things in future
-    // run sum over bc input from pc on gpu
-    zones[i]->runSumPFBCCUDA(streams, 2);
-    // run sum over sc input from pc on gpu
-    zones[i]->runSumPFSCCUDA(streams, 3);
-    // cpy pf -> bc input sum to host
-    zones[i]->cpyPFBCSumGPUtoHostCUDA(streams, 5);
-    // cpy pf -> sc input sum to host
-    zones[i]->cpyPFSCSumGPUtoHostCUDA(streams, 3);
-
-    // calculate sc spiking activity (host)
-    zones[i]->calcSCActivities();
-    // calculate bc spiking activity (host)
-    zones[i]->calcBCActivities();
-    // update spike outputs from bc -> pc
-    zones[i]->updateBCPCOut();
-    // update spike outputs from sc -> pc
-    zones[i]->updateSCPCOut();
-
-    // compute pc spiking activity (host)
-    zones[i]->calcPCActivities();
-    // update pc output vars
-    zones[i]->updatePCOut();
-
-    // compute io activities (host)
-    zones[i]->calcIOActivities();
-    // update io output variables
-    zones[i]->updateIOOut();
-
-    // temp solution: by default mfnc plast is GRADED. no other
-    // plasticity modes are given for these synapses
-    if (mf_nc_plast != OFF) {
-      zones[i]->updateMFNCSyn(inputNet->exportHistMF(), curTime);
-    }
-
-    // update mf -> nc output vars
-    zones[i]->updateMFNCOut();
-    // compute nc spiking activity
-    zones[i]->calcNCActivities();
-    // update nc output vars
-    zones[i]->updateNCOut();
-  }
-
-  // reset mf histories, given the current time
-  inputNet->resetMFHist(curTime);
+  curTime++;
 }
 
 void CBMSimCore::updateMFInput(const uint8_t *mfIn) {

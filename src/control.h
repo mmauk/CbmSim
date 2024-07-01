@@ -216,7 +216,7 @@ public:
   struct cell_firing_rates firing_rates[NUM_CELL_TYPES];
 
   /* extra conductance pointers obtained from innet and mzone */
-  const float *grgoG, *mfgoG, *gogrG, *mfgrG;
+  const float *grgoG, *grgonmdaG, *mfgoG, *gogrG, *mfgrG;
   /* mossy fiber and golgi spike pointers for test data collection */
   const uint8_t *mfAP, *goSpks;
 

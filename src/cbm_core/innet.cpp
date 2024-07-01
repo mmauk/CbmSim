@@ -201,6 +201,8 @@ InNet::~InNet() {
   delete[] depAmpGOGPU;
   delete[] dynamicAmpGOH;
   delete[] dynamicAmpGOGPU;
+  delete[] biasGOBkgdH;
+  delete[] biasGOCSH;
 
   delete[] counter;
 
@@ -332,6 +334,10 @@ const float *InNet::exportgSum_MFGO() {
 
 const float *InNet::exportgSum_GRGO() { return (const float *)as->gGRGO.get(); }
 
+const float *InNet::exportgSum_GRGONMDA() {
+  return (const float *)as->gGRGO_NMDA.get();
+}
+
 void InNet::updateMFActivties(const uint8_t *actInMF) {
   for (int i = 0; i < num_mf; i++) {
     as->histMF[i] = as->histMF[i] || actInMF[i];
@@ -342,22 +348,13 @@ void InNet::updateMFActivties(const uint8_t *actInMF) {
   }
 }
 
-void InNet::calcGOActivities() {
+void InNet::calcGOActivities(bool inCS) {
+  float *bias = (inCS) ? biasGOCSH : biasGOBkgdH;
 #pragma omp parallel for // an attempt at parallelization using openmp haha
   for (int i = 0; i < num_go; i++) {
-    // gather gr -> go input sums copied from all devices into one host array
-    sumGRInputGO[i] = 0;
-    for (int j = 0; j < numGPUs; j++) {
-      sumGRInputGO[i] += grInputGOSumH[j][i];
-    }
     // temp var as faster to access local memory than dereference array over and
     // over (or so I hear)
     float tempVGO = as->vGO[i];
-
-    // NMDA Low (voltage-dep step size for nmda conductance update gr -> go)
-    float gNMDAIncGRGO = (0.00000082263 * tempVGO * tempVGO * tempVGO) +
-                         (0.00021653 * tempVGO * tempVGO) + (0.0195 * tempVGO) +
-                         0.6117;
 
     // NMDA High (voltage-dep step size for nmda conductance update mf -> go)
     as->gNMDAIncMFGO[i] = (0.00000011969 * tempVGO * tempVGO * tempVGO) +
@@ -376,25 +373,14 @@ void InNet::calcGOActivities() {
         as->inputMFGO[i] * (mfgoW * NMDA_AMPAratioMFGO * as->gNMDAIncMFGO[i]) +
         as->gNMDAMFGO[i] * gDecayMFtoGONMDA;
 
-    // update gr -> go input conductance. (notice the weight grgoW)
-    as->gGRGO[i] = (sumGRInputGO[i] * grgoW * as->synWscalerGRtoGO[i]) +
-                   as->gGRGO[i] * gDecGRtoGO;
-    // update gr -> go nmda conductance. (also notice the grgoW and syn scale
-    // value) value of 0.6 appears to be a fudge-factor
-    as->gGRGO_NMDA[i] = sumGRInputGO[i] * ((grgoW * as->synWscalerGRtoGO[i]) *
-                                           0.6 * gNMDAIncGRGO) +
-                        as->gGRGO_NMDA[i] * gDecayMFtoGONMDA;
-
     // update voltage threshold variable
     as->threshCurGO[i] += (threshRestGO - as->threshCurGO[i]) * threshDecGO;
 
     // use all updated conductances to update the voltage
-    tempVGO += (gLeakGO * (eLeakGO - tempVGO)) +
-               (as->gSum_GOGO[i] * (eGABAGO - tempVGO)) -
-               (as->gSum_MFGO[i] + as->gGRGO[i] + as->gNMDAMFGO[i] +
-                as->gGRGO_NMDA[i]) *
-                   tempVGO -
-               (as->vCoupleGO[i] * tempVGO);
+    tempVGO +=
+        gLeakGO * (eLeakGO - tempVGO) + as->gSum_GOGO[i] * (eGABAGO - tempVGO) -
+        (as->gSum_MFGO[i] + as->gNMDAMFGO[i] + bias[i] + as->vCoupleGO[i]) *
+            tempVGO;
 
     // set voltage to threshold if supersedes it
     if (tempVGO > threshMaxGO)
@@ -1069,10 +1055,25 @@ void InNet::initGOCUDA() {
   depAmpGOGPU = new float *[numGPUs];
   dynamicAmpGOH = new float *[numGPUs];
   dynamicAmpGOGPU = new float *[numGPUs];
+  biasGOBkgdH = new float[num_go];
+  biasGOCSH = new float[num_go];
 
   LOG_DEBUG("Allocating GO cuda variables...");
   counter = new int[num_go];
   memset(counter, 0, num_go * sizeof(int));
+
+  CRandomSFMT0 biasRand(time(0));
+  // NOTE: these bias lvl values are based off old
+  // mf generator. You'll have to collect these from
+  // the new mf generator sim :-)
+  float noise_lvl = 0.05 * 0.004809;
+  // empirically determined values from sim w/ intact grs
+  for (size_t i = 0; i < num_go; i++) {
+    biasGOBkgdH[i] = 0.004809 + 2.0 * (biasRand.Random() - 0.5) * noise_lvl;
+  }
+  for (size_t i = 0; i < num_go; i++) {
+    biasGOCSH[i] = 0.045054 + 2.0 * (biasRand.Random() - 0.5) * noise_lvl;
+  }
 
   // allocate host and device memory
   for (int i = 0; i < numGPUs; i++) {
