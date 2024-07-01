@@ -140,6 +140,7 @@ void callPFPCSTPKernel(cudaStream_t &st, uint32_t numBlocks,
 void callPFPCGradedPlastKernel(cudaStream_t &st, unsigned int numBlocks,
                                unsigned int numGRPerBlock, float *synWeightGPU,
                                float *stpPFPCGPU, uint64_t *historyGPU,
+                               uint8_t *compartMaskGPU,
                                unsigned int pastBinNToCheck, int offSet,
                                float pfPCPlastStep);
 

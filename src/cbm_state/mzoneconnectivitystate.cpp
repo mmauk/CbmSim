@@ -27,8 +27,12 @@ MZoneConnectivityState::MZoneConnectivityState(int randSeed) {
   connectBCtoPC();
   LOG_DEBUG("Connecting PC to BC");
   connectPCtoBC();
-  LOG_DEBUG("Connecting SC and PC");
-  connectSCtoPC();
+
+  LOG_DEBUG("Connecting SC to Compartment");
+  connectSCtoCompart();
+  LOG_DEBUG("Connecting Compartment to PC");
+  connectCompartToPC();
+
   LOG_DEBUG("Connecting PC and NC");
   connectPCtoNC(randSeed);
   LOG_DEBUG("Connecting NC and IO");
@@ -67,11 +71,6 @@ void MZoneConnectivityState::pPCfromBCtoPCRW(std::fstream &file, bool read) {
              num_pc * num_p_pc_from_bc_to_pc * sizeof(uint32_t), read, file);
 }
 
-void MZoneConnectivityState::pPCfromSCtoPCRW(std::fstream &file, bool read) {
-  rawBytesRW((char *)pPCfromSCtoPC[0],
-             num_pc * num_p_pc_from_sc_to_pc * sizeof(uint32_t), read, file);
-}
-
 void MZoneConnectivityState::pPCfromPCtoNCRW(std::fstream &file, bool read) {
   rawBytesRW((char *)pPCfromPCtoNC[0],
              num_pc * num_p_pc_from_pc_to_nc * sizeof(uint32_t), read, file);
@@ -89,11 +88,6 @@ void MZoneConnectivityState::pBCfromBCtoPCRW(std::fstream &file, bool read) {
 void MZoneConnectivityState::pBCfromPCtoBCRW(std::fstream &file, bool read) {
   rawBytesRW((char *)pBCfromPCtoBC[0],
              num_bc * num_p_bc_from_pc_to_bc * sizeof(uint32_t), read, file);
-}
-
-void MZoneConnectivityState::pSCfromSCtoPCRW(std::fstream &file, bool read) {
-  rawBytesRW((char *)pSCfromSCtoPC[0],
-             num_sc * num_p_sc_from_sc_to_pc * sizeof(uint32_t), read, file);
 }
 
 void MZoneConnectivityState::pNCfromPCtoNCRW(std::fstream &file, bool read) {
@@ -140,12 +134,18 @@ void MZoneConnectivityState::allocateMemory() {
   pBCfromPCtoBC = allocate2DArray<uint32_t>(num_bc, num_p_bc_from_pc_to_bc);
 
   // stellate cells
-  pSCfromSCtoPC = allocate2DArray<uint32_t>(num_sc, num_p_sc_from_sc_to_pc);
+  pSCfromSCtoCompart =
+      allocate2DArray<uint32_t>(num_sc, num_p_sc_from_sc_to_compart);
+  pCompartfromSCtoCompart =
+      allocate2DArray<uint32_t>(num_compart, num_p_compart_from_sc_to_compart);
+  pCompartfromCompartToPC = new uint32_t[num_compart]();
+  pPCfromCompartToPC =
+      allocate2DArray<uint32_t>(num_pc, max_num_p_pc_from_compart_to_pc);
+  numpPCfromCompartToPC = new uint32_t[num_pc]();
 
   // purkinje cells
   pPCfromBCtoPC = allocate2DArray<uint32_t>(num_pc, num_p_pc_from_bc_to_pc);
   pPCfromPCtoBC = allocate2DArray<uint32_t>(num_pc, num_p_pc_from_pc_to_bc);
-  pPCfromSCtoPC = allocate2DArray<uint32_t>(num_pc, num_p_pc_from_sc_to_pc);
   pPCfromPCtoNC = allocate2DArray<uint32_t>(num_pc, num_p_pc_from_pc_to_nc);
   pPCfromIOtoPC = new uint32_t[num_pc]();
 
@@ -172,16 +172,21 @@ void MZoneConnectivityState::initializeVals() {
             pBCfromPCtoBC[0] + num_bc * num_p_bc_from_pc_to_bc, 0);
 
   // stellate cells
-  std::fill(pSCfromSCtoPC[0],
-            pSCfromSCtoPC[0] + num_sc * num_p_sc_from_sc_to_pc, 0);
+  std::fill(pSCfromSCtoCompart[0],
+            pSCfromSCtoCompart[0] + num_sc * num_p_sc_from_sc_to_compart, 0);
+  std::fill(pCompartfromSCtoCompart[0],
+            pCompartfromSCtoCompart[0] +
+                num_compart * num_p_compart_from_sc_to_compart,
+            0);
+  std::fill(pPCfromCompartToPC[0],
+            pPCfromCompartToPC[0] + num_pc * max_num_p_pc_from_compart_to_pc,
+            0);
 
   // purkinje cells
   std::fill(pPCfromBCtoPC[0],
             pPCfromBCtoPC[0] + num_pc * num_p_pc_from_bc_to_pc, 0);
   std::fill(pPCfromPCtoBC[0],
             pPCfromPCtoBC[0] + num_pc * num_p_pc_from_pc_to_bc, 0);
-  std::fill(pPCfromSCtoPC[0],
-            pPCfromSCtoPC[0] + num_pc * num_p_pc_from_sc_to_pc, 0);
   std::fill(pPCfromPCtoNC[0],
             pPCfromPCtoNC[0] + num_pc * num_p_pc_from_pc_to_nc, 0);
 
@@ -211,12 +216,15 @@ void MZoneConnectivityState::deallocMemory() {
   delete2DArray<uint32_t>(pBCfromPCtoBC);
 
   // stellate cells
-  delete2DArray<uint32_t>(pSCfromSCtoPC);
+  delete2DArray<uint32_t>(pSCfromSCtoCompart);
+  delete2DArray<uint32_t>(pCompartfromSCtoCompart);
+  delete[] pCompartfromCompartToPC;
+  delete2DArray<uint32_t>(pPCfromCompartToPC);
+  delete[] numpPCfromCompartToPC;
 
   // purkinje cells
   delete2DArray<uint32_t>(pPCfromBCtoPC);
   delete2DArray<uint32_t>(pPCfromPCtoBC);
-  delete2DArray<uint32_t>(pPCfromSCtoPC);
   delete2DArray<uint32_t>(pPCfromPCtoNC);
   delete[] pPCfromIOtoPC;
 
@@ -244,16 +252,27 @@ void MZoneConnectivityState::stateRW(bool read, std::fstream &file) {
              num_bc * num_p_bc_from_pc_to_bc * sizeof(uint32_t), read, file);
 
   // stellate cells
-  rawBytesRW((char *)pSCfromSCtoPC[0],
-             num_sc * num_p_sc_from_sc_to_pc * sizeof(uint32_t), read, file);
+  rawBytesRW((char *)pSCfromSCtoCompart[0],
+             num_sc * num_p_sc_from_sc_to_compart * sizeof(uint32_t), read,
+             file);
+  rawBytesRW((char *)pCompartfromSCtoCompart[0],
+             num_compart * num_p_compart_from_sc_to_compart * sizeof(uint32_t),
+             read, file);
+
+  rawBytesRW((char *)pCompartfromCompartToPC, num_compart * sizeof(uint32_t),
+             read, file);
+
+  rawBytesRW((char *)pPCfromCompartToPC[0],
+             num_pc * max_num_p_pc_from_compart_to_pc * sizeof(uint32_t), read,
+             file);
+  rawBytesRW((char *)numpPCfromCompartToPC, num_pc * sizeof(uint32_t), read,
+             file);
 
   // purkinje cells
   rawBytesRW((char *)pPCfromBCtoPC[0],
              num_pc * num_p_pc_from_bc_to_pc * sizeof(uint32_t), read, file);
   rawBytesRW((char *)pPCfromPCtoBC[0],
              num_pc * num_p_pc_from_pc_to_bc * sizeof(uint32_t), read, file);
-  rawBytesRW((char *)pPCfromSCtoPC[0],
-             num_pc * num_p_pc_from_sc_to_pc * sizeof(uint32_t), read, file);
   rawBytesRW((char *)pPCfromPCtoNC[0],
              num_pc * num_p_pc_from_pc_to_nc * sizeof(uint32_t), read, file);
   rawBytesRW((char *)pPCfromIOtoPC, num_pc * sizeof(uint32_t), read, file);
@@ -341,13 +360,55 @@ void MZoneConnectivityState::connectPCtoBC() {
   }
 }
 
-void MZoneConnectivityState::connectSCtoPC() {
-  for (int i = 0; i < num_sc; i++) {
-    for (int j = 0; j < num_p_sc_from_sc_to_pc; j++) {
-      int pcInd = i / num_p_pc_from_sc_to_pc;
-      pSCfromSCtoPC[i][j] = pcInd;
-      pPCfromSCtoPC[pcInd][i % num_p_pc_from_sc_to_pc] = i;
+void MZoneConnectivityState::connectSCtoCompart() {
+  // naive: fully connected
+  uint32_t compart_connect_count[num_compart];
+  for (size_t i = 0; i < num_compart; i++) {
+    compart_connect_count[i] = 0;
+  }
+
+  for (size_t i = 0; i < num_sc; i++) {
+    for (size_t j = 0; j < num_p_sc_from_sc_to_compart; j++) {
+      int compartId = (i + j) % num_compart;
+      pSCfromSCtoCompart[i][j] = compartId;
+      pCompartfromSCtoCompart[compartId][compart_connect_count[compartId]] = i;
+      compart_connect_count[compartId]++;
     }
+  }
+}
+
+void MZoneConnectivityState::connectCompartToPC() {
+  CRandomSFMT0 randGen(time(0));
+  bool compartAssigned[num_compart];
+  for (size_t i = 0; i < num_compart; i++) {
+    compartAssigned[i] = false;
+  }
+  uint32_t total = 0;
+  uint32_t pc_id = 0;
+  uint32_t total_assigned = 0;
+  while (total < num_compart) {
+
+    uint32_t num_to_assign = randGen.IRandomX(min_num_p_pc_from_compart_to_pc,
+                                              max_num_p_pc_from_compart_to_pc);
+    if (total + num_to_assign > num_compart) {
+      num_to_assign = num_compart - total;
+    } else if (total + num_to_assign == num_compart) {
+      num_to_assign--;
+    }
+    uint32_t num_assigned = 0;
+    while (num_assigned < num_to_assign) {
+      uint32_t compart_id = randGen.IRandomX(0, num_compart - 1);
+      if (!compartAssigned[compart_id]) {
+        pCompartfromCompartToPC[compart_id] = pc_id;
+        pPCfromCompartToPC[pc_id][num_assigned] = compart_id;
+        num_assigned++;
+        total_assigned++;
+        compartAssigned[compart_id] = true;
+      }
+    }
+    numpPCfromCompartToPC[pc_id] = num_to_assign;
+    total += num_to_assign;
+    pc_id++;
   }
 }
 

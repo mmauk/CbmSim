@@ -113,6 +113,19 @@ MZone::~MZone() {
   delete[] inputPFSCGPUP;
   delete[] inputSumPFSCGPU;
 
+  // compart
+  cudaSetDevice(gpuIndStart);
+  cudaFreeHost(compartMaskHost);
+  cudaDeviceSynchronize();
+  for (size_t i = 0; i < numGPUs; i++) {
+    cudaSetDevice(i + gpuIndStart);
+    cudaFree(compartMaskGPU[i]);
+    cudaDeviceSynchronize();
+  }
+
+  delete[] compartMaskGPU;
+  LOG_DEBUG("Finished Compart cuda variable allocation");
+
   // bc
   cudaSetDevice(gpuIndStart);
   cudaFreeHost(inputSumPFBCH);
@@ -266,6 +279,9 @@ void MZone::initCUDA(cudaStream_t **stream) {
   initSCCUDA();
   LOG_DEBUG("Initialized SC CUDA");
   LOG_DEBUG("Last error: %s", cudaGetErrorString(cudaGetLastError()));
+  initCompartCUDA();
+  LOG_DEBUG("Initialized Compart CUDA");
+  LOG_DEBUG("Last error: %s", cudaGetErrorString(cudaGetLastError()));
 
   testReduction();
   LOG_DEBUG("Finished Test.");
@@ -356,6 +372,25 @@ void MZone::initSCCUDA() {
   LOG_DEBUG("Finished initializing SC cuda variables...");
 }
 
+void MZone::initCompartCUDA() {
+  LOG_DEBUG("Allocating Compartment cuda variables...");
+  compartMaskGPU = new uint8_t *[numGPUs];
+
+  cudaSetDevice(gpuIndStart);
+  cudaHostAlloc((void **)&compartMaskHost, num_gr * sizeof(uint8_t),
+                cudaHostAllocPortable);
+  cudaMemset(compartMaskHost, 0, num_gr * sizeof(uint8_t));
+  cudaDeviceSynchronize();
+  for (int i = 0; i < numGPUs; i++) {
+    cudaSetDevice(i + gpuIndStart);
+    cudaMalloc((void **)&compartMaskGPU[i], numGRPerGPU * sizeof(uint8_t));
+    cudaMemset(compartMaskGPU[i], 0, numGRPerGPU * sizeof(uint8_t));
+
+    cudaDeviceSynchronize();
+  }
+  LOG_DEBUG("Finished Compart cuda variable allocation");
+}
+
 void MZone::writeToState() {
   // TODO: write everything to state...only doing weights and pfpc input sums :/
   cpyPFPCSynWCUDA();
@@ -406,6 +441,14 @@ void MZone::setTrueMFs(const bool *isCollateralMF) {
 
 void MZone::calcPCActivities() {
   for (int i = 0; i < num_pc; i++) {
+    // simplest thing to do: linear average
+    float mean_compart_v = 0;
+    if (cs->numpPCfromCompartToPC[i] > 0) {
+      for (size_t j = 0; j < cs->numpPCfromCompartToPC[i]; j++) {
+        mean_compart_v += as->vCompart[cs->pPCfromCompartToPC[i][j]];
+      }
+      mean_compart_v /= cs->numpPCfromCompartToPC[i];
+    }
     // update pf -> pc conductance
     as->gPFPC[i] += inputSumPFPCMZH[i] * gIncGRtoPC;
     as->gPFPC[i] *= gDecGRtoPC;
@@ -413,13 +456,14 @@ void MZone::calcPCActivities() {
     as->gBCPC[i] += as->inputBCPC[i] * gIncBCtoPC;
     as->gBCPC[i] *= gDecBCtoPC;
     // update sc -> pc conductance
-    as->gSCPC[i] += as->inputSCPC[i] * gIncSCtoPC;
-    as->gSCPC[i] *= gDecSCtoPC;
+    // as->gSCPC[i] += as->inputSCPC[i] * gIncSCtoPC;
+    // as->gSCPC[i] *= gDecSCtoPC;
 
     // use updated conductances to update voltage
     as->vPC[i] += gLeakPC * (eLeakPC - as->vPC[i]) - as->gPFPC[i] * as->vPC[i] +
                   as->gBCPC[i] * (eBCtoPC - as->vPC[i]) +
-                  as->gSCPC[i] * (eSCtoPC - as->vPC[i]);
+                  0.0001 * mean_compart_v;
+    /* as->gSCPC[i] * (eSCtoPC - as->vPC[i]) */;
     as->threshPC[i] += threshDecPC * (threshRestPC - as->threshPC[i]);
 
     // compute whether we spike or not this time step
@@ -632,18 +676,66 @@ void MZone::updateBCPCOut() {
   }
 }
 
-void MZone::updateSCPCOut() {
-  for (int i = 0; i < num_pc; i++)
-    as->inputSCPC[i] = 0;
+// void MZone::updateSCPCOut() {
+//   for (int i = 0; i < num_pc; i++)
+//     as->inputSCPC[i] = 0;
+//
+//   for (int i = 0; i < num_sc; i++) {
+//     // if this sp spiked, update post syn inputs
+//     if (as->apSC[i]) {
+//       for (int j = 0; j < num_p_sc_from_sc_to_pc; j++) {
+//         // update sc -> pc inputs using pre-synaptic con array
+//         as->inputSCPC[cs->pSCfromSCtoPC[i][j]]++;
+//       }
+//     }
+//   }
+// }
+
+void MZone::updateSCCompartOut() {
+  for (int i = 0; i < num_compart; i++)
+    as->inputSCCompart[i] = 0;
 
   for (int i = 0; i < num_sc; i++) {
     // if this sp spiked, update post syn inputs
     if (as->apSC[i]) {
-      for (int j = 0; j < num_p_sc_from_sc_to_pc; j++) {
+      for (int j = 0; j < num_p_sc_from_sc_to_compart; j++) {
         // update sc -> pc inputs using pre-synaptic con array
-        as->inputSCPC[cs->pSCfromSCtoPC[i][j]]++;
+        as->inputSCCompart[cs->pSCfromSCtoCompart[i][j]]++;
       }
     }
+  }
+}
+
+void MZone::calcCompartMembraneV() {
+  for (size_t i = 0; i < num_compart; i++) {
+    as->gSCCompart[i] += as->inputSCCompart[i] * gIncSCtoCompart;
+    as->gSCCompart[i] *= gDecSCtoCompart;
+    as->vCompart[i] += gLeakCompart * (eLeakCompart - as->vCompart[i]) -
+                       as->gSCCompart[i] * (-72 - as->vCompart[i]);
+  }
+}
+
+void MZone::UpdateCompartPCOut() {
+  uint32_t num_gr_per_compart = num_gr / num_compart;
+  uint8_t mask_val = 0;
+  for (size_t i = 0; i < num_compart; i++) {
+    if (as->vCompart[i] > compartThresh) {
+      as->vCompart[i] = compartThresh;
+      mask_val = 0; // turn off plast
+    } else
+      mask_val = 1; // turn on plast
+    for (size_t j = i * num_gr_per_compart; j < (i + 1) * num_gr_per_compart;
+         j++)
+      compartMaskHost[j] = mask_val;
+  }
+}
+
+void MZone::cpyCompartMaskCUDA(cudaStream_t **sts, int streamN) {
+  for (int i = 0; i < numGPUs; i++) {
+    cudaSetDevice(i + gpuIndStart);
+    cudaMemcpyAsync((void *)&compartMaskHost[i], compartMaskGPU[i],
+                    numGRPerGPU * sizeof(uint8_t), cudaMemcpyHostToDevice,
+                    sts[i][streamN]);
   }
 }
 
@@ -843,8 +935,9 @@ void MZone::runPFPCGradedPlastCUDA(cudaStream_t **sts, int streamN,
       callPFPCGradedPlastKernel(
           sts[curGPUInd][streamN + curIOInd], updatePFPCSynWNumBlocks,
           updatePFPCSynWNumGRPerB, pfSynWeightPCGPU[curGPUInd],
-          pfpcSTPsGPU[curGPUInd], histGRGPU[curGPUInd], grPCHistCheckBinIO,
-          curGROffset, pfPCPlastStepIO[curIOInd]);
+          pfpcSTPsGPU[curGPUInd], histGRGPU[curGPUInd],
+          compartMaskGPU[curGPUInd], grPCHistCheckBinIO, curGROffset,
+          pfPCPlastStepIO[curIOInd]);
 
       curGROffset += num_p_pc_from_gr_to_pc;
     }

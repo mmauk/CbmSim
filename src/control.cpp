@@ -966,10 +966,10 @@ void Control::save_con_arrs() {
           simState->getMZoneConStateInternal(0)->pPCfromBCtoPCRW(
               post_con_arrs_file_buf, false);
         } else if (SYN_CONS_IDS[i] == "SCPC") {
-          simState->getMZoneConStateInternal(0)->pSCfromSCtoPCRW(
-              pre_con_arrs_file_buf, false);
-          simState->getMZoneConStateInternal(0)->pPCfromSCtoPCRW(
-              post_con_arrs_file_buf, false);
+          // simState->getMZoneConStateInternal(0)->pSCfromSCtoPCRW(
+          //     pre_con_arrs_file_buf, false);
+          // simState->getMZoneConStateInternal(0)->pPCfromSCtoPCRW(
+          //    post_con_arrs_file_buf, false);
         } else if (SYN_CONS_IDS[i] == "PCBC") {
           simState->getMZoneConStateInternal(0)->pPCfromPCtoBCRW(
               pre_con_arrs_file_buf, false);

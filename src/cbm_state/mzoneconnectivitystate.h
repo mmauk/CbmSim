@@ -71,12 +71,17 @@ public:
   uint32_t **pBCfromPCtoBC;
 
   // stellate cells
-  uint32_t **pSCfromSCtoPC;
+  // uint32_t **pSCfromSCtoPC;
+
+  uint32_t **pSCfromSCtoCompart;
+  uint32_t **pCompartfromSCtoCompart;
+  uint32_t *pCompartfromCompartToPC;
+  uint32_t **pPCfromCompartToPC;
+  uint32_t *numpPCfromCompartToPC;
 
   // purkinje cells
   uint32_t **pPCfromBCtoPC;
   uint32_t **pPCfromPCtoBC;
-  uint32_t **pPCfromSCtoPC;
   uint32_t **pPCfromPCtoNC;
   uint32_t *pPCfromIOtoPC;
 
@@ -100,7 +105,8 @@ private:
   void assignGRDelays();
   void connectBCtoPC();
   void connectPCtoBC();
-  void connectSCtoPC();
+  void connectSCtoCompart();
+  void connectCompartToPC();
   void connectPCtoNC(int randSeed);
   void connectNCtoIO();
   void connectMFtoNC();

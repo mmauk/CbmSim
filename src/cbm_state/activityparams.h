@@ -63,9 +63,17 @@ extern float gIncAvgPCtoNC;
 extern float gDecTauGRtoBC;
 extern float gDecTauGRtoPC;
 extern float gDecTauGRtoSC;
+
+// NEW
+extern float gDecTauSCtoCompart;
+
 extern float gIncGRtoPC;
 extern float gDecTauSCtoPC;
 extern float gIncSCtoPC;
+
+// NEW
+extern float gIncSCtoCompart;
+
 extern float gluDecayGO;
 extern float gluScaleGO;
 extern float goGABAGOGOSynDepF;
@@ -128,6 +136,10 @@ extern float rawGLeakIO;
 extern float rawGLeakNC;
 extern float rawGLeakPC;
 extern float rawGLeakSC;
+
+// NEW
+extern float rawGLeakCompart;
+
 extern float rawGMFAMPAIncNC;
 extern float rawGMFNMDAIncNC;
 extern float threshDecTauBC;
@@ -169,11 +181,19 @@ extern float threshDecGR;
 extern float tsPerHistBinGR;
 extern float gLeakSC;
 extern float gDecGRtoSC;
+
+// NEW
+extern float gDecSCtoCompart;
+
 extern float threshDecSC;
 extern float gDecGRtoBC;
 extern float gDecPCtoBC;
 extern float threshDecBC;
 extern float threshDecPC;
+
+// NEW
+extern float gLeakCompart;
+
 extern float gLeakPC;
 extern float gDecGRtoPC;
 extern float gDecBCtoPC;
