@@ -163,7 +163,8 @@ void Control::initialize_session(std::string sess_file) {
       std::stoi(s_file.parsed_var_sections["trial_spec"].param_map["msPreCS"]);
   msPostCS =
       std::stoi(s_file.parsed_var_sections["trial_spec"].param_map["msPostCS"]);
-  msMeasure = msPreCS + td.cs_lens[0] + msPostCS;
+  // msMeasure = msPreCS + td.cs_lens[0] + msPostCS;      
+  msMeasure = 5000;
 
   trials_data_initialized = true;
   LOG_DEBUG("Session initialized.");
@@ -865,15 +866,17 @@ void Control::runSession(struct gui *gui) {
       if (currTrialName == "probe_trial") {
         if (ts >= onsetCS - msPreCS && ts < onsetCS + csLength + msPostCS) {
           fill_rasters_no_io(raster_counter, PSTHCounter);
-          fill_psths_no_io(PSTHCounter);
-          PSTHCounter++;
+          // fill_psths_no_io(PSTHCounter);
+          // PSTHCounter++;
           raster_counter++;
         }
       } else if (currTrialName == "forget_trial") {
         // collect the IOs at every time step
-        for (uint32_t j = 0; j < rast_cell_nums[IO]; j++) {
-          rasters[IO][forget_trial_counter * trialTime + ts][j] = cell_spikes[IO][j];
-        }
+        // for (uint32_t j = 0; j < rast_cell_nums[IO]; j++) {
+        //   rasters[IO][forget_trial_counter * trialTime + ts][j] = cell_spikes[IO][j];
+        // }
+        fill_psths_no_io(PSTHCounter);
+        PSTHCounter++;
       }
 
       if (use_gui) {
@@ -907,35 +910,36 @@ void Control::runSession(struct gui *gui) {
     if (data_out_dir_created) {
       if (currTrialName != "probe_trial" && nextTrialName == "probe_trial") {
         save_pfpc_weights_at_trial_to_file(trial);
-    //    std::string weight_steps_ltp_fname =
-    //        data_out_path + "/" + data_out_base_name + "_TRIAL_" +
-    //        std::to_string(trial) + "_LTP.pfpcpe";
-    //    LOG_DEBUG(
-    //        "Saving pfpc ltp plasticity events array to file at trial %d...",
-    //        trial);
-    //    std::fstream out_weight_steps_ltp_buf(weight_steps_ltp_fname.c_str(),
-    //                                          std::ios::out | std::ios::binary);
-    //    simCore->getMZoneList()[0]->save_weight_steps_ltp_to_file(
-    //        out_weight_steps_ltp_buf);
-    //    out_weight_steps_ltp_buf.close();
-    //
-    //    std::string weight_steps_ltd_fname =
-    //        data_out_path + "/" + data_out_base_name + "_TRIAL_" +
-    //        std::to_string(trial) + "_LTD.pfpcpe";
-    //    LOG_DEBUG(
-    //        "Saving pfpc ltd plasticity events array to file at trial %d...",
-    //        trial);
-    //    std::fstream out_weight_steps_ltd_buf(weight_steps_ltd_fname.c_str(),
-    //                                          std::ios::out | std::ios::binary);
-    //    simCore->getMZoneList()[0]->save_weight_steps_ltd_to_file(
-    //        out_weight_steps_ltd_buf);
-    //    out_weight_steps_ltd_buf.close();
-    //  }
-    //  if (currTrialName == "probe_trial" && nextTrialName != "probe_trial") {
-    //    simCore->getMZoneList()[0]->reset_weight_steps_ltp();
-    //    LOG_DEBUG("Resetting PFPC synapse LTP steps at %d...", trial);
-    //    simCore->getMZoneList()[0]->reset_weight_steps_ltd();
-    //    LOG_DEBUG("Resetting PFPC synapse LTD steps at %d...", trial);
+        // save plasticity events
+       std::string weight_steps_ltp_fname =
+           data_out_path + "/" + data_out_base_name + "_TRIAL_" +
+           std::to_string(trial) + "_LTP.pfpcpe";
+       LOG_DEBUG(
+           "Saving pfpc ltp plasticity events array to file at trial %d...",
+           trial);
+       std::fstream out_weight_steps_ltp_buf(weight_steps_ltp_fname.c_str(),
+                                             std::ios::out | std::ios::binary);
+       simCore->getMZoneList()[0]->save_weight_steps_ltp_to_file(
+           out_weight_steps_ltp_buf);
+       out_weight_steps_ltp_buf.close();
+    
+       std::string weight_steps_ltd_fname =
+           data_out_path + "/" + data_out_base_name + "_TRIAL_" +
+           std::to_string(trial) + "_LTD.pfpcpe";
+       LOG_DEBUG(
+           "Saving pfpc ltd plasticity events array to file at trial %d...",
+           trial);
+       std::fstream out_weight_steps_ltd_buf(weight_steps_ltd_fname.c_str(),
+                                             std::ios::out | std::ios::binary);
+       simCore->getMZoneList()[0]->save_weight_steps_ltd_to_file(
+           out_weight_steps_ltd_buf);
+       out_weight_steps_ltd_buf.close();
+     }
+     if (currTrialName == "probe_trial" && nextTrialName != "probe_trial") {
+       simCore->getMZoneList()[0]->reset_weight_steps_ltp();
+       LOG_DEBUG("Resetting PFPC synapse LTP steps at %d...", trial);
+       simCore->getMZoneList()[0]->reset_weight_steps_ltd();
+       LOG_DEBUG("Resetting PFPC synapse LTD steps at %d...", trial);
       }
     }
     trial++;

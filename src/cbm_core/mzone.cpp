@@ -441,53 +441,56 @@ void MZone::calcBCActivities() {
   }
 }
 
-void MZone::calcIOActivities() {
+void MZone::calcIOActivities(uint32_t ts) {
+  for (uint8_t i = 0; i < num_io; i++)
+    as->apIO[i] = (ts % 1000 == 0) ? 1 : 0;
   // next few lines used to add a little noise to voltage computation
-  srand(clock());
-  float r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-  float gNoise = (r - 0.5) * 2.0;
 
-  for (int i = 0; i < num_io; i++) {
-    float gNCSum;
-    gNCSum = 0;
+  // srand(clock());
+  // float r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+  // float gNoise = (r - 0.5) * 2.0;
 
-    for (int j = 0; j < num_p_io_from_nc_to_io; j++) {
-      // update nc -> io input conductance. has this funky exponential
-      // dependency
-      as->gNCIO[i * num_p_io_from_nc_to_io + j] *= exp(
-          -msPerTimeStep /
-          (-gDecTSofNCtoIO * exp(-as->gNCIO[i * num_p_io_from_nc_to_io + j] /
-                                 gDecTTofNCtoIO) +
-           gDecT0ofNCtoIO));
-      // another exponential dependence on...itself?
-      as->gNCIO[i * num_p_io_from_nc_to_io + j] +=
-          as->inputNCIO[i * num_p_io_from_nc_to_io + j] * gIncNCtoIO *
-          exp(-as->gNCIO[i * num_p_io_from_nc_to_io + j] / gIncTauNCtoIO);
-      // update over input nc sum
-      gNCSum += as->gNCIO[i * num_p_io_from_nc_to_io + j];
-      // reset input nc -> io
-      as->inputNCIO[i * num_p_io_from_nc_to_io + j] = 0;
-    }
-    // this looks like some sort of fudge factor to me
-    gNCSum = 1.5 * gNCSum / 3.1;
+//   for (int i = 0; i < num_io; i++) {
+//     float gNCSum;
+//     gNCSum = 0;
 
-    // update the voltage. notice the errDrive (unconditioned stimulus)
-    as->vIO[i] += gLeakIO * (eLeakIO - as->vIO[i]) +
-                  gNCSum * (eNCtoIO - as->vIO[i]) + as->vCoupleIO[i] +
-                  as->errDrive + gNoise;
-    // update voltage threshold
-    as->threshIO[i] += threshDecIO * (threshRestIO - as->threshIO[i]);
+//     for (int j = 0; j < num_p_io_from_nc_to_io; j++) {
+//       // update nc -> io input conductance. has this funky exponential
+//       // dependency
+//       as->gNCIO[i * num_p_io_from_nc_to_io + j] *= exp(
+//           -msPerTimeStep /
+//           (-gDecTSofNCtoIO * exp(-as->gNCIO[i * num_p_io_from_nc_to_io + j] /
+//                                  gDecTTofNCtoIO) +
+//            gDecT0ofNCtoIO));
+//       // another exponential dependence on...itself?
+//       as->gNCIO[i * num_p_io_from_nc_to_io + j] +=
+//           as->inputNCIO[i * num_p_io_from_nc_to_io + j] * gIncNCtoIO *
+//           exp(-as->gNCIO[i * num_p_io_from_nc_to_io + j] / gIncTauNCtoIO);
+//       // update over input nc sum
+//       gNCSum += as->gNCIO[i * num_p_io_from_nc_to_io + j];
+//       // reset input nc -> io
+//       as->inputNCIO[i * num_p_io_from_nc_to_io + j] = 0;
+//     }
+//     // this looks like some sort of fudge factor to me
+//     gNCSum = 1.5 * gNCSum / 3.1;
 
-    // did we spike or not?
-    as->apIO[i] = as->vIO[i] > as->threshIO[i];
-    // push spike info to spike buffer
-    as->apBufIO[i] = (as->apBufIO[i] << 1) | (as->apIO[i] * 0x00000001);
+//     // update the voltage. notice the errDrive (unconditioned stimulus)
+//     as->vIO[i] += gLeakIO * (eLeakIO - as->vIO[i]) +
+//                   gNCSum * (eNCtoIO - as->vIO[i]) + as->vCoupleIO[i] +
+//                   as->errDrive + gNoise;
+//     // update voltage threshold
+//     as->threshIO[i] += threshDecIO * (threshRestIO - as->threshIO[i]);
 
-    // limit thresh to max thresh if we spiked
-    as->threshIO[i] =
-        as->apIO[i] * threshMaxIO + (1 - as->apIO[i]) * as->threshIO[i];
-  }
-  as->errDrive = 0; // honestly not sure why we have to reset this
+//     // did we spike or not?
+//     as->apIO[i] = as->vIO[i] > as->threshIO[i];
+//     // push spike info to spike buffer
+//     as->apBufIO[i] = (as->apBufIO[i] << 1) | (as->apIO[i] * 0x00000001);
+
+//     // limit thresh to max thresh if we spiked
+//     as->threshIO[i] =
+//         as->apIO[i] * threshMaxIO + (1 - as->apIO[i]) * as->threshIO[i];
+//   }
+//   as->errDrive = 0; // honestly not sure why we have to reset this
 }
 
 void MZone::calcNCActivities() {

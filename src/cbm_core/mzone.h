@@ -40,7 +40,7 @@ public:
   void calcPCActivities();
   void calcSCActivities();
   void calcBCActivities();
-  void calcIOActivities();
+  void calcIOActivities(uint32_t ts);
   void calcNCActivities();
 
   void updatePCOut();

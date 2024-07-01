@@ -148,7 +148,7 @@ void CBMSimCore::calcActivityGRPoiss(enum plasticity pf_pc_plast, uint32_t ts) {
     zones[i]->calcPCActivities();
     zones[i]->updatePCOut();
 
-    zones[i]->calcIOActivities();
+    zones[i]->calcIOActivities(ts);
     zones[i]->updateIOOut();
 
     // no nc bcuz no MF :crying_emoji:
@@ -255,7 +255,7 @@ void CBMSimCore::calcActivity(float spillFrac, enum plasticity pf_pc_plast,
     zones[i]->updatePCOut();
 
     // compute io activities (host)
-    zones[i]->calcIOActivities();
+    zones[i]->calcIOActivities(curTime);
     // update io output variables
     zones[i]->updateIOOut();
 
