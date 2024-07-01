@@ -362,12 +362,17 @@ void MZoneConnectivityState::connectPCtoBC() {
 
 void MZoneConnectivityState::connectSCtoCompart() {
   // naive: fully connected
+  uint32_t compart_connect_count[num_compart];
+  for (size_t i = 0; i < num_compart; i++) {
+    compart_connect_count[i] = 0;
+  }
+
   for (size_t i = 0; i < num_sc; i++) {
     for (size_t j = 0; j < num_p_sc_from_sc_to_compart; j++) {
-      int compartId = i / num_p_compart_from_sc_to_compart;
+      int compartId = (i + j) % num_compart;
       pSCfromSCtoCompart[i][j] = compartId;
-      pCompartfromSCtoCompart[compartId][i % num_p_compart_from_sc_to_compart] =
-          i;
+      pCompartfromSCtoCompart[compartId][compart_connect_count[compartId]] = i;
+      compart_connect_count[compartId]++;
     }
   }
 }

@@ -440,12 +440,9 @@ void MZone::setTrueMFs(const bool *isCollateralMF) {
 }
 
 void MZone::calcPCActivities() {
-  float mean_v = 0.0;
   for (int i = 0; i < num_pc; i++) {
     // simplest thing to do: linear average
     float mean_compart_v = 0;
-    // printf("pc %d num compart inputs: %d\n", i,
-    // cs->numpPCfromCompartToPC[i]);
     if (cs->numpPCfromCompartToPC[i] > 0) {
       for (size_t j = 0; j < cs->numpPCfromCompartToPC[i]; j++) {
         mean_compart_v += as->vCompart[cs->pPCfromCompartToPC[i][j]];
@@ -464,10 +461,8 @@ void MZone::calcPCActivities() {
 
     // use updated conductances to update voltage
     as->vPC[i] += gLeakPC * (eLeakPC - as->vPC[i]) - as->gPFPC[i] * as->vPC[i] +
-                  as->gBCPC[i] * (eBCtoPC - as->vPC[i]) -
-                  0.00001 * mean_compart_v;
-    printf("pc %d mean compart v: %0.4f\n", i, mean_compart_v);
-    mean_v += as->vPC[i];
+                  as->gBCPC[i] * (eBCtoPC - as->vPC[i]) +
+                  0.0001 * mean_compart_v;
     /* as->gSCPC[i] * (eSCtoPC - as->vPC[i]) */;
     as->threshPC[i] += threshDecPC * (threshRestPC - as->threshPC[i]);
 
@@ -482,8 +477,6 @@ void MZone::calcPCActivities() {
     // update the pc population activity, used in mf -> nc plast computation
     as->pcPopAct += as->apPC[i];
   }
-  mean_v /= num_pc;
-  // printf("mean pc v: %0.4f\n", mean_v);
 }
 
 void MZone::calcSCActivities() {
@@ -718,7 +711,7 @@ void MZone::calcCompartMembraneV() {
     as->gSCCompart[i] += as->inputSCCompart[i] * gIncSCtoCompart;
     as->gSCCompart[i] *= gDecSCtoCompart;
     as->vCompart[i] += gLeakCompart * (eLeakCompart - as->vCompart[i]) -
-                       as->gSCCompart[i] * (-72.0 - as->vCompart[i]);
+                       as->gSCCompart[i] * (-72 - as->vCompart[i]);
   }
 }
 
